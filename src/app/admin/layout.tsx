@@ -32,57 +32,42 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (pathname === "/admin/login") return;
-    const getCookie = (name: string) => {
-      if (typeof window === "undefined") return undefined;
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop()?.split(';').shift();
-      return undefined;
-    };
 
-    const token = getCookie("sf-admin-session");
-    if (!token) {
-      router.push("/admin/login");
-      return;
-    }
+    async function checkAuth() {
+      try {
+        // getSession() auto-refreshes the access token using the stored refresh token.
+        // This fixes the 1-hour JWT expiry that was blocking the admin panel.
+        const { data: { session }, error } = await supabase.auth.getSession();
 
-    try {
-      const parts = token.split(".");
-      if (parts.length === 3) {
-        let base64Payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-        while (base64Payload.length % 4) {
-          base64Payload += "=";
-        }
-        const payload = JSON.parse(atob(base64Payload));
-
-        const isExpired = payload.exp * 1000 < Date.now();
-        if (isExpired) {
-          document.cookie = "sf-admin-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        if (error || !session) {
           router.push("/admin/login");
           return;
         }
 
-        const adminEmailsEnv = process.env.NEXT_PUBLIC_ALLOWED_ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAILS || "ernestoortiz@gmail.com,ernestoortizlicer@gmail.com";
-        if (adminEmailsEnv) {
-          const whitelist = adminEmailsEnv.split(",").map(e => e.trim().toLowerCase());
-          const userEmail = (payload.email || "").toLowerCase();
+        // Refresh the cookie so getAuthHeaders() always has a valid token
+        document.cookie = `sf-admin-session=${session.access_token}; path=/; max-age=604800; SameSite=Lax; Secure`;
 
-          if (!whitelist.includes(userEmail)) {
-            document.cookie = "sf-admin-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-            router.push("/admin/login?error=unauthorized");
-            return;
-          }
+        const adminEmailsEnv =
+          process.env.NEXT_PUBLIC_ALLOWED_ADMIN_EMAIL ||
+          process.env.NEXT_PUBLIC_ADMIN_EMAILS ||
+          "ernestoortiz@gmail.com,ernestoortizlicer@gmail.com";
+        const whitelist = adminEmailsEnv.split(",").map((e) => e.trim().toLowerCase());
+        const userEmail = (session.user?.email || "").toLowerCase();
+
+        if (!whitelist.includes(userEmail)) {
+          await supabase.auth.signOut();
+          document.cookie = "sf-admin-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+          router.push("/admin/login?error=unauthorized");
+          return;
         }
 
-        setTimeout(() => {
-          setAuthorized(true);
-        }, 0);
-      } else {
+        setAuthorized(true);
+      } catch {
         router.push("/admin/login");
       }
-    } catch {
-      router.push("/admin/login");
     }
+
+    checkAuth();
   }, [router, pathname]);
 
   useEffect(() => {
