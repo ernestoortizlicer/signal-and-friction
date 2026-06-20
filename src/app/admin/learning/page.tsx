@@ -574,13 +574,13 @@ export default function LearningDashboard() {
                 )}
 
                 {/* 3 Drafts Side-By-Side */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
                   {activeDrafts.length > 0 ? (
                     activeDrafts.map((draft) => (
                       <div
                         key={draft.id}
                         onClick={() => handleSelectDraft(draft.draft_number)}
-                        className={`p-4 border rounded-xl transition-all duration-300 cursor-pointer flex flex-col justify-between min-h-[200px] ${
+                        className={`p-4 border rounded-xl transition-all duration-300 cursor-pointer flex flex-col justify-between min-h-[200px] overflow-hidden ${
                           selectedDraftId === draft.draft_number
                             ? "bg-[#D4A853]/5 border-[#D4A853]/40"
                             : "bg-[#110F0D]/20 border-[#2A2218] hover:border-[#D4A853]/25"
@@ -626,7 +626,7 @@ export default function LearningDashboard() {
                       <div
                         key={num}
                         onClick={() => handleSelectDraft(num)}
-                        className={`p-4 border rounded-xl transition-all duration-300 cursor-pointer flex flex-col justify-between min-h-[200px] ${
+                        className={`p-4 border rounded-xl transition-all duration-300 cursor-pointer flex flex-col justify-between min-h-[200px] overflow-hidden ${
                           selectedDraftId === num
                             ? "bg-[#D4A853]/5 border-[#D4A853]/40"
                             : "bg-[#110F0D]/20 border-[#2A2218] hover:border-[#D4A853]/25"
@@ -829,7 +829,7 @@ export default function LearningDashboard() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6 font-mono">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-6 font-mono">
                   {CASE_STUDIES.map(cs => (
                     <button
                       key={cs.id}
@@ -872,7 +872,7 @@ export default function LearningDashboard() {
                         <label className="text-xs text-[#9A8F82] uppercase tracking-wider block">
                           Isolate suspected friction mechanisms (Select all that apply):
                         </label>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
                           {activeChallenge.frictionOptions.map((option, idx) => {
                             const isSel = hlSelectedOptions.includes(idx);
                             return (
@@ -995,7 +995,7 @@ export default function LearningDashboard() {
                               <span className="font-mono text-xs text-[#D4A853] tracking-widest uppercase block mb-3">
                                 Priority Educational Articles (Gap Closure)
                               </span>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                                 {elev.articles.map((art) => (
                                   <div
                                     key={art.num}

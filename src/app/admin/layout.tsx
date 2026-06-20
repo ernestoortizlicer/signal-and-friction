@@ -33,41 +33,45 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (pathname === "/admin/login") return;
 
-    async function checkAuth() {
-      try {
-        // getSession() auto-refreshes the access token using the stored refresh token.
-        // This fixes the 1-hour JWT expiry that was blocking the admin panel.
-        const { data: { session }, error } = await supabase.auth.getSession();
+    const adminEmailsEnv =
+      process.env.NEXT_PUBLIC_ALLOWED_ADMIN_EMAIL ||
+      process.env.NEXT_PUBLIC_ADMIN_EMAILS ||
+      "ernestoortiz@gmail.com,ernestoortizlicer@gmail.com";
+    const whitelist = adminEmailsEnv.split(",").map((e) => e.trim().toLowerCase());
 
-        if (error || !session) {
-          router.push("/admin/login");
-          return;
-        }
-
-        // Refresh the cookie so getAuthHeaders() always has a valid token
-        document.cookie = `sf-admin-session=${session.access_token}; path=/; max-age=604800; SameSite=Lax; Secure`;
-
-        const adminEmailsEnv =
-          process.env.NEXT_PUBLIC_ALLOWED_ADMIN_EMAIL ||
-          process.env.NEXT_PUBLIC_ADMIN_EMAILS ||
-          "ernestoortiz@gmail.com,ernestoortizlicer@gmail.com";
-        const whitelist = adminEmailsEnv.split(",").map((e) => e.trim().toLowerCase());
-        const userEmail = (session.user?.email || "").toLowerCase();
-
-        if (!whitelist.includes(userEmail)) {
-          await supabase.auth.signOut();
-          document.cookie = "sf-admin-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-          router.push("/admin/login?error=unauthorized");
-          return;
-        }
-
-        setAuthorized(true);
-      } catch {
+    function authorizeSession(session: { access_token: string; user?: { email?: string } } | null) {
+      if (!session) {
         router.push("/admin/login");
+        return;
       }
+      const userEmail = (session.user?.email || "").toLowerCase();
+      if (!whitelist.includes(userEmail)) {
+        supabase.auth.signOut();
+        document.cookie = "sf-admin-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        router.push("/admin/login?error=unauthorized");
+        return;
+      }
+      // Keep cookie in sync so getAuthHeaders() stays valid
+      document.cookie = `sf-admin-session=${session.access_token}; path=/; max-age=604800; SameSite=Lax`;
+      setAuthorized(true);
     }
 
-    checkAuth();
+    // 1. Immediate check from localStorage (instant, no network)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      authorizeSession(session);
+    });
+
+    // 2. Subscribe to all auth events: login, token refresh, logout
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        setAuthorized(false);
+        router.push("/admin/login");
+      } else {
+        authorizeSession(session);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [router, pathname]);
 
   useEffect(() => {
