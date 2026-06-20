@@ -98,6 +98,14 @@ export default function SingaporeClient() {
   const [calcLtv, setCalcLtv] = useState(270); // in SGD (~200 USD equivalent)
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref && /^[A-Z0-9]{6,16}$/.test(ref)) {
+      localStorage.setItem('sf_referral_ref', ref);
+    }
+  }, []);
+
+  useEffect(() => {
     async function fetchTestimonials() {
       try {
         const { data, error } = await supabase.from("testimonials").select("*").limit(3);
@@ -209,7 +217,7 @@ export default function SingaporeClient() {
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#5C9A6B] pulse-cyan" style={{ boxShadow: "0 0 6px rgba(34,197,94,0.5)" }} />
+            <div className="w-1.5 h-1.5 rounded-full bg-[#5C9A6B] pulse-cyan" style={{ boxShadow: "0 0 6px rgba(92,154,107,0.5)" }} />
             <span className="font-mono text-xs text-[#5C9A6B]/60 tracking-[0.15em] uppercase">
               APAC Gateway
             </span>
@@ -246,6 +254,19 @@ export default function SingaporeClient() {
               Clinical B2B SaaS diagnostic localized for APAC. 72h async delivery.
               JCB &amp; PayNow checks. Supported by the S&amp;F SGD $2,700 Growth Guarantee™.
             </p>
+
+            {/* APAC Trust Signals */}
+            <div className="flex flex-wrap gap-2 pt-1">
+              {[
+                { label: "Singapore Regional Office", icon: "🇸🇬" },
+                { label: "Global HQ: Montevideo 🇺🇾", icon: null },
+                { label: "PDPA Compliant", icon: null },
+              ].map((chip) => (
+                <span key={chip.label} className="font-mono text-xs text-[#7A6F65] border border-[#D4A853]/10 px-2.5 py-1 rounded-full bg-[#D4A853]/[0.02]">
+                  {chip.icon && <span className="mr-1">{chip.icon}</span>}{chip.label}
+                </span>
+              ))}
+            </div>
 
             {/* Step indicators */}
             <div className="flex gap-1 pt-2">
@@ -740,9 +761,9 @@ export default function SingaporeClient() {
         </div>
       </section>
 
-      {/* ── Phase 3 Migration Notice ────────────────────── */}
+      {/* ── Dual HQ Notice ──────────────────────────────── */}
       <div className="border-t border-[#D4A853]/10 bg-[#D4A853]/[0.02] px-6 py-3 font-mono text-xs text-[#7A6F65] text-center">
-        <span className="text-[#D4A853]">Phase 3:</span> Signal &amp; Friction HQ relocating to UAE Free Zone (Q3 2026). APAC operations and guarantees continue uninterrupted.
+        <span className="text-[#D4A853]">Global Structure:</span> Signal &amp; Friction · <span className="text-[#9A8F82]">Global HQ: Montevideo, Uruguay 🇺🇾</span> &nbsp;·&nbsp; <span className="text-[#9A8F82]">APAC Regional Office: Singapore 🇸🇬</span> &nbsp;·&nbsp; All APAC operations &amp; guarantees continue uninterrupted.
       </div>
 
       {/* ── Footer ──────────────────────────────────────── */}
@@ -755,6 +776,9 @@ export default function SingaporeClient() {
           <Link href="/certified" className="hover:text-white transition-colors uppercase tracking-wider">Certified Licensing</Link>
           <span className="hidden md:inline">|</span>
           <Link href="/" className="hover:text-white transition-colors uppercase tracking-wider">Global Portal →</Link>
+        </div>
+        <div className="text-center text-[#4A4540] text-xs mt-1 md:mt-0">
+          Global HQ: Montevideo, Uruguay 🇺🇾 &nbsp;·&nbsp; APAC Regional Office: Singapore 🇸🇬
         </div>
         <a href="/admin/login" className="hover:text-white transition-colors uppercase tracking-wider">
           Operator Console →

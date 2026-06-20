@@ -194,7 +194,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </span>
           <div className="w-px h-4 bg-[#D4A853]/10 hidden lg:block" />
           <span className="font-mono text-xs text-[#D4A853] tracking-[0.1em] uppercase hidden lg:block">
-            Phase 3: UAE 🇦🇪
+            Phase 3: Uruguay 🇺🇾
           </span>
         </div>
 

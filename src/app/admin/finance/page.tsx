@@ -1126,11 +1126,11 @@ export default function PersonalFinanceCenter() {
                     </div>
                   </div>
 
-                  {/* UAE Free Zone Card — Phase 3 */}
+                  {/* Uruguay Card — Phase 3 */}
                   <div className="border border-[#D4A853]/20 bg-[#D4A853]/[0.03] p-5 rounded space-y-3">
                     <div className="flex justify-between items-center text-xs font-mono border-b border-[#D4A853]/8 pb-2">
-                      <span className="text-[#D4A853] font-bold">UAE Free Zone 🇦🇪</span>
-                      <span className="text-[#9A8F82]">Phase 3 · 0% Corp Tax</span>
+                      <span className="text-[#D4A853] font-bold">Uruguay 🇺🇾</span>
+                      <span className="text-[#9A8F82]">Phase 3 · 0% Foreign Income</span>
                     </div>
                     <div className="space-y-1.5 font-mono text-xs text-[#9A8F82]">
                       <div className="flex justify-between">
@@ -1162,7 +1162,7 @@ export default function PersonalFinanceCenter() {
                     <span className="text-[#D4A853]">→</span>
                     <div className="flex items-center gap-2 px-3 py-2 border border-[#D4A853]/30 bg-[#D4A853]/5 rounded">
                       <span className="text-[#D4A853] font-bold">Phase 3 · Primary</span>
-                      <span className="text-[#9A8F82]">UAE Free Zone 🇦🇪 · 0%</span>
+                      <span className="text-[#9A8F82]">Uruguay 🇺🇾 · 0% (11yr)</span>
                     </div>
                     <span className="text-[#9A8F82]">→</span>
                     <div className="flex items-center gap-2 px-3 py-2 border border-[#9A8F82]/10 bg-white/[0.01] rounded">
@@ -1173,7 +1173,7 @@ export default function PersonalFinanceCenter() {
                 </div>
 
                 <div className="border border-[#D4A853]/8 bg-black/40 p-4 rounded text-xs font-mono text-[#9A8F82] leading-relaxed">
-                  *Note: Bulgaria operates a flat 10% corporate income tax (Phase 1–2 base). UAE Free Zones qualify for 0% corporate tax under the Qualifying Free Zone Person regime — the elected Phase 3 primary jurisdiction. Georgia offers a 1% turnover tax for Virtual Zone companies as a backup option.
+                  *Note: Bulgaria operates a flat 10% corporate income tax (Phase 1–2 base). Uruguay offers 0% tax on foreign-source income for 11 years under the Tax Holiday for new residents — the elected Phase 3 primary jurisdiction. Georgia offers a 1% turnover tax for Virtual Zone companies as a backup option.
                 </div>
               </div>
 
