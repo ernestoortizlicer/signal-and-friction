@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 1200px;
+      height: 630px;
+      overflow: hidden;
+      background: #0A0908;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .container {
+      width: 1200px;
+      height: 630px;
+      background: #0A0908;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 80px 100px;
+    }
+
+    /* Very subtle warm gradient for depth */
+    .container::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 80% 20%, rgba(184, 92, 56, 0.08) 0%, transparent 60%),
+                  linear-gradient(135deg, #0A0908 0%, #0F0D0A 50%, #0A0908 100%);
+      pointer-events: none;
+    }
+
+    /* Film grain overlay */
+    .grain {
+      position: absolute;
+      inset: 0;
+      opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    /* Minimal frame */
+    .border-frame {
+      position: absolute;
+      inset: 30px;
+      border: 1px solid rgba(245, 240, 235, 0.03);
+      pointer-events: none;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo-svg {
+      width: 48px;
+      height: 48px;
+      color: #F5F0EB;
+    }
+
+    .logo-text {
+      font-family: 'DM Serif Display', serif;
+      font-size: 28px;
+      color: #F5F0EB;
+      letter-spacing: -0.01em;
+    }
+
+    .logo-text .amp {
+      color: #B85C38;
+      font-style: italic;
+    }
+
+    .tag-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #B85C38;
+      border: 1px solid rgba(184, 92, 56, 0.2);
+      padding: 6px 14px;
+      border-radius: 30px;
+      background: rgba(184, 92, 56, 0.03);
+    }
+
+    .main-body {
+      position: relative;
+      z-index: 10;
+      margin-top: 40px;
+    }
+
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      color: rgba(245, 240, 235, 0.4);
+      margin-bottom: 24px;
+    }
+
+    .title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 82px;
+      color: #F5F0EB;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      margin-bottom: 28px;
+    }
+
+    .title em {
+      font-style: italic;
+      color: #B85C38;
+      font-weight: 300;
+    }
+
+    .description {
+      font-size: 22px;
+      color: rgba(245, 240, 235, 0.7);
+      max-width: 720px;
+      line-height: 1.6;
+      font-weight: 300;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 10;
+      border-top: 1px solid rgba(245, 240, 235, 0.06);
+      padding-top: 36px;
+    }
+
+    .footer-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .footer-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: rgba(245, 240, 235, 0.35);
+    }
+
+    .footer-value {
+      font-size: 15px;
+      font-weight: 500;
+      color: #F5F0EB;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="grain"></div>
+    <div class="border-frame"></div>
+
+    <!-- Header -->
+    <div class="header">
+      <div class="logo-container">
+        <svg class="logo-svg" width="48" height="48" viewBox="0 0 100 100" fill="none">
+          <path d="M15 85c15-5 25-25 35-40 5-8 15-15 25-20" stroke="currentColor" stroke-width="6" stroke-linecap="round" />
+          <path d="m60 35 15-10-5 17" stroke="#B85C38" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span class="logo-text">Signal <span class="amp">&amp;</span> Friction</span>
+      </div>
+      <div class="tag-badge">🔒 Zero-Cloud sandbox protocol</div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-body">
+      <div class="eyebrow">Revenue Friction Diagnostic</div>
+      <h1 class="title">One Signal. One Friction.<br><em>One Decision.</em></h1>
+      <p class="description">
+        Systematically identifying where conversion leaks and mending the cognitive load vectors draining B2B SaaS revenue.
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-item">
+        <span class="footer-label">Methodology</span>
+        <span class="footer-value">Behavioral System Design</span>
+      </div>
+      <div class="footer-item">
+        <span class="footer-label">Delivery</span>
+        <span class="footer-value">72-Hour Private Brief</span>
+      </div>
+      <div class="footer-item">
+        <span class="footer-label">Operations</span>
+        <span class="footer-value">100% Asynchronous</span>
+      </div>
+      <div class="footer-item">
+        <span class="footer-label">Platform</span>
+        <span class="footer-value">signal-and-friction.com</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
