@@ -1126,11 +1126,11 @@ export default function PersonalFinanceCenter() {
                     </div>
                   </div>
 
-                  {/* Uruguay Card — Phase 3 */}
+                  {/* Uruguay Card — Phase 2 */}
                   <div className="border border-[#D4A853]/20 bg-[#D4A853]/[0.03] p-5 rounded space-y-3">
                     <div className="flex justify-between items-center text-xs font-mono border-b border-[#D4A853]/8 pb-2">
                       <span className="text-[#D4A853] font-bold">Uruguay 🇺🇾</span>
-                      <span className="text-[#9A8F82]">Phase 3 · 0% Foreign Income</span>
+                      <span className="text-[#9A8F82]">Phase 2 · 0% Foreign Income</span>
                     </div>
                     <div className="space-y-1.5 font-mono text-xs text-[#9A8F82]">
                       <div className="flex justify-between">
@@ -1151,29 +1151,29 @@ export default function PersonalFinanceCenter() {
                   </div>
                 </div>
 
-                {/* Phase 3 Roadmap Comparison */}
+                {/* Phase 2 Roadmap Comparison */}
                 <div className="border border-[#D4A853]/8 bg-black/30 p-4 rounded font-mono text-xs">
                   <div className="text-[#D4A853] uppercase tracking-wider mb-3 font-bold">Phase Roadmap: Tax Optimization Path</div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <div className="flex items-center gap-2 px-3 py-2 border border-[#5C9A6B]/20 bg-[#5C9A6B]/5 rounded">
-                      <span className="text-[#5C9A6B] font-bold">Phase 1–2</span>
+                      <span className="text-[#5C9A6B] font-bold">Phase 1</span>
                       <span className="text-[#9A8F82]">Bulgaria · 10% flat</span>
                     </div>
                     <span className="text-[#D4A853]">→</span>
                     <div className="flex items-center gap-2 px-3 py-2 border border-[#D4A853]/30 bg-[#D4A853]/5 rounded">
-                      <span className="text-[#D4A853] font-bold">Phase 3 · Primary</span>
+                      <span className="text-[#D4A853] font-bold">Phase 2 · Primary</span>
                       <span className="text-[#9A8F82]">Uruguay 🇺🇾 · 0% (11yr)</span>
                     </div>
                     <span className="text-[#9A8F82]">→</span>
                     <div className="flex items-center gap-2 px-3 py-2 border border-[#9A8F82]/10 bg-white/[0.01] rounded">
-                      <span className="text-[#9A8F82] font-bold">Phase 3 · Backup</span>
-                      <span className="text-[#7A6F65]">Georgia · 1% turnover</span>
+                      <span className="text-[#9A8F82] font-bold">Backup</span>
+                      <span className="text-[#7A6F65]">Andorra · 10% flat</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="border border-[#D4A853]/8 bg-black/40 p-4 rounded text-xs font-mono text-[#9A8F82] leading-relaxed">
-                  *Note: Bulgaria operates a flat 10% corporate income tax (Phase 1–2 base). Uruguay offers 0% tax on foreign-source income for 11 years under the Tax Holiday for new residents — the elected Phase 3 primary jurisdiction. Georgia offers a 1% turnover tax for Virtual Zone companies as a backup option.
+                  *Note: Bulgaria is the Phase 1 base (10% flat). Uruguay is the elected Phase 2 destination — 0% on foreign-source income for 11 years (Tax Holiday for new residents). Trigger: $15K MRR sustained 3 months. Andorra (10% flat) is the backup if needed.
                 </div>
               </div>
 

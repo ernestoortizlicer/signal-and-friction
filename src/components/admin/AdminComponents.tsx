@@ -214,7 +214,7 @@ export function RevenueProgressBar({
       </div>
       <div className="flex justify-between font-mono text-xs text-[#7A6F65]">
         <span>{displayPct}% complete</span>
-        <span>Phase 3: UAE 🇦🇪</span>
+        <span>Phase 2: Uruguay 🇺🇾</span>
       </div>
     </div>
   );

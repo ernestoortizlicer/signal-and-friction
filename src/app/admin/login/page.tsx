@@ -85,10 +85,10 @@ export default function AdminLogin() {
         S&amp;F · OPS
       </div>
       <div className="absolute bottom-4 left-5 font-mono text-xs text-[#2A2520] tracking-[0.15em] select-none">
-        UAE Free Zone
+        Montevideo, Uruguay
       </div>
       <div className="absolute bottom-4 right-5 font-mono text-xs text-[#D4A853]/20 tracking-[0.15em] select-none">
-        PHASE 3
+        PHASE 2
       </div>
 
       <motion.div
@@ -345,7 +345,7 @@ export default function AdminLogin() {
           {/* Footer */}
           <div className="border-t border-[#D4A853]/6 px-5 py-3 text-center">
             <span className="font-mono text-xs text-[#3A3530] tracking-[0.2em] uppercase">
-              Signal &amp; Friction · Classified Systems · Phase 3 · UAE 🇦🇪
+              Signal &amp; Friction · Classified Systems · Phase 2 · Uruguay 🇺🇾
             </span>
           </div>
         </div>

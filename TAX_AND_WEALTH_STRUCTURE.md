@@ -5,9 +5,9 @@
 
 ---
 
-## ⚡ PHASE 3 VERDICT — UPDATED 2026-06-20
+## ⚡ PHASE 2 VERDICT — UPDATED 2026-06-20
 
-**PHASE 3 DESTINATION: URUGUAY (Montevideo) 🇺🇾**
+**PHASE 2 DESTINATION: URUGUAY (Montevideo) 🇺🇾**
 
 After a 21-agent Socratic debate evaluating 9 jurisdictions, Uruguay wins unanimously:
 - **0% tax on all foreign-source income** for 11 years (Uruguay Tax Holiday for new residents)
@@ -22,7 +22,7 @@ After a 21-agent Socratic debate evaluating 9 jurisdictions, Uruguay wins unanim
 **Backup 1:** Andorra (10% flat, near Barcelona, Spanish-speaking)
 **Backup 2:** Cyprus (0% dividends non-dom 17yr, Mediterranean, EU)
 
-**Full strategy:** See `PHASE3_GLOBAL_STRATEGY.md`
+**Full strategy:** See `PHASE2_GLOBAL_STRATEGY.md`
 
 ---
 
@@ -31,7 +31,7 @@ After a 21-agent Socratic debate evaluating 9 jurisdictions, Uruguay wins unanim
 | Variable | Status |
 |---|---|
 | Primary residence | Bulgaria (Phase 1 active) |
-| Phase 3 destination | **Uruguay (Montevideo)** — decided 2026-06-20 |
+| Phase 2 destination | **Uruguay (Montevideo)** — decided 2026-06-20 |
 | Business entity | Signal & Friction LLC (Wyoming, USA) |
 | Tax filing | Bulgarian flat 10% personal income |
 | Stripe account | **LIVE** — 12 payment links active |
@@ -84,7 +84,7 @@ Saving vs. US W2:      $59,400/year
 
 ---
 
-## 3. OPTIMAL STRUCTURE — PHASE 3 (Year 2+, Uruguay)
+## 3. OPTIMAL STRUCTURE — PHASE 2 (Year 2+, Uruguay)
 
 ### Uruguay Personal Residency → 0% Foreign Income Tax
 
@@ -111,7 +111,7 @@ CLIENT (Global SaaS / Founder) → Stripe
   - Files FBAR if USD accounts > $10K
 ```
 
-**Effective Rate at $500K+ Revenue (Phase 3):**
+**Effective Rate at $500K+ Revenue (Phase 2):**
 ```
 Wyoming LLC Revenue:   $500,000
 US Entity-Level Tax:   $0 (pass-through, foreign-owned)
@@ -128,7 +128,7 @@ Annual savings:        $50,000
 
 **Migration Trigger:** $15K MRR sustained 3 months, OR $40K in savings to cover relocation + 6-month runway
 
-**Previous Phase 3 (UAE):** SUPERSEDED. UAE was hot desert climate, Arabic culture — poor fit.
+**Previous "Phase 3" label (UAE):** SUPERSEDED. UAE was hot desert climate, Arabic culture — poor fit. Now correctly labeled Phase 2: Uruguay.
 **Previous Phase 2 (Hong Kong):** SUPERSEDED. Uruguay + Wyoming LLC is simpler and achieves 0% (vs HK's 0% on offshore but with more compliance overhead).
 
 ---
