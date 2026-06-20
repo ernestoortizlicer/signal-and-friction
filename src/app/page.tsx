@@ -218,8 +218,8 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#22C55E] pulse-cyan" style={{ boxShadow: "0 0 6px rgba(34,197,94,0.5)" }} />
-            <span className="font-mono text-[0.5rem] text-[#22C55E]/60 tracking-[0.15em] uppercase">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#5C9A6B] pulse-cyan" style={{ boxShadow: "0 0 6px rgba(92,154,107,0.5)" }} />
+            <span className="font-mono text-[0.5rem] text-[#5C9A6B]/60 tracking-[0.15em] uppercase">
               Online
             </span>
           </div>
@@ -236,7 +236,7 @@ export default function Home() {
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="flex-1 max-w-lg space-y-6 animate-pulse-slow"
+            className="flex-1 max-w-lg space-y-6"
           >
             <div className="space-y-2">
               <div className="font-mono text-[0.5rem] text-[#D4A853]/40 tracking-[0.4em] uppercase">
@@ -307,7 +307,7 @@ export default function Home() {
               <div className="border-b border-[#D4A853]/8 px-5 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1.5">
-                    <div className="w-[7px] h-[7px] rounded-full bg-[#22C55E]" />
+                    <div className="w-[7px] h-[7px] rounded-full bg-[#5C9A6B]" />
                     <div className="w-[7px] h-[7px] rounded-full bg-[#D4A853]/60 animate-ping" />
                     <div className="w-[7px] h-[7px] rounded-full bg-[#6A5F55]/40" />
                   </div>
@@ -315,9 +315,8 @@ export default function Home() {
                     {currentStep.code}
                   </span>
                 </div>
-                <span className="font-mono text-[0.55rem] text-[#6A5F55] tabular-nums">
-                  Phase {step}
-                  <span className="text-[#2A2218]">/</span>5
+                <span className="font-mono text-[0.55rem] text-[#9A8F82] tabular-nums">
+                  Step {step} of 5
                 </span>
               </div>
 
@@ -355,12 +354,16 @@ export default function Home() {
                           className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#2A2218] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
                           style={{ caretColor: "#D4A853" }}
                         />
+                        <div className="font-mono text-[0.5rem] text-[#9A8F82]/60 tracking-wide flex items-center gap-1.5">
+                          <span className="w-1 h-1 rounded-full bg-[#5C9A6B]/50" />
+                          Join 50+ B2B SaaS founders who have diagnosed their funnel.
+                        </div>
                         <button
                           type="button"
                           onClick={nextStep}
                           className="w-full py-3 border border-[#D4A853]/20 text-[#D4A853] hover:bg-[#D4A853]/5 active:bg-[#D4A853]/10 transition-all duration-200 font-mono text-[0.6rem] uppercase tracking-[0.25em] cursor-pointer"
                         >
-                          Proceed →
+                          Scan My Funnel →
                         </button>
                       </motion.div>
                     )}
@@ -524,13 +527,17 @@ export default function Home() {
                             className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#2A2218] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
                             style={{ caretColor: "#D4A853" }}
                           />
-                          <div className="mt-2 font-mono text-[0.5rem] text-[#2A2218] tracking-wide">
-                            Report credentials delivered to this address. No marketing spam.
+                          <div className="mt-2 font-mono text-[0.5rem] text-[#9A8F82]/50 tracking-wide">
+                            Results in 72h. No marketing spam. No calls required.
                           </div>
+                        </div>
+                        <div className="border border-[#D4A853]/10 bg-[#D4A853]/[0.03] px-3 py-2 font-mono text-[0.5rem] text-[#9A8F82]/70 leading-relaxed flex items-center gap-2">
+                          <span className="text-[#D4A853]">⚑</span>
+                          20% growth guarantee or full refund via Stripe. 72h async. Zero sales calls.
                         </div>
                         <div className="flex gap-px">
                           <button type="button" disabled={loading} onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#6A5F55] hover:text-[#9A8F82] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer disabled:opacity-30">
+                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#9A8F82] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer disabled:opacity-30">
                             ← Back
                           </button>
                           <button
@@ -544,7 +551,7 @@ export default function Home() {
                                 Executing...
                               </span>
                             ) : (
-                              "Execute Diagnostic"
+                              "Find My Friction Point →"
                             )}
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 hover:opacity-100" style={{ animation: "scan-sweep 2s linear infinite" }} />
                           </button>
@@ -561,7 +568,7 @@ export default function Home() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="mt-4 py-2 px-3 border-l-2 border-[#EF4444]/50 bg-[#EF4444]/5 font-mono text-[0.6rem] text-[#EF4444]/80 tracking-wide"
+                      className="mt-4 py-2 px-3 border-l-2 border-[#C85C5C]/50 bg-[#C85C5C]/5 font-mono text-[0.6rem] text-[#C85C5C]/80 tracking-wide"
                     >
                       ERR: {errorMsg}
                     </motion.div>
@@ -603,7 +610,7 @@ export default function Home() {
             {/* Visitors Slider */}
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-[#807870] uppercase">Monthly Unique Visitors:</span>
+                <span className="text-[#9A8F82] uppercase">Monthly Unique Visitors:</span>
                 <span className="text-[#D4A853] font-bold">{(calcVisitors).toLocaleString()}</span>
               </div>
               <input
@@ -625,7 +632,7 @@ export default function Home() {
             {/* Current Conversion Rate Slider */}
             <div className="space-y-2 border-t border-[#D4A853]/8 pt-4">
               <div className="flex justify-between">
-                <span className="text-[#807870] uppercase">Current Conversion Rate:</span>
+                <span className="text-[#9A8F82] uppercase">Current Conversion Rate:</span>
                 <span className="text-[#D4A853] font-bold">{calcConvRate.toFixed(1)}%</span>
               </div>
               <input
@@ -647,7 +654,7 @@ export default function Home() {
             {/* Customer LTV Slider */}
             <div className="space-y-2 border-t border-[#D4A853]/8 pt-4">
               <div className="flex justify-between">
-                <span className="text-[#807870] uppercase">Customer LTV (ACV):</span>
+                <span className="text-[#9A8F82] uppercase">Customer LTV (ACV):</span>
                 <span className="text-[#D4A853] font-bold">${calcLtv} USD</span>
               </div>
               <input
@@ -675,7 +682,7 @@ export default function Home() {
                 <span className="text-[#9A8F82]">Current Monthly Revenue:</span>
                 <span className="text-white font-bold">${Math.round(calcVisitors * (calcConvRate / 100) * calcLtv).toLocaleString()}</span>
               </div>
-              <div className="flex justify-between text-[#22C55E]">
+              <div className="flex justify-between text-[#5C9A6B]">
                 <span>Projected Revenue (+20%):</span>
                 <span className="font-bold">${Math.round(calcVisitors * ((calcConvRate * 1.2) / 100) * calcLtv).toLocaleString()}</span>
               </div>
@@ -689,7 +696,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="border border-[#D4A853]/25 bg-[#0A0908] p-3 rounded text-[0.55rem] text-[#807870] leading-relaxed">
+            <div className="border border-[#D4A853]/25 bg-[#0A0908] p-3 rounded text-[0.55rem] text-[#9A8F82] leading-relaxed">
               Calculations are based on a 20% relative increase in your current conversion rate (e.g. from {calcConvRate.toFixed(1)}% to {(calcConvRate * 1.2).toFixed(2)}%). Backed by the S&amp;F Results-Based Guarantee.
             </div>
           </div>
@@ -722,7 +729,7 @@ export default function Home() {
             <tbody className="divide-y divide-white/5 text-[#9A8F82]">
               <tr>
                 <td className="p-4 font-bold text-white uppercase text-[0.58rem]">Risk Allocation</td>
-                <td className="p-4 text-emerald-400 font-bold">100% Refundable via Stripe if metrics fail.</td>
+                <td className="p-4 text-[#5C9A6B] font-bold">100% Refundable via Stripe if metrics fail.</td>
                 <td className="p-4">Pay upfront with zero performance accountability.</td>
               </tr>
               <tr>

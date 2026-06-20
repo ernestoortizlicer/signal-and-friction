@@ -235,7 +235,7 @@ export default function SingaporeClient() {
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="flex-1 max-w-lg space-y-6 animate-pulse-slow"
+            className="flex-1 max-w-lg space-y-6"
           >
             <div className="space-y-2">
               <div className="font-mono text-xs text-[#D4A853]/40 tracking-[0.4em] uppercase">
@@ -367,12 +367,16 @@ export default function SingaporeClient() {
                           className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#2A2218] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
                           style={{ caretColor: "#D4A853" }}
                         />
+                        <div className="font-mono text-xs text-[#9A8F82]/60 tracking-wide flex items-center gap-1.5">
+                          <span className="w-1 h-1 rounded-full bg-[#5C9A6B]/50" />
+                          Trusted by APAC SaaS founders in SG, AU, and MY.
+                        </div>
                         <button
                           type="button"
                           onClick={nextStep}
                           className="w-full py-3 border border-[#D4A853]/20 text-[#D4A853] hover:bg-[#D4A853]/5 active:bg-[#D4A853]/10 transition-all duration-200 font-mono text-xs uppercase tracking-[0.25em] cursor-pointer"
                         >
-                          Proceed →
+                          Scan My APAC Funnel →
                         </button>
                       </motion.div>
                     )}
@@ -536,9 +540,13 @@ export default function SingaporeClient() {
                             className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#2A2218] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
                             style={{ caretColor: "#D4A853" }}
                           />
-                          <div className="mt-2 font-mono text-xs text-[#7A6F65] tracking-wide">
-                            Report credentials delivered to this address. No marketing spam.
+                          <div className="mt-2 font-mono text-xs text-[#9A8F82]/50 tracking-wide">
+                            APAC results in 72h. PDPA compliant. No sales calls.
                           </div>
+                        </div>
+                        <div className="border border-[#D4A853]/10 bg-[#D4A853]/[0.03] px-3 py-2 font-mono text-xs text-[#9A8F82]/70 leading-relaxed flex items-center gap-2">
+                          <span className="text-[#D4A853]">⚑</span>
+                          SGD $2,700 guarantee or full Stripe refund. 72h async. Zero sales calls.
                         </div>
                         <div className="flex gap-px">
                           <button type="button" disabled={loading} onClick={prevStep}
@@ -556,7 +564,7 @@ export default function SingaporeClient() {
                                 Executing...
                               </span>
                             ) : (
-                              "Execute Diagnostic"
+                              "Find My APAC Friction →"
                             )}
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 hover:opacity-100" style={{ animation: "scan-sweep 2s linear infinite" }} />
                           </button>
@@ -573,7 +581,7 @@ export default function SingaporeClient() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="mt-4 py-2 px-3 border-l-2 border-[#EF4444]/50 bg-[#EF4444]/5 font-mono text-xs text-[#EF4444]/80 tracking-wide"
+                      className="mt-4 py-2 px-3 border-l-2 border-[#C85C5C]/50 bg-[#C85C5C]/5 font-mono text-xs text-[#C85C5C]/80 tracking-wide"
                     >
                       ERR: {errorMsg}
                     </motion.div>

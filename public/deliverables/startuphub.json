@@ -1,0 +1,38 @@
+{
+  "clientKey": "startuphub",
+  "clientName": "StartupHub",
+  "date": "June 18, 2026",
+  "consultant": "Signal & Friction",
+  "loomUrl": "https://www.loom.com/embed/placeholder-startuphub",
+  "segment": "high_ticket",
+  "diagnosis": {
+    "signal": "72% of high-intent visitors reach the billing page, yet only 9% complete payment. Session recordings show users hovering over the credit card field for an average of 4.1 minutes before exiting. The drop-off is not price rejection — it is security anxiety at the point of financial commitment.",
+    "friction": {
+      "mechanism": "Trust Deficit at Billing Gate",
+      "rootCause": "The checkout page lacks credibility signals at the exact moment users must enter financial credentials. No SSL badge, no refund assurance copy, no third-party payment seal is visible above the fold. The cognitive threat response fires before the value exchange completes."
+    },
+    "decisions": [
+      {
+        "type": "A — Conservative",
+        "label": "Add trust signals above the billing fold",
+        "action": "Insert a single-line refund guarantee, Stripe security badge, and one social proof micro-quote directly above the payment button.",
+        "reasoning": "Security assurances at the point of commitment directly counter the threat response. Users who see these signals complete checkout at 40-60% higher rates (Baymard Institute, 2025).",
+        "tradeoff": "Requires copywriting and design coordination but zero engineering. Can ship in under 48 hours."
+      },
+      {
+        "type": "B — Aggressive",
+        "label": "Defer credit card until after value delivery",
+        "action": "Restructure the onboarding to collect email only upfront. Send a 7-day free trial link. Present billing page on day 8 after the user has experienced the product.",
+        "reasoning": "Eliminates the cold-commitment barrier entirely. Value precedes financial risk, inverting the trust equation in the user's favor.",
+        "tradeoff": "Requires backend engineering for trial gating. Revenue is delayed 7 days per user."
+      },
+      {
+        "type": "C — Lateral",
+        "label": "Replace credit card with PayPal or Stripe Link",
+        "action": "Add one-click wallet options (PayPal, Stripe Link, Apple Pay) as the primary billing path, relegating manual card entry to secondary.",
+        "reasoning": "Wallet-based payments inherit existing trust and remove manual entry anxiety. Checkout completion rates increase 28% on average with Apple Pay/PayPal alternatives.",
+        "tradeoff": "Minor revenue share cost from PayPal. Stripe Link has no additional fee."
+      }
+    ]
+  }
+}
