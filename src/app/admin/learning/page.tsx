@@ -478,7 +478,7 @@ export default function LearningDashboard() {
   }).join(" ");
 
   return (
-    <div className="min-h-screen bg-[#0A0908] text-[#F5F0EB] p-6 space-y-8 font-sans relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#0A0908] text-[#F5F0EB] p-6 space-y-8 font-mono relative overflow-x-hidden">
 
       {/* Background Grid */}
       <div className="absolute inset-0 pointer-events-none" style={{
@@ -612,7 +612,7 @@ export default function LearningDashboard() {
                         </div>
 
                         <div className="pt-3 border-t border-[#2A2218] flex justify-between items-center mt-3">
-                          <span className="text-xs font-mono text-[#7A6F65] uppercase">
+                          <span className="text-xs font-mono text-[#9A8F82] uppercase">
                             {draft.draft_number === 1 ? "Product Strategist" : draft.draft_number === 2 ? "Behavioral Scientist" : "Linguistic Architect"}
                           </span>
                           <div className={`w-3 h-3 rounded-full border ${
@@ -648,7 +648,7 @@ export default function LearningDashboard() {
                           </p>
                         </div>
                         <div className="pt-3 border-t border-[#2A2218] flex justify-between items-center mt-3">
-                          <span className="text-xs font-mono text-[#7A6F65] uppercase">
+                          <span className="text-xs font-mono text-[#9A8F82] uppercase">
                             {num === 1 ? "Product Strategist" : num === 2 ? "Behavioral Scientist" : "Linguistic Architect"}
                           </span>
                           <div className={`w-3 h-3 rounded-full border ${
@@ -751,11 +751,11 @@ export default function LearningDashboard() {
               </div>
             </div>
 
-            {/* Right: Engine Config */}
+            {/* Right: Engine Config + Mastery Index */}
             <div className="xl:col-span-4 space-y-6">
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-6 rounded-2xl space-y-4">
                 <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-2">Socratic Engine Config</h3>
-                <div className="space-y-3 font-mono text-xs">
+                <div className="space-y-3 text-xs">
                   <div className="flex justify-between">
                     <span className="text-[#9A8F82]">Active Agents:</span>
                     <span className="text-white">3 (Strategist, Scientist, Architect)</span>
@@ -769,9 +769,38 @@ export default function LearningDashboard() {
                     <span className="text-[#D4A853]">96.8 / 100</span>
                   </div>
                 </div>
-                <p className="text-xs text-[#9A8F82] font-mono leading-relaxed pt-2 border-t border-[#D4A853]/8">
+                <p className="text-xs text-[#9A8F82] leading-relaxed pt-2 border-t border-[#D4A853]/8">
                   The Socratic Draft Engine synthesizes multiple expert viewpoints to construct high-status conversion analysis documents.
                 </p>
+              </div>
+
+              {/* Mastery Index */}
+              <div className="border border-[#D4A853]/15 bg-[#110F0D] p-6 rounded-2xl space-y-4">
+                <span className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase block">
+                  Mastery Index
+                </span>
+                <div className="space-y-3">
+                  {DOMAINS.map((d) => (
+                    <div key={d.name}>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-[#9A8F82]">{d.name}</span>
+                        <span className="text-[#D4A853]">{d.score}%</span>
+                      </div>
+                      <div className="h-1 bg-[#1A1815] rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-[#D4A853] rounded-full"
+                          style={{ width: `${d.score}%`, opacity: 0.6 + d.score / 500 }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t border-[#D4A853]/8 pt-3 flex justify-between items-center text-xs">
+                  <span className="text-[#9A8F82]">Overall Mastery</span>
+                  <span className="text-[#D4A853] font-bold">
+                    {Math.round(DOMAINS.reduce((a, d) => a + d.score, 0) / DOMAINS.length)}%
+                  </span>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -876,7 +905,7 @@ export default function LearningDashboard() {
                           value={hlInput}
                           onChange={(e) => setHlInput(e.target.value)}
                           placeholder="Write your diagnostic strategy. Focus on how technical constraints interact with behavioral friction..."
-                          className="w-full bg-[#0A0908] border border-[#D4A853]/8 focus:border-[#D4A853] focus:outline-none p-3 text-xs rounded-md h-20 text-[#F5F0EB] font-sans"
+                          className="w-full bg-[#0A0908] border border-[#D4A853]/8 focus:border-[#D4A853] focus:outline-none p-3 text-xs rounded-md h-20 text-[#F5F0EB] font-mono"
                         />
                       </div>
 
@@ -979,7 +1008,7 @@ export default function LearningDashboard() {
                                       <span className={`font-mono text-xs ${art.categoryColor} uppercase block mb-1`}>Article 0{art.num} — {art.category}</span>
                                       <h5 className="text-xs font-bold text-white font-mono leading-snug">{art.title}</h5>
                                       {expandedArticle === art.num ? (
-                                        <p className="text-sm text-[#F5F0EB] mt-1.5 leading-relaxed font-sans">{art.body}</p>
+                                        <p className="text-sm text-[#F5F0EB] mt-1.5 leading-relaxed">{art.body}</p>
                                       ) : (
                                         <p className="text-xs text-[#9A8F82] mt-1.5 line-clamp-3">{art.summary}</p>
                                       )}
@@ -1039,8 +1068,8 @@ export default function LearningDashboard() {
                 <span className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase block self-start mb-4">
                   03 — Cognitive Evolution Radar
                 </span>
-                <div className="relative">
-                  <svg width={radarWidth} height={radarHeight} className="overflow-visible">
+                <div className="relative overflow-x-auto max-w-full flex justify-center">
+                  <svg width={radarWidth} height={radarHeight} className="overflow-visible flex-shrink-0">
                     {[1, 2, 3, 4].map((level) => {
                       const points = radarDomains.map((_, idx) => {
                         const coords = getWebCoordinates(idx, level);
