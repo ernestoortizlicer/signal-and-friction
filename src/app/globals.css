@@ -134,6 +134,10 @@
     box-shadow: 0 0 15px rgba(107,143,94,0.1), inset 0 0 15px rgba(107,143,94,0.03);
   }
 
+  .glow-border-red {
+    box-shadow: 0 0 15px rgba(200,92,92,0.1), inset 0 0 15px rgba(200,92,92,0.03);
+  }
+
   /* ── Glow accent (buttons / CTAs) ── */
   .glow-accent {
     box-shadow: 0 0 20px rgba(212,168,83,0.25), 0 0 40px rgba(212,168,83,0.1);
