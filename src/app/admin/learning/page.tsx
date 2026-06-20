@@ -148,7 +148,7 @@ const CHALLENGE_ELEVATIONS: Record<string, {
   tiktok: {
     gaps: [
       { label: "Cognitive Load Gap", current: 40, target: 85, colorClass: "text-[#C85C5C]", barColor: "from-[#C85C5C] to-[#D4A853]" },
-      { label: "Behavioral Science Gap", current: 45, target: 90, colorClass: "text-amber-400", barColor: "from-amber-500 to-[#D4A853]" }
+      { label: "Behavioral Science Gap", current: 45, target: 90, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" }
     ],
     studyPlan: [
       { step: "01", title: "Mobile Payload Weight Reduction", desc: "Bundle split and lazy load heavy assets to ensure the initial JS chunk is under 150KB for poor 3G connections." },
@@ -167,7 +167,7 @@ const CHALLENGE_ELEVATIONS: Record<string, {
       {
         num: 2,
         category: "Behavior",
-        categoryColor: "text-amber-400",
+        categoryColor: "text-[#D4A853]",
         title: "SMS Gateway Resilience Protocols in Developing Markets",
         summary: "Handling delayed OTP verification codes using local transactional SMS routes.",
         body: "Delayed OTP codes lead to users clicking 'Resend' repeatedly, compounding gateway queues. Implementing smart client-side countdowns and choosing top-tier regional SMS aggregators (e.g., Twilio local routes) prevents activation failure."
@@ -184,7 +184,7 @@ const CHALLENGE_ELEVATIONS: Record<string, {
   },
   figma: {
     gaps: [
-      { label: "Cognitive Load Gap", current: 55, target: 90, colorClass: "text-amber-400", barColor: "from-amber-500 to-[#D4A853]" },
+      { label: "Cognitive Load Gap", current: 55, target: 90, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" },
       { label: "Pricing Logic Gap", current: 60, target: 95, colorClass: "text-[#5C9A6B]", barColor: "from-[#5C9A6B] to-[#D4A853]" }
     ],
     studyPlan: [
@@ -196,7 +196,7 @@ const CHALLENGE_ELEVATIONS: Record<string, {
       {
         num: 1,
         category: "Cognitive Load",
-        categoryColor: "text-amber-400",
+        categoryColor: "text-[#D4A853]",
         title: "B2B Checkout Optimization & Deferring Tax Friction",
         summary: "Why demanding corporate tax ID numbers during checkout increases cart abandonment.",
         body: "Demanding VAT/EIN registration numbers mid-checkout forces corporate buyers to search internal documents, increasing checkout time and exit rates. Moving tax profile verification to the post-purchase setup increases immediate conversion by 22%."
@@ -222,7 +222,7 @@ const CHALLENGE_ELEVATIONS: Record<string, {
   vercel: {
     gaps: [
       { label: "Value Deficit Gap", current: 30, target: 85, colorClass: "text-[#C85C5C]", barColor: "from-[#C85C5C] to-[#D4A853]" },
-      { label: "Trust Deficit Gap", current: 50, target: 90, colorClass: "text-amber-400", barColor: "from-amber-500 to-[#D4A853]" }
+      { label: "Trust Deficit Gap", current: 50, target: 90, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" }
     ],
     studyPlan: [
       { step: "01", title: "Reciprocal Value Offset Design", desc: "Explicitly reward opting in to telemetry by unlocking a premium dashboard feature (e.g. 10% faster load caching)." },
@@ -241,7 +241,7 @@ const CHALLENGE_ELEVATIONS: Record<string, {
       {
         num: 2,
         category: "Trust Deficit",
-        categoryColor: "text-amber-400",
+        categoryColor: "text-[#D4A853]",
         title: "Privacy-First Analytics Telemetry & Data Sovereignty",
         summary: "Gaining technical developer trust through cryptographic transparency.",
         body: "Developers are highly suspicious of telemetry trackers. Demonstrating that all ingested data points are salted and hashed client-side, with full adherence to GDPR, removes corporate liability fears."
@@ -259,7 +259,7 @@ const CHALLENGE_ELEVATIONS: Record<string, {
   saas_asia: {
     gaps: [
       { label: "Tax & Compliance Gap", current: 50, target: 95, colorClass: "text-[#C85C5C]", barColor: "from-[#C85C5C] to-[#D4A853]" },
-      { label: "Technical Systems Gap", current: 40, target: 90, colorClass: "text-amber-400", barColor: "from-amber-500 to-[#D4A853]" }
+      { label: "Technical Systems Gap", current: 40, target: 90, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" }
     ],
     studyPlan: [
       { step: "01", title: "Sovereign Acquirer Routing Setup", desc: "Establish local acquiring rails in Singapore (e.g., DBS/UOB card processors) to bypass international settlement delays and 15%+ decline rates." },
@@ -278,7 +278,7 @@ const CHALLENGE_ELEVATIONS: Record<string, {
       {
         num: 2,
         category: "Law",
-        categoryColor: "text-amber-400",
+        categoryColor: "text-[#D4A853]",
         title: "SaaS Compliance Protocols under SG MAS Guidelines",
         summary: "Mastering technology risk management (TRM) and outsourcing directives defined by the Monetary Authority of Singapore.",
         body: "SaaS architectures operating in Singapore that serve fintechs, financial consultancies, or handle high-frequency payment rails fall within the advisory scope of the Monetary Authority of Singapore (MAS) Guidelines on Outsourcing and Technology Risk Management (TRM)."
@@ -294,6 +294,40 @@ const CHALLENGE_ELEVATIONS: Record<string, {
     ]
   }
 };
+
+function parseInlineMd(text: string): React.ReactNode[] {
+  const result: React.ReactNode[] = [];
+  const regex = /(\*\*(.+?)\*\*|\*(.+?)\*)/g;
+  let lastIdx = 0;
+  let match;
+  let key = 0;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIdx) result.push(<span key={key++}>{text.slice(lastIdx, match.index)}</span>);
+    if (match[0].startsWith("**")) {
+      result.push(<strong key={key++} className="text-[#F5F0EB] font-semibold">{match[2]}</strong>);
+    } else {
+      result.push(<em key={key++} className="text-[#D4A853] not-italic">{match[3]}</em>);
+    }
+    lastIdx = match.index + match[0].length;
+  }
+  if (lastIdx < text.length) result.push(<span key={key++}>{text.slice(lastIdx)}</span>);
+  return result;
+}
+
+function InlineMarkdown({ text, className }: { text: string; className?: string }) {
+  const lines = text.split("\n");
+  return (
+    <span className={className}>
+      {lines.map((line, li) => {
+        const hMatch = line.match(/^#{1,3}\s+(.+)/);
+        if (hMatch) {
+          return <span key={li} className="block text-[#F5F0EB] font-bold text-xs uppercase tracking-wider mt-1.5">{hMatch[1]}</span>;
+        }
+        return <span key={li} className="block">{parseInlineMd(line)}</span>;
+      })}
+    </span>
+  );
+}
 
 export default function LearningDashboard() {
   const [activeTab, setActiveTab] = useState<'socratic' | 'hyper_leap'>('socratic');
@@ -546,7 +580,7 @@ export default function LearningDashboard() {
                       <div
                         key={draft.id}
                         onClick={() => handleSelectDraft(draft.draft_number)}
-                        className={`p-4 border rounded-xl transition-all duration-300 cursor-pointer flex flex-col justify-between h-80 ${
+                        className={`p-4 border rounded-xl transition-all duration-300 cursor-pointer flex flex-col justify-between min-h-[200px] ${
                           selectedDraftId === draft.draft_number
                             ? "bg-[#D4A853]/5 border-[#D4A853]/40"
                             : "bg-[#110F0D]/20 border-[#2A2218] hover:border-[#D4A853]/25"
@@ -566,7 +600,7 @@ export default function LearningDashboard() {
                                     handleRating(draft.id, star);
                                   }}
                                   className={`text-xs cursor-pointer transition-colors ${
-                                    star <= (ratings[draft.id] || 0) ? "text-[#F59E0B]" : "text-[#7A6F65]"
+                                    star <= (ratings[draft.id] || 0) ? "text-[#D4A853]" : "text-[#7A6F65]"
                                   }`}
                                 >
                                   ★
@@ -574,9 +608,7 @@ export default function LearningDashboard() {
                               ))}
                             </div>
                           </div>
-                          <p className="text-sm text-[#9A8F82] leading-relaxed font-mono whitespace-pre-line">
-                            {draft.content}
-                          </p>
+                          <InlineMarkdown text={draft.content} className="text-sm text-[#9A8F82] leading-relaxed font-mono" />
                         </div>
 
                         <div className="pt-3 border-t border-[#2A2218] flex justify-between items-center mt-3">
@@ -594,7 +626,7 @@ export default function LearningDashboard() {
                       <div
                         key={num}
                         onClick={() => handleSelectDraft(num)}
-                        className={`p-4 border rounded-xl transition-all duration-300 cursor-pointer flex flex-col justify-between h-80 ${
+                        className={`p-4 border rounded-xl transition-all duration-300 cursor-pointer flex flex-col justify-between min-h-[200px] ${
                           selectedDraftId === num
                             ? "bg-[#D4A853]/5 border-[#D4A853]/40"
                             : "bg-[#110F0D]/20 border-[#2A2218] hover:border-[#D4A853]/25"
@@ -938,8 +970,8 @@ export default function LearningDashboard() {
                                 {elev.articles.map((art) => (
                                   <div
                                     key={art.num}
-                                    className={`p-3 border rounded-xl flex flex-col justify-between h-44 cursor-pointer transition-all ${
-                                      expandedArticle === art.num ? "border-[#D4A853] bg-[#D4A853]/10 h-auto min-h-[11rem]" : "border-[#D4A853]/8 bg-[#0A0908] hover:border-[#D4A853]/25"
+                                    className={`p-3 border rounded-xl flex flex-col justify-between min-h-[11rem] cursor-pointer transition-all ${
+                                      expandedArticle === art.num ? "border-[#D4A853] bg-[#D4A853]/10" : "border-[#D4A853]/8 bg-[#0A0908] hover:border-[#D4A853]/25"
                                     }`}
                                     onClick={() => setExpandedArticle(expandedArticle === art.num ? null : art.num)}
                                   >

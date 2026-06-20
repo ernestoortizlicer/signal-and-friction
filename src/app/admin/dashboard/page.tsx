@@ -826,6 +826,34 @@ export default function AdminDashboard() {
               {/* $1M Revenue Mission Progress */}
               <RevenueProgressBar current={(m.dealsClosed || 0) * 350} target={1000000} />
 
+              {/* 30-Day Sprint Tracker */}
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-mono text-xs text-[#D4A853]/60 tracking-[0.3em] uppercase">30-Day Sprint Tracker</span>
+                  <span className="font-mono text-xs text-[#7A6F65] border border-[#D4A853]/10 px-2 py-0.5 rounded-full">Phase 2 · $1M Path</span>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {(() => {
+                    const clients = m.dealsClosed || 0;
+                    const htMrr = (m.highTicketCount || 0) * 2000;
+                    const dwyMrr = (m.microdosingCount || 0) * 350;
+                    const mrr = htMrr + dwyMrr || clients * 350;
+                    const pctToMillion = +((mrr * 12) / 10000).toFixed(1);
+                    return [
+                      { label: "Clients Acquired", display: String(clients), accent: "text-[#5C9A6B]" },
+                      { label: "MRR", display: `$${mrr.toLocaleString()}`, accent: "text-[#D4A853]" },
+                      { label: "Cash Collected", display: `$${mrr.toLocaleString()}`, accent: "text-[#D4A853]" },
+                      { label: "% to $1M ARR", display: `${pctToMillion}%`, accent: "text-[#F5F0EB]" },
+                    ].map((card) => (
+                      <div key={card.label} className="border border-[#D4A853]/15 bg-[#110F0D] p-4">
+                        <div className="font-mono text-xs text-[#7A6F65] tracking-widest uppercase mb-2">{card.label}</div>
+                        <div className={`font-mono text-2xl font-bold ${card.accent}`}>{card.display}</div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </section>
+
               {/* Analytics Scorecard Row */}
               <section className="grid grid-cols-2 lg:grid-cols-6 gap-4">
                 {[
