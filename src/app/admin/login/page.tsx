@@ -12,7 +12,7 @@ import { supabase } from "@/lib/supabase";
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 const inputClass =
-  "w-full bg-transparent border-b border-[#2A2520] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#3D3530] focus:outline-none focus:border-[#D4A853]/70 transition-colors duration-400 font-mono tracking-wide";
+  "w-full bg-transparent border-b border-[#2A2520] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#7A6F65] focus:outline-none focus:border-[#D4A853]/70 transition-colors duration-400 font-mono tracking-wide";
 
 
 export default function AdminLogin() {
@@ -78,13 +78,13 @@ export default function AdminLogin() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_50%_at_50%_50%,rgba(212,168,83,0.05),transparent)] pointer-events-none" />
 
       {/* Corner coordinates — mission-control aesthetic */}
-      <div className="absolute top-4 left-5 font-mono text-xs text-[#2A2520] tracking-[0.2em] select-none">
+      <div className="absolute top-4 left-5 font-mono text-xs text-[#7A6F65] tracking-[0.2em] select-none">
         28.0°N · 55.2°E
       </div>
-      <div className="absolute top-4 right-5 font-mono text-xs text-[#2A2520] tracking-[0.2em] select-none">
+      <div className="absolute top-4 right-5 font-mono text-xs text-[#7A6F65] tracking-[0.2em] select-none">
         S&amp;F · OPS
       </div>
-      <div className="absolute bottom-4 right-5 font-mono text-xs text-[#D4A853]/20 tracking-[0.15em] select-none">
+      <div className="absolute bottom-4 right-5 font-mono text-xs text-[#D4A853]/70 tracking-[0.15em] select-none">
         PHASE 2
       </div>
 
@@ -105,13 +105,13 @@ export default function AdminLogin() {
                 <div className="w-[6px] h-[6px] rounded-full bg-[#D4A853]/40" />
                 <div className="w-[6px] h-[6px] rounded-full bg-[#5C9A6B]/35" />
               </div>
-              <span className="font-mono text-xs text-[#3A3530] tracking-[0.2em] uppercase">
+              <span className="font-mono text-xs text-[#7A6F65] tracking-[0.2em] uppercase">
                 Access Terminal
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-[#5C9A6B] animate-pulse" />
-              <span className="font-mono text-xs text-[#5C5550] tracking-[0.15em] uppercase">
+              <span className="font-mono text-xs text-[#7A6F65] tracking-[0.15em] uppercase">
                 Secure
               </span>
             </div>
@@ -187,7 +187,7 @@ export default function AdminLogin() {
 
               {/* Title block */}
               <div className="space-y-1.5">
-                <div className="font-mono text-xs text-[#5C5550] tracking-[0.3em] uppercase">
+                <div className="font-mono text-xs text-[#7A6F65] tracking-[0.3em] uppercase">
                   Signal &amp; Friction
                 </div>
                 <h1 className="font-serif text-[28px] font-bold text-[#F5F0EB] tracking-tight leading-none">
@@ -209,7 +209,7 @@ export default function AdminLogin() {
                   className={`flex-1 py-2.5 cursor-pointer transition-all duration-300 ${
                     mode === m
                       ? "bg-[#D4A853]/8 text-[#D4A853] border-b border-[#D4A853]/40"
-                      : "text-[#5C5550] hover:text-[#9A8F82]"
+                      : "text-[#B0A89E] hover:text-[#F5F0EB]"
                   }`}
                 >
                   {m === "password" ? "Access Key" : "Magic Link"}
@@ -341,14 +341,14 @@ export default function AdminLogin() {
 
           {/* Footer */}
           <div className="border-t border-[#D4A853]/6 px-5 py-3 text-center">
-            <span className="font-mono text-xs text-[#3A3530] tracking-[0.2em] uppercase">
+            <span className="font-mono text-xs text-[#7A6F65] tracking-[0.2em] uppercase">
               Signal &amp; Friction · Classified Systems · Phase 2
             </span>
           </div>
         </div>
 
         {/* Below-card ghost label */}
-        <div className="text-center mt-4 font-mono text-xs text-[#2A2520] tracking-[0.15em] uppercase">
+        <div className="text-center mt-4 font-mono text-xs text-[#7A6F65] tracking-[0.15em] uppercase">
           v3 · Command Center OS
         </div>
       </motion.div>

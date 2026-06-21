@@ -385,7 +385,7 @@ export default function LearningDashboard() {
       {/* Header */}
       <div className="flex flex-wrap justify-between items-start gap-3 border-b border-[#D4A853]/15 pb-4 relative z-10">
         <div>
-          <span className="font-mono text-xs text-[#D4A853]/40 tracking-[0.4em] uppercase block">
+          <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.4em] uppercase block">
             Eminence System
           </span>
           <h1 className="text-2xl font-bold tracking-tight">
@@ -415,7 +415,7 @@ export default function LearningDashboard() {
             className={`pb-3 font-mono text-xs uppercase tracking-widest border-b-2 transition-all duration-300 cursor-pointer whitespace-nowrap ${
               activeTab === tab.key
                 ? "border-[#D4A853] text-[#D4A853]"
-                : "border-transparent text-[#7A6F65] hover:text-[#9A8F82]"
+                : "border-transparent text-[#7A6F65] hover:text-[#B0A89E]"
             }`}
           >
             {tab.label}
@@ -440,7 +440,7 @@ export default function LearningDashboard() {
               {/* Scenario Selector */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase">
+                  <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase">
                     01 — Scenario Selection
                   </span>
                   <span className="font-mono text-[10px] uppercase tracking-wider text-[#C85C5C] border border-[#C85C5C]/20 px-2 py-0.5 rounded-full bg-[#C85C5C]/5">
@@ -461,7 +461,7 @@ export default function LearningDashboard() {
                       className={`p-3 border rounded-xl text-left transition-all cursor-pointer ${
                         selectedChallengeId === cs.id
                           ? "border-[#D4A853] bg-[#D4A853]/5 text-white"
-                          : "border-[#D4A853]/8 text-[#9A8F82] hover:border-[#D4A853]/20 hover:text-white"
+                          : "border-[#D4A853]/8 text-[#B0A89E] hover:border-[#D4A853]/20 hover:text-white"
                       }`}
                     >
                       <div className="text-xs font-bold leading-snug line-clamp-2">{cs.title}</div>
@@ -475,7 +475,7 @@ export default function LearningDashboard() {
 
               {/* Main Challenge Card */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-4">
-                <span className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase">
+                <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase">
                   02 — Crisis Scenario
                 </span>
                 <h3 className="text-base font-bold text-white font-serif leading-snug">{activeChallenge.title}</h3>
@@ -483,11 +483,11 @@ export default function LearningDashboard() {
                 <div className="border border-[#D4A853]/10 bg-[#0A0908] p-4 rounded-xl text-xs space-y-3">
                   <div>
                     <span className="text-[#D4A853] font-semibold block uppercase text-[10px] tracking-wider mb-1">Metrics Bottleneck</span>
-                    <p className="text-[#9A8F82] leading-relaxed">{activeChallenge.metrics}</p>
+                    <p className="text-[#B0A89E] leading-relaxed">{activeChallenge.metrics}</p>
                   </div>
                   <div className="border-t border-[#D4A853]/8 pt-3">
                     <span className="text-[#D4A853] font-semibold block uppercase text-[10px] tracking-wider mb-1">Environmental Context</span>
-                    <p className="text-[#9A8F82] leading-relaxed">{activeChallenge.context}</p>
+                    <p className="text-[#B0A89E] leading-relaxed">{activeChallenge.context}</p>
                   </div>
                 </div>
 
@@ -495,7 +495,7 @@ export default function LearningDashboard() {
                   <div className="space-y-4">
                     {/* Friction options — 2 cols max */}
                     <div>
-                      <label className="text-xs text-[#9A8F82] uppercase tracking-wider block mb-2">
+                      <label className="text-xs text-[#B0A89E] uppercase tracking-wider block mb-2">
                         Isolate friction mechanisms (select all that apply):
                       </label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -515,7 +515,7 @@ export default function LearningDashboard() {
                               className={`p-3 text-xs text-left border rounded-xl transition-all cursor-pointer leading-relaxed ${
                                 isSel
                                   ? "border-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                  : "border-[#D4A853]/8 text-[#9A8F82] hover:border-white/10"
+                                  : "border-[#D4A853]/8 text-[#B0A89E] hover:border-white/10"
                               }`}
                             >
                               {option}
@@ -527,7 +527,7 @@ export default function LearningDashboard() {
 
                     {/* Hypothesis */}
                     <div>
-                      <label className="text-xs text-[#9A8F82] uppercase tracking-wider block mb-2">
+                      <label className="text-xs text-[#B0A89E] uppercase tracking-wider block mb-2">
                         Clinical diagnostic hypothesis:
                       </label>
                       <textarea
@@ -575,7 +575,7 @@ export default function LearningDashboard() {
                       <h4 className="text-xs text-[#5C9A6B] uppercase tracking-widest font-semibold mb-1">
                         ✓ Socratic Reverse-Reveal Complete
                       </h4>
-                      <p className="text-xs text-[#9A8F82] leading-relaxed">
+                      <p className="text-xs text-[#B0A89E] leading-relaxed">
                         Hypothesis: <span className="text-white italic">&ldquo;{hlInput}&rdquo;</span>
                       </p>
                     </div>
@@ -583,28 +583,28 @@ export default function LearningDashboard() {
                     {/* Cognitive Telemetry */}
                     {coverageScore !== null && (
                       <div className="border border-[#D4A853]/15 bg-[#0A0908]/60 p-4 rounded-xl">
-                        <span className="font-mono text-[10px] text-[#D4A853]/60 uppercase tracking-widest block mb-3">
+                        <span className="font-mono text-[10px] text-[#D4A853]/70 uppercase tracking-widest block mb-3">
                           Cognitive Telemetry
                         </span>
                         <div className="grid grid-cols-3 gap-3 text-center">
                           <div>
-                            <span className="font-mono text-[10px] text-[#9A8F82] uppercase block mb-1">Velocity</span>
+                            <span className="font-mono text-[10px] text-[#B0A89E] uppercase block mb-1">Velocity</span>
                             <span className="font-serif text-xl font-bold text-[#D4A853]">{diagnosticVelocity ?? "—"}</span>
-                            <span className="font-mono text-[10px] text-[#5C5550] block">WPM</span>
+                            <span className="font-mono text-[10px] text-[#7A6F65] block">WPM</span>
                           </div>
                           <div>
-                            <span className="font-mono text-[10px] text-[#9A8F82] uppercase block mb-1">Coverage</span>
+                            <span className="font-mono text-[10px] text-[#B0A89E] uppercase block mb-1">Coverage</span>
                             <span className={`font-serif text-xl font-bold ${
                               coverageScore === 100 ? "text-[#5C9A6B]" :
                               coverageScore >= 67 ? "text-[#D4A853]" :
                               "text-[#C85C5C]"
                             }`}>{coverageScore}%</span>
-                            <span className="font-mono text-[10px] text-[#5C5550] block">Mechanisms</span>
+                            <span className="font-mono text-[10px] text-[#7A6F65] block">Mechanisms</span>
                           </div>
                           <div>
-                            <span className="font-mono text-[10px] text-[#9A8F82] uppercase block mb-1">Session</span>
+                            <span className="font-mono text-[10px] text-[#B0A89E] uppercase block mb-1">Session</span>
                             <span className="font-serif text-xl font-bold text-[#F5F0EB]">{sessionElapsed ?? "—"}s</span>
-                            <span className="font-mono text-[10px] text-[#5C5550] block">Elapsed</span>
+                            <span className="font-mono text-[10px] text-[#7A6F65] block">Elapsed</span>
                           </div>
                         </div>
                       </div>
@@ -615,7 +615,7 @@ export default function LearningDashboard() {
                       {activeChallenge.concepts.map((concept, idx) => (
                         <div key={idx}>
                           <div className="text-xs text-[#D4A853] uppercase font-bold">{concept.title}</div>
-                          <p className="text-xs text-[#9A8F82] leading-relaxed mt-0.5">{concept.description}</p>
+                          <p className="text-xs text-[#B0A89E] leading-relaxed mt-0.5">{concept.description}</p>
                         </div>
                       ))}
                     </div>
@@ -632,7 +632,7 @@ export default function LearningDashboard() {
                           {elev.gaps.map((g, idx) => (
                             <div key={idx}>
                               <div className="flex justify-between text-xs mb-1 flex-wrap gap-1">
-                                <span className="text-[#9A8F82]">{g.label}</span>
+                                <span className="text-[#B0A89E]">{g.label}</span>
                                 <span className={`${g.colorClass} font-bold`}>{g.target - g.current}% Gap</span>
                               </div>
                               <div className="w-full bg-white/5 h-1.5 rounded overflow-hidden">
@@ -653,7 +653,7 @@ export default function LearningDashboard() {
                               <span className="text-[#D4A853] font-bold text-xs flex-shrink-0">{s.step}</span>
                               <div>
                                 <span className="text-white block font-bold text-xs">{s.title}</span>
-                                <span className="text-xs text-[#9A8F82] leading-relaxed block mt-0.5">{s.desc}</span>
+                                <span className="text-xs text-[#B0A89E] leading-relaxed block mt-0.5">{s.desc}</span>
                               </div>
                             </div>
                           ))}
@@ -683,7 +683,7 @@ export default function LearningDashboard() {
                                 {expandedArticle === art.num ? (
                                   <p className="text-xs text-[#F5F0EB] mt-2 leading-relaxed">{art.body}</p>
                                 ) : (
-                                  <p className="text-xs text-[#9A8F82] mt-1 line-clamp-2">{art.summary}</p>
+                                  <p className="text-xs text-[#B0A89E] mt-1 line-clamp-2">{art.summary}</p>
                                 )}
                               </div>
                               <span className="text-xs text-[#D4A853] font-bold mt-2">
@@ -700,7 +700,7 @@ export default function LearningDashboard() {
                       <button
                         type="button"
                         onClick={resetChallenge}
-                        className="px-4 py-2 border border-white/10 text-xs text-[#9A8F82] hover:text-white cursor-pointer uppercase font-mono rounded-xl transition-colors"
+                        className="px-4 py-2 border border-white/10 text-xs text-[#B0A89E] hover:text-white cursor-pointer uppercase font-mono rounded-xl transition-colors"
                       >
                         Reset
                       </button>
@@ -772,7 +772,7 @@ export default function LearningDashboard() {
 
               {/* Cognitive Radar */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl">
-                <span className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase block mb-4">
+                <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase block mb-4">
                   03 — Cognitive Radar
                 </span>
                 <div className="flex justify-center">
@@ -808,7 +808,7 @@ export default function LearningDashboard() {
                       const ly = cy + labelR * Math.sin(angle);
                       const anchor = Math.cos(angle) > 0.1 ? "start" : Math.cos(angle) < -0.1 ? "end" : "middle";
                       return (
-                        <text key={d.name} x={lx} y={ly + 4} fill="#9A8F82" fontSize="8" fontFamily="monospace" textAnchor={anchor}>
+                        <text key={d.name} x={lx} y={ly + 4} fill="#B0A89E" fontSize="8" fontFamily="monospace" textAnchor={anchor}>
                           {d.name.split(" ")[0]}
                         </text>
                       );
@@ -822,7 +822,7 @@ export default function LearningDashboard() {
                   </div>
                   {radarDomains.map(d => (
                     <div key={d.name} className="flex justify-between items-center text-xs">
-                      <span className="text-[#9A8F82] truncate mr-2">{d.name}</span>
+                      <span className="text-[#B0A89E] truncate mr-2">{d.name}</span>
                       <span className="text-[#D4A853] flex-shrink-0 font-mono">{d.score}</span>
                     </div>
                   ))}
@@ -831,12 +831,12 @@ export default function LearningDashboard() {
 
               {/* Quick Diagnostic Quiz */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-3">
-                <span className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase">
+                <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase">
                   04 — Quick Diagnostic
                 </span>
                 <div className="border border-[#D4A853]/8 bg-[#0A0908] p-3 rounded-xl">
                   <span className="text-[10px] text-[#D4A853] uppercase block mb-1">Active Scenario</span>
-                  <p className="text-xs text-[#9A8F82] leading-relaxed">{activeChallenge.quizQuestion}</p>
+                  <p className="text-xs text-[#B0A89E] leading-relaxed">{activeChallenge.quizQuestion}</p>
                 </div>
                 <div className="space-y-1.5">
                   {activeChallenge.quizAnswers.map((ans, idx) => (
@@ -850,7 +850,7 @@ export default function LearningDashboard() {
                           ? idx === 1
                             ? "bg-[#5C9A6B]/10 border-[#5C9A6B]/30 text-[#5C9A6B]"
                             : "bg-[#C85C5C]/10 border-[#C85C5C]/30 text-[#C85C5C]"
-                          : "border-[#D4A853]/8 text-[#9A8F82] hover:border-[#D4A853]/25 hover:text-white"
+                          : "border-[#D4A853]/8 text-[#B0A89E] hover:border-[#D4A853]/25 hover:text-white"
                       } disabled:cursor-not-allowed`}
                     >
                       {ans}
@@ -884,7 +884,7 @@ export default function LearningDashboard() {
             {/* LEFT: Draft Engine */}
             <div className="xl:col-span-8 space-y-4">
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl">
-                <span className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase block mb-4">
+                <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase block mb-4">
                   01 — Socratic Draft Engine
                 </span>
 
@@ -903,7 +903,7 @@ export default function LearningDashboard() {
                         className={`px-4 py-2 text-xs font-mono border rounded-xl transition-all flex-shrink-0 cursor-pointer ${
                           selectedArticleSlug === article.slug
                             ? "border-[#D4A853] bg-[#D4A853]/10 text-[#D4A853]"
-                            : "border-[#2A2218] text-[#7A6F65] hover:text-[#9A8F82]"
+                            : "border-[#2A2218] text-[#7A6F65] hover:text-[#B0A89E]"
                         }`}
                       >
                         {article.title}
@@ -917,7 +917,7 @@ export default function LearningDashboard() {
                   <h2 className="text-base font-bold font-mono text-white">
                     {activeArticle?.title || "Socratic Funnel Diagnostics"}
                   </h2>
-                  <p className="text-xs text-[#9A8F82] leading-relaxed mt-1">
+                  <p className="text-xs text-[#B0A89E] leading-relaxed mt-1">
                     {activeArticle?.summary || "How to construct medical-grade landing page teardowns that demand high-ticket consulting responses."}
                   </p>
                 </div>
@@ -952,10 +952,10 @@ export default function LearningDashboard() {
                               ))}
                             </div>
                           </div>
-                          <InlineMarkdown text={draft.content} className="text-xs text-[#9A8F82] leading-relaxed font-mono" />
+                          <InlineMarkdown text={draft.content} className="text-xs text-[#B0A89E] leading-relaxed font-mono" />
                         </div>
                         <div className="pt-3 border-t border-[#2A2218] flex justify-between items-center mt-3">
-                          <span className="text-xs font-mono text-[#9A8F82] uppercase truncate mr-2">
+                          <span className="text-xs font-mono text-[#B0A89E] uppercase truncate mr-2">
                             {draft.draft_number === 1 ? "Product Strategist" : draft.draft_number === 2 ? "Behavioral Scientist" : "Linguistic Architect"}
                           </span>
                           <div className={`w-2.5 h-2.5 rounded-full border flex-shrink-0 ${
@@ -977,7 +977,7 @@ export default function LearningDashboard() {
                       >
                         <div className="min-w-0">
                           <span className="font-mono text-xs text-[#D4A853] tracking-wider uppercase block mb-2">Draft 0{num}</span>
-                          <p className="text-xs text-[#9A8F82] leading-relaxed font-mono">
+                          <p className="text-xs text-[#B0A89E] leading-relaxed font-mono">
                             {num === 1
                               ? "Focus on high-ticket conversion friction. Highlight visual deficits adjacent to key click triggers."
                               : num === 2
@@ -987,7 +987,7 @@ export default function LearningDashboard() {
                           </p>
                         </div>
                         <div className="pt-3 border-t border-[#2A2218] flex justify-between items-center mt-3">
-                          <span className="text-xs font-mono text-[#9A8F82] uppercase truncate mr-2">
+                          <span className="text-xs font-mono text-[#B0A89E] uppercase truncate mr-2">
                             {num === 1 ? "Product Strategist" : num === 2 ? "Behavioral Scientist" : "Linguistic Architect"}
                           </span>
                           <div className={`w-2.5 h-2.5 rounded-full border flex-shrink-0 ${
@@ -1008,7 +1008,7 @@ export default function LearningDashboard() {
                       exit={{ opacity: 0, y: 8 }}
                       className="space-y-3 border-t border-[#D4A853]/15 pt-4 mt-4"
                     >
-                      <label className="font-mono text-xs text-[#D4A853]/60 tracking-wider uppercase block">
+                      <label className="font-mono text-xs text-[#D4A853]/70 tracking-wider uppercase block">
                         Socratic Refinement Notes
                       </label>
                       <textarea
@@ -1021,7 +1021,7 @@ export default function LearningDashboard() {
                         <button
                           type="button"
                           onClick={() => setSelectedDraftId(null)}
-                          className="px-4 py-2 border border-[#2A2218] text-xs font-mono text-[#7A6F65] hover:text-[#9A8F82] cursor-pointer rounded-xl"
+                          className="px-4 py-2 border border-[#2A2218] text-xs font-mono text-[#7A6F65] hover:text-[#B0A89E] cursor-pointer rounded-xl"
                         >
                           Clear
                         </button>
@@ -1044,7 +1044,7 @@ export default function LearningDashboard() {
 
               {/* Dialectic Chain — spine-based, zero flex-row */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl overflow-hidden">
-                <span className="font-mono text-[10px] text-[#D4A853]/40 tracking-[0.3em] uppercase block mb-5">
+                <span className="font-mono text-[10px] text-[#D4A853]/70 tracking-[0.3em] uppercase block mb-5">
                   02 — Dialectic Chain
                 </span>
                 <div className="relative">
@@ -1055,8 +1055,8 @@ export default function LearningDashboard() {
                   <div className="relative pl-7 mb-2">
                     <div className="absolute left-0 top-1 w-[13px] h-[13px] rounded-full border-2 border-[#D4A853] bg-[#110F0D]" />
                     <div className="font-mono text-[10px] text-[#D4A853] uppercase mb-0.5">Product Strategist</div>
-                    <div className="font-mono text-[10px] text-[#D4A853]/40 mb-1.5">Arg 01</div>
-                    <p className="text-xs text-[#9A8F82] leading-relaxed">
+                    <div className="font-mono text-[10px] text-[#D4A853]/70 mb-1.5">Arg 01</div>
+                    <p className="text-xs text-[#B0A89E] leading-relaxed">
                       Funnel requires card reduction to minimize decision fatigue on checkout.
                     </p>
                   </div>
@@ -1072,7 +1072,7 @@ export default function LearningDashboard() {
                     <div className="absolute left-0 top-1 w-[13px] h-[13px] rounded-full border-2 border-[#C85C5C] bg-[#110F0D]" />
                     <div className="font-mono text-[10px] text-[#C85C5C] uppercase mb-0.5">Behavioral Scientist</div>
                     <div className="font-mono text-[10px] text-[#C85C5C]/40 mb-1.5">Pivot 02</div>
-                    <p className="text-xs text-[#9A8F82] leading-relaxed">
+                    <p className="text-xs text-[#B0A89E] leading-relaxed">
                       Card reduction fails if value is undefined. Calculator slider builds habit loop first.
                     </p>
                   </div>
@@ -1088,7 +1088,7 @@ export default function LearningDashboard() {
                     <div className="absolute left-0 top-1 w-[13px] h-[13px] rounded-full border-2 border-[#5C9A6B] bg-[#110F0D]" />
                     <div className="font-mono text-[10px] text-[#5C9A6B] uppercase mb-0.5">Linguistic Architect</div>
                     <div className="font-mono text-[10px] text-[#5C9A6B]/40 mb-1.5">Synthesis 03</div>
-                    <p className="text-xs text-[#9A8F82] leading-relaxed">
+                    <p className="text-xs text-[#B0A89E] leading-relaxed">
                       Frame calculator as interactive tool: user isolates value, removing billing anxiety.
                     </p>
                   </div>
@@ -1097,7 +1097,7 @@ export default function LearningDashboard() {
 
               {/* Engine Config */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-4">
-                <h3 className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase">Socratic Engine Config</h3>
+                <h3 className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase">Socratic Engine Config</h3>
                 <div className="space-y-2 text-xs">
                   {[
                     { label: "Active Agents", value: "3 (Strategist, Scientist, Architect)" },
@@ -1105,23 +1105,23 @@ export default function LearningDashboard() {
                     { label: "Socratic Index", value: "96.8 / 100" },
                   ].map(row => (
                     <div key={row.label} className="flex justify-between gap-2">
-                      <span className="text-[#9A8F82] flex-shrink-0">{row.label}:</span>
+                      <span className="text-[#B0A89E] flex-shrink-0">{row.label}:</span>
                       <span className="text-white text-right">{row.value}</span>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-[#9A8F82] leading-relaxed pt-2 border-t border-[#D4A853]/8">
+                <p className="text-xs text-[#B0A89E] leading-relaxed pt-2 border-t border-[#D4A853]/8">
                   The Socratic Draft Engine synthesizes multiple expert viewpoints to construct high-status conversion analysis documents.
                 </p>
               </div>
 
               {/* Mastery Index */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-3">
-                <span className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase block">Mastery Index</span>
+                <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase block">Mastery Index</span>
                 {DOMAINS.map((d) => (
                   <div key={d.name}>
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="text-[#9A8F82] truncate mr-2">{d.name}</span>
+                      <span className="text-[#B0A89E] truncate mr-2">{d.name}</span>
                       <span className="text-[#D4A853] flex-shrink-0">{d.score}%</span>
                     </div>
                     <div className="h-1 bg-[#1A1815] rounded-full overflow-hidden">

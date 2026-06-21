@@ -876,7 +876,7 @@ export default function AdminDashboard() {
       case "critical": return "bg-[#C85C5C]/10 border-[#C85C5C]/20 text-[#C85C5C]";
       case "high": return "bg-orange-500/10 border-orange-500/20 text-orange-400";
       case "medium": return "bg-amber-500/10 border-amber-500/20 text-amber-400";
-      default: return "bg-white/5 border-white/10 text-[#9A8F82]";
+      default: return "bg-white/5 border-white/10 text-[#B0A89E]";
     }
   };
 
@@ -893,7 +893,7 @@ export default function AdminDashboard() {
         {/* Navigation & Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#D4A853]/10 pb-8">
           <div>
-            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853]/60 block mb-2">OS Interno</span>
+            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853]/70 block mb-2">OS Interno</span>
             <h1 className="text-4xl font-serif text-white tracking-tight">Flujo de Ventas · Signal &amp; Friction</h1>
           </div>
           <div className="flex items-center gap-4 mt-4 md:mt-0">
@@ -908,7 +908,7 @@ export default function AdminDashboard() {
           <button
             onClick={() => setActiveView('pipeline')}
             className={`pb-4 font-mono text-xs uppercase tracking-widest border-b-2 transition-all duration-300 cursor-pointer ${
-              activeView === 'pipeline' ? "border-[#D4A853] text-[#D4A853]" : "border-transparent text-[#7A6F65] hover:text-[#9A8F82]"
+              activeView === 'pipeline' ? "border-[#D4A853] text-[#D4A853]" : "border-transparent text-[#7A6F65] hover:text-[#B0A89E]"
             }`}
           >
             Pipeline y Conversiones
@@ -916,7 +916,7 @@ export default function AdminDashboard() {
           <button
             onClick={() => setActiveView('learning')}
             className={`pb-4 font-mono text-xs uppercase tracking-widest border-b-2 transition-all duration-300 cursor-pointer relative ${
-              activeView === 'learning' ? "border-[#D4A853] text-[#D4A853]" : "border-transparent text-[#7A6F65] hover:text-[#9A8F82]"
+              activeView === 'learning' ? "border-[#D4A853] text-[#D4A853]" : "border-transparent text-[#7A6F65] hover:text-[#B0A89E]"
             }`}
           >
             OS de Aprendizaje Continuo
@@ -946,7 +946,7 @@ export default function AdminDashboard() {
                   <div className="border border-[#D4A853]/20 bg-[#110F0D] p-6 rounded-2xl space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="font-mono text-xs uppercase tracking-[0.25em] text-[#D4A853]/60 block mb-1">Trayectoria ARR</span>
+                        <span className="font-mono text-xs uppercase tracking-[0.25em] text-[#D4A853]/70 block mb-1">Trayectoria ARR</span>
                         <div className="flex items-baseline gap-3">
                           <span className="font-serif text-3xl font-bold text-white">${arrUsd.toLocaleString()}</span>
                           <span className="font-mono text-xs text-[#7A6F65]">/ objetivo $1.000.000</span>
@@ -979,7 +979,7 @@ export default function AdminDashboard() {
                             <div key={i} className="flex-1 rounded-sm bg-[#D4A853]/30 transition-all" style={{ height: `${h}%` }} title={`$${v}`} />
                           );
                         })}
-                        <span className="font-mono text-[9px] text-[#D4A853]/60 ml-1 self-end">today</span>
+                        <span className="font-mono text-[9px] text-[#D4A853]/70 ml-1 self-end">today</span>
                       </div>
                     )}
                   </div>
@@ -989,7 +989,7 @@ export default function AdminDashboard() {
               {/* 30-Day Sprint Tracker */}
               <section>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-mono text-xs text-[#D4A853]/60 tracking-[0.3em] uppercase">Sprint 30 Días</span>
+                  <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.3em] uppercase">Sprint 30 Días</span>
                   <span className="font-mono text-xs text-[#7A6F65] border border-[#D4A853]/10 px-2 py-0.5 rounded-full">Fase 2 · Ruta $1M</span>
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1019,7 +1019,7 @@ export default function AdminDashboard() {
                 {[
                   { label: "Leads Totales", value: m.totalLeads, detail: "Todos los perfiles", color: "text-[#F5F0EB]" },
                   { label: "High-Ticket", value: m.highTicketCount || 0, detail: "Vía Concierge", color: "text-[#D4A853]" },
-                  { label: "Microdosing", value: m.microdosingCount || 0, detail: "Vía Autonomía", color: "text-[#9A8F82]" },
+                  { label: "Microdosing", value: m.microdosingCount || 0, detail: "Vía Autonomía", color: "text-[#B0A89E]" },
                   { label: "Outreach Enviado", value: m.outreachSent, detail: "DMs Beta activos", color: "text-[#D4A853]" },
                   { label: "Diagnósticos", value: m.diagnosticsDelivered, detail: "Briefs Loom entregados", color: "text-[#D4A853]" },
                   { label: "Deals Cerrados", value: m.dealsClosed, detail: "Testimonio y pago", color: "text-[#5C9A6B]" },
@@ -1049,7 +1049,7 @@ export default function AdminDashboard() {
                     ].map((item, idx) => (
                       <div key={idx} className="space-y-1.5">
                         <div className="flex justify-between text-xs font-mono">
-                          <span className="text-[#9A8F82]">{item.step}</span>
+                          <span className="text-[#B0A89E]">{item.step}</span>
                           <span className="text-white">{item.count} ({item.pct.toFixed(0)}%)</span>
                         </div>
                         <div className="h-2 bg-black border border-[#D4A853]/8 rounded-full overflow-hidden">
@@ -1079,7 +1079,7 @@ export default function AdminDashboard() {
                       <div key={idx} className="flex items-center justify-between text-xs font-mono">
                         <div className="flex items-center gap-2">
                           <div className={`w-2.5 h-2.5 rounded-full ${item.color}`} />
-                          <span className="text-[#9A8F82]">{item.key}</span>
+                          <span className="text-[#B0A89E]">{item.key}</span>
                         </div>
                         <span className="text-[#F5F0EB] font-semibold">{item.count}</span>
                       </div>
@@ -1101,13 +1101,13 @@ export default function AdminDashboard() {
                     </span>
                   </div>
 
-                  <p className="text-sm text-[#9A8F82] font-mono leading-relaxed">
+                  <p className="text-sm text-[#B0A89E] font-mono leading-relaxed">
                     Clientes Concierge bajo el protocolo de garantía por resultados. +20% conversión en 30 días o factura anulada.
                   </p>
 
                   <div className="space-y-4">
                     {m.pipeline.filter(p => p.guarantee_active).length === 0 ? (
-                      <div className="text-sm text-[#9A8F82] font-mono text-center py-6">Sin campañas garantizadas activas.</div>
+                      <div className="text-sm text-[#B0A89E] font-mono text-center py-6">Sin campañas garantizadas activas.</div>
                     ) : (
                       m.pipeline.filter(p => p.guarantee_active).map((item) => (
                         <div key={item.id} className="border border-[#D4A853]/8 bg-black/30 p-4 rounded-xl space-y-3">
@@ -1119,7 +1119,7 @@ export default function AdminDashboard() {
                           </div>
 
                           {/* Gate requirements tracker */}
-                          <div className="grid grid-cols-2 gap-2 text-xs font-mono text-[#9A8F82]">
+                          <div className="grid grid-cols-2 gap-2 text-xs font-mono text-[#B0A89E]">
                             <div className="flex items-center gap-1.5">
                               <span className={item.guarantee?.traffic_gate_met ? "text-[#5C9A6B]" : "text-[#C85C5C]"}>
                                 {item.guarantee?.traffic_gate_met ? "✓" : "✗"}
@@ -1169,19 +1169,19 @@ export default function AdminDashboard() {
                     </span>
                   </div>
 
-                  <p className="text-sm text-[#9A8F82] font-mono leading-relaxed">
+                  <p className="text-sm text-[#B0A89E] font-mono leading-relaxed">
                     Metodología licenciada a agencias externas ($1.500/año). Auditoría anual con mínimo 80% de satisfacción.
                   </p>
 
                   <div className="space-y-3">
                     {m.pipeline.filter(p => p.is_certified).length === 0 ? (
-                      <div className="text-sm text-[#9A8F82] font-mono text-center py-6">Sin partners certificados registrados.</div>
+                      <div className="text-sm text-[#B0A89E] font-mono text-center py-6">Sin partners certificados registrados.</div>
                     ) : (
                       m.pipeline.filter(p => p.is_certified).map((partner) => (
                         <div key={partner.id} className="flex justify-between items-center p-4 border border-[#D4A853]/15 bg-black/20 rounded-xl hover:border-[#D4A853]/35 transition-all duration-300">
                           <div>
                             <span className="text-sm font-serif text-white block font-medium">{partner.company_name}</span>
-                            <span className="text-xs text-[#9A8F82] font-mono mt-0.5 block">{partner.contact_name}</span>
+                            <span className="text-xs text-[#B0A89E] font-mono mt-0.5 block">{partner.contact_name}</span>
                           </div>
                           <div className="text-right space-y-1">
                             <span className="font-mono text-xs bg-[#5C9A6B]/10 text-[#5C9A6B] px-2 py-0.5 rounded-full border border-[#5C9A6B]/20 block">
@@ -1231,7 +1231,7 @@ export default function AdminDashboard() {
                             <span className={`font-mono text-[10px] uppercase px-2 py-0.5 rounded-full border shrink-0 ${
                               isDFY
                                 ? 'text-[#D4A853] border-[#D4A853]/30 bg-[#D4A853]/8'
-                                : 'text-[#9A8F82] border-white/10 bg-white/[0.03]'
+                                : 'text-[#B0A89E] border-white/10 bg-white/[0.03]'
                             }`}>
                               {lead.segment}
                             </span>
@@ -1243,20 +1243,20 @@ export default function AdminDashboard() {
                             </div>
                             <div className="bg-black/40 rounded p-1.5">
                               <span className="font-mono text-[9px] text-[#7A6F65] uppercase block">Latencia</span>
-                              <span className={`font-mono text-xs font-bold ${urgency === 'hot' ? 'text-[#C85C5C]' : urgency === 'warm' ? 'text-amber-400' : 'text-[#9A8F82]'}`}>
+                              <span className={`font-mono text-xs font-bold ${urgency === 'hot' ? 'text-[#C85C5C]' : urgency === 'warm' ? 'text-amber-400' : 'text-[#B0A89E]'}`}>
                                 {hoursAgo}h
                               </span>
                             </div>
                             <div className="bg-black/40 rounded p-1.5">
                               <span className="font-mono text-[9px] text-[#7A6F65] uppercase block">Fuente</span>
-                              <span className="font-mono text-xs text-[#9A8F82]">{lead.source}</span>
+                              <span className="font-mono text-xs text-[#B0A89E]">{lead.source}</span>
                             </div>
                           </div>
                           <div className="flex items-center justify-between pt-1 border-t border-[#D4A853]/8">
                             <span className={`font-mono text-[9px] uppercase ${urgency === 'hot' ? 'text-[#C85C5C]' : urgency === 'warm' ? 'text-amber-400' : 'text-[#7A6F65]'}`}>
                               {urgency === 'hot' ? '🔴 Responde ya' : urgency === 'warm' ? '🟡 Responde hoy' : '⚪ En cola'}
                             </span>
-                            <span className="font-mono text-[9px] text-[#D4A853]/50 group-hover:text-[#D4A853] transition-colors">Ver →</span>
+                            <span className="font-mono text-[9px] text-[#D4A853]/70 group-hover:text-[#D4A853] transition-colors">Ver →</span>
                           </div>
                         </button>
                       );
@@ -1290,10 +1290,10 @@ export default function AdminDashboard() {
                       }`}
                     >
                       <div className="flex justify-between items-center mb-2">
-                        <span className="font-mono text-xs uppercase tracking-wider text-[#9A8F82]">{card.title}</span>
+                        <span className="font-mono text-xs uppercase tracking-wider text-[#B0A89E]">{card.title}</span>
                         <span className={`font-mono text-xl font-bold ${card.color}`}>{card.count}</span>
                       </div>
-                      <p className="text-sm text-[#9A8F82] font-sans italic">{card.action}</p>
+                      <p className="text-sm text-[#B0A89E] font-sans italic">{card.action}</p>
                     </button>
                   ))}
                 </div>
@@ -1329,7 +1329,7 @@ export default function AdminDashboard() {
                                   )}
                                 </div>
                               </div>
-                              <p className="text-xs text-[#9A8F82]">{item.contact_name}</p>
+                              <p className="text-xs text-[#B0A89E]">{item.contact_name}</p>
 
                               {/* SLA 72h Page URL — copyable chip when diagnostic is in progress */}
                               {item.status === "diagnostic_in_progress" && (() => {
@@ -1386,7 +1386,7 @@ export default function AdminDashboard() {
                               )}
 
                               {item.private_notes && (
-                                <p className="text-sm font-mono text-[#9A8F82] mt-2 italic line-clamp-1 border-t border-[#D4A853]/8 pt-2">
+                                <p className="text-sm font-mono text-[#B0A89E] mt-2 italic line-clamp-1 border-t border-[#D4A853]/8 pt-2">
                                   {item.private_notes}
                                 </p>
                               )}
@@ -1395,7 +1395,7 @@ export default function AdminDashboard() {
                                 <span className={item.payment_status === "paid" ? "text-[#5C9A6B] font-medium" : "text-[#7A6F65]"}>
                                   {({ paid: "Pagado", uninvoiced: "Sin Facturar", invoiced_unpaid: "Facturado" } as Record<string, string>)[item.payment_status] || item.payment_status}
                                 </span>
-                                <span className="text-[#5C5550]">#{item.id.slice(0, 4)}</span>
+                                <span className="text-[#7A6F65]">#{item.id.slice(0, 4)}</span>
                               </div>
                             </div>
                           ))}
@@ -1444,7 +1444,7 @@ export default function AdminDashboard() {
                   { label: "Resolución Media", value: resolvedIncidents.length > 0 ? "1,0 h" : "N/A", detail: "Velocidad de mitigación" },
                 ].map((item, idx) => (
                   <div key={idx} className="border border-[#D4A853]/15 p-5 bg-[#110F0D] rounded-2xl relative overflow-hidden">
-                    <span className="font-mono text-xs text-[#D4A853]/60 uppercase tracking-wider block mb-2">{item.label}</span>
+                    <span className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-wider block mb-2">{item.label}</span>
                     <span className="font-serif text-3xl font-bold text-white block mb-1">{item.value}</span>
                     <span className="text-xs text-[#7A6F65]">{item.detail}</span>
                   </div>
@@ -1459,7 +1459,7 @@ export default function AdminDashboard() {
                   <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">Cronología de Incidencias</h3>
                   <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin">
                     {incidents.length === 0 ? (
-                      <div className="text-sm text-[#9A8F82] font-mono py-12 text-center">Sin incidencias de IA o proceso registradas.</div>
+                      <div className="text-sm text-[#B0A89E] font-mono py-12 text-center">Sin incidencias de IA o proceso registradas.</div>
                     ) : (
                       incidents.map(inc => (
                         <div key={inc.id} className={`border border-[#D4A853]/8 bg-black/40 rounded p-5 space-y-4 relative ${inc.resolved_at ? 'opacity-70' : ''}`}>
@@ -1472,16 +1472,16 @@ export default function AdminDashboard() {
                                 {inc.incident_type.replace(/_/g, " ")}
                               </span>
                             </div>
-                            <span className="font-mono text-xs text-[#9A8F82]">
+                            <span className="font-mono text-xs text-[#B0A89E]">
                               {new Date(inc.created_at).toLocaleString()}
                             </span>
                           </div>
 
                           <div className="space-y-1">
-                            <span className="font-mono text-xs text-[#9A8F82] uppercase block">
+                            <span className="font-mono text-xs text-[#B0A89E] uppercase block">
                               Fase: <strong className="text-[#D4A853]">{inc.phase}</strong>
                             </span>
-                            <p className="text-sm text-[#9A8F82] leading-relaxed font-mono">
+                            <p className="text-sm text-[#B0A89E] leading-relaxed font-mono">
                               {inc.description}
                             </p>
                           </div>
@@ -1489,7 +1489,7 @@ export default function AdminDashboard() {
                           {!inc.resolved_at && inc.root_cause && (
                             <div className="border-t border-[#D4A853]/8 pt-3">
                               <span className="font-mono text-xs text-[#D4A853] uppercase block mb-1">Análisis de Causa Raíz</span>
-                              <p className="text-sm text-[#9A8F82] leading-relaxed font-mono">
+                              <p className="text-sm text-[#B0A89E] leading-relaxed font-mono">
                                 {inc.root_cause}
                               </p>
                             </div>
@@ -1499,14 +1499,14 @@ export default function AdminDashboard() {
                             <div className="border-t border-[#5C9A6B]/10 bg-[#5C9A6B]/[0.03] p-3 rounded-xl space-y-2">
                               <div className="flex justify-between items-center text-xs font-mono">
                                 <span className="text-[#5C9A6B] uppercase">✓ Resuelta y Mitigada</span>
-                                <span className="text-[#9A8F82]">{inc.iteration_version}</span>
+                                <span className="text-[#B0A89E]">{inc.iteration_version}</span>
                               </div>
-                              <p className="text-sm text-[#9A8F82] leading-relaxed font-mono">
-                                <strong className="text-[#9A8F82]">Resolución: </strong>{inc.resolution}
+                              <p className="text-sm text-[#B0A89E] leading-relaxed font-mono">
+                                <strong className="text-[#B0A89E]">Resolución: </strong>{inc.resolution}
                               </p>
                               {inc.lesson_learned && (
-                                <p className="text-sm text-[#9A8F82] leading-relaxed font-mono italic">
-                                  <strong className="text-[#9A8F82]">Lección: </strong>&quot;{inc.lesson_learned}&quot;
+                                <p className="text-sm text-[#B0A89E] leading-relaxed font-mono italic">
+                                  <strong className="text-[#B0A89E]">Lección: </strong>&quot;{inc.lesson_learned}&quot;
                                 </p>
                               )}
                             </div>
@@ -1531,10 +1531,10 @@ export default function AdminDashboard() {
                         <div key={idx} className="border border-[#D4A853]/8 bg-[#0A0908]/40 p-4 rounded space-y-1.5">
                           <div className="flex justify-between items-center text-xs font-mono">
                             <span className="text-[#D4A853]">{item.type}</span>
-                            <span className="text-[#9A8F82]">{item.date}</span>
+                            <span className="text-[#B0A89E]">{item.date}</span>
                           </div>
                           <h4 className="text-xs font-bold text-white font-serif">{item.title}</h4>
-                          <p className="text-sm text-[#9A8F82] leading-relaxed font-mono">{item.desc}</p>
+                          <p className="text-sm text-[#B0A89E] leading-relaxed font-mono">{item.desc}</p>
                         </div>
                       ))}
                     </div>
@@ -1545,14 +1545,14 @@ export default function AdminDashboard() {
                     <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">Patrones de Error Detectados</h3>
                     <div className="space-y-4">
                       {sortedPatterns.length === 0 ? (
-                        <div className="text-xs text-[#9A8F82] font-mono text-center py-6">Sin patrones registrados.</div>
+                        <div className="text-xs text-[#B0A89E] font-mono text-center py-6">Sin patrones registrados.</div>
                       ) : (
                         sortedPatterns.map(([type, count]) => {
                           const percentage = incidents.length > 0 ? (count / incidents.length) * 100 : 0;
                           return (
                             <div key={type} className="space-y-1.5">
                               <div className="flex justify-between text-xs font-mono">
-                                <span className="text-[#9A8F82] text-xs">{type.replace(/_/g, " ")}</span>
+                                <span className="text-[#B0A89E] text-xs">{type.replace(/_/g, " ")}</span>
                                 <span className="text-white text-xs">{count} ({percentage.toFixed(0)}%)</span>
                               </div>
                               <div className="h-1 bg-black border border-[#D4A853]/8 rounded-full overflow-hidden">
@@ -1585,13 +1585,13 @@ export default function AdminDashboard() {
             >
               <div className="p-6 border-b border-[#D4A853]/10 flex items-start justify-between">
                 <div>
-                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#D4A853]/50 block mb-1">Lead Entrante</span>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#D4A853]/70 block mb-1">Lead Entrante</span>
                   <h3 className="font-serif text-xl text-white">{selectedLead.company || selectedLead.email.split('@')[1]}</h3>
                   <p className="font-mono text-xs text-[#7A6F65] mt-0.5">{selectedLead.email}</p>
                 </div>
                 <button
                   onClick={() => setShowLeadDrawer(false)}
-                  className="text-[#9A8F82] hover:text-white font-mono text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                  className="text-[#B0A89E] hover:text-white font-mono text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
                 >×</button>
               </div>
 
@@ -1599,10 +1599,10 @@ export default function AdminDashboard() {
                 {/* Lead meta */}
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { label: 'Segmento', value: selectedLead.segment, accent: selectedLead.segment === 'DFY' ? 'text-[#D4A853]' : 'text-[#9A8F82]' },
+                    { label: 'Segmento', value: selectedLead.segment, accent: selectedLead.segment === 'DFY' ? 'text-[#D4A853]' : 'text-[#B0A89E]' },
                     { label: 'Valor Est.', value: selectedLead.segment === 'DFY' ? '$2.000' : '$350', accent: 'text-[#5C9A6B]' },
-                    { label: 'Fuente', value: selectedLead.source, accent: 'text-[#9A8F82]' },
-                    { label: 'Recibido', value: `Hace ${Math.floor((Date.now() - new Date(selectedLead.created_at).getTime()) / 3600000)}h`, accent: 'text-[#9A8F82]' },
+                    { label: 'Fuente', value: selectedLead.source, accent: 'text-[#B0A89E]' },
+                    { label: 'Recibido', value: `Hace ${Math.floor((Date.now() - new Date(selectedLead.created_at).getTime()) / 3600000)}h`, accent: 'text-[#B0A89E]' },
                   ].map(item => (
                     <div key={item.label} className="bg-black/40 border border-[#D4A853]/8 p-3 rounded-xl">
                       <span className="font-mono text-[9px] text-[#7A6F65] uppercase block mb-1">{item.label}</span>
@@ -1614,7 +1614,7 @@ export default function AdminDashboard() {
                 {/* Answers from form */}
                 {Object.keys(selectedLead.answers || {}).length > 0 && (
                   <div className="space-y-3">
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-[#D4A853]/60 block">Respuestas del Formulario</span>
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-[#D4A853]/70 block">Respuestas del Formulario</span>
                     <div className="space-y-2">
                       {Object.entries(selectedLead.answers).map(([k, v]) => (
                         <div key={k} className="bg-black/30 border border-[#D4A853]/8 p-3 rounded-xl">
@@ -1629,7 +1629,7 @@ export default function AdminDashboard() {
                 {/* Pre-drafted next action */}
                 <div className="border border-[#D4A853]/20 bg-[#D4A853]/[0.03] p-4 rounded-2xl space-y-3">
                   <span className="font-mono text-[10px] uppercase tracking-wider text-[#D4A853] block">Próxima Acción — Piloto Automático</span>
-                  <p className="font-mono text-xs text-[#9A8F82] leading-relaxed">
+                  <p className="font-mono text-xs text-[#B0A89E] leading-relaxed">
                     {selectedLead.segment === 'DFY'
                       ? `Lead High-Ticket DFY vía ${selectedLead.source}. Prioridad: enviar diagnóstico de señal personalizado en menos de 2 horas. Adjuntar plantilla de auditoría de fricción. Asunto: "Detecté una brecha de conversión en tu funnel."`
                       : `Lead DWY vía ${selectedLead.source}. Prioridad: enviar intro de la vía de autonomía + enlace Tally en menos de 24h. Asunto: "Tu configuración de señal — 3 cosas que revisar primero."`}
@@ -1680,7 +1680,7 @@ export default function AdminDashboard() {
                 </div>
                 <button
                   onClick={() => setShowModal(false)}
-                  className="text-[#9A8F82] hover:text-white font-mono text-xl cursor-pointer w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors"
+                  className="text-[#B0A89E] hover:text-white font-mono text-xl cursor-pointer w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors"
                 >
                   ×
                 </button>
@@ -1692,18 +1692,18 @@ export default function AdminDashboard() {
                   {/* Main parameters inputs */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
                     <div className="space-y-1.5">
-                      <label className="text-[#9A8F82] uppercase">Nombre de Contacto</label>
+                      <label className="text-[#B0A89E] uppercase">Nombre de Contacto</label>
                       <p className="p-3 bg-black/40 border border-[#D4A853]/8 rounded text-white">{selectedClient.contact_name}</p>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[#9A8F82] uppercase">Email</label>
+                      <label className="text-[#B0A89E] uppercase">Email</label>
                       <p className="p-3 bg-black/40 border border-[#D4A853]/8 rounded text-white">{selectedClient.contact_email}</p>
                     </div>
                   </div>
 
                   {/* Founder psychology notes */}
                   <div className="space-y-1.5 font-mono text-xs">
-                    <label className="text-[#9A8F82] uppercase tracking-wider block">Psicología del Fundador / Notas Privadas</label>
+                    <label className="text-[#B0A89E] uppercase tracking-wider block">Psicología del Fundador / Notas Privadas</label>
                     <textarea
                       value={modalPrivateNotes}
                       onChange={e => setModalPrivateNotes(e.target.value)}
@@ -1716,7 +1716,7 @@ export default function AdminDashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
                     {/* Certified toggle */}
                     <div className="border border-[#D4A853]/8 p-3 rounded space-y-1 bg-black/20">
-                      <span className="text-[#9A8F82] uppercase block">Licencia Certificada</span>
+                      <span className="text-[#B0A89E] uppercase block">Licencia Certificada</span>
                       <div className="flex items-center justify-between pt-1">
                         <span className="text-white font-serif">{modalIsCertified ? "S&F Licenciado" : "Sin Licencia"}</span>
                         <button
@@ -1733,7 +1733,7 @@ export default function AdminDashboard() {
 
                     {/* Segment selector */}
                     <div className="border border-[#D4A853]/8 p-3 rounded space-y-1 bg-black/20">
-                      <span className="text-[#9A8F82] uppercase block">Segmento Asignado</span>
+                      <span className="text-[#B0A89E] uppercase block">Segmento Asignado</span>
                       <div className="flex items-center justify-between pt-1">
                         <span className="text-white font-serif">{modalSegment === "high_ticket" ? "High-Ticket" : "Microdosing"}</span>
                         <button
@@ -1749,7 +1749,7 @@ export default function AdminDashboard() {
                     {/* Cognitive fatigue slider */}
                     <div className="border border-[#D4A853]/8 p-3 rounded space-y-1 bg-black/20 flex flex-col justify-between">
                       <div className="flex justify-between">
-                        <span className="text-[#9A8F82] uppercase">Fatiga Cognitiva</span>
+                        <span className="text-[#B0A89E] uppercase">Fatiga Cognitiva</span>
                         <span className="text-[#D4A853] font-bold">{modalCognitiveFatigue}</span>
                       </div>
                       <input
@@ -1835,7 +1835,7 @@ export default function AdminDashboard() {
                         <span className="font-mono text-xs text-[#D4A853] uppercase block">Formulario de Entregables del Diagnóstico</span>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono">
                           <div className="space-y-1">
-                            <label className="text-[#9A8F82] uppercase">URL de Loom (Requerido)</label>
+                            <label className="text-[#B0A89E] uppercase">URL de Loom (Requerido)</label>
                             <input
                               type="text"
                               value={loomUrl}
@@ -1845,7 +1845,7 @@ export default function AdminDashboard() {
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[#9A8F82] uppercase">URL de Figma (Opcional)</label>
+                            <label className="text-[#B0A89E] uppercase">URL de Figma (Opcional)</label>
                             <input
                               type="text"
                               value={figmaUrl}
@@ -1855,7 +1855,7 @@ export default function AdminDashboard() {
                             />
                           </div>
                           <div className="space-y-1 md:col-span-2">
-                            <label className="text-[#9A8F82] uppercase">Signal del Funnel</label>
+                            <label className="text-[#B0A89E] uppercase">Signal del Funnel</label>
                             <textarea
                               value={diagSignal}
                               onChange={(e) => setDiagSignal(e.target.value)}
@@ -1865,7 +1865,7 @@ export default function AdminDashboard() {
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[#9A8F82] uppercase">Mecanismo de Fricción</label>
+                            <label className="text-[#B0A89E] uppercase">Mecanismo de Fricción</label>
                             <select
                               value={diagMechanism}
                               onChange={(e) => setDiagMechanism(e.target.value)}
@@ -1877,7 +1877,7 @@ export default function AdminDashboard() {
                             </select>
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[#9A8F82] uppercase">Causa Raíz</label>
+                            <label className="text-[#B0A89E] uppercase">Causa Raíz</label>
                             <textarea
                               value={diagRootCause}
                               onChange={(e) => setDiagRootCause(e.target.value)}
@@ -1960,7 +1960,7 @@ export default function AdminDashboard() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-[0.62rem]">
                         {/* Gate checklist */}
                         <div className="space-y-2 border-r border-[#D4A853]/8 pr-4">
-                          <span className="text-[#9A8F82] uppercase block mb-1">Checklist de Gates:</span>
+                          <span className="text-[#B0A89E] uppercase block mb-1">Checklist de Gates:</span>
                           <div className="space-y-1.5">
                             <label className="flex items-center gap-2 cursor-pointer text-white">
                               <input
@@ -2005,7 +2005,7 @@ export default function AdminDashboard() {
                         <div className="space-y-2">
                           <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-1">
-                              <label className="text-[#9A8F82] uppercase">Mejora Objetivo %</label>
+                              <label className="text-[#B0A89E] uppercase">Mejora Objetivo %</label>
                               <input
                                 type="number"
                                 value={modalTargetImprovement}
@@ -2014,7 +2014,7 @@ export default function AdminDashboard() {
                               />
                             </div>
                             <div className="space-y-1">
-                              <label className="text-[#9A8F82] uppercase">Ventana (Días)</label>
+                              <label className="text-[#B0A89E] uppercase">Ventana (Días)</label>
                               <input
                                 type="number"
                                 value={modalTimeframeDays}
@@ -2026,7 +2026,7 @@ export default function AdminDashboard() {
 
                           <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-1">
-                              <label className="text-[#9A8F82] uppercase">Conv% Base</label>
+                              <label className="text-[#B0A89E] uppercase">Conv% Base</label>
                               <input
                                 type="number"
                                 step="0.01"
@@ -2036,7 +2036,7 @@ export default function AdminDashboard() {
                               />
                             </div>
                             <div className="space-y-1">
-                              <label className="text-[#9A8F82] uppercase">Conv% Actual</label>
+                              <label className="text-[#B0A89E] uppercase">Conv% Actual</label>
                               <input
                                 type="number"
                                 step="0.01"
@@ -2048,7 +2048,7 @@ export default function AdminDashboard() {
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-[#9A8F82] uppercase">Estado de Garantía</label>
+                            <label className="text-[#B0A89E] uppercase">Estado de Garantía</label>
                             <select
                               value={modalGuaranteeStatus}
                               onChange={e => setModalGuaranteeStatus(e.target.value as any)}
@@ -2069,17 +2069,17 @@ export default function AdminDashboard() {
                 {/* Right Column: Timeline & Friction Diagnostics (col-span-5) */}
                 <div className="lg:col-span-5 border-t lg:border-t-0 lg:border-l border-white/10 pt-6 lg:pt-0 lg:pl-6 space-y-6 flex flex-col max-h-[60vh] overflow-y-auto">
                   <div className="space-y-3">
-                    <span className="font-mono text-xs text-[#9A8F82] uppercase tracking-wider block border-b border-[#D4A853]/8 pb-1">
+                    <span className="font-mono text-xs text-[#B0A89E] uppercase tracking-wider block border-b border-[#D4A853]/8 pb-1">
                       Diagnósticos de Fricción
                     </span>
                     {selectedClientInteractions.length === 0 ? (
-                      <p className="text-xs text-[#9A8F82] font-mono italic">Sin diagnósticos registrados.</p>
+                      <p className="text-xs text-[#B0A89E] font-mono italic">Sin diagnósticos registrados.</p>
                     ) : (
                       selectedClientInteractions.map((inter, i) => (
                         <div key={inter.id || i} className="bg-black/30 p-3 border border-[#D4A853]/8 rounded space-y-1.5">
                           <div className="flex justify-between text-[0.58rem] font-mono">
                             <span className="text-[#D4A853]">{inter.dominant_friction_mechanism?.replace(/_/g, " ").toUpperCase()}</span>
-                            <span className="text-[#9A8F82]">{new Date(inter.created_at).toLocaleDateString()}</span>
+                            <span className="text-[#B0A89E]">{new Date(inter.created_at).toLocaleDateString()}</span>
                           </div>
                           <p className="text-xs text-[#F5F0EB] font-sans leading-relaxed">{inter.root_cause_description}</p>
                           {inter.diagnostic_loom_url && (
@@ -2098,18 +2098,18 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="space-y-3 grow flex flex-col min-h-0">
-                    <span className="font-mono text-xs text-[#9A8F82] uppercase tracking-wider block border-b border-[#D4A853]/8 pb-1">
+                    <span className="font-mono text-xs text-[#B0A89E] uppercase tracking-wider block border-b border-[#D4A853]/8 pb-1">
                       Historial de Actividad
                     </span>
                     <div className="overflow-y-auto space-y-2 grow pr-1 scrollbar-thin max-h-[300px]">
                       {loadingLogs ? (
-                        <p className="text-xs text-[#9A8F82] font-mono animate-pulse">Cargando historial...</p>
+                        <p className="text-xs text-[#B0A89E] font-mono animate-pulse">Cargando historial...</p>
                       ) : selectedClientLogs.length === 0 ? (
-                        <p className="text-xs text-[#9A8F82] font-mono italic">Sin eventos registrados.</p>
+                        <p className="text-xs text-[#B0A89E] font-mono italic">Sin eventos registrados.</p>
                       ) : (
                         selectedClientLogs.map((log) => (
                           <div key={log.id} className="text-xs font-mono border-b border-[#D4A853]/8 pb-2 last:border-b-0">
-                            <div className="text-[#9A8F82] flex justify-between mb-0.5">
+                            <div className="text-[#B0A89E] flex justify-between mb-0.5">
                               <span>{new Date(log.created_at).toLocaleDateString()}</span>
                               <span>{new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                             </div>

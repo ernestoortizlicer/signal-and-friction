@@ -212,7 +212,7 @@ export default function Home() {
             </svg>
             <div className="absolute inset-0 blur-md bg-[#D4A853]/20 rounded-full" />
           </div>
-          <span className="font-mono text-[0.55rem] text-[#D4A853]/60 tracking-[0.35em] uppercase font-semibold">
+          <span className="font-mono text-[0.55rem] text-[#D4A853]/70 tracking-[0.35em] uppercase font-semibold">
             Signal &amp; Friction
           </span>
         </div>
@@ -251,7 +251,7 @@ export default function Home() {
               </h1>
             </div>
 
-            <p className="text-sm text-[#9A8F82] leading-relaxed max-w-md font-mono">
+            <p className="text-sm text-[#B0A89E] leading-relaxed max-w-md font-mono">
               Clinical B2B SaaS diagnostic. 72h async delivery.
               One finding. One fix. Supported by the S&F 20% Growth Guarantee™.
             </p>
@@ -283,7 +283,7 @@ export default function Home() {
               <div className="pt-4 space-y-2 hidden md:block">
                 {testimonials.slice(0, 2).map((t, i) => (
                   <div key={i} className="border-l border-[#D4A853]/10 pl-3 py-1">
-                    <p className="text-[0.65rem] text-[#9A8F82] italic leading-relaxed">
+                    <p className="text-[0.65rem] text-[#B0A89E] italic leading-relaxed">
                       &ldquo;{t.quote_text}&rdquo;
                     </p>
                     <span className="text-[0.55rem] font-mono text-[#D4A853]/70 uppercase tracking-wider block mt-0.5">
@@ -315,7 +315,7 @@ export default function Home() {
                     {currentStep.code}
                   </span>
                 </div>
-                <span className="font-mono text-[0.55rem] text-[#9A8F82] tabular-nums">
+                <span className="font-mono text-[0.55rem] text-[#B0A89E] tabular-nums">
                   Step {step} of 5
                 </span>
               </div>
@@ -327,7 +327,7 @@ export default function Home() {
                   <div className="font-mono text-[0.5rem] text-[#D4A853]/70 tracking-[0.3em] uppercase mb-1">
                     {currentStep.label}
                   </div>
-                  <div className="font-mono text-[0.65rem] text-[#9A8F82]">
+                  <div className="font-mono text-[0.65rem] text-[#B0A89E]">
                     {currentStep.desc}
                   </div>
                 </div>
@@ -351,10 +351,10 @@ export default function Home() {
                           onChange={(e) => setUrl(e.target.value)}
                           placeholder="https://your-product.com"
                           aria-label="Product URL for diagnostic scan"
-                          className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#4A4540] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
+                          className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#7A6F65] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
                           style={{ caretColor: "#D4A853" }}
                         />
-                        <div className="font-mono text-[0.5rem] text-[#9A8F82] tracking-wide flex items-center gap-1.5">
+                        <div className="font-mono text-[0.5rem] text-[#B0A89E] tracking-wide flex items-center gap-1.5">
                           <span className="w-1 h-1 rounded-full bg-[#5C9A6B]/50" />
                           Join 50+ B2B SaaS founders who have diagnosed their funnel.
                         </div>
@@ -387,17 +387,17 @@ export default function Home() {
                               className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                 funnelPain === opt.key
                                   ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                  : "border-l-transparent text-[#9A8F82] hover:text-[#9A8F82] hover:bg-white/[0.01]"
+                                  : "border-l-transparent text-[#B0A89E] hover:text-[#B0A89E] hover:bg-white/[0.01]"
                               }`}
                             >
                               <div className="text-xs tracking-wide">{opt.label}</div>
-                              <div className="text-[0.55rem] text-[#9A8F82] mt-0.5">{opt.sub}</div>
+                              <div className="text-[0.55rem] text-[#B0A89E] mt-0.5">{opt.sub}</div>
                             </button>
                           ))}
                         </div>
                         <div className="flex gap-px pt-1">
                           <button type="button" onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#9A8F82] hover:text-[#9A8F82] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer">
+                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#B0A89E] hover:text-[#B0A89E] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer">
                             ← Back
                           </button>
                           <button type="button" onClick={nextStep}
@@ -427,17 +427,17 @@ export default function Home() {
                               className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                 segmentSelection === opt.key
                                   ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                  : "border-l-transparent text-[#9A8F82] hover:text-[#9A8F82] hover:bg-white/[0.01]"
+                                  : "border-l-transparent text-[#B0A89E] hover:text-[#B0A89E] hover:bg-white/[0.01]"
                               }`}
                             >
                               <div className="text-xs tracking-wide">{opt.label}</div>
-                              <div className="text-[0.55rem] text-[#9A8F82] mt-0.5">{opt.sub}</div>
+                              <div className="text-[0.55rem] text-[#B0A89E] mt-0.5">{opt.sub}</div>
                             </button>
                           ))}
                         </div>
                         <div className="flex gap-px pt-1">
                           <button type="button" onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#9A8F82] hover:text-[#9A8F82] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer">
+                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#B0A89E] hover:text-[#B0A89E] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer">
                             ← Back
                           </button>
                           <button type="button" onClick={nextStep}
@@ -468,11 +468,11 @@ export default function Home() {
                                 className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                   customAnswer === opt.label
                                     ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                    : "border-l-transparent text-[#9A8F82] hover:text-[#9A8F82] hover:bg-white/[0.01]"
+                                    : "border-l-transparent text-[#B0A89E] hover:text-[#B0A89E] hover:bg-white/[0.01]"
                                 }`}
                               >
                                 <div className="text-xs tracking-wide">{opt.label}</div>
-                                <div className="text-[0.55rem] text-[#9A8F82] mt-0.5">{opt.sub}</div>
+                                <div className="text-[0.55rem] text-[#B0A89E] mt-0.5">{opt.sub}</div>
                               </button>
                             ))
                           ) : (
@@ -484,18 +484,18 @@ export default function Home() {
                                 className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                   customAnswer === opt.label
                                     ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                    : "border-l-transparent text-[#9A8F82] hover:text-[#9A8F82] hover:bg-white/[0.01]"
+                                    : "border-l-transparent text-[#B0A89E] hover:text-[#B0A89E] hover:bg-white/[0.01]"
                                 }`}
                               >
                                 <div className="text-xs tracking-wide">{opt.label}</div>
-                                <div className="text-[0.55rem] text-[#9A8F82] mt-0.5">{opt.sub}</div>
+                                <div className="text-[0.55rem] text-[#B0A89E] mt-0.5">{opt.sub}</div>
                               </button>
                             ))
                           )}
                         </div>
                         <div className="flex gap-px pt-1">
                           <button type="button" onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#9A8F82] hover:text-[#9A8F82] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer">
+                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#B0A89E] hover:text-[#B0A89E] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer">
                             ← Back
                           </button>
                           <button type="button" onClick={nextStep}
@@ -524,20 +524,20 @@ export default function Home() {
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="you@company.com"
                             aria-label="Email address for diagnostic report delivery"
-                            className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#4A4540] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
+                            className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#7A6F65] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
                             style={{ caretColor: "#D4A853" }}
                           />
-                          <div className="mt-2 font-mono text-[0.5rem] text-[#9A8F82] tracking-wide">
+                          <div className="mt-2 font-mono text-[0.5rem] text-[#B0A89E] tracking-wide">
                             Results in 72h. No marketing spam. No calls required.
                           </div>
                         </div>
-                        <div className="border border-[#D4A853]/10 bg-[#D4A853]/[0.03] px-3 py-2 font-mono text-[0.5rem] text-[#9A8F82] leading-relaxed flex items-center gap-2">
+                        <div className="border border-[#D4A853]/10 bg-[#D4A853]/[0.03] px-3 py-2 font-mono text-[0.5rem] text-[#B0A89E] leading-relaxed flex items-center gap-2">
                           <span className="text-[#D4A853]">⚑</span>
                           20% growth guarantee or full refund via Stripe. 72h async. Zero sales calls.
                         </div>
                         <div className="flex gap-px">
                           <button type="button" disabled={loading} onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#9A8F82] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer disabled:opacity-30">
+                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#B0A89E] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer disabled:opacity-30">
                             ← Back
                           </button>
                           <button
@@ -599,7 +599,7 @@ export default function Home() {
           <h2 className="text-2xl lg:text-4xl font-serif text-white tracking-tight">
             Calculate your <span className="text-[#D4A853] glow-text">conversion revenue lift</span>.
           </h2>
-          <p className="text-xs text-[#9A8F82] font-mono max-w-lg mx-auto leading-relaxed">
+          <p className="text-xs text-[#B0A89E] font-mono max-w-lg mx-auto leading-relaxed">
             Adjust the metrics to visualize how our guaranteed 20% relative conversion rate lift translates directly into recurring enterprise value.
           </p>
         </div>
@@ -610,7 +610,7 @@ export default function Home() {
             {/* Visitors Slider */}
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-[#9A8F82] uppercase">Monthly Unique Visitors:</span>
+                <span className="text-[#B0A89E] uppercase">Monthly Unique Visitors:</span>
                 <span className="text-[#D4A853] font-bold">{(calcVisitors).toLocaleString()}</span>
               </div>
               <input
@@ -622,7 +622,7 @@ export default function Home() {
                 onChange={(e) => setCalcVisitors(Number(e.target.value))}
                 className="w-full h-1 bg-[#2A2218] rounded appearance-none cursor-pointer accent-[#D4A853]"
               />
-              <div className="flex justify-between text-[0.5rem] text-[#9A8F82]">
+              <div className="flex justify-between text-[0.5rem] text-[#B0A89E]">
                 <span>5,000</span>
                 <span>50,000</span>
                 <span>100,000</span>
@@ -632,7 +632,7 @@ export default function Home() {
             {/* Current Conversion Rate Slider */}
             <div className="space-y-2 border-t border-[#D4A853]/8 pt-4">
               <div className="flex justify-between">
-                <span className="text-[#9A8F82] uppercase">Current Conversion Rate:</span>
+                <span className="text-[#B0A89E] uppercase">Current Conversion Rate:</span>
                 <span className="text-[#D4A853] font-bold">{calcConvRate.toFixed(1)}%</span>
               </div>
               <input
@@ -644,7 +644,7 @@ export default function Home() {
                 onChange={(e) => setCalcConvRate(Number(e.target.value))}
                 className="w-full h-1 bg-[#2A2218] rounded appearance-none cursor-pointer accent-[#D4A853]"
               />
-              <div className="flex justify-between text-[0.5rem] text-[#9A8F82]">
+              <div className="flex justify-between text-[0.5rem] text-[#B0A89E]">
                 <span>0.5%</span>
                 <span>2.5%</span>
                 <span>5.0%</span>
@@ -654,7 +654,7 @@ export default function Home() {
             {/* Customer LTV Slider */}
             <div className="space-y-2 border-t border-[#D4A853]/8 pt-4">
               <div className="flex justify-between">
-                <span className="text-[#9A8F82] uppercase">Customer LTV (ACV):</span>
+                <span className="text-[#B0A89E] uppercase">Customer LTV (ACV):</span>
                 <span className="text-[#D4A853] font-bold">${calcLtv} USD</span>
               </div>
               <input
@@ -666,7 +666,7 @@ export default function Home() {
                 onChange={(e) => setCalcLtv(Number(e.target.value))}
                 className="w-full h-1 bg-[#2A2218] rounded appearance-none cursor-pointer accent-[#D4A853]"
               />
-              <div className="flex justify-between text-[0.5rem] text-[#9A8F82]">
+              <div className="flex justify-between text-[0.5rem] text-[#B0A89E]">
                 <span>$50</span>
                 <span>$1,000</span>
                 <span>$2,000</span>
@@ -679,7 +679,7 @@ export default function Home() {
             <h3 className="text-white font-serif text-sm font-bold border-b border-[#D4A853]/10 pb-2">Revenue Growth Projections</h3>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-[#9A8F82]">Current Monthly Revenue:</span>
+                <span className="text-[#B0A89E]">Current Monthly Revenue:</span>
                 <span className="text-white font-bold">${Math.round(calcVisitors * (calcConvRate / 100) * calcLtv).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-[#5C9A6B]">
@@ -696,7 +696,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="border border-[#D4A853]/25 bg-[#0A0908] p-3 rounded text-[0.55rem] text-[#9A8F82] leading-relaxed">
+            <div className="border border-[#D4A853]/25 bg-[#0A0908] p-3 rounded text-[0.55rem] text-[#B0A89E] leading-relaxed">
               Calculations are based on a 20% relative increase in your current conversion rate (e.g. from {calcConvRate.toFixed(1)}% to {(calcConvRate * 1.2).toFixed(2)}%). Backed by the S&amp;F Results-Based Guarantee.
             </div>
           </div>
@@ -712,7 +712,7 @@ export default function Home() {
           <h2 className="text-2xl lg:text-4xl font-serif text-white tracking-tight">
             Why clinical diagnostics <span className="text-[#D4A853] glow-text">beats generic AI</span>.
           </h2>
-          <p className="text-xs text-[#9A8F82] font-mono max-w-lg mx-auto leading-relaxed">
+          <p className="text-xs text-[#B0A89E] font-mono max-w-lg mx-auto leading-relaxed">
             Stop relying on automated audit scrapers that tell you to change colors. Compare our clinical guarantee parameters.
           </p>
         </div>
@@ -726,7 +726,7 @@ export default function Home() {
                 <th className="p-4 font-semibold">Standard AI Audits</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-[#9A8F82]">
+            <tbody className="divide-y divide-white/5 text-[#B0A89E]">
               <tr>
                 <td className="p-4 font-bold text-white uppercase text-[0.58rem]">Risk Allocation</td>
                 <td className="p-4 text-[#5C9A6B] font-bold">100% Refundable via Stripe if metrics fail.</td>
@@ -751,13 +751,13 @@ export default function Home() {
           </table>
         </div>
 
-        <div className="text-center font-mono text-[0.55rem] text-[#9A8F82]">
+        <div className="text-center font-mono text-[0.55rem] text-[#B0A89E]">
           Read the complete legally binding covenant: <Link href="/legal/guarantee" className="text-[#D4A853] hover:underline">S&amp;F Performance Terms &amp; Conditions</Link>.
         </div>
       </section>
 
       {/* ── Footer ──────────────────────────────────────── */}
-      <footer className="w-full border-t border-white/[0.03] py-8 px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-[0.45rem] font-mono text-[#9A8F82] relative z-10 bg-[#0A0908]">
+      <footer className="w-full border-t border-white/[0.03] py-8 px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-[0.45rem] font-mono text-[#B0A89E] relative z-10 bg-[#0A0908]">
         <div className="flex flex-col md:flex-row items-center gap-4">
           <span>© {new Date().getFullYear()} Signal &amp; Friction Method™. All rights reserved.</span>
           <span className="hidden md:inline">|</span>

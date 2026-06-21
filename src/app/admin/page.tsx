@@ -305,19 +305,19 @@ export default function AdminDashboard() {
               <path d="M15 85c15-5 25-25 35-40 5-8 15-15 25-20" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
               <path d="m60 35 15-10-5 17" stroke="#B85C38" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            Signal &amp; Friction <span className="font-mono text-xs uppercase tracking-widest text-[#9A8F82] border border-[#222019] px-2 py-0.5 rounded-full ml-2">Revenue OS</span>
+            Signal &amp; Friction <span className="font-mono text-xs uppercase tracking-widest text-[#B0A89E] border border-[#222019] px-2 py-0.5 rounded-full ml-2">Revenue OS</span>
           </div>
         </div>
         
         {/* KPI Panel */}
         <div className="flex items-center gap-6 text-right">
           <div>
-            <div className="font-mono text-[0.55rem] uppercase tracking-wider text-[#9A8F82]">Active Pipeline</div>
+            <div className="font-mono text-[0.55rem] uppercase tracking-wider text-[#B0A89E]">Active Pipeline</div>
             <div className="text-sm font-medium text-[#F5F0EB] font-serif">${pipelineValue.toLocaleString()} USD</div>
           </div>
           <div className="w-px h-8 bg-border" />
           <div>
-            <div className="font-mono text-[0.55rem] uppercase tracking-wider text-[#9A8F82]">Active Leads</div>
+            <div className="font-mono text-[0.55rem] uppercase tracking-wider text-[#B0A89E]">Active Leads</div>
             <div className="text-sm font-medium text-accent">{activeLeads.length}</div>
           </div>
         </div>
@@ -330,7 +330,7 @@ export default function AdminDashboard() {
         <aside className="w-80 border-r border-border flex flex-col bg-[#0E0D0C]/40 shrink-0">
           <div className="p-4 border-b border-border flex items-center justify-between">
             <h2 className="font-mono text-xs uppercase tracking-wider text-[#F5F0EB]">Inbound Pipeline</h2>
-            <button onClick={fetchLeads} className="text-[#9A8F82] hover:text-[#F5F0EB] transition-colors">
+            <button onClick={fetchLeads} className="text-[#B0A89E] hover:text-[#F5F0EB] transition-colors">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.253 8H18.2" />
               </svg>
@@ -339,9 +339,9 @@ export default function AdminDashboard() {
           
           <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-thin">
             {loading ? (
-              <div className="p-8 text-center text-xs text-[#9A8F82] animate-pulse">Loading leads...</div>
+              <div className="p-8 text-center text-xs text-[#B0A89E] animate-pulse">Loading leads...</div>
             ) : leads.length === 0 ? (
-              <div className="p-8 text-center text-xs text-[#9A8F82]">No intakes received yet.</div>
+              <div className="p-8 text-center text-xs text-[#B0A89E]">No intakes received yet.</div>
             ) : (
               leads.map((lead) => (
                 <button
@@ -359,7 +359,7 @@ export default function AdminDashboard() {
                       {lead.status}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-[0.65rem] text-[#9A8F82] font-mono">
+                  <div className="flex items-center justify-between text-[0.65rem] text-[#B0A89E] font-mono">
                     <span>{lead.industry.split("(")[0]}</span>
                     <span>{new Date(lead.submittedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                   </div>
@@ -385,7 +385,7 @@ export default function AdminDashboard() {
                 <div className="border-b border-border pb-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div>
                     <h1 className="text-3xl font-serif text-[#F5F0EB] leading-tight mb-2">{selectedLead.companyName}</h1>
-                    <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-[#9A8F82]">
+                    <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-[#B0A89E]">
                       <span className="flex items-center gap-1.5">
                         <svg className="w-3.5 h-3.5 text-[#B85C38]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                         {selectedLead.contact}
@@ -412,7 +412,7 @@ export default function AdminDashboard() {
                         className={`text-[0.65rem] font-mono uppercase px-3 py-1.5 rounded-full transition-all duration-300 ${
                           selectedLead.status === btn.key
                             ? "bg-[#B85C38] text-white font-medium"
-                            : "text-[#9A8F82] hover:text-[#F5F0EB]"
+                            : "text-[#B0A89E] hover:text-[#F5F0EB]"
                         }`}
                       >
                         {btn.label}
@@ -428,7 +428,7 @@ export default function AdminDashboard() {
                     className={`px-6 py-3 font-mono text-xs uppercase tracking-wider border-b-2 transition-all duration-300 ${
                       activeTab === 'details'
                         ? "border-[#B85C38] text-[#F5F0EB]"
-                        : "border-transparent text-[#9A8F82] hover:text-[#B8B0A8]"
+                        : "border-transparent text-[#B0A89E] hover:text-[#B8B0A8]"
                     }`}
                   >
                     Lead Evaluation &amp; Outbound
@@ -438,7 +438,7 @@ export default function AdminDashboard() {
                     className={`px-6 py-3 font-mono text-xs uppercase tracking-wider border-b-2 transition-all duration-300 ${
                       activeTab === 'editor'
                         ? "border-[#B85C38] text-[#F5F0EB]"
-                        : "border-transparent text-[#9A8F82] hover:text-[#B8B0A8]"
+                        : "border-transparent text-[#B0A89E] hover:text-[#B8B0A8]"
                     }`}
                   >
                     Diagnostic Brief Builder
@@ -453,12 +453,12 @@ export default function AdminDashboard() {
                       {/* Problem & Hypothesis */}
                       <div className="space-y-6">
                         <div className="border border-border bg-[#121110]/40 p-6 rounded">
-                          <h3 className="font-mono text-[0.65rem] uppercase tracking-wider text-[#9A8F82] mb-3">Intake Statement</h3>
+                          <h3 className="font-mono text-[0.65rem] uppercase tracking-wider text-[#B0A89E] mb-3">Intake Statement</h3>
                           <p className="text-sm leading-[1.7] text-[#F5F0EB] whitespace-pre-wrap">{selectedLead.intakeData.problemStatement}</p>
                         </div>
                         
                         <div className="border border-border bg-[#121110]/40 p-6 rounded">
-                          <h3 className="font-mono text-[0.65rem] uppercase tracking-wider text-[#9A8F82] mb-3">Current Hypothesis</h3>
+                          <h3 className="font-mono text-[0.65rem] uppercase tracking-wider text-[#B0A89E] mb-3">Current Hypothesis</h3>
                           <p className="text-sm leading-[1.7] italic">{selectedLead.intakeData.currentHypothesis || "None submitted."}</p>
                         </div>
                       </div>
@@ -466,7 +466,7 @@ export default function AdminDashboard() {
                       {/* Funnel Metrics */}
                       <div className="border border-border bg-[#121110]/40 p-6 rounded flex flex-col justify-between">
                         <div>
-                          <h3 className="font-mono text-[0.65rem] uppercase tracking-wider text-[#9A8F82] mb-6">Funnel Metrics (SaaS Drop-offs)</h3>
+                          <h3 className="font-mono text-[0.65rem] uppercase tracking-wider text-[#B0A89E] mb-6">Funnel Metrics (SaaS Drop-offs)</h3>
                           <div className="space-y-4">
                             {[
                               { label: "Signup → Pricing Page", val: selectedLead.intakeData.funnelMetrics.signupToPricing },
@@ -474,7 +474,7 @@ export default function AdminDashboard() {
                               { label: "Checkout → Paid Upgrade", val: selectedLead.intakeData.funnelMetrics.checkoutToPaid }
                             ].map((metric, i) => (
                               <div key={i} className="flex justify-between items-center border-b border-border pb-3 last:border-0 last:pb-0">
-                                <span className="text-xs text-[#9A8F82] font-mono">{metric.label}</span>
+                                <span className="text-xs text-[#B0A89E] font-mono">{metric.label}</span>
                                 <span className="text-sm font-semibold text-[#F5F0EB]">{metric.val || "Unavailable"}</span>
                               </div>
                             ))}
@@ -491,7 +491,7 @@ export default function AdminDashboard() {
                     {/* CRM Execution Notes Panel */}
                     <div className="border border-border bg-[#121110]/30 p-6 rounded space-y-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="font-mono text-[0.65rem] uppercase tracking-wider text-[#9A8F82] flex items-center gap-2">
+                        <h3 className="font-mono text-[0.65rem] uppercase tracking-wider text-[#B0A89E] flex items-center gap-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
                           Internal CRM Execution Notes
                         </h3>
@@ -516,12 +516,12 @@ export default function AdminDashboard() {
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
                         <div>
                           <h3 className="font-serif text-lg text-[#F5F0EB]">Outbound Sniper Console</h3>
-                          <p className="text-xs text-[#9A8F82] font-mono mt-1">Generate high-converting American outbound copy with Reforge &amp; Stanford behavioral triggers.</p>
+                          <p className="text-xs text-[#B0A89E] font-mono mt-1">Generate high-converting American outbound copy with Reforge &amp; Stanford behavioral triggers.</p>
                         </div>
                         
                         {/* Mechanism Selector */}
                         <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-[0.65rem] font-mono text-[#9A8F82] uppercase">Friction Pivot:</span>
+                          <span className="text-[0.65rem] font-mono text-[#B0A89E] uppercase">Friction Pivot:</span>
                           <select
                             value={selectedMechanism}
                             onChange={(e) => setSelectedMechanism(e.target.value)}
@@ -547,7 +547,7 @@ export default function AdminDashboard() {
                               ].map((pitch) => (
                                 <div key={pitch.key} className="bg-[#0A0908] border border-border p-5 rounded space-y-3 relative group">
                                   <div className="flex justify-between items-center">
-                                    <span className="font-mono text-xs text-[#9A8F82] uppercase tracking-wider">{pitch.title}</span>
+                                    <span className="font-mono text-xs text-[#B0A89E] uppercase tracking-wider">{pitch.title}</span>
                                     <button
                                       onClick={() => {
                                         navigator.clipboard.writeText(pitch.text);
@@ -574,7 +574,7 @@ export default function AdminDashboard() {
                 {activeTab === 'editor' && (
                   <div className="space-y-8">
                     {delLoading ? (
-                      <div className="p-12 text-center text-xs text-[#9A8F82] animate-pulse">Loading secure client brief...</div>
+                      <div className="p-12 text-center text-xs text-[#B0A89E] animate-pulse">Loading secure client brief...</div>
                     ) : (
                       <div className="space-y-8">
                         {/* Status bar */}
@@ -611,7 +611,7 @@ export default function AdminDashboard() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Input: Loom URL */}
                             <div className="space-y-2">
-                              <label className="text-[0.65rem] font-mono uppercase tracking-wider text-[#9A8F82]">Loom Video Walkthrough URL</label>
+                              <label className="text-[0.65rem] font-mono uppercase tracking-wider text-[#B0A89E]">Loom Video Walkthrough URL</label>
                               <input
                                 type="text"
                                 value={deliverable.loomUrl}
@@ -622,7 +622,7 @@ export default function AdminDashboard() {
                             </div>
                             {/* Selector: Mechanism */}
                             <div className="space-y-2">
-                              <label className="text-[0.65rem] font-mono uppercase tracking-wider text-[#9A8F82]">Primary Friction Mechanism</label>
+                              <label className="text-[0.65rem] font-mono uppercase tracking-wider text-[#B0A89E]">Primary Friction Mechanism</label>
                               <select
                                 value={deliverable.diagnosis.friction.mechanism}
                                 onChange={(e) => setDeliverable({
@@ -643,7 +643,7 @@ export default function AdminDashboard() {
 
                           {/* Input: The Signal */}
                           <div className="space-y-2">
-                            <label className="text-[0.65rem] font-mono uppercase tracking-wider text-[#9A8F82]">01 — The Funnel Signal (Observable Drops)</label>
+                            <label className="text-[0.65rem] font-mono uppercase tracking-wider text-[#B0A89E]">01 — The Funnel Signal (Observable Drops)</label>
                             <textarea
                               value={deliverable.diagnosis.signal}
                               onChange={(e) => setDeliverable({
@@ -657,7 +657,7 @@ export default function AdminDashboard() {
 
                           {/* Input: Root Cause */}
                           <div className="space-y-2">
-                            <label className="text-[0.65rem] font-mono uppercase tracking-wider text-[#9A8F82]">02 — Root Cause Analysis (Behavioral Science perspective)</label>
+                            <label className="text-[0.65rem] font-mono uppercase tracking-wider text-[#B0A89E]">02 — Root Cause Analysis (Behavioral Science perspective)</label>
                             <textarea
                               value={deliverable.diagnosis.friction.rootCause}
                               onChange={(e) => setDeliverable({
@@ -687,7 +687,7 @@ export default function AdminDashboard() {
                                 <div className="grid grid-cols-1 gap-4">
                                   {/* Label */}
                                   <div className="space-y-1">
-                                    <label className="text-[0.55rem] font-mono uppercase tracking-widest text-[#9A8F82]">Decision Title/Label</label>
+                                    <label className="text-[0.55rem] font-mono uppercase tracking-widest text-[#B0A89E]">Decision Title/Label</label>
                                     <input
                                       type="text"
                                       value={decision.label}
@@ -706,7 +706,7 @@ export default function AdminDashboard() {
 
                                   {/* Action */}
                                   <div className="space-y-1">
-                                    <label className="text-[0.55rem] font-mono uppercase tracking-widest text-[#9A8F82]">Action Details</label>
+                                    <label className="text-[0.55rem] font-mono uppercase tracking-widest text-[#B0A89E]">Action Details</label>
                                     <textarea
                                       value={decision.action}
                                       onChange={(e) => {
@@ -724,7 +724,7 @@ export default function AdminDashboard() {
 
                                   {/* Reasoning */}
                                   <div className="space-y-1">
-                                    <label className="text-[0.55rem] font-mono uppercase tracking-widest text-[#9A8F82]">Behavioral Reasoning</label>
+                                    <label className="text-[0.55rem] font-mono uppercase tracking-widest text-[#B0A89E]">Behavioral Reasoning</label>
                                     <textarea
                                       value={decision.reasoning}
                                       onChange={(e) => {
@@ -742,7 +742,7 @@ export default function AdminDashboard() {
 
                                   {/* Trade-off */}
                                   <div className="space-y-1">
-                                    <label className="text-[0.55rem] font-mono uppercase tracking-widest text-[#9A8F82]">Risk &amp; Trade-off</label>
+                                    <label className="text-[0.55rem] font-mono uppercase tracking-widest text-[#B0A89E]">Risk &amp; Trade-off</label>
                                     <textarea
                                       value={decision.tradeoff}
                                       onChange={(e) => {
@@ -778,7 +778,7 @@ export default function AdminDashboard() {
                 )}
               </motion.div>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-xs text-[#9A8F82]">
+              <div className="flex-1 flex items-center justify-center text-xs text-[#B0A89E]">
                 Select a B2B SaaS lead from the pipeline directory to activate the workspace.
               </div>
             )}
@@ -807,7 +807,7 @@ export default function AdminDashboard() {
                       navigator.clipboard.writeText(link.copyVal);
                       alert(`${link.label} Stripe Link copied!`);
                     }}
-                    className="w-full text-center text-[0.65rem] font-mono uppercase bg-[#0A0908] border border-border rounded py-2 text-[#9A8F82] group-hover:text-accent-light group-hover:border-accent/30 transition-all duration-300"
+                    className="w-full text-center text-[0.65rem] font-mono uppercase bg-[#0A0908] border border-border rounded py-2 text-[#B0A89E] group-hover:text-accent-light group-hover:border-accent/30 transition-all duration-300"
                   >
                     Copy Stripe Link
                   </button>

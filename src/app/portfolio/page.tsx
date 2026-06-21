@@ -62,7 +62,7 @@ export default function PublicPortfolio() {
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
             <path d="M8 1L15 8L8 15L1 8Z" stroke="#D4A853" strokeWidth="1.5" />
           </svg>
-          <span className="font-mono text-xs text-[#D4A853]/60 tracking-[0.35em] uppercase font-bold">
+          <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.35em] uppercase font-bold">
             S&amp;F Clinical Portfolio
           </span>
         </div>
@@ -80,7 +80,7 @@ export default function PublicPortfolio() {
           <h1 className="text-3xl lg:text-5xl font-serif text-white tracking-tight">
             Case Studies in <span className="text-[#D4A853] glow-text">Clinical Conversion</span>.
           </h1>
-          <p className="text-sm text-[#9A8F82] font-mono max-w-lg mx-auto leading-relaxed">
+          <p className="text-sm text-[#B0A89E] font-mono max-w-lg mx-auto leading-relaxed">
             We don&apos;t build website templates. We isolate technical and cognitive friction mechanisms to drive direct, telemetry-verified revenue growth.
           </p>
         </div>
@@ -101,7 +101,7 @@ export default function PublicPortfolio() {
               <div className="flex justify-between items-start border-b border-[#D4A853]/8 pb-3">
                 <div className="space-y-0.5">
                   <h3 className="text-lg font-bold text-white font-mono">{project.client}</h3>
-                  <span className="text-xs font-mono text-[#9A8F82] uppercase tracking-wider block">{project.category}</span>
+                  <span className="text-xs font-mono text-[#B0A89E] uppercase tracking-wider block">{project.category}</span>
                 </div>
                 <div className="text-right">
                   <span className="text-2xl font-bold text-[#D4A853] font-mono glow-text block">{project.stat}</span>
@@ -109,7 +109,7 @@ export default function PublicPortfolio() {
                 </div>
               </div>
 
-              <p className="text-sm text-[#9A8F82] font-mono leading-relaxed">
+              <p className="text-sm text-[#B0A89E] font-mono leading-relaxed">
                 {project.description}
               </p>
 
@@ -124,7 +124,7 @@ export default function PublicPortfolio() {
         {/* Global Conquest CTA */}
         <div className="border border-[#D4A853]/15 bg-[#0A0908]/95 p-8 rounded text-center space-y-4">
           <h3 className="text-xl font-bold font-serif text-white">Backed by the S&amp;F Guarantee</h3>
-          <p className="text-sm text-[#9A8F82] font-mono max-w-md mx-auto leading-relaxed">
+          <p className="text-sm text-[#B0A89E] font-mono max-w-md mx-auto leading-relaxed">
             All enterprise audits are backed by our results-based performance protocols. If we don&apos;t meet our conversion benchmarks, your diagnostic fee is refunded via Stripe.
           </p>
           <div className="pt-2">

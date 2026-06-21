@@ -84,14 +84,14 @@ function ConfirmedContent() {
         transition={{ duration: 0.6 }}
         className="w-64 border-r border-[#D4A853]/8 bg-[#0A0908] flex flex-col py-6 px-5 flex-shrink-0 hidden md:flex"
       >
-        <div className="font-mono text-xs text-[#D4A853]/60 tracking-[0.35em] uppercase mb-6">
+        <div className="font-mono text-xs text-[#D4A853]/70 tracking-[0.35em] uppercase mb-6">
           Mission Parameters
         </div>
 
         {/* Ref ID */}
         <div className="mb-4">
           <div className="font-mono text-xs text-[#7A6F65] tracking-[0.2em] uppercase mb-1">Ref ID</div>
-          <div className="font-mono text-xs text-[#D4A853]/60 tracking-wider">{refId}</div>
+          <div className="font-mono text-xs text-[#D4A853]/70 tracking-wider">{refId}</div>
         </div>
 
         {/* Email */}
@@ -142,7 +142,7 @@ function ConfirmedContent() {
           ))}
         </div>
 
-        <Link href="/" className="font-mono text-xs text-[#7A6F65] hover:text-[#9A8F82] transition-colors tracking-[0.15em] uppercase">
+        <Link href="/" className="font-mono text-xs text-[#7A6F65] hover:text-[#B0A89E] transition-colors tracking-[0.15em] uppercase">
           ← Return
         </Link>
       </motion.div>
@@ -181,7 +181,7 @@ function ConfirmedContent() {
 
           {/* Oscilloscope */}
           <div className="w-full border border-[#D4A853]/8 bg-[#0A0908]/80 p-4">
-            <div className="font-mono text-xs text-[#9A8F82] tracking-[0.25em] uppercase mb-2">
+            <div className="font-mono text-xs text-[#B0A89E] tracking-[0.25em] uppercase mb-2">
               Signal Monitor — Live Trace
             </div>
             <Oscilloscope width={560} height={140} color="#D4A853" />
@@ -189,10 +189,10 @@ function ConfirmedContent() {
 
           {/* Payment Card / Direct CTA */}
           <div className="border border-[#D4A853]/10 bg-[#0A0908]/95 px-8 py-6 max-w-md text-center space-y-5 glow-border">
-            <div className="font-mono text-xs text-[#9A8F82] tracking-[0.2em] uppercase">
+            <div className="font-mono text-xs text-[#B0A89E] tracking-[0.2em] uppercase">
               Secure Payment Pending
             </div>
-            <p className="text-sm text-[#9A8F82] font-mono leading-relaxed">
+            <p className="text-sm text-[#B0A89E] font-mono leading-relaxed">
               {isMicrodosing
                 ? "The diagnostic fee unlocks your full conversion framework — interactive modules, self-paced checklists, and a Loom walkthrough. Completely async, starting immediately."
                 : "The diagnostic fee activates your 72-hour clinical window. You receive a precision friction report and Loom walkthrough — no calls, no meetings. If we don’t identify three specific friction points, you pay nothing."
@@ -211,7 +211,7 @@ function ConfirmedContent() {
           {/* Time to Delivery Countdown (DFY Only) */}
           {!isMicrodosing && (
             <div className="border border-[#D4A853]/8 bg-[#0A0908]/80 px-8 py-5 glow-border">
-              <div className="font-mono text-xs text-[#9A8F82] tracking-[0.3em] uppercase mb-3 text-center">
+              <div className="font-mono text-xs text-[#B0A89E] tracking-[0.3em] uppercase mb-3 text-center">
                 Time to Delivery (Post-Payment)
               </div>
               <div className="flex items-center justify-center gap-1 font-mono">
@@ -241,7 +241,7 @@ function ConfirmedContent() {
               isMicrodosing ? "Full conversion modules." : "Manual funnel audit: landing → checkout.",
               isMicrodosing ? "Complete self-serve autonomy." : "Clinical report + Loom in your inbox.",
             ].map((item, i) => (
-              <div key={i} className="border border-[#D4A853]/5 px-3 py-2.5 font-mono text-xs text-[#9A8F82] leading-relaxed">
+              <div key={i} className="border border-[#D4A853]/5 px-3 py-2.5 font-mono text-xs text-[#B0A89E] leading-relaxed">
                 <span className="text-[#5C9A6B] mr-1.5">●</span>{item}
               </div>
             ))}
@@ -262,13 +262,13 @@ function ConfirmedContent() {
                 <p className="font-mono text-xs text-[#F5F0EB] leading-relaxed mb-0.5">
                   Refer a founder. Earn a $500 Diagnostic Credit.
                 </p>
-                <p className="font-mono text-xs text-[#9A8F82] leading-relaxed">
+                <p className="font-mono text-xs text-[#B0A89E] leading-relaxed">
                   Share your link. Credit activates when they complete a paid phase. Valid on orders $750 and above.
                 </p>
               </div>
               <div className="flex flex-col items-end gap-2 shrink-0">
                 <div className="flex items-center gap-2 border border-[#D4A853]/15 px-2.5 py-1.5 bg-[#0A0908]">
-                  <span className="font-mono text-xs text-[#9A8F82] truncate max-w-[160px]">
+                  <span className="font-mono text-xs text-[#B0A89E] truncate max-w-[160px]">
                     {referralLink}
                   </span>
                 </div>

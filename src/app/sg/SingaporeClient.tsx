@@ -37,7 +37,7 @@ function UtcClock() {
     return () => clearInterval(id);
   }, []);
   return (
-    <span className="font-mono text-xs text-[#D4A853]/50 tracking-[0.2em] tabular-nums glow-text">
+    <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.2em] tabular-nums glow-text">
       UTC {time}
     </span>
   );
@@ -211,7 +211,7 @@ export default function SingaporeClient() {
             </svg>
             <div className="absolute inset-0 blur-md bg-[#D4A853]/20 rounded-full" />
           </div>
-          <span className="font-mono text-xs text-[#D4A853]/60 tracking-[0.35em] uppercase font-semibold">
+          <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.35em] uppercase font-semibold">
             Signal &amp; Friction // SG
           </span>
         </div>
@@ -238,7 +238,7 @@ export default function SingaporeClient() {
             className="flex-1 max-w-lg space-y-6"
           >
             <div className="space-y-2">
-              <div className="font-mono text-xs text-[#D4A853]/60 tracking-[0.4em] uppercase">
+              <div className="font-mono text-xs text-[#D4A853]/70 tracking-[0.4em] uppercase">
                 Singapore Diagnostic Portal v4.5
               </div>
               <h1 className="text-[2.8rem] lg:text-[3.6rem] font-bold leading-[1.0] tracking-[-0.03em]">
@@ -250,7 +250,7 @@ export default function SingaporeClient() {
               </h1>
             </div>
 
-            <p className="text-sm text-[#9A8F82] leading-relaxed max-w-md font-mono">
+            <p className="text-sm text-[#B0A89E] leading-relaxed max-w-md font-mono">
               Clinical B2B SaaS diagnostic localized for APAC. 72h async delivery.
               JCB &amp; PayNow checks. Supported by the S&amp;F SGD $2,700 Growth Guarantee™.
             </p>
@@ -297,7 +297,7 @@ export default function SingaporeClient() {
                     <p className="text-xs text-[#7A6F65] italic leading-relaxed">
                       &ldquo;{t.quote_text}&rdquo;
                     </p>
-                    <span className="text-xs font-mono text-[#D4A853]/60 uppercase tracking-wider block mt-0.5">
+                    <span className="text-xs font-mono text-[#D4A853]/70 uppercase tracking-wider block mt-0.5">
                       Verified Client
                     </span>
                   </div>
@@ -322,7 +322,7 @@ export default function SingaporeClient() {
                     <div className="w-[7px] h-[7px] rounded-full bg-[#D4A853]/60 animate-ping" />
                     <div className="w-[7px] h-[7px] rounded-full bg-[#7A6F65]/40" />
                   </div>
-                  <span className="font-mono text-xs text-[#D4A853]/60 tracking-[0.25em] uppercase">
+                  <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.25em] uppercase">
                     {currentStep.code}
                   </span>
                 </div>
@@ -336,10 +336,10 @@ export default function SingaporeClient() {
               <div className="p-6">
                 {/* Step label */}
                 <div className="mb-5">
-                  <div className="font-mono text-xs text-[#D4A853]/60 tracking-[0.3em] uppercase mb-1">
+                  <div className="font-mono text-xs text-[#D4A853]/70 tracking-[0.3em] uppercase mb-1">
                     {currentStep.label}
                   </div>
-                  <div className="font-mono text-xs text-[#9A8F82]">
+                  <div className="font-mono text-xs text-[#B0A89E]">
                     {currentStep.desc}
                   </div>
                 </div>
@@ -363,10 +363,10 @@ export default function SingaporeClient() {
                           onChange={(e) => setUrl(e.target.value)}
                           placeholder="https://your-product.sg"
                           aria-label="APAC product URL for diagnostic scan"
-                          className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#4A4540] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
+                          className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#7A6F65] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
                           style={{ caretColor: "#D4A853" }}
                         />
-                        <div className="font-mono text-xs text-[#9A8F82] tracking-wide flex items-center gap-1.5">
+                        <div className="font-mono text-xs text-[#B0A89E] tracking-wide flex items-center gap-1.5">
                           <span className="w-1 h-1 rounded-full bg-[#5C9A6B]/50" />
                           Trusted by APAC SaaS founders in SG, AU, and MY.
                         </div>
@@ -399,17 +399,17 @@ export default function SingaporeClient() {
                               className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                 funnelPain === opt.key
                                   ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                  : "border-l-transparent text-[#9A8F82] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
+                                  : "border-l-transparent text-[#B0A89E] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
                               }`}
                             >
                               <div className="text-xs tracking-wide">{opt.label}</div>
-                              <div className="text-xs text-[#9A8F82]/80 mt-0.5">{opt.sub}</div>
+                              <div className="text-xs text-[#B0A89E]/80 mt-0.5">{opt.sub}</div>
                             </button>
                           ))}
                         </div>
                         <div className="flex gap-px pt-1">
                           <button type="button" onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#9A8F82] transition-all font-mono text-xs uppercase tracking-[0.15em] cursor-pointer">
+                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#B0A89E] transition-all font-mono text-xs uppercase tracking-[0.15em] cursor-pointer">
                             ← Back
                           </button>
                           <button type="button" onClick={nextStep}
@@ -439,17 +439,17 @@ export default function SingaporeClient() {
                               className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                 segmentSelection === opt.key
                                   ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                  : "border-l-transparent text-[#9A8F82] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
+                                  : "border-l-transparent text-[#B0A89E] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
                               }`}
                             >
                               <div className="text-xs tracking-wide">{opt.label}</div>
-                              <div className="text-xs text-[#9A8F82]/80 mt-0.5">{opt.sub}</div>
+                              <div className="text-xs text-[#B0A89E]/80 mt-0.5">{opt.sub}</div>
                             </button>
                           ))}
                         </div>
                         <div className="flex gap-px pt-1">
                           <button type="button" onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#9A8F82] transition-all font-mono text-xs uppercase tracking-[0.15em] cursor-pointer">
+                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#B0A89E] transition-all font-mono text-xs uppercase tracking-[0.15em] cursor-pointer">
                             ← Back
                           </button>
                           <button type="button" onClick={nextStep}
@@ -480,11 +480,11 @@ export default function SingaporeClient() {
                                 className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                   customAnswer === opt.label
                                     ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                    : "border-l-transparent text-[#9A8F82] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
+                                    : "border-l-transparent text-[#B0A89E] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
                                 }`}
                               >
                                 <div className="text-xs tracking-wide">{opt.label}</div>
-                                <div className="text-xs text-[#9A8F82]/80 mt-0.5">{opt.sub}</div>
+                                <div className="text-xs text-[#B0A89E]/80 mt-0.5">{opt.sub}</div>
                               </button>
                             ))
                           ) : (
@@ -496,18 +496,18 @@ export default function SingaporeClient() {
                                 className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                   customAnswer === opt.label
                                     ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                    : "border-l-transparent text-[#9A8F82] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
+                                    : "border-l-transparent text-[#B0A89E] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
                                 }`}
                               >
                                 <div className="text-xs tracking-wide">{opt.label}</div>
-                                <div className="text-xs text-[#9A8F82]/80 mt-0.5">{opt.sub}</div>
+                                <div className="text-xs text-[#B0A89E]/80 mt-0.5">{opt.sub}</div>
                               </button>
                             ))
                           )}
                         </div>
                         <div className="flex gap-px pt-1">
                           <button type="button" onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#9A8F82] transition-all font-mono text-xs uppercase tracking-[0.15em] cursor-pointer">
+                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#B0A89E] transition-all font-mono text-xs uppercase tracking-[0.15em] cursor-pointer">
                             ← Back
                           </button>
                           <button type="button" onClick={nextStep}
@@ -536,20 +536,20 @@ export default function SingaporeClient() {
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="you@company.sg"
                             aria-label="Email address for APAC diagnostic report delivery"
-                            className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#4A4540] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
+                            className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#7A6F65] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
                             style={{ caretColor: "#D4A853" }}
                           />
-                          <div className="mt-2 font-mono text-xs text-[#9A8F82] tracking-wide">
+                          <div className="mt-2 font-mono text-xs text-[#B0A89E] tracking-wide">
                             APAC results in 72h. PDPA compliant. No sales calls.
                           </div>
                         </div>
-                        <div className="border border-[#D4A853]/10 bg-[#D4A853]/[0.03] px-3 py-2 font-mono text-xs text-[#9A8F82] leading-relaxed flex items-center gap-2">
+                        <div className="border border-[#D4A853]/10 bg-[#D4A853]/[0.03] px-3 py-2 font-mono text-xs text-[#B0A89E] leading-relaxed flex items-center gap-2">
                           <span className="text-[#D4A853]">⚑</span>
                           SGD $2,700 guarantee or full Stripe refund. 72h async. Zero sales calls.
                         </div>
                         <div className="flex gap-px">
                           <button type="button" disabled={loading} onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#9A8F82] transition-all font-mono text-xs uppercase tracking-[0.15em] cursor-pointer disabled:opacity-30">
+                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#B0A89E] transition-all font-mono text-xs uppercase tracking-[0.15em] cursor-pointer disabled:opacity-30">
                             ← Back
                           </button>
                           <button
@@ -611,7 +611,7 @@ export default function SingaporeClient() {
           <h2 className="text-2xl lg:text-4xl font-serif text-white tracking-tight">
             Calculate your <span className="text-[#D4A853] glow-text">conversion revenue lift</span>.
           </h2>
-          <p className="text-sm text-[#9A8F82] font-mono max-w-lg mx-auto leading-relaxed">
+          <p className="text-sm text-[#B0A89E] font-mono max-w-lg mx-auto leading-relaxed">
             Adjust the metrics to visualize how our guaranteed 20% relative conversion rate lift translates directly into recurring enterprise value.
           </p>
         </div>
@@ -622,7 +622,7 @@ export default function SingaporeClient() {
             {/* Visitors Slider */}
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-[#9A8F82] uppercase">Monthly Unique Visitors:</span>
+                <span className="text-[#B0A89E] uppercase">Monthly Unique Visitors:</span>
                 <span className="text-[#D4A853] font-bold">{(calcVisitors).toLocaleString()}</span>
               </div>
               <input
@@ -644,7 +644,7 @@ export default function SingaporeClient() {
             {/* Current Conversion Rate Slider */}
             <div className="space-y-2 border-t border-[#D4A853]/8 pt-4">
               <div className="flex justify-between">
-                <span className="text-[#9A8F82] uppercase">Current Conversion Rate:</span>
+                <span className="text-[#B0A89E] uppercase">Current Conversion Rate:</span>
                 <span className="text-[#D4A853] font-bold">{calcConvRate.toFixed(1)}%</span>
               </div>
               <input
@@ -666,7 +666,7 @@ export default function SingaporeClient() {
             {/* Customer LTV Slider */}
             <div className="space-y-2 border-t border-[#D4A853]/8 pt-4">
               <div className="flex justify-between">
-                <span className="text-[#9A8F82] uppercase">Customer LTV (ACV):</span>
+                <span className="text-[#B0A89E] uppercase">Customer LTV (ACV):</span>
                 <span className="text-[#D4A853] font-bold">${calcLtv} SGD</span>
               </div>
               <input
@@ -691,7 +691,7 @@ export default function SingaporeClient() {
             <h3 className="text-white font-serif text-sm font-bold border-b border-[#D4A853]/10 pb-2">Revenue Growth Projections</h3>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-[#9A8F82]">Current Monthly Revenue:</span>
+                <span className="text-[#B0A89E]">Current Monthly Revenue:</span>
                 <span className="text-white font-bold">${Math.round(calcVisitors * (calcConvRate / 100) * calcLtv).toLocaleString()} SGD</span>
               </div>
               <div className="flex justify-between text-[#5C9A6B]">
@@ -708,7 +708,7 @@ export default function SingaporeClient() {
               </div>
             </div>
 
-            <div className="border border-[#D4A853]/25 bg-[#0A0908] p-3 rounded text-xs text-[#9A8F82] leading-relaxed">
+            <div className="border border-[#D4A853]/25 bg-[#0A0908] p-3 rounded text-xs text-[#B0A89E] leading-relaxed">
               Calculations are based on a 20% relative increase in your current conversion rate (e.g. from {calcConvRate.toFixed(1)}% to {(calcConvRate * 1.2).toFixed(2)}%). Backed by the S&amp;F Results-Based Guarantee.
             </div>
           </div>
@@ -724,7 +724,7 @@ export default function SingaporeClient() {
           <h2 className="text-2xl lg:text-4xl font-serif text-white tracking-tight">
             Why clinical diagnostics <span className="text-[#D4A853] glow-text">beats generic AI</span>.
           </h2>
-          <p className="text-sm text-[#9A8F82] font-mono max-w-lg mx-auto leading-relaxed">
+          <p className="text-sm text-[#B0A89E] font-mono max-w-lg mx-auto leading-relaxed">
             Stop relying on automated audit scrapers that tell you to change colors. Compare our clinical guarantee parameters.
           </p>
         </div>
@@ -738,7 +738,7 @@ export default function SingaporeClient() {
                 <th className="p-4 font-semibold">Standard AI Audits</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-[#9A8F82]">
+            <tbody className="divide-y divide-white/5 text-[#B0A89E]">
               <tr>
                 <td className="p-4 font-bold text-white uppercase text-xs">Risk Allocation</td>
                 <td className="p-4 text-[#5C9A6B] font-bold">100% Refundable via Stripe in SGD if metrics fail.</td>
@@ -770,7 +770,7 @@ export default function SingaporeClient() {
 
       {/* ── Dual HQ Notice ──────────────────────────────── */}
       <div className="border-t border-[#D4A853]/10 bg-[#D4A853]/[0.02] px-6 py-3 font-mono text-xs text-[#7A6F65] text-center">
-        <span className="text-[#D4A853]">Global Structure:</span> Signal &amp; Friction · <span className="text-[#9A8F82]">APAC Regional Office: Singapore 🇸🇬</span> &nbsp;·&nbsp; All APAC operations &amp; guarantees continue uninterrupted.
+        <span className="text-[#D4A853]">Global Structure:</span> Signal &amp; Friction · <span className="text-[#B0A89E]">APAC Regional Office: Singapore 🇸🇬</span> &nbsp;·&nbsp; All APAC operations &amp; guarantees continue uninterrupted.
       </div>
 
       {/* ── Footer ──────────────────────────────────────── */}

@@ -112,7 +112,7 @@ export default function CertifiedClient() {
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
             <path d="M8 1L15 8L8 15L1 8Z" stroke="#D4A853" strokeWidth="1.5" />
           </svg>
-          <span className="font-mono text-xs text-[#D4A853]/60 tracking-[0.35em] uppercase font-bold">
+          <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.35em] uppercase font-bold">
             S&amp;F Certified™
           </span>
         </div>
@@ -135,7 +135,7 @@ export default function CertifiedClient() {
             </h1>
           </div>
 
-          <p className="text-sm text-[#9A8F82] leading-relaxed max-w-lg font-mono">
+          <p className="text-sm text-[#B0A89E] leading-relaxed max-w-lg font-mono">
             Licensing of the industry-leading cognitive conversion diagnostics framework. Enable your agency to sell medical-grade audits, run optimized A/B tests, and secure high-ticket clients.
           </p>
 
@@ -149,7 +149,7 @@ export default function CertifiedClient() {
             ].map((b, idx) => (
               <div key={idx} className="border border-[#D4A853]/8 bg-white/[0.01] p-4 rounded space-y-1">
                 <span className="text-xs font-serif font-bold text-[#F5F0EB] block">{b.title}</span>
-                <p className="text-sm text-[#9A8F82] font-mono leading-relaxed">{b.desc}</p>
+                <p className="text-sm text-[#B0A89E] font-mono leading-relaxed">{b.desc}</p>
               </div>
             ))}
           </div>
@@ -168,7 +168,7 @@ export default function CertifiedClient() {
               >
                 <div className="text-center space-y-1.5 border-b border-[#D4A853]/10 pb-4">
                   <h3 className="text-lg font-serif font-bold text-white">License Intake Portal</h3>
-                  <p className="text-xs text-[#9A8F82] font-mono uppercase tracking-wider">Select license billing parameters</p>
+                  <p className="text-xs text-[#B0A89E] font-mono uppercase tracking-wider">Select license billing parameters</p>
                 </div>
 
                 {/* Billing Selector */}
@@ -192,7 +192,7 @@ export default function CertifiedClient() {
                 {/* Intake Form */}
                 <form onSubmit={handleSubmit} className="space-y-4 font-mono text-xs">
                   <div className="space-y-1.5">
-                    <label className="text-[#9A8F82] uppercase tracking-wider block">Full Name</label>
+                    <label className="text-[#B0A89E] uppercase tracking-wider block">Full Name</label>
                     <input
                       required
                       type="text"
@@ -204,7 +204,7 @@ export default function CertifiedClient() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[#9A8F82] uppercase tracking-wider block">Work Email</label>
+                    <label className="text-[#B0A89E] uppercase tracking-wider block">Work Email</label>
                     <input
                       required
                       type="email"
@@ -216,7 +216,7 @@ export default function CertifiedClient() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[#9A8F82] uppercase tracking-wider block">Agency Name</label>
+                    <label className="text-[#B0A89E] uppercase tracking-wider block">Agency Name</label>
                     <input
                       required
                       type="text"
@@ -228,7 +228,7 @@ export default function CertifiedClient() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[#9A8F82] uppercase tracking-wider block">Website URL</label>
+                    <label className="text-[#B0A89E] uppercase tracking-wider block">Website URL</label>
                     <input
                       required
                       type="url"
@@ -260,14 +260,14 @@ export default function CertifiedClient() {
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-lg font-serif font-bold text-white">Stripe Payment Successful</h3>
-                  <p className="text-sm text-[#9A8F82] font-mono leading-relaxed">
+                  <p className="text-sm text-[#B0A89E] font-mono leading-relaxed">
                     License payment received for <strong className="text-white">{formData.agency}</strong> ({tier === "one_time" ? "Lifetime Plan" : "Subscription Plan"}).
                   </p>
                 </div>
 
                 <div className="border border-[#D4A853]/8 bg-[#110F0D]/25 p-4 rounded text-left space-y-3 font-mono text-xs">
                   <span className="text-[#D4A853] font-semibold block uppercase tracking-wider">Automated Onboarding Kit:</span>
-                  <p className="text-[#9A8F82] leading-relaxed">
+                  <p className="text-[#B0A89E] leading-relaxed">
                     We have dispatched your digital S&amp;F Certification playbook, exam key, and vector badge assets to: <strong className="text-[#F5F0EB]">{formData.email}</strong>.
                   </p>
                   <a
@@ -282,7 +282,7 @@ export default function CertifiedClient() {
                 <button
                   type="button"
                   onClick={() => setSubmitted(false)}
-                  className="w-full py-2.5 border border-[#7A6F65] text-xs text-[#9A8F82] hover:text-white transition-colors cursor-pointer"
+                  className="w-full py-2.5 border border-[#7A6F65] text-xs text-[#B0A89E] hover:text-white transition-colors cursor-pointer"
                 >
                   Return to License Form
                 </button>
@@ -310,7 +310,7 @@ export default function CertifiedClient() {
             <div key={idx} className="border border-[#D4A853]/8 bg-[#110F0D]/10 p-5 rounded space-y-2 font-mono">
               <span className="text-[#D4A853] font-bold text-xs">Module {m.id}</span>
               <h4 className="text-white font-serif font-bold text-sm">{m.title}</h4>
-              <p className="text-sm text-[#9A8F82] leading-relaxed">{m.desc}</p>
+              <p className="text-sm text-[#B0A89E] leading-relaxed">{m.desc}</p>
             </div>
           ))}
         </div>

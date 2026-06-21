@@ -84,7 +84,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
   // Loading skeleton
   if (fetching && !d.clientName) {
     return (
-      <div className="min-h-screen bg-[#0A0908] flex items-center justify-center font-mono text-xs text-[#9A8F82] animate-pulse">
+      <div className="min-h-screen bg-[#0A0908] flex items-center justify-center font-mono text-xs text-[#B0A89E] animate-pulse">
         Loading diagnostic portal...
       </div>
     );
@@ -102,7 +102,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
               </span>
               <span className="text-xs text-[#7A6F65] font-mono">/ Client Portal</span>
             </div>
-            <span className="font-mono text-xs uppercase tracking-[0.15em] text-[#D4A853]/60 border border-[#D4A853]/25 px-3 py-1 rounded bg-[#D4A853]/5">
+            <span className="font-mono text-xs uppercase tracking-[0.15em] text-[#D4A853]/70 border border-[#D4A853]/25 px-3 py-1 rounded bg-[#D4A853]/5">
               Autonomy Track
             </span>
           </div>
@@ -127,7 +127,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-[#F5F0EB] font-serif">
                 {d.clientName} Optimization Console
               </h1>
-              <p className="text-sm text-[#9A8F82] leading-relaxed max-w-[60ch]">
+              <p className="text-sm text-[#B0A89E] leading-relaxed max-w-[60ch]">
                 Welcome to your self-serve optimization workspace. Analyze your custom diagnostic Loom, master the learning modules, and complete the checklist to resolve your conversion friction.
               </p>
             </div>
@@ -136,7 +136,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
               {/* Autonomy Progress */}
               <div className="bg-[#110F0D] border border-[#D4A853]/15 p-5 rounded-lg space-y-4 glow-border">
                 <div className="flex justify-between items-center font-mono text-xs">
-                  <span className="text-[#9A8F82]">Autonomy Progress</span>
+                  <span className="text-[#B0A89E]">Autonomy Progress</span>
                   <span className="text-[#D4A853] font-bold">{dynamicProgress}%</span>
                 </div>
                 <div className="w-full bg-[#2A2218] h-2 rounded-full overflow-hidden">
@@ -155,7 +155,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
               {/* Founder Focus Tracker — dynamic */}
               <div className="bg-[#110F0D] border border-[#C85C5C]/15 p-5 rounded-lg space-y-3 glow-border-red">
                 <div className="flex justify-between items-center font-mono text-xs">
-                  <span className="text-[#9A8F82]">Founder Focus Score</span>
+                  <span className="text-[#B0A89E]">Founder Focus Score</span>
                   <span className="text-[#5C9A6B] font-bold">{founderFocusScore} / 100</span>
                 </div>
                 <div className="w-full bg-[#2A2218] h-1.5 rounded-full overflow-hidden">
@@ -191,7 +191,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                         <polygon points="5 3 19 12 5 21 5 3" fill="#D4A853" />
                       </svg>
                     </div>
-                    <p className="font-mono text-xs text-[#D4A853]/60 uppercase tracking-widest">
+                    <p className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-widest">
                       Loom Video Briefing Active
                     </p>
                   </div>
@@ -225,7 +225,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                     <p className={`text-xs font-mono font-medium ${item.done ? "line-through text-[#7A6F65]" : "text-[#F5F0EB]"}`}>
                       {item.task}
                     </p>
-                    <p className="text-xs text-[#9A8F82] leading-relaxed">{item.tip}</p>
+                    <p className="text-xs text-[#B0A89E] leading-relaxed">{item.tip}</p>
                   </div>
                 </div>
               ))}
@@ -253,7 +253,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-[#9A8F82] leading-relaxed">{mod.description}</p>
+                  <p className="text-xs text-[#B0A89E] leading-relaxed">{mod.description}</p>
                 </div>
               ))}
             </div>
@@ -263,7 +263,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                   Module Summary &amp; Insight
                 </span>
                 <h4 className="text-xs font-bold font-mono text-[#F5F0EB]">{activeModule.title}</h4>
-                <p className="text-xs text-[#9A8F82] leading-relaxed font-mono">{activeModule.content}</p>
+                <p className="text-xs text-[#B0A89E] leading-relaxed font-mono">{activeModule.content}</p>
               </div>
             )}
           </div>
@@ -280,7 +280,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
 
   // ── High-Ticket / Concierge View ──────────────────────────────────────────
   return (
-    <main className="min-h-screen bg-[#0A0908] text-[#9A8F82] overflow-x-hidden grain">
+    <main className="min-h-screen bg-[#0A0908] text-[#B0A89E] overflow-x-hidden grain">
       <nav className="w-full fixed top-0 z-50 bg-[#0A0908]/90 backdrop-blur-xl border-b border-[#D4A853]/8">
         <div className="max-w-[900px] mx-auto px-6 h-14 flex items-center justify-between">
           <span className="font-serif text-[#F5F0EB] text-lg tracking-tight">
@@ -300,7 +300,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
       >
         <div className="max-w-[900px] mx-auto">
           <motion.div variants={itemVariants} className="flex items-center gap-3 mb-6">
-            <span className="font-mono text-xs uppercase tracking-[0.15em] text-[#9A8F82]">
+            <span className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E]">
               Revenue Friction Diagnostic
             </span>
             <span className="w-1 h-1 rounded-full bg-white/10" />
@@ -316,7 +316,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
 
           <motion.p
             variants={itemVariants}
-            className="text-lg text-[#9A8F82] max-w-[55ch] leading-relaxed font-light"
+            className="text-lg text-[#B0A89E] max-w-[55ch] leading-relaxed font-light"
           >
             This dashboard displays your custom Signal &amp; Friction diagnostic brief. Below is the clinical breakdown of your funnel signal, the dominant cognitive friction mechanism, and three strategic decisions.
           </motion.p>
@@ -350,7 +350,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
         transition={{ delay: 0.4 }}
       >
         <div className="max-w-[900px] mx-auto">
-          <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#9A8F82] mb-6">
+          <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E] mb-6">
             Video Walkthrough
           </h2>
           <div className="aspect-video bg-[#110F0D] border border-[#D4A853]/8 rounded-lg overflow-hidden relative glow-accent">
@@ -389,7 +389,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
       >
         <div className="max-w-[900px] mx-auto">
           <motion.div variants={itemVariants}>
-            <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#9A8F82] mb-4">
+            <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E] mb-4">
               01 — The Funnel Signal
             </h2>
             <p className="text-lg text-[#F5F0EB] leading-relaxed max-w-[65ch] font-serif font-light">
@@ -409,13 +409,13 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
       >
         <div className="max-w-[900px] mx-auto">
           <motion.div variants={itemVariants}>
-            <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#9A8F82] mb-4">
+            <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E] mb-4">
               02 — The Friction Bottleneck
             </h2>
             <h3 className="text-3xl font-serif text-[#C85C5C] tracking-tight mb-4 font-normal">
               {d.diagnosis?.friction?.mechanism}
             </h3>
-            <p className="text-base text-[#9A8F82] leading-relaxed max-w-[60ch] font-light">
+            <p className="text-base text-[#B0A89E] leading-relaxed max-w-[60ch] font-light">
               {d.diagnosis?.friction?.rootCause}
             </p>
           </motion.div>
@@ -430,7 +430,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
         viewport={{ once: true, margin: "-100px" }}
       >
         <div className="max-w-[900px] mx-auto">
-          <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#9A8F82] mb-8">
+          <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E] mb-8">
             Visualization — Interface Overhaul (Drag to Compare)
           </h2>
           <BeforeAfterSlider data={ba} clientName={d.clientName} />
@@ -448,7 +448,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
         <div className="max-w-[900px] mx-auto">
           <motion.h2
             variants={itemVariants}
-            className="font-mono text-xs uppercase tracking-[0.15em] text-[#9A8F82] mb-12"
+            className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E] mb-12"
           >
             03 — Three Strategic Growth Decisions
           </motion.h2>
@@ -468,15 +468,15 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                   {decision.label}
                 </h3>
                 <div className="space-y-3">
-                  <p className="text-sm text-[#9A8F82] leading-relaxed">
+                  <p className="text-sm text-[#B0A89E] leading-relaxed">
                     <strong className="text-[#F5F0EB] font-medium font-mono text-xs uppercase tracking-wider mr-2">Action:</strong>
                     {decision.action}
                   </p>
-                  <p className="text-sm text-[#9A8F82] leading-relaxed">
+                  <p className="text-sm text-[#B0A89E] leading-relaxed">
                     <strong className="text-[#F5F0EB] font-medium font-mono text-xs uppercase tracking-wider mr-2">Reasoning:</strong>
                     {decision.reasoning}
                   </p>
-                  <p className="text-sm text-[#9A8F82] leading-relaxed border-t border-[#D4A853]/8 pt-4 mt-4">
+                  <p className="text-sm text-[#B0A89E] leading-relaxed border-t border-[#D4A853]/8 pt-4 mt-4">
                     <strong className="text-[#7A6F65] font-medium font-mono text-xs uppercase tracking-wider mr-2">Trade-off:</strong>
                     {decision.tradeoff}
                   </p>
@@ -573,7 +573,7 @@ function BeforeAfterSlider({ data: ba, clientName }: { data: BeforeAfterData; cl
             </div>
             <div className="border border-[#D4A853]/8 p-4 rounded bg-[#110F0D]/50 space-y-2 border-l-2 border-[#C85C5C]/40">
               <span className="font-mono text-xs text-[#C85C5C] uppercase tracking-widest block">Cognitive Load</span>
-              <p className="text-xs text-[#9A8F82] leading-relaxed">{ba.beforeIssue}</p>
+              <p className="text-xs text-[#B0A89E] leading-relaxed">{ba.beforeIssue}</p>
               <div className="font-mono text-xs text-[#C85C5C]">{ba.beforeBounce}</div>
             </div>
           </div>
@@ -599,11 +599,11 @@ function BeforeAfterSlider({ data: ba, clientName }: { data: BeforeAfterData; cl
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center flex-1 py-4">
               <div className="space-y-2">
-                <span className="font-mono text-xs text-[#9A8F82] uppercase tracking-wider block">Mended Intake</span>
+                <span className="font-mono text-xs text-[#B0A89E] uppercase tracking-wider block">Mended Intake</span>
                 <h4 className="font-serif text-lg text-[#F5F0EB]">{ba.afterTitle}</h4>
                 <div className="border border-[#D4A853]/20 bg-[#D4A853]/5 p-3 rounded space-y-3">
                   <div className="space-y-1.5">
-                    <label className="text-xs text-[#9A8F82] block">Workspace Domain</label>
+                    <label className="text-xs text-[#B0A89E] block">Workspace Domain</label>
                     <div className="h-7 bg-[#0A0908] border border-[#D4A853]/20 rounded flex items-center px-2 text-xs text-[#F5F0EB]">
                       {ba.afterDomain}
                     </div>
@@ -616,13 +616,13 @@ function BeforeAfterSlider({ data: ba, clientName }: { data: BeforeAfterData; cl
               </div>
               <div className="border border-[#D4A853]/8 p-4 rounded bg-[#0A0908] space-y-2 border-l-2 border-[#D4A853]/40">
                 <span className="font-mono text-xs text-[#D4A853] uppercase tracking-widest block">Friction Mended</span>
-                <p className="text-xs text-[#9A8F82] leading-relaxed">
+                <p className="text-xs text-[#B0A89E] leading-relaxed">
                   Subtracted all secondary inputs. User lands on simulated workspace with dummy data immediately. Habit builds, conversion scales.
                 </p>
                 <div className="font-mono text-xs text-[#5C9A6B]">{ba.afterGain}</div>
               </div>
             </div>
-            <div className="text-xs font-mono text-[#9A8F82] text-right mt-2">
+            <div className="text-xs font-mono text-[#B0A89E] text-right mt-2">
               Signal &amp; Friction Design Recommendation
             </div>
           </div>

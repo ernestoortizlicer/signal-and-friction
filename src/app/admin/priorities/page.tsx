@@ -205,7 +205,7 @@ export default function PriorityCommandCenter() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0A0908] flex items-center justify-center font-mono text-xs text-[#9A8F82] animate-pulse">
+      <div className="min-h-screen bg-[#0A0908] flex items-center justify-center font-mono text-xs text-[#B0A89E] animate-pulse">
         Iniciando Motor de Prioridades...
       </div>
     );
@@ -218,7 +218,7 @@ export default function PriorityCommandCenter() {
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#D4A853]/8 pb-8">
           <div>
-            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#9A8F82] block mb-2">OS de Decisión</span>
+            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#B0A89E] block mb-2">OS de Decisión</span>
             <h1 className="text-4xl font-serif text-[#F5F0EB] tracking-tight">Centro de Mando Prioritario</h1>
           </div>
           <div className="flex items-center gap-3 mt-4 md:mt-0 flex-wrap">
@@ -235,7 +235,7 @@ export default function PriorityCommandCenter() {
             { label: "Hacer Ahora", value: quadrants.do_now.length, detail: "Urgencia + importancia", color: "text-[#C85C5C]" },
             { label: "Prioridad Media", value: pendingTasks.length > 0 ? (totalScore / pendingTasks.length).toFixed(1) : "—", detail: "Puntuación /100", color: "text-[#D4A853]" },
             { label: "Ingresos en Riesgo", value: `$${(pendingTasks.reduce((s, t) => s + t.revenue_impact, 0) / 100).toLocaleString()}`, detail: "Tareas pendientes", color: "text-[#D4A853]" },
-            { label: "Esfuerzo Hoy", value: `${filteredTasks.reduce((s, t) => s + t.effort_minutes, 0)} min`, detail: `${(filteredTasks.reduce((s, t) => s + t.effort_minutes, 0) / 60).toFixed(1)} horas`, color: "text-[#9A8F82]" },
+            { label: "Esfuerzo Hoy", value: `${filteredTasks.reduce((s, t) => s + t.effort_minutes, 0)} min`, detail: `${(filteredTasks.reduce((s, t) => s + t.effort_minutes, 0) / 60).toFixed(1)} horas`, color: "text-[#B0A89E]" },
           ].map((item, idx) => (
             <AdminStatCard key={idx} label={item.label} value={item.value} detail={item.detail} accentColor={item.color} />
           ))}
@@ -246,7 +246,7 @@ export default function PriorityCommandCenter() {
           <div className="flex gap-2 items-center flex-wrap">
             <span className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider">Categoría:</span>
             {['all', 'beta_project', 'incident', 'finance', 'manual', 'learning'].map(cat => (
-              <button key={cat} onClick={() => setCategoryFilter(cat)} className={`font-mono text-xs px-2.5 py-1 rounded-full border transition-all cursor-pointer ${categoryFilter === cat ? 'border-[#D4A853]/40 text-[#D4A853] bg-[#D4A853]/8' : 'border-[#D4A853]/8 text-[#9A8F82] hover:text-[#F5F0EB]'}`}>
+              <button key={cat} onClick={() => setCategoryFilter(cat)} className={`font-mono text-xs px-2.5 py-1 rounded-full border transition-all cursor-pointer ${categoryFilter === cat ? 'border-[#D4A853]/40 text-[#D4A853] bg-[#D4A853]/8' : 'border-[#D4A853]/8 text-[#B0A89E] hover:text-[#F5F0EB]'}`}>
                 {cat === 'all' ? 'Todo' : cat.replace('_', ' ')}
               </button>
             ))}
@@ -254,7 +254,7 @@ export default function PriorityCommandCenter() {
           <div className="flex gap-2 items-center flex-wrap">
             <span className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider">Energía:</span>
             {['all', 'deep', 'shallow', 'creative', 'analytical', 'admin'].map(e => (
-              <button key={e} onClick={() => setEnergyFilter(e)} className={`font-mono text-xs px-2.5 py-1 rounded-full border transition-all cursor-pointer ${energyFilter === e ? 'border-[#D4A853]/40 text-[#D4A853] bg-[#D4A853]/8' : 'border-[#D4A853]/8 text-[#9A8F82] hover:text-[#F5F0EB]'}`}>
+              <button key={e} onClick={() => setEnergyFilter(e)} className={`font-mono text-xs px-2.5 py-1 rounded-full border transition-all cursor-pointer ${energyFilter === e ? 'border-[#D4A853]/40 text-[#D4A853] bg-[#D4A853]/8' : 'border-[#D4A853]/8 text-[#B0A89E] hover:text-[#F5F0EB]'}`}>
                 {e === 'all' ? 'Todo' : `${ENERGY_ICONS[e] || ''} ${e}`}
               </button>
             ))}
@@ -273,7 +273,7 @@ export default function PriorityCommandCenter() {
               key={tab.key}
               onClick={() => setActiveView(tab.key as typeof activeView)}
               className={`pb-4 font-mono text-xs uppercase tracking-widest border-b-2 transition-all duration-300 cursor-pointer ${
-                activeView === tab.key ? "border-[#D4A853] text-[#F5F0EB]" : "border-transparent text-[#9A8F82] hover:text-[#F5F0EB]"
+                activeView === tab.key ? "border-[#D4A853] text-[#F5F0EB]" : "border-transparent text-[#B0A89E] hover:text-[#F5F0EB]"
               }`}
             >
               {tab.label}
@@ -308,7 +308,7 @@ export default function PriorityCommandCenter() {
                         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#B85C38] to-transparent" />
                       )}
                       <div className="flex items-center justify-between mb-4">
-                        <span className="font-mono text-xs uppercase tracking-wider text-[#9A8F82]">
+                        <span className="font-mono text-xs uppercase tracking-wider text-[#B0A89E]">
                           {isFirst ? '🔥 Prioridad #1' : idx === 1 ? '⚡ Prioridad #2' : '📋 Prioridad #3'}
                         </span>
                         <span className={`font-mono text-xs px-2 py-0.5 border rounded ${CATEGORY_COLORS[task.category] || CATEGORY_COLORS.manual}`}>
@@ -320,17 +320,17 @@ export default function PriorityCommandCenter() {
 
                       <div className="grid grid-cols-3 gap-3 mb-4 text-center">
                         <div className="bg-black/30 border border-[#D4A853]/8 rounded py-2 px-1">
-                          <span className="font-mono text-xs text-[#9A8F82] block uppercase">Puntuación</span>
-                          <span className={`font-serif text-lg font-bold ${task.priority_score >= 60 ? 'text-[#B85C38]' : task.priority_score >= 40 ? 'text-amber-400' : 'text-[#9A8F82]'}`}>
+                          <span className="font-mono text-xs text-[#B0A89E] block uppercase">Puntuación</span>
+                          <span className={`font-serif text-lg font-bold ${task.priority_score >= 60 ? 'text-[#B85C38]' : task.priority_score >= 40 ? 'text-amber-400' : 'text-[#B0A89E]'}`}>
                             {Number(task.priority_score).toFixed(0)}
                           </span>
                         </div>
                         <div className="bg-black/30 border border-[#D4A853]/8 rounded py-2 px-1">
-                          <span className="font-mono text-xs text-[#9A8F82] block uppercase">Esfuerzo</span>
+                          <span className="font-mono text-xs text-[#B0A89E] block uppercase">Esfuerzo</span>
                           <span className="font-serif text-lg font-bold text-[#F5F0EB]">{task.effort_minutes}m</span>
                         </div>
                         <div className="bg-black/30 border border-[#D4A853]/8 rounded py-2 px-1">
-                          <span className="font-mono text-xs text-[#9A8F82] block uppercase">Energía</span>
+                          <span className="font-mono text-xs text-[#B0A89E] block uppercase">Energía</span>
                           <span className="font-serif text-lg">{ENERGY_ICONS[task.energy_required]}</span>
                         </div>
                       </div>
@@ -342,7 +342,7 @@ export default function PriorityCommandCenter() {
                       )}
 
                       {task.deadline && (
-                        <div className="text-xs font-mono text-[#9A8F82] mb-3">
+                        <div className="text-xs font-mono text-[#B0A89E] mb-3">
                           ⏰ Fecha límite: {new Date(task.deadline).toLocaleDateString('es-ES')} {new Date(task.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       )}
@@ -357,7 +357,7 @@ export default function PriorityCommandCenter() {
                             className="overflow-hidden border-t border-[#D4A853]/8 mt-4 pt-4 space-y-3"
                           >
                             {task.description && (
-                              <p className="text-sm text-[#9A8F82] font-mono italic leading-relaxed">{task.description}</p>
+                              <p className="text-sm text-[#B0A89E] font-mono italic leading-relaxed">{task.description}</p>
                             )}
                             {task.status === 'pending' && !isFirst && (
                               <button
@@ -383,7 +383,7 @@ export default function PriorityCommandCenter() {
                                     { label: 'Energía', val: log.energy_component, weight: 10 },
                                   ].map(c => (
                                     <div key={c.label} className="bg-black/30 border border-[#D4A853]/8 rounded p-2">
-                                      <span className="text-[#9A8F82] block">{c.label} ({c.weight}%)</span>
+                                      <span className="text-[#B0A89E] block">{c.label} ({c.weight}%)</span>
                                       <div className="flex items-center gap-2 mt-1">
                                         <div className="flex-1 h-1 bg-black rounded-full overflow-hidden">
                                           <div className="h-full bg-[#B85C38]" style={{ width: `${Number(c.val)}%` }} />
@@ -427,7 +427,7 @@ export default function PriorityCommandCenter() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left font-mono text-xs">
                       <thead>
-                        <tr className="border-b border-white/10 text-[#9A8F82] text-xs uppercase">
+                        <tr className="border-b border-white/10 text-[#B0A89E] text-xs uppercase">
                           <th className="py-3">Punt.</th>
                           <th>Tarea</th>
                           <th>Categoría</th>
@@ -440,15 +440,15 @@ export default function PriorityCommandCenter() {
                       <tbody>
                         {filteredTasks.slice(3).map(task => (
                           <tr key={task.id} className="border-b border-[#D4A853]/8 hover:bg-white/[0.01]">
-                            <td className={`py-3 font-bold ${task.priority_score >= 60 ? 'text-[#B85C38]' : task.priority_score >= 40 ? 'text-amber-400' : 'text-[#9A8F82]'}`}>
+                            <td className={`py-3 font-bold ${task.priority_score >= 60 ? 'text-[#B85C38]' : task.priority_score >= 40 ? 'text-amber-400' : 'text-[#B0A89E]'}`}>
                               {Number(task.priority_score).toFixed(0)}
                             </td>
                             <td className="text-[#F5F0EB]">{task.title}</td>
                             <td><span className={`px-1.5 py-0.5 border rounded text-xs ${CATEGORY_COLORS[task.category] || ''}`}>{task.category.replace('_', ' ')}</span></td>
-                            <td className="text-[#9A8F82]">{QUADRANT_META[task.quadrant]?.emoji} {QUADRANT_META[task.quadrant]?.label}</td>
-                            <td className="text-[#9A8F82]">{task.effort_minutes}m</td>
+                            <td className="text-[#B0A89E]">{QUADRANT_META[task.quadrant]?.emoji} {QUADRANT_META[task.quadrant]?.label}</td>
+                            <td className="text-[#B0A89E]">{task.effort_minutes}m</td>
                             <td>{ENERGY_ICONS[task.energy_required]} {task.energy_required}</td>
-                            <td className="text-right text-[#9A8F82]">{task.deadline ? new Date(task.deadline).toLocaleDateString('es-ES') : '—'}</td>
+                            <td className="text-right text-[#B0A89E]">{task.deadline ? new Date(task.deadline).toLocaleDateString('es-ES') : '—'}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -480,7 +480,7 @@ export default function PriorityCommandCenter() {
                         <h3 className="font-mono text-xs uppercase tracking-widest text-[#F5F0EB]">
                           {meta.emoji} {meta.label}
                         </h3>
-                        <span className="font-mono text-xs text-[#9A8F82] bg-black/30 px-2 py-0.5 rounded">
+                        <span className="font-mono text-xs text-[#B0A89E] bg-black/30 px-2 py-0.5 rounded">
                           {items.length}
                         </span>
                       </div>
@@ -504,11 +504,11 @@ export default function PriorityCommandCenter() {
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <h4 className="font-serif text-sm text-[#F5F0EB] leading-snug flex-1">{task.title}</h4>
-                                <span className={`font-mono text-xs font-bold shrink-0 ${task.priority_score >= 60 ? 'text-[#B85C38]' : task.priority_score >= 40 ? 'text-amber-400' : 'text-[#9A8F82]'}`}>
+                                <span className={`font-mono text-xs font-bold shrink-0 ${task.priority_score >= 60 ? 'text-[#B85C38]' : task.priority_score >= 40 ? 'text-amber-400' : 'text-[#B0A89E]'}`}>
                                   {Number(task.priority_score).toFixed(0)}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-2 mt-2 text-xs font-mono text-[#9A8F82]">
+                              <div className="flex items-center gap-2 mt-2 text-xs font-mono text-[#B0A89E]">
                                 <span className={`px-1.5 py-0.5 border rounded ${CATEGORY_COLORS[task.category] || ''}`}>{task.category.replace('_', ' ')}</span>
                                 <span>{ENERGY_ICONS[task.energy_required]} {task.effort_minutes}m</span>
                                 {task.revenue_impact > 0 && <span className="text-[#5C9A6B]">${(task.revenue_impact / 100).toFixed(0)}</span>}
@@ -517,7 +517,7 @@ export default function PriorityCommandCenter() {
                               <AnimatePresence>
                                 {selectedTask === task.id && (
                                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                                    <div className="border-t border-[#D4A853]/8 mt-3 pt-3 text-xs font-mono text-[#9A8F82] space-y-2">
+                                    <div className="border-t border-[#D4A853]/8 mt-3 pt-3 text-xs font-mono text-[#B0A89E] space-y-2">
                                       {task.description && <p className="italic">{task.description}</p>}
                                       <p>Aprendizaje: {task.learning_multiplier}/10 · Fecha límite: {task.deadline ? new Date(task.deadline).toLocaleDateString('es-ES') : 'Sin fecha'}</p>
                                       {task.auto_generated && <p className="text-[#7A6F65]">🤖 Auto-generado desde {task.source_table}</p>}
@@ -534,7 +534,7 @@ export default function PriorityCommandCenter() {
                                                   updateTaskQuadrant(task.id, qKey as PriorityTask['quadrant']);
                                                   setSelectedTask(null);
                                                 }}
-                                                className="px-2 py-0.5 text-[9px] font-mono rounded border border-[#D4A853]/15 text-[#9A8F82] hover:text-[#F5F0EB] hover:border-[#D4A853]/40 transition-all cursor-pointer"
+                                                className="px-2 py-0.5 text-[9px] font-mono rounded border border-[#D4A853]/15 text-[#B0A89E] hover:text-[#F5F0EB] hover:border-[#D4A853]/40 transition-all cursor-pointer"
                                               >
                                                 {qMeta.emoji} {qMeta.label}
                                               </button>
@@ -585,24 +585,24 @@ export default function PriorityCommandCenter() {
                             <div className="flex items-center gap-3 mb-3">
                               <span className="text-lg">{ENERGY_ICONS[key]}</span>
                               <h4 className="font-mono text-xs uppercase tracking-wider text-[#F5F0EB]">Bloque {block.label}</h4>
-                              <span className="font-mono text-xs text-[#9A8F82] bg-black/30 px-2 py-0.5 rounded">{blockMinutes} min</span>
+                              <span className="font-mono text-xs text-[#B0A89E] bg-black/30 px-2 py-0.5 rounded">{blockMinutes} min</span>
                             </div>
 
                             {block.tasks.sort((a, b) => b.priority_score - a.priority_score).map((task, idx) => (
                               <div key={task.id} className="flex items-center gap-4 border border-[#D4A853]/8 bg-[#0A0908]/60 p-4 rounded hover:border-white/10 transition-all">
-                                <div className="w-6 h-6 rounded-full border border-white/10 flex items-center justify-center text-xs font-mono text-[#9A8F82] shrink-0">
+                                <div className="w-6 h-6 rounded-full border border-white/10 flex items-center justify-center text-xs font-mono text-[#B0A89E] shrink-0">
                                   {idx + 1}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <h5 className="font-serif text-sm text-[#F5F0EB] truncate">{task.title}</h5>
-                                  <div className="flex items-center gap-2 mt-1 text-xs font-mono text-[#9A8F82]">
+                                  <div className="flex items-center gap-2 mt-1 text-xs font-mono text-[#B0A89E]">
                                     <span className={`px-1.5 py-0.5 border rounded ${CATEGORY_COLORS[task.category] || ''}`}>{task.category.replace('_', ' ')}</span>
                                     <span>{task.effort_minutes} min</span>
                                     {task.revenue_impact > 0 && <span className="text-[#5C9A6B]">${(task.revenue_impact / 100).toFixed(0)}</span>}
                                   </div>
                                 </div>
                                 <div className="shrink-0 text-right">
-                                  <span className={`font-mono text-sm font-bold ${task.priority_score >= 60 ? 'text-[#B85C38]' : 'text-[#9A8F82]'}`}>
+                                  <span className={`font-mono text-sm font-bold ${task.priority_score >= 60 ? 'text-[#B85C38]' : 'text-[#B0A89E]'}`}>
                                     {Number(task.priority_score).toFixed(0)}
                                   </span>
                                 </div>
@@ -615,7 +615,7 @@ export default function PriorityCommandCenter() {
                   })}
                 </div>
 
-                <div className="border-t border-[#D4A853]/8 mt-8 pt-4 flex justify-between text-xs font-mono text-[#9A8F82]">
+                <div className="border-t border-[#D4A853]/8 mt-8 pt-4 flex justify-between text-xs font-mono text-[#B0A89E]">
                   <span>Total planificado: {filteredTasks.reduce((s, t) => s + t.effort_minutes, 0)} min ({(filteredTasks.reduce((s, t) => s + t.effort_minutes, 0) / 60).toFixed(1)} horas)</span>
                   <span>{filteredTasks.length} tareas en {Object.values(energyBlocks).filter(b => b.tasks.length > 0).length} bloques de energía</span>
                 </div>
@@ -629,12 +629,12 @@ export default function PriorityCommandCenter() {
               {/* Time selector */}
               <div className="border border-[#D4A853]/8 p-6 bg-[#121110]/20 rounded">
                 <h3 className="font-serif text-xl text-[#F5F0EB] mb-4">⚡ Modo Piloto Automático</h3>
-                <p className="text-sm text-[#9A8F82] font-mono mb-6">
+                <p className="text-sm text-[#B0A89E] font-mono mb-6">
                   Selecciona tu tiempo disponible. El motor elegirá la combinación óptima de tareas que maximiza el valor de prioridad total dentro de tu ventana de tiempo.
                 </p>
 
                 <div className="flex items-center gap-4 mb-6">
-                  <span className="font-mono text-xs text-[#9A8F82] uppercase">Tiempo disponible:</span>
+                  <span className="font-mono text-xs text-[#B0A89E] uppercase">Tiempo disponible:</span>
                   <div className="flex gap-2">
                     {[30, 60, 90, 120, 180, 240].map(mins => (
                       <button
@@ -643,7 +643,7 @@ export default function PriorityCommandCenter() {
                         className={`font-mono text-xs px-3 py-2 rounded border transition-all ${
                           autopilotMinutes === mins
                             ? 'border-[#B85C38]/40 text-[#B85C38] bg-[#B85C38]/5'
-                            : 'border-[#D4A853]/8 text-[#9A8F82] hover:text-[#B8B0A8]'
+                            : 'border-[#D4A853]/8 text-[#B0A89E] hover:text-[#B8B0A8]'
                         }`}
                       >
                         {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
@@ -655,7 +655,7 @@ export default function PriorityCommandCenter() {
                 {/* Results */}
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center justify-between text-xs font-mono">
-                    <span className="text-[#9A8F82]">Seleccionadas: {autoPilotSelection.length} tareas · {autoPilotSelection.reduce((s, t) => s + t.effort_minutes, 0)} min usados</span>
+                    <span className="text-[#B0A89E]">Seleccionadas: {autoPilotSelection.length} tareas · {autoPilotSelection.reduce((s, t) => s + t.effort_minutes, 0)} min usados</span>
                     <span className="text-[#B85C38]">Valor de prioridad: {autoPilotSelection.reduce((s, t) => s + Number(t.priority_score), 0).toFixed(0)} pts</span>
                   </div>
                   <div className="h-2 bg-black border border-[#D4A853]/8 rounded-full overflow-hidden">
@@ -684,18 +684,18 @@ export default function PriorityCommandCenter() {
                     transition={{ ...springConfig, delay: idx * 0.05 }}
                     className="border border-[#D4A853]/8 bg-[#121110]/40 p-5 rounded hover:border-white/10 transition-all flex items-start gap-4"
                   >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-mono text-sm font-bold ${idx === 0 ? 'bg-[#B85C38]/20 text-[#B85C38] border border-[#B85C38]/30' : 'bg-white/5 text-[#9A8F82] border border-white/10'}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-mono text-sm font-bold ${idx === 0 ? 'bg-[#B85C38]/20 text-[#B85C38] border border-[#B85C38]/30' : 'bg-white/5 text-[#B0A89E] border border-white/10'}`}>
                       {idx + 1}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-serif text-sm text-[#F5F0EB] leading-snug">{task.title}</h4>
-                      <div className="flex flex-wrap items-center gap-2 mt-2 text-xs font-mono text-[#9A8F82]">
+                      <div className="flex flex-wrap items-center gap-2 mt-2 text-xs font-mono text-[#B0A89E]">
                         <span className={`px-1.5 py-0.5 border rounded ${CATEGORY_COLORS[task.category] || ''}`}>{task.category.replace('_', ' ')}</span>
                         <span>{ENERGY_ICONS[task.energy_required]} {task.effort_minutes}m</span>
-                        <span className={task.priority_score >= 60 ? 'text-[#B85C38]' : 'text-[#9A8F82]'}>Score: {Number(task.priority_score).toFixed(0)}</span>
+                        <span className={task.priority_score >= 60 ? 'text-[#B85C38]' : 'text-[#B0A89E]'}>Score: {Number(task.priority_score).toFixed(0)}</span>
                         {task.revenue_impact > 0 && <span className="text-[#5C9A6B]">${(task.revenue_impact / 100).toFixed(0)}</span>}
                       </div>
-                      {task.description && <p className="text-sm text-[#9A8F82] font-mono mt-2 italic">{task.description}</p>}
+                      {task.description && <p className="text-sm text-[#B0A89E] font-mono mt-2 italic">{task.description}</p>}
                       <div className="mt-3 flex gap-2">
                         {task.status === 'pending' && (
                           <button
@@ -717,7 +717,7 @@ export default function PriorityCommandCenter() {
               </div>
 
               {autoPilotSelection.length === 0 && (
-                <div className="text-center text-[#9A8F82] font-mono text-xs py-12 border border-[#D4A853]/8 rounded bg-[#121110]/20">
+                <div className="text-center text-[#B0A89E] font-mono text-xs py-12 border border-[#D4A853]/8 rounded bg-[#121110]/20">
                   Ninguna tarea cabe en {autopilotMinutes} minutos. Prueba con un bloque de tiempo mayor.
                 </div>
               )}

@@ -243,7 +243,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   className={`relative flex items-center gap-3 px-2 md:px-3 py-3 rounded-md font-mono transition-all duration-200 cursor-pointer group ${
                     isActive
                       ? "text-[#F5F0EB] bg-[#D4A853]/8"
-                      : "text-[#9A8F82] hover:text-[#F5F0EB] hover:bg-[#D4A853]/5"
+                      : "text-[#B0A89E] hover:text-[#F5F0EB] hover:bg-[#D4A853]/5"
                   }`}
                 >
                   {/* Active indicator — gold left border */}
@@ -261,7 +261,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </span>
 
                   {/* Desktop: code + label */}
-                  <span className={`hidden md:inline text-xs tracking-[0.15em] uppercase w-6 flex-shrink-0 font-medium ${isActive ? "text-[#D4A853]" : "text-[#7A6F65] group-hover:text-[#9A8F82]"}`}>
+                  <span className={`hidden md:inline text-xs tracking-[0.15em] uppercase w-6 flex-shrink-0 font-medium ${isActive ? "text-[#D4A853]" : "text-[#7A6F65] group-hover:text-[#B0A89E]"}`}>
                     {link.code}
                   </span>
                   <span className="hidden md:inline text-sm tracking-wide font-medium">

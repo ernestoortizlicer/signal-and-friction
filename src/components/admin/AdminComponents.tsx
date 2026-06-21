@@ -44,14 +44,14 @@ export function AdminStatCard({
     >
       {/* Bottom accent line on hover */}
       <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[#D4A853]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      <span className="font-mono text-xs text-[#D4A853]/50 uppercase tracking-[0.15em] block mb-3">
+      <span className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-[0.15em] block mb-3">
         {label}
       </span>
       <span className={`font-serif text-3xl font-bold block mb-1.5 tabular-nums ${accentColor}`}>
         {value}
       </span>
       {detail && (
-        <span className="text-xs text-[#9A8F82] font-mono">{detail}</span>
+        <span className="text-xs text-[#B0A89E] font-mono">{detail}</span>
       )}
       {hasSparkline && (
         <div className="mt-3 flex items-end gap-[2px]">
@@ -66,7 +66,7 @@ export function AdminStatCard({
               />
             );
           })}
-          <span className="ml-auto font-mono text-[10px] text-[#5C5550] self-end pb-px">7d</span>
+          <span className="ml-auto font-mono text-[10px] text-[#7A6F65] self-end pb-px">7d</span>
         </div>
       )}
     </motion.div>
@@ -81,7 +81,7 @@ const BADGE_CLASSES: Record<BadgeVariant, string> = {
   gold: "bg-[#D4A853]/10 border-[#D4A853]/20 text-[#D4A853]",
   red: "bg-[#C85C5C]/10 border-[#C85C5C]/20 text-[#C85C5C]",
   amber: "bg-amber-500/10 border-amber-500/20 text-amber-400",
-  muted: "bg-white/5 border-white/10 text-[#9A8F82]",
+  muted: "bg-white/5 border-white/10 text-[#B0A89E]",
   purple: "bg-purple-500/10 border-purple-500/20 text-purple-400",
 };
 
@@ -153,7 +153,7 @@ export function AdminSectionHeader({
     <div className="flex items-start justify-between border-b border-[#D4A853]/8 pb-4 mb-6">
       <div>
         {eyebrow && (
-          <span className="font-mono text-xs text-[#D4A853]/50 uppercase tracking-[0.2em] block mb-1">
+          <span className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-[0.2em] block mb-1">
             {eyebrow}
           </span>
         )}
@@ -161,7 +161,7 @@ export function AdminSectionHeader({
           {title}
         </h2>
         {subtitle && (
-          <p className="text-sm text-[#9A8F82] font-mono mt-1">{subtitle}</p>
+          <p className="text-sm text-[#B0A89E] font-mono mt-1">{subtitle}</p>
         )}
       </div>
       <div className="flex items-center gap-3 mt-1">
@@ -187,7 +187,7 @@ export function AdminEmptyState({
       {icon && (
         <div className="text-3xl opacity-30 select-none">{icon}</div>
       )}
-      <p className="text-sm text-[#9A8F82] font-mono">{text}</p>
+      <p className="text-sm text-[#B0A89E] font-mono">{text}</p>
       {subtext && (
         <p className="text-xs text-[#7A6F65] font-mono">{subtext}</p>
       )}
@@ -211,18 +211,18 @@ export function RevenueProgressBar({
     <div className="border border-[#D4A853]/10 bg-[#110F0D] rounded-2xl p-5 space-y-3">
       <div className="flex items-center justify-between">
         <div>
-          <span className="font-mono text-xs text-[#D4A853]/50 uppercase tracking-[0.15em] block mb-0.5">
+          <span className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-[0.15em] block mb-0.5">
             $1M Revenue Mission
           </span>
           <span className="font-serif text-lg font-bold text-[#F5F0EB]">
             ${current.toLocaleString()}
-            <span className="text-[#9A8F82] text-sm font-mono font-normal ml-2">
+            <span className="text-[#B0A89E] text-sm font-mono font-normal ml-2">
               / $1,000,000
             </span>
           </span>
         </div>
         <div className="text-right">
-          <span className="font-mono text-xs text-[#9A8F82] block">Remaining</span>
+          <span className="font-mono text-xs text-[#B0A89E] block">Remaining</span>
           <span className="font-serif text-base font-bold text-[#D4A853]">
             ${remaining.toLocaleString()}
           </span>
@@ -262,7 +262,7 @@ export function AdminTable({
             {headers.map((h) => (
               <th
                 key={h}
-                className="px-4 py-3 text-[#D4A853]/60 uppercase tracking-[0.12em] font-semibold text-xs whitespace-nowrap"
+                className="px-4 py-3 text-[#D4A853]/70 uppercase tracking-[0.12em] font-semibold text-xs whitespace-nowrap"
               >
                 {h}
               </th>

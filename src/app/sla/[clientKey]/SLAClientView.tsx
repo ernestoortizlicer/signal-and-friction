@@ -97,7 +97,7 @@ export default function SLAClientView({ staticClientKey }: { staticClientKey: st
 
   if (fetching && !data) {
     return (
-      <div className="min-h-screen bg-[#0A0908] flex items-center justify-center font-mono text-xs text-[#D4A853]/40 animate-pulse">
+      <div className="min-h-screen bg-[#0A0908] flex items-center justify-center font-mono text-xs text-[#D4A853]/70 animate-pulse">
         Verifying protocol status...
       </div>
     );
@@ -117,7 +117,7 @@ export default function SLAClientView({ staticClientKey }: { staticClientKey: st
           </div>
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-[#D4A853] animate-pulse" />
-            <span className="font-mono text-xs uppercase tracking-[0.15em] text-[#D4A853]/60 border border-[#D4A853]/25 px-3 py-1 rounded bg-[#D4A853]/5">
+            <span className="font-mono text-xs uppercase tracking-[0.15em] text-[#D4A853]/70 border border-[#D4A853]/25 px-3 py-1 rounded bg-[#D4A853]/5">
               72h Protocol Active
             </span>
           </div>
@@ -155,7 +155,7 @@ export default function SLAClientView({ staticClientKey }: { staticClientKey: st
               {data?.clientName ?? urlClientKey}
             </h1>
 
-            <p className="text-base text-[#9A8F82] leading-relaxed max-w-[56ch]">
+            <p className="text-base text-[#B0A89E] leading-relaxed max-w-[56ch]">
               Your friction diagnostic is being analyzed. You will receive a Loom video
               with a full funnel breakdown and three intervention decisions within 72 hours
               of protocol initiation.
@@ -365,7 +365,7 @@ export default function SLAClientView({ staticClientKey }: { staticClientKey: st
               >
                 <span className="text-2xl">{item.icon}</span>
                 <h3 className="font-serif text-lg text-white">{item.title}</h3>
-                <p className="text-sm text-[#9A8F82] leading-relaxed">{item.description}</p>
+                <p className="text-sm text-[#B0A89E] leading-relaxed">{item.description}</p>
               </div>
             ))}
           </div>
@@ -385,7 +385,7 @@ export default function SLAClientView({ staticClientKey }: { staticClientKey: st
               This page refreshes automatically when your diagnostic is ready.
             </span>
           </div>
-          <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[#D4A853]/60">
+          <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[#D4A853]/70">
             signal-and-friction.com
           </span>
         </div>

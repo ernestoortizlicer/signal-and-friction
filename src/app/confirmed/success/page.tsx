@@ -103,7 +103,7 @@ function SuccessContent() {
             Diagnostic Protocol <span className="text-[#D4A853]">Activated</span>
           </h1>
           {product && (
-            <p className="font-mono text-xs text-[#7A6F65] tracking-[0.15em] uppercase">
+            <p className="font-mono text-xs text-[#B0A89E] tracking-[0.15em] uppercase">
               {product}
             </p>
           )}
@@ -128,7 +128,7 @@ function SuccessContent() {
           )}
 
           <div className="border-t border-[#D4A853]/8 pt-4">
-            <p className="font-mono text-sm text-[#9A8F82] leading-relaxed">
+            <p className="font-mono text-sm text-[#B0A89E] leading-relaxed">
               You will receive your clinical diagnostic and Loom walkthrough within{" "}
               <span className="text-[#F5F0EB]">72 hours</span>. No meetings. No calls. Just the deliverable.
             </p>
@@ -151,8 +151,8 @@ function SuccessContent() {
               key={step.id}
               className="border border-[#D4A853]/5 px-3 py-2.5 text-center"
             >
-              <div className="font-mono text-xs text-[#D4A853]/40 tracking-[0.2em] mb-1">{step.id}</div>
-              <div className="font-mono text-xs text-[#7A6F65]">{step.label}</div>
+              <div className="font-mono text-xs text-[#D4A853]/70 tracking-[0.2em] mb-1">{step.id}</div>
+              <div className="font-mono text-xs text-[#B0A89E]">{step.label}</div>
             </div>
           ))}
         </motion.div>
@@ -165,7 +165,7 @@ function SuccessContent() {
         >
           <Link
             href="/"
-            className="font-mono text-xs text-[#7A6F65] hover:text-[#9A8F82] transition-colors tracking-[0.2em] uppercase"
+            className="font-mono text-xs text-[#7A6F65] hover:text-[#B0A89E] transition-colors tracking-[0.2em] uppercase"
           >
             ← Return to Signal & Friction
           </Link>

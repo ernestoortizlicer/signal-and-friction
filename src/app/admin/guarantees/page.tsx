@@ -161,7 +161,7 @@ export default function AdminGuarantees() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0A0908] flex items-center justify-center font-mono text-xs text-[#9A8F82] animate-pulse">
+      <div className="min-h-screen bg-[#0A0908] flex items-center justify-center font-mono text-xs text-[#B0A89E] animate-pulse">
         Loading performance guarantees ledger...
       </div>
     );
@@ -173,7 +173,7 @@ export default function AdminGuarantees() {
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#D4A853]/8 pb-8">
           <div>
-            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#9A8F82] block mb-2">Outcomes-Based Risk Gating</span>
+            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#B0A89E] block mb-2">Outcomes-Based Risk Gating</span>
             <h1 className="text-4xl font-serif text-[#F5F0EB] tracking-tight">Performance Guarantees Monitor</h1>
           </div>
           <div className="flex items-center gap-4 mt-4 md:mt-0">
@@ -218,13 +218,13 @@ export default function AdminGuarantees() {
                 {/* Header info */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[#D4A853]/8 pb-5 mb-5">
                   <div className="font-mono">
-                    <span className="text-xs text-[#9A8F82] uppercase tracking-wider block mb-1">Client Startup</span>
+                    <span className="text-xs text-[#B0A89E] uppercase tracking-wider block mb-1">Client Startup</span>
                     <h3 className="text-xl font-bold text-[#F5F0EB] font-serif">{client.company_name}</h3>
-                    <span className="text-xs text-[#9A8F82] mt-1 block">{client.contact_name} · {client.contact_email}</span>
+                    <span className="text-xs text-[#B0A89E] mt-1 block">{client.contact_name} · {client.contact_email}</span>
                   </div>
 
                   <div className="text-right font-mono">
-                    <span className="text-xs text-[#9A8F82] uppercase tracking-wider block mb-1.5">Guarantee Status</span>
+                    <span className="text-xs text-[#B0A89E] uppercase tracking-wider block mb-1.5">Guarantee Status</span>
                     <span className={`text-xs uppercase px-3 py-1 border rounded-full inline-block ${
                       g.guarantee_status === "active"
                         ? "bg-[#D4A853]/10 border-[#D4A853]/20 text-[#D4A853]"
@@ -246,19 +246,19 @@ export default function AdminGuarantees() {
                     <h4 className="text-xs text-[#D4A853]/70 uppercase tracking-wider">Conversion Metrics</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-[#9A8F82]">Baseline:</span>
+                        <span className="text-[#B0A89E]">Baseline:</span>
                         <span className="text-[#F5F0EB] font-medium">{g.baseline_conversion_rate.toFixed(2)}%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-[#9A8F82]">Current:</span>
+                        <span className="text-[#B0A89E]">Current:</span>
                         <span className="text-[#F5F0EB] font-medium">{g.current_conversion_rate.toFixed(2)}%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-[#9A8F82]">Target Lift:</span>
+                        <span className="text-[#B0A89E]">Target Lift:</span>
                         <span className="text-[#5C9A6B] font-medium">+{g.target_improvement_pct}% (+{(targetLift).toFixed(2)}%)</span>
                       </div>
                       <div className="flex justify-between border-t border-[#D4A853]/8 pt-2">
-                        <span className="text-[#9A8F82]">Actual Lift:</span>
+                        <span className="text-[#B0A89E]">Actual Lift:</span>
                         <span className={`font-semibold ${lift >= targetLift ? "text-[#5C9A6B]" : "text-[#C85C5C]"}`}>
                           {(lift).toFixed(2)}%
                         </span>
@@ -282,7 +282,7 @@ export default function AdminGuarantees() {
                             gate.met ? "border-[#5C9A6B]/20 bg-[#5C9A6B]/5" : "border-[#C85C5C]/20 bg-[#C85C5C]/5"
                           }`}
                         >
-                          <span className="text-[#9A8F82]">{gate.name}</span>
+                          <span className="text-[#B0A89E]">{gate.name}</span>
                           <span className={`font-bold ${gate.met ? "text-[#5C9A6B]" : "text-[#C85C5C]"}`}>
                             {gate.met ? "✓" : "✗"}
                           </span>
@@ -294,7 +294,7 @@ export default function AdminGuarantees() {
                   {/* Right: Actions and Stripe Billing */}
                   <div className="md:col-span-3 space-y-4 text-right">
                     <div>
-                      <span className="text-xs text-[#9A8F82] uppercase tracking-wider block mb-1">Intervention Fee</span>
+                      <span className="text-xs text-[#B0A89E] uppercase tracking-wider block mb-1">Intervention Fee</span>
                       <span className="text-2xl font-bold text-[#F5F0EB] font-serif">${price} USD</span>
                     </div>
 

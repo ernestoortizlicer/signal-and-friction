@@ -400,7 +400,7 @@ export default function PersonalFinanceCenter() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0A0908] flex items-center justify-center font-mono text-xs text-[#9A8F82] animate-pulse">
+      <div className="min-h-screen bg-[#0A0908] flex items-center justify-center font-mono text-xs text-[#B0A89E] animate-pulse">
         Cargando el espacio de trabajo financiero...
       </div>
     );
@@ -413,7 +413,7 @@ export default function PersonalFinanceCenter() {
         {/* Navigation & Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#D4A853]/8 pb-8">
           <div>
-            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#9A8F82] block mb-2">Libro Mayor — Ernesto Ortiz</span>
+            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#B0A89E] block mb-2">Libro Mayor — Ernesto Ortiz</span>
             <h1 className="text-4xl font-serif text-[#F5F0EB] tracking-tight">Centro Financiero de Inversión</h1>
           </div>
           <div className="flex items-center gap-4 mt-4 md:mt-0">
@@ -437,7 +437,7 @@ export default function PersonalFinanceCenter() {
               key={tab.key}
               onClick={() => setActiveSubView(tab.key as typeof activeSubView)}
               className={`pb-4 font-mono text-xs uppercase tracking-widest border-b-2 transition-all duration-300 whitespace-nowrap cursor-pointer ${
-                activeSubView === tab.key ? "border-[#D4A853] text-[#F5F0EB]" : "border-transparent text-[#9A8F82] hover:text-[#F5F0EB]"
+                activeSubView === tab.key ? "border-[#D4A853] text-[#F5F0EB]" : "border-transparent text-[#B0A89E] hover:text-[#F5F0EB]"
               }`}
             >
               {tab.label}
@@ -464,7 +464,7 @@ export default function PersonalFinanceCenter() {
                   { label: "Ingresos Consultoría", value: `$${(Math.abs(accounts.find(a => a.name === "Consulting Revenue") ? (accountBalances[accounts.find(a => a.name === "Consulting Revenue")!.id] || 0) : 70000) / 100).toFixed(2)}`, detail: "Honorarios beta reconciliados" },
                 ].map((item, idx) => (
                   <div key={idx} className="border border-[#D4A853]/10 p-5 bg-[#110F0D] rounded-2xl relative overflow-hidden">
-                    <span className="font-mono text-xs text-[#9A8F82] uppercase tracking-wider block mb-2">{item.label}</span>
+                    <span className="font-mono text-xs text-[#B0A89E] uppercase tracking-wider block mb-2">{item.label}</span>
                     <span className="font-serif text-3xl font-bold text-[#F5F0EB] block mb-1">{item.value}</span>
                     <span className="text-xs text-[#7A6F65]">{item.detail}</span>
                   </div>
@@ -476,7 +476,7 @@ export default function PersonalFinanceCenter() {
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4A853]/5 rounded-full filter blur-2xl pointer-events-none" />
                 <div className="flex justify-between items-center border-b border-[#D4A853]/15 pb-4">
                   <div>
-                    <span className="font-mono text-xs text-[#D4A853]/60 tracking-widest uppercase block mb-1">Nodo Stripe</span>
+                    <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase block mb-1">Nodo Stripe</span>
                     <h3 className="text-lg font-bold text-white font-mono uppercase">Ingresos en Directo y Telemetría</h3>
                   </div>
                   <span className={`font-mono text-xs border px-3 py-1 rounded-full uppercase tracking-wider ${isTelemetryError ? 'text-amber-400 border-amber-500/25 bg-amber-500/5' : 'text-[#5C9A6B] border-[#5C9A6B]/25 bg-[#5C9A6B]/5'}`}>
@@ -486,32 +486,32 @@ export default function PersonalFinanceCenter() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                   <div className="p-5 border border-[#D4A853]/8 bg-black/20 rounded-xl">
-                    <span className="font-mono text-xs text-[#9A8F82] uppercase block mb-2">Volumen Bruto</span>
+                    <span className="font-mono text-xs text-[#B0A89E] uppercase block mb-2">Volumen Bruto</span>
                     <span className="font-serif text-2xl font-bold text-white">
                       ${(stripeGrossVolume > 0 ? stripeGrossVolume : 145850.00).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                     <span className="text-xs text-[#5C9A6B] block mt-1.5">↑ Desde base de datos</span>
                   </div>
                   <div className="p-5 border border-[#D4A853]/8 bg-black/20 rounded-xl">
-                    <span className="font-mono text-xs text-[#9A8F82] uppercase block mb-2">MRR Activo</span>
+                    <span className="font-mono text-xs text-[#B0A89E] uppercase block mb-2">MRR Activo</span>
                     <span className="font-serif text-2xl font-bold text-[#D4A853]">
                       ${(stripeMRR > 0 ? stripeMRR : 12500.00).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
-                    <span className="text-xs text-[#9A8F82] block mt-1.5">Base de suscripciones</span>
+                    <span className="text-xs text-[#B0A89E] block mt-1.5">Base de suscripciones</span>
                   </div>
                   <div className="p-5 border border-[#D4A853]/8 bg-black/20 rounded-xl">
-                    <span className="font-mono text-xs text-[#9A8F82] uppercase block mb-2">Reembolsos Emitidos</span>
+                    <span className="font-mono text-xs text-[#B0A89E] uppercase block mb-2">Reembolsos Emitidos</span>
                     <span className="font-serif text-2xl font-bold text-[#C85C5C]">
                       ${(stripeRefundsVolume > 0 ? stripeRefundsVolume : 1050.00).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
-                    <span className="text-xs text-[#9A8F82] block mt-1.5">Garantías activadas</span>
+                    <span className="text-xs text-[#B0A89E] block mt-1.5">Garantías activadas</span>
                   </div>
                 </div>
 
                 <div className="space-y-3 pt-2">
                   <h4 className="font-mono text-xs text-white uppercase font-bold">Últimas Transacciones Stripe</h4>
                   <div className="border border-[#D4A853]/8 rounded overflow-hidden font-mono text-[0.58rem]">
-                    <div className="grid grid-cols-12 bg-white/5 p-2 font-bold text-[#9A8F82] border-b border-[#D4A853]/8">
+                    <div className="grid grid-cols-12 bg-white/5 p-2 font-bold text-[#B0A89E] border-b border-[#D4A853]/8">
                       <div className="col-span-3">Cliente</div>
                       <div className="col-span-3">Producto / ID Precio</div>
                       <div className="col-span-2">Importe</div>
@@ -527,14 +527,14 @@ export default function PersonalFinanceCenter() {
                       ].map((tx, idx) => (
                         <div key={idx} className="grid grid-cols-12 p-2 hover:bg-[#D4A853]/[0.02]">
                           <div className="col-span-3 text-white font-bold">{tx.customer}</div>
-                          <div className="col-span-3 text-[#9A8F82]">{tx.product}</div>
+                          <div className="col-span-3 text-[#B0A89E]">{tx.product}</div>
                           <div className="col-span-2 text-white">{tx.amount}</div>
                           <div className="col-span-2">
                             <span className={`px-1.5 py-0.5 rounded-full text-xs uppercase font-bold ${
                               tx.status === "Paid" ? "bg-[#5C9A6B]/10 text-[#5C9A6B]" : "bg-[#C85C5C]/10 text-[#C85C5C]"
                             }`}>{({ Paid: "Pagado", Refunded: "Reembolsado" } as Record<string, string>)[tx.status] || tx.status}</span>
                           </div>
-                          <div className="col-span-2 text-[#6A5F55]">{tx.date}</div>
+                          <div className="col-span-2 text-[#7A6F65]">{tx.date}</div>
                         </div>
                       ))}
                     </div>
@@ -549,13 +549,13 @@ export default function PersonalFinanceCenter() {
                   <h3 className="font-serif text-lg text-[#F5F0EB] border-b border-[#D4A853]/8 pb-3">Tendencia de Flujo de Caja Mensual</h3>
                   {/* SVG Bar Chart for Income vs Expenses */}
                   <div className="h-64 flex items-end justify-between px-4 pt-8 border-b border-[#D4A853]/8 relative">
-                    <div className="absolute top-0 left-0 text-xs font-mono text-[#6A5F55]">Ingresos (Dorado) vs Gastos (Gris)</div>
+                    <div className="absolute top-0 left-0 text-xs font-mono text-[#7A6F65]">Ingresos (Dorado) vs Gastos (Gris)</div>
                     <div className="w-16 h-48 bg-[#D4A853]/80 rounded-t flex flex-col justify-end items-center relative group">
                       <span className="absolute top-[-25px] font-mono text-xs text-[#F5F0EB]">$700</span>
                       <span className="font-mono text-xs text-black font-bold mb-2">MAR</span>
                     </div>
                     <div className="w-16 h-12 bg-white/10 rounded-t flex flex-col justify-end items-center relative">
-                      <span className="absolute top-[-25px] font-mono text-xs text-[#9A8F82]">$125</span>
+                      <span className="absolute top-[-25px] font-mono text-xs text-[#B0A89E]">$125</span>
                     </div>
 
                     <div className="w-16 h-32 bg-[#D4A853]/80 rounded-t flex flex-col justify-end items-center relative">
@@ -563,7 +563,7 @@ export default function PersonalFinanceCenter() {
                       <span className="font-mono text-xs text-black font-bold mb-2">APR</span>
                     </div>
                     <div className="w-16 h-20 bg-white/10 rounded-t flex flex-col justify-end items-center relative">
-                      <span className="absolute top-[-25px] font-mono text-xs text-[#9A8F82]">$205</span>
+                      <span className="absolute top-[-25px] font-mono text-xs text-[#B0A89E]">$205</span>
                     </div>
 
                     <div className="w-16 h-56 bg-[#D4A853]/80 rounded-t flex flex-col justify-end items-center relative">
@@ -571,7 +571,7 @@ export default function PersonalFinanceCenter() {
                       <span className="font-mono text-xs text-black font-bold mb-2">MAY</span>
                     </div>
                     <div className="w-16 h-16 bg-white/10 rounded-t flex flex-col justify-end items-center relative">
-                      <span className="absolute top-[-25px] font-mono text-xs text-[#9A8F82]">$180</span>
+                      <span className="absolute top-[-25px] font-mono text-xs text-[#B0A89E]">$180</span>
                     </div>
                   </div>
                 </div>
@@ -585,7 +585,7 @@ export default function PersonalFinanceCenter() {
                       return (
                         <div key={goal.id} className="space-y-2">
                           <div className="flex justify-between text-xs font-mono">
-                            <span className="text-[#9A8F82]">{goal.name}</span>
+                            <span className="text-[#B0A89E]">{goal.name}</span>
                             <span className="text-[#F5F0EB]">${(goal.current_amount/100).toFixed(0)} / ${(goal.target_amount/100).toFixed(0)}</span>
                           </div>
                           <div className="h-1.5 bg-black border border-[#D4A853]/8 rounded-full overflow-hidden">
@@ -618,7 +618,7 @@ export default function PersonalFinanceCenter() {
                     <div className="text-[#D4A853] uppercase text-xs border-b border-[#D4A853]/8 pb-1">Activos</div>
                     {accounts.filter(a => a.type === "asset").map(a => (
                       <div key={a.id} className="flex justify-between">
-                        <span className="text-[#9A8F82]">{a.name}</span>
+                        <span className="text-[#B0A89E]">{a.name}</span>
                         <span className="text-[#F5F0EB]">${((accountBalances[a.id] || 0) / 100).toFixed(2)}</span>
                       </div>
                     ))}
@@ -629,11 +629,11 @@ export default function PersonalFinanceCenter() {
 
                     <div className="text-[#D4A853] uppercase text-xs border-b border-[#D4A853]/8 pb-1 mt-6">Pasivos</div>
                     {accounts.filter(a => a.type === "liability").length === 0 ? (
-                      <div className="text-xs text-[#6A5F55] italic">Sin pasivos en el balance.</div>
+                      <div className="text-xs text-[#7A6F65] italic">Sin pasivos en el balance.</div>
                     ) : (
                       accounts.filter(a => a.type === "liability").map(a => (
                         <div key={a.id} className="flex justify-between">
-                          <span className="text-[#9A8F82]">{a.name}</span>
+                          <span className="text-[#B0A89E]">{a.name}</span>
                           <span className="text-[#F5F0EB]">${((accountBalances[a.id] || 0) / 100).toFixed(2)}</span>
                         </div>
                       ))
@@ -652,7 +652,7 @@ export default function PersonalFinanceCenter() {
                     <div className="text-[#D4A853] uppercase text-xs border-b border-[#D4A853]/8 pb-1">Ingresos de Consultoría</div>
                     {accounts.filter(a => a.type === "revenue").map(a => (
                       <div key={a.id} className="flex justify-between">
-                        <span className="text-[#9A8F82]">{a.name}</span>
+                        <span className="text-[#B0A89E]">{a.name}</span>
                         {/* Revenues are credit balance (negative stored), show absolute */}
                         <span className="text-[#F5F0EB]">${(Math.abs(accountBalances[a.id] || 0) / 100).toFixed(2)}</span>
                       </div>
@@ -661,7 +661,7 @@ export default function PersonalFinanceCenter() {
                     <div className="text-[#D4A853] uppercase text-xs border-b border-[#D4A853]/8 pb-1 mt-6">Gastos Operativos</div>
                     {accounts.filter(a => a.type === "expense").map(a => (
                       <div key={a.id} className="flex justify-between">
-                        <span className="text-[#9A8F82]">{a.name}</span>
+                        <span className="text-[#B0A89E]">{a.name}</span>
                         <span className="text-[#F5F0EB]">${((accountBalances[a.id] || 0) / 100).toFixed(2)}</span>
                       </div>
                     ))}
@@ -689,7 +689,7 @@ export default function PersonalFinanceCenter() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left font-mono text-xs">
                     <thead>
-                      <tr className="border-b border-white/10 pb-2 text-[#9A8F82] text-xs uppercase">
+                      <tr className="border-b border-white/10 pb-2 text-[#B0A89E] text-xs uppercase">
                         <th className="py-3">Fecha</th>
                         <th>Descripción</th>
                         <th>Cuenta Deudora</th>
@@ -703,10 +703,10 @@ export default function PersonalFinanceCenter() {
                         const creditEntry = tx.transaction_entries?.find(e => e.amount < 0);
                         return (
                           <tr key={tx.id} className="border-b border-[#D4A853]/8 hover:bg-white/[0.01]">
-                            <td className="py-4 text-[#9A8F82]">{new Date(tx.date).toLocaleDateString()}</td>
+                            <td className="py-4 text-[#B0A89E]">{new Date(tx.date).toLocaleDateString()}</td>
                             <td className="text-[#F5F0EB]">{tx.description}</td>
                             <td className="text-[#5C9A6B]">{debitEntry?.accounts?.name || 'Desconocido'}</td>
-                            <td className="text-[#9A8F82]">{creditEntry?.accounts?.name || 'Desconocido'}</td>
+                            <td className="text-[#B0A89E]">{creditEntry?.accounts?.name || 'Desconocido'}</td>
                             <td className="text-right text-[#F5F0EB] font-bold">
                               ${(Math.abs(debitEntry?.amount || 0) / 100).toFixed(2)}
                             </td>
@@ -738,7 +738,7 @@ export default function PersonalFinanceCenter() {
                   <div className="space-y-4 text-xs font-mono">
                     <div className="bg-black/40 border border-[#D4A853]/8 p-4 rounded">
                       <div className="text-[#D4A853] uppercase text-xs mb-1 font-bold">Escenario A: Capitalización en Fondo Índice ($3,500 inversión)</div>
-                      <p className="text-[#9A8F82] leading-relaxed">
+                      <p className="text-[#B0A89E] leading-relaxed">
                         Destinar $3,500 a un ETF de índice S&amp;P 500 capitalizando a una rentabilidad media del 8% anual.
                       </p>
                       <div className="text-right text-[#5C9A6B] font-bold mt-2">
@@ -748,7 +748,7 @@ export default function PersonalFinanceCenter() {
 
                     <div className="bg-black/40 border border-[#D4A853]/8 p-4 rounded">
                       <div className="text-[#D4A853] uppercase text-xs mb-1 font-bold">Escenario B: Compra de Hardware MacBook ($3,500 inversión)</div>
-                      <p className="text-[#9A8F82] leading-relaxed">
+                      <p className="text-[#B0A89E] leading-relaxed">
                         Renovar el portátil. Depreciación del 25% anual. El valor residual decrece con el tiempo.
                       </p>
                       <div className="text-right text-[#C85C5C] font-bold mt-2">
@@ -758,7 +758,7 @@ export default function PersonalFinanceCenter() {
 
                     <div className="bg-black/40 border border-[#D4A853]/8 p-4 rounded">
                       <div className="text-[#D4A853] uppercase text-xs mb-1 font-bold">Escenario C: Apalancamiento en Plataformas IA ($3,500 inversión)</div>
-                      <p className="text-[#9A8F82] leading-relaxed">
+                      <p className="text-[#B0A89E] leading-relaxed">
                         Redirigir capital a créditos de API IA. Si el outreach automatizado capta solo 1 brief de diagnóstico extra a $350/mes.
                       </p>
                       <div className="text-right text-[#D4A853] font-bold mt-2">
@@ -775,7 +775,7 @@ export default function PersonalFinanceCenter() {
                   {/* Inputs */}
                   <div className="grid grid-cols-3 gap-4 text-xs font-mono">
                     <div className="space-y-1">
-                      <label className="text-[#9A8F82] text-xs uppercase">Ahorro Mensual</label>
+                      <label className="text-[#B0A89E] text-xs uppercase">Ahorro Mensual</label>
                       <input 
                         type="number" 
                         value={monthlyContrib} 
@@ -784,7 +784,7 @@ export default function PersonalFinanceCenter() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[#9A8F82] text-xs uppercase">Rentabilidad Anual %</label>
+                      <label className="text-[#B0A89E] text-xs uppercase">Rentabilidad Anual %</label>
                       <input 
                         type="number" 
                         value={returnRate} 
@@ -793,7 +793,7 @@ export default function PersonalFinanceCenter() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[#9A8F82] text-xs uppercase">Años a Proyectar</label>
+                      <label className="text-[#B0A89E] text-xs uppercase">Años a Proyectar</label>
                       <input 
                         type="number" 
                         value={yearsProject} 
@@ -805,7 +805,7 @@ export default function PersonalFinanceCenter() {
 
                   {/* SVG compound line chart mockup */}
                   <div className="h-32 border-b border-[#D4A853]/8 relative flex items-end pt-4">
-                    <div className="absolute top-2 left-2 text-xs font-mono text-[#6A5F55]">Proyección de Interés Compuesto</div>
+                    <div className="absolute top-2 left-2 text-xs font-mono text-[#7A6F65]">Proyección de Interés Compuesto</div>
                     <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                       <path 
                         d="M0 100 Q 50 80, 100 10" 
@@ -819,15 +819,15 @@ export default function PersonalFinanceCenter() {
                   {/* Outputs */}
                   <div className="space-y-2 text-xs font-mono">
                     <div className="flex justify-between">
-                      <span className="text-[#9A8F82]">Principal Capitalizado (Caja):</span>
+                      <span className="text-[#B0A89E]">Principal Capitalizado (Caja):</span>
                       <span className="text-[#F5F0EB]">${compoundPrincipal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-[#9A8F82]">Aportaciones Añadidas:</span>
+                      <span className="text-[#B0A89E]">Aportaciones Añadidas:</span>
                       <span className="text-[#F5F0EB]">${(monthlyContrib * 12 * yearsProject).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                     </div>
                     <div className="flex justify-between border-t border-[#D4A853]/8 pt-2 font-bold text-sm">
-                      <span className="text-[#9A8F82]">Patrimonio Neto Proyectado:</span>
+                      <span className="text-[#B0A89E]">Patrimonio Neto Proyectado:</span>
                       <span className="text-[#5C9A6B]">${totalAccumulated.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                     </div>
                   </div>
@@ -839,13 +839,13 @@ export default function PersonalFinanceCenter() {
               <div className="border border-[#D4A853]/8 p-8 bg-[#0A0908]/20 rounded space-y-6">
                 <div className="flex justify-between items-center border-b border-[#D4A853]/8 pb-4">
                   <h3 className="font-serif text-xl text-[#F5F0EB]">Cartera de Activos</h3>
-                  <button className="px-3 py-1 bg-white/5 text-[#9A8F82] border border-white/10 hover:bg-white/10 rounded font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer">
+                  <button className="px-3 py-1 bg-white/5 text-[#B0A89E] border border-white/10 hover:bg-white/10 rounded font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer">
                     + Añadir Activo (Manual)
                   </button>
                 </div>
                 {investments.length === 0 ? (
                   <div className="border border-dashed border-white/10 p-12 text-center rounded space-y-4">
-                    <p className="text-xs font-mono text-[#9A8F82]">Sin activos catalogados.</p>
+                    <p className="text-xs font-mono text-[#B0A89E]">Sin activos catalogados.</p>
                     <div className="flex justify-center gap-4">
                       <a
                         href="https://dashboard.stripe.com"
@@ -861,7 +861,7 @@ export default function PersonalFinanceCenter() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left font-mono text-xs">
                       <thead>
-                        <tr className="border-b border-white/10 pb-2 text-[#9A8F82] text-xs uppercase">
+                        <tr className="border-b border-white/10 pb-2 text-[#B0A89E] text-xs uppercase">
                           <th className="py-3">Descripción del Activo</th>
                           <th>Tipo</th>
                           <th>Fecha Compra</th>
@@ -874,9 +874,9 @@ export default function PersonalFinanceCenter() {
                         {investments.map(inv => (
                           <tr key={inv.id} className="border-b border-[#D4A853]/8 hover:bg-white/[0.01]">
                             <td className="py-4 text-[#F5F0EB] font-bold">{inv.name}</td>
-                            <td className="text-[#9A8F82] text-xs uppercase">{inv.type}</td>
-                            <td className="text-[#9A8F82]">{new Date(inv.purchase_date).toLocaleDateString()}</td>
-                            <td className="text-right text-[#9A8F82]">${(inv.cost_basis/100).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                            <td className="text-[#B0A89E] text-xs uppercase">{inv.type}</td>
+                            <td className="text-[#B0A89E]">{new Date(inv.purchase_date).toLocaleDateString()}</td>
+                            <td className="text-right text-[#B0A89E]">${(inv.cost_basis/100).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                             <td className="text-right text-[#F5F0EB]">${(inv.current_value/100).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                             <td className="text-right">
                               {inv.projected_annual_roi_pct ? (
@@ -916,10 +916,10 @@ export default function PersonalFinanceCenter() {
                       <span className="font-mono text-xs uppercase tracking-wider text-[#D4A853] border border-[#D4A853]/20 px-2 py-0.5 rounded">
                         {art.category}
                       </span>
-                      <span className="font-mono text-xs text-[#9A8F82]">{art.read_time_mins} min de lectura</span>
+                      <span className="font-mono text-xs text-[#B0A89E]">{art.read_time_mins} min de lectura</span>
                     </div>
                     <h3 className="font-serif text-xl text-[#F5F0EB] tracking-tight">{art.title}</h3>
-                    <p className="text-sm text-[#9A8F82] font-mono leading-relaxed italic">{art.summary}</p>
+                    <p className="text-sm text-[#B0A89E] font-mono leading-relaxed italic">{art.summary}</p>
                     
                     <AnimatePresence initial={false}>
                       {isExpanded && (
@@ -959,7 +959,7 @@ export default function PersonalFinanceCenter() {
               {/* Question form */}
               <div className="border border-[#D4A853]/8 p-8 bg-[#0A0908]/20 rounded space-y-6">
                 <h3 className="font-serif text-xl text-[#F5F0EB]">Motor de Inteligencia de Inversión IA</h3>
-                <p className="text-xs text-[#9A8F82] font-mono">
+                <p className="text-xs text-[#B0A89E] font-mono">
                   Introduce una pregunta de coste de oportunidad. Claude consultará las reservas de caja, rendimientos de capitalización y devolverá una recomendación estratégica.
                 </p>
 
@@ -991,7 +991,7 @@ export default function PersonalFinanceCenter() {
                   <div className="font-mono text-xs text-[#D4A853] uppercase tracking-wider border-b border-[#D4A853]/8 pb-2">
                     Informe del Asesor
                   </div>
-                  <div className="text-xs leading-[1.8] text-[#9A8F82] font-mono space-y-0.5">
+                  <div className="text-xs leading-[1.8] text-[#B0A89E] font-mono space-y-0.5">
                     {renderMarkdownBlock(adviceResponse)}
                   </div>
                 </motion.div>
@@ -1132,7 +1132,7 @@ export default function PersonalFinanceCenter() {
                     <div className="flex flex-wrap justify-between items-start gap-3 border-b border-[#D4A853]/8 pb-4">
                       <div>
                         <h3 className="font-serif text-lg text-[#F5F0EB]">Simulador Fiscal — Jurisdicciones Internacionales</h3>
-                        <p className="font-mono text-xs text-[#D4A853]/40 mt-0.5 uppercase tracking-widest">v3 · Análisis Adversarial · Pensión + Consulting separados</p>
+                        <p className="font-mono text-xs text-[#D4A853]/70 mt-0.5 uppercase tracking-widest">v3 · Análisis Adversarial · Pensión + Consulting separados</p>
                       </div>
                       <span className="font-mono text-[10px] text-[#C85C5C] uppercase tracking-wider bg-[#C85C5C]/5 border border-[#C85C5C]/20 px-2.5 py-1 rounded">
                         ⚠ Estimaciones — verificar con asesor local
@@ -1143,25 +1143,25 @@ export default function PersonalFinanceCenter() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="space-y-2">
                         <div className="flex justify-between font-mono text-xs">
-                          <span className="text-[#9A8F82]">Pensión IPT anual <span className="text-[#6A5F55]">(€700,92 × 14 pagas)</span>:</span>
+                          <span className="text-[#B0A89E]">Pensión IPT anual <span className="text-[#7A6F65]">(€700,92 × 14 pagas)</span>:</span>
                           <span className="text-[#5C9A6B] font-bold">{fmt(p)}</span>
                         </div>
                         <input type="range" min="0" max="20000" step="100" value={taxPension}
                           onChange={(e) => setTaxPension(Number(e.target.value))}
                           className="w-full h-1 bg-[#2A2218] rounded-lg appearance-none cursor-pointer accent-[#5C9A6B]" />
-                        <div className="flex justify-between text-[10px] font-mono text-[#6A5F55]">
+                        <div className="flex justify-between text-[10px] font-mono text-[#7A6F65]">
                           <span>$0</span><span>$10,000</span><span>$20,000</span>
                         </div>
                       </div>
                       <div className="space-y-2">
                         <div className="flex justify-between font-mono text-xs">
-                          <span className="text-[#9A8F82]">Consulting anual (LLC):</span>
+                          <span className="text-[#B0A89E]">Consulting anual (LLC):</span>
                           <span className="text-[#D4A853] font-bold">{fmt(c)}</span>
                         </div>
                         <input type="range" min="0" max="200000" step="1000" value={taxIncome}
                           onChange={(e) => setTaxIncome(Number(e.target.value))}
                           className="w-full h-1 bg-[#2A2218] rounded-lg appearance-none cursor-pointer accent-[#D4A853]" />
-                        <div className="flex justify-between text-[10px] font-mono text-[#6A5F55]">
+                        <div className="flex justify-between text-[10px] font-mono text-[#7A6F65]">
                           <span>$0</span><span>$100,000</span><span>$200,000</span>
                         </div>
                       </div>
@@ -1178,30 +1178,30 @@ export default function PersonalFinanceCenter() {
                             {/* Card header */}
                             <div className="border-b border-white/5 pb-2">
                               <div className={`font-mono text-xs font-bold ${riskColor[overallRisk]}`}>{label}</div>
-                              <div className="font-mono text-[10px] text-[#9A8F82] mt-0.5">{sublabel}</div>
+                              <div className="font-mono text-[10px] text-[#B0A89E] mt-0.5">{sublabel}</div>
                             </div>
 
                             {/* Pension row */}
                             <div className="space-y-1">
-                              <div className="font-mono text-[10px] text-[#9A8F82] uppercase tracking-wider">
+                              <div className="font-mono text-[10px] text-[#B0A89E] uppercase tracking-wider">
                                 Pensión IPT
                               </div>
                               <div className="flex justify-between text-xs font-mono">
-                                <span className="text-[#9A8F82]">Tax:</span>
+                                <span className="text-[#B0A89E]">Tax:</span>
                                 <span className={`font-bold ${riskColor[data.pensionRisk as RiskKey]}`}>
                                   {fmt(data.pensionTax)} <span className="font-normal opacity-60">({pct(data.pensionTax, p)})</span>
                                 </span>
                               </div>
-                              <div className="font-mono text-[9px] text-[#6A5F55] leading-tight">{data.pensionNote}</div>
+                              <div className="font-mono text-[9px] text-[#7A6F65] leading-tight">{data.pensionNote}</div>
                             </div>
 
                             {/* Consulting row */}
                             <div className="space-y-1 border-t border-white/5 pt-2">
-                              <div className="font-mono text-[10px] text-[#9A8F82] uppercase tracking-wider">
+                              <div className="font-mono text-[10px] text-[#B0A89E] uppercase tracking-wider">
                                 Consulting (LLC)
                               </div>
                               <div className="flex justify-between text-xs font-mono">
-                                <span className="text-[#9A8F82]">Tax:</span>
+                                <span className="text-[#B0A89E]">Tax:</span>
                                 <span className={`font-bold ${riskColor[data.consultingRisk as RiskKey]}`}>
                                   {fmt(data.consultingTax)} <span className="font-normal opacity-60">({pct(data.consultingTax, c)})</span>
                                 </span>
@@ -1216,15 +1216,15 @@ export default function PersonalFinanceCenter() {
                             {/* Total */}
                             <div className="border-t border-white/5 pt-2 space-y-1">
                               <div className="flex justify-between text-xs font-mono">
-                                <span className="text-[#9A8F82]">Total tax:</span>
+                                <span className="text-[#B0A89E]">Total tax:</span>
                                 <span className={`font-bold ${riskColor[overallRisk]}`}>{fmt(totalTax)}</span>
                               </div>
                               <div className="flex justify-between text-xs font-mono">
-                                <span className="text-[#9A8F82]">Net take-home:</span>
+                                <span className="text-[#B0A89E]">Net take-home:</span>
                                 <span className="text-white font-bold">{fmt(netTotal)}</span>
                               </div>
                               <div className="flex justify-between text-[10px] font-mono">
-                                <span className="text-[#6A5F55]">Eff. rate total:</span>
+                                <span className="text-[#7A6F65]">Eff. rate total:</span>
                                 <span className={riskColor[overallRisk]}>{pct(totalTax, totalIncome)}</span>
                               </div>
                             </div>
@@ -1246,7 +1246,7 @@ export default function PersonalFinanceCenter() {
                         ].map(r => (
                           <div key={r.country} className="border border-white/5 bg-black/20 p-2.5 rounded-lg">
                             <div className={`${r.color} font-bold mb-0.5`}>{r.country} · {r.risk}</div>
-                            <div className="text-[#9A8F82] leading-relaxed">{r.detail}</div>
+                            <div className="text-[#B0A89E] leading-relaxed">{r.detail}</div>
                           </div>
                         ))}
                       </div>
@@ -1259,7 +1259,7 @@ export default function PersonalFinanceCenter() {
                           Recomendación · Confianza 8/10
                         </div>
                         <div className="font-mono text-xs text-white font-bold">Singapur 🇸🇬 / Hong Kong 🇭🇰</div>
-                        <div className="font-mono text-[10px] text-[#9A8F82] leading-relaxed">
+                        <div className="font-mono text-[10px] text-[#B0A89E] leading-relaxed">
                           Territorial sólido · DTT con España · Consulting LLC exterior 0% · Economías maduras · Sin riesgo recaracterización agresivo · Ideal para perfil high-ticket consultoría
                         </div>
                       </div>
@@ -1268,13 +1268,13 @@ export default function PersonalFinanceCenter() {
                           Salida España · Bloqueador real
                         </div>
                         <div className="font-mono text-xs text-white font-bold">Concurso de acreedores</div>
-                        <div className="font-mono text-[10px] text-[#9A8F82] leading-relaxed">
+                        <div className="font-mono text-[10px] text-[#B0A89E] leading-relaxed">
                           Antes del vuelo: verificar arraigo con abogado concursal. Sin certificado de residencia fiscal extranjero en 2026, España mantiene residencia. 1 enero 2027 = salida limpia. 24 junio = riesgo formal pero bajo si consulting &lt; €3K en 2026.
                         </div>
                       </div>
                     </div>
 
-                    <div className="font-mono text-[10px] text-[#6A5F55] leading-relaxed border-t border-[#D4A853]/8 pt-3">
+                    <div className="font-mono text-[10px] text-[#7A6F65] leading-relaxed border-t border-[#D4A853]/8 pt-3">
                       Todos los cálculos son estimaciones con datos públicos. Hong Kong: Salaries Tax calculado sobre tipo estándar 15% vs. progresivo (el menor), allowance HKD 132,000. Singapur: tipos 2024/25 en SGD (USD × 1.35 aprox). EAU Zona Franca: 0% IRPF personal confirmado. Ninguna cifra substituye verificación con asesor fiscal habilitado en el país destino. Pensión IPT: clasificación bajo Art.7.f LIRPF y tratados DTT debe confirmarse con asesor español.
                     </div>
                   </div>
@@ -1285,7 +1285,7 @@ export default function PersonalFinanceCenter() {
               <div className="border border-[#D4A853]/15 bg-[#0A0908]/95 p-8 rounded relative glow-border mt-8 space-y-6">
                   <div className="flex justify-between items-start border-b border-[#D4A853]/8 pb-4">
                     <div>
-                      <span className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase block mb-1">
+                      <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase block mb-1">
                         Simulador de Conquista Global
                       </span>
                       <h3 className="text-sm font-bold font-mono text-[#f8fafc]">Modelador de Madurez SaaS Regional y Expansión</h3>
@@ -1295,7 +1295,7 @@ export default function PersonalFinanceCenter() {
                     </span>
                   </div>
 
-                  <p className="text-sm text-[#9A8F82] leading-relaxed font-mono">
+                  <p className="text-sm text-[#B0A89E] leading-relaxed font-mono">
                     Selecciona una región de expansión para inspeccionar umbrales de fricción SaaS, costes de adquisición de clientes (CAC), índices de saturación competitiva y rutas de optimización fiscal.
                   </p>
 
@@ -1315,11 +1315,11 @@ export default function PersonalFinanceCenter() {
                         className={`p-3 text-left border rounded transition-all cursor-pointer ${
                           conquestRegion === region.key
                             ? "border-[#D4A853] bg-[#D4A853]/5 text-white"
-                            : "border-[#D4A853]/8 text-[#9A8F82] hover:border-white/10 hover:text-white"
+                            : "border-[#D4A853]/8 text-[#B0A89E] hover:border-white/10 hover:text-white"
                         }`}
                       >
                         <div className="text-xs font-semibold">{region.label}</div>
-                        <div className="text-xs text-[#9A8F82] mt-1 space-y-0.5">
+                        <div className="text-xs text-[#B0A89E] mt-1 space-y-0.5">
                           <div>Madurez: {region.maturity}</div>
                           <div>Índice de Fricción: {region.friction}</div>
                           <div>Tipo Fiscal: {region.tax}</div>
@@ -1335,7 +1335,7 @@ export default function PersonalFinanceCenter() {
                       <span className="text-[#D4A853] font-semibold block uppercase text-xs tracking-wider border-b border-[#D4A853]/8 pb-1">
                         Parámetros Macroeconómicos
                       </span>
-                      <div className="space-y-1.5 text-[#9A8F82]">
+                      <div className="space-y-1.5 text-[#B0A89E]">
                         <div className="flex justify-between">
                           <span>Crecimiento PIB:</span>
                           <span className="text-white font-bold">{conquestRegion === "estonia" ? "+2.8%" : conquestRegion === "mexico" ? "+3.5%" : "+3.1%"}</span>
@@ -1360,7 +1360,7 @@ export default function PersonalFinanceCenter() {
                       <span className="text-[#D4A853] font-semibold block uppercase text-xs tracking-wider border-b border-[#D4A853]/8 pb-1">
                         Índices de Saturación Competitiva
                       </span>
-                      <div className="space-y-1.5 text-[#9A8F82]">
+                      <div className="space-y-1.5 text-[#B0A89E]">
                         <div className="flex justify-between">
                           <span>Densidad de Saturación SaaS:</span>
                           <span className="text-white font-bold">{conquestRegion === "estonia" ? "Alta (90%)" : conquestRegion === "mexico" ? "Baja (45%)" : "Media (75%)"}</span>
@@ -1415,7 +1415,7 @@ export default function PersonalFinanceCenter() {
                       <h4 className="text-xs text-[#22C55E] uppercase tracking-widest font-bold font-mono">
                         ✓ Simulación de Expansión Completada
                       </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs leading-relaxed text-[#9A8F82] font-mono">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs leading-relaxed text-[#B0A89E] font-mono">
                         <div className="border border-[#D4A853]/8 bg-white/[0.01] p-3 rounded space-y-1">
                           <span className="text-[#D4A853] font-semibold block uppercase text-xs tracking-wider">Canal de Outreach Sniper</span>
                           {conquestRegion === "estonia" ? (
@@ -1443,7 +1443,7 @@ export default function PersonalFinanceCenter() {
                         <span className="text-[#D4A853] font-bold block uppercase text-[0.58rem] tracking-wider">
                           Quarterly Recommendation Report — Agent #21 (Global Expansion Hacker)
                         </span>
-                        <div className="text-xs text-[#9A8F82] leading-relaxed space-y-2">
+                        <div className="text-xs text-[#B0A89E] leading-relaxed space-y-2">
                           <p>
                             <strong>Estrategia Objetivo:</strong> {conquestRegion === "estonia" 
                               ? "Estonia es el trampolín óptimo para el programa S&F Certified en Europa. Reinvertir beneficios libres de impuesto corporativo (0%) permite escalar la infraestructura de automatización outbound ×3." 

@@ -22,7 +22,7 @@ export default function GuaranteeTerms() {
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
             <path d="M8 1L15 8L8 15L1 8Z" stroke="#D4A853" strokeWidth="1.5" />
           </svg>
-          <span className="font-mono text-xs text-[#D4A853]/60 tracking-[0.35em] uppercase font-bold">
+          <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.35em] uppercase font-bold">
             S&amp;F Legal Console
           </span>
         </div>
@@ -40,29 +40,29 @@ export default function GuaranteeTerms() {
           <h1 className="text-2xl font-bold font-serif text-white tracking-tight">
             Signal &amp; Friction 20% Growth Guarantee™ Terms
           </h1>
-          <div className="text-[#9A8F82] text-xs uppercase tracking-wider">
+          <div className="text-[#B0A89E] text-xs uppercase tracking-wider">
             Version 4.2 // Hardened Performance Gating
           </div>
         </div>
 
-        <p className="text-[#9A8F82] leading-relaxed text-sm">
+        <p className="text-[#B0A89E] leading-relaxed text-sm">
           This document establishes the legally binding framework governing the results-based refund protocol offered under the Done-For-You (DFY) Concierge model. Traditional marketing agencies operate on billing retainers with zero outcome accountability. The Signal &amp; Friction Method™ distributes risk by tying the diagnostic fee to telemetry-verified performance.
         </p>
 
         <div className="border border-[#D4A853]/8 bg-[#D4A853]/[0.03] p-5 rounded space-y-6">
           <div className="space-y-2">
             <h3 className="text-[#D4A853] font-bold uppercase text-xs tracking-wider">1. The Core Performance Covenant</h3>
-            <p className="text-[#9A8F82] leading-relaxed text-sm">
+            <p className="text-[#B0A89E] leading-relaxed text-sm">
               S&amp;F covenants that executing the single, Socratic diagnostic fix will yield a minimum <strong className="text-[#F5F0EB]">20.00% relative conversion rate lift</strong> (e.g., boosting a baseline conversion rate of 2.00% to 2.40%) within a 30-day monitoring window.
             </p>
           </div>
 
           <div className="space-y-2 border-t border-[#D4A853]/8 pt-4">
             <h3 className="text-[#D4A853] font-bold uppercase text-xs tracking-wider">2. Technical &amp; Environmental Gating Parameters</h3>
-            <p className="text-[#9A8F82] leading-relaxed text-sm">
+            <p className="text-[#B0A89E] leading-relaxed text-sm">
               To prevent client teams from compromising test environments, the guarantee is strictly gated by four telemetry parameters:
             </p>
-            <ul className="list-disc pl-4 space-y-1.5 text-[#9A8F82] text-sm">
+            <ul className="list-disc pl-4 space-y-1.5 text-[#B0A89E] text-sm">
               <li>
                 <strong className="text-white">Traffic Volume Gate:</strong> The test page/route must receive a minimum of <strong className="text-[#F5F0EB]">15,000 unique visitors</strong> during the 30-day testing window.
               </li>
@@ -80,7 +80,7 @@ export default function GuaranteeTerms() {
 
           <div className="space-y-2 border-t border-[#D4A853]/8 pt-4">
             <h3 className="text-[#D4A853] font-bold uppercase text-xs tracking-wider">3. Automated Settlement and Stripe Refund</h3>
-            <p className="text-[#9A8F82] leading-relaxed text-sm">
+            <p className="text-[#B0A89E] leading-relaxed text-sm">
               If all four gating criteria are fully met, and the verified 30-day conversion rate lift fails to exceed 20.00%, the performance guarantee is marked as failed. Upon state change, S&amp;F will automatically trigger a full refund of the diagnostic fee ($350.00 or localized equivalent) back to the client&apos;s originating Stripe card within 48 hours.
             </p>
           </div>

@@ -166,13 +166,13 @@ export default function ScanPage() {
 
         {/* Header */}
         <header className="space-y-4">
-          <a href="/" className="inline-block font-mono text-xs text-[#D4A853]/50 hover:text-[#D4A853] transition-colors uppercase tracking-[0.3em] mb-6">
+          <a href="/" className="inline-block font-mono text-xs text-[#D4A853]/70 hover:text-[#D4A853] transition-colors uppercase tracking-[0.3em] mb-6">
             ← Signal &amp; Friction
           </a>
           <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight text-white leading-tight">
             Checkout Friction Audit
           </h1>
-          <p className="text-sm text-[#9A8F82] leading-relaxed max-w-[560px]">
+          <p className="text-sm text-[#B0A89E] leading-relaxed max-w-[560px]">
             Enter your store URL. Get a clinical breakdown of where revenue is leaking — LCP score, script bloat, layout instability, and the primary friction mechanism killing your conversion rate.
           </p>
           <div className="flex flex-wrap gap-2 pt-1">
@@ -289,7 +289,7 @@ export default function ScanPage() {
 
               {/* 3 Free Metrics */}
               <div>
-                <p className="font-mono text-[10px] text-[#D4A853]/50 uppercase tracking-widest mb-3">Core Metrics</p>
+                <p className="font-mono text-[10px] text-[#D4A853]/70 uppercase tracking-widest mb-3">Core Metrics</p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {[
                     {
@@ -335,7 +335,7 @@ export default function ScanPage() {
                   {report.signals.hasStripe && (
                     <>
                       <span className="text-[#7A6F65]">·</span>
-                      <span className="font-mono text-[10px] text-[#9A8F82]">
+                      <span className="font-mono text-[10px] text-[#B0A89E]">
                         Stripe.js {report.signals.stripeAsync ? '(async ✓)' : '(sync — blocking ✗)'}
                       </span>
                     </>
@@ -346,7 +346,7 @@ export default function ScanPage() {
               {/* Friction mechanisms — always visible */}
               {report.frictionMechanisms.length > 0 && (
                 <div>
-                  <p className="font-mono text-[10px] text-[#D4A853]/50 uppercase tracking-widest mb-3">
+                  <p className="font-mono text-[10px] text-[#D4A853]/70 uppercase tracking-widest mb-3">
                     Friction Mechanisms Detected ({report.frictionMechanisms.length})
                   </p>
                   <div className="space-y-2">
@@ -364,7 +364,7 @@ export default function ScanPage() {
                             {m.severity}
                           </span>
                         </div>
-                        <p className="text-xs text-[#9A8F82] leading-relaxed">{m.detail}</p>
+                        <p className="text-xs text-[#B0A89E] leading-relaxed">{m.detail}</p>
                       </motion.div>
                     ))}
                   </div>
@@ -389,7 +389,7 @@ export default function ScanPage() {
                   >
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#110F0D]/0 to-[#110F0D] pointer-events-none rounded-2xl" />
                     <div className="relative">
-                      <p className="font-mono text-[10px] text-[#D4A853]/50 uppercase tracking-widest mb-2">
+                      <p className="font-mono text-[10px] text-[#D4A853]/70 uppercase tracking-widest mb-2">
                         Estimated Monthly Friction Cost
                       </p>
                       <div className="flex items-baseline gap-3 mb-3">
@@ -456,7 +456,7 @@ export default function ScanPage() {
                   className="border border-[#D4A853]/20 bg-[#110F0D] p-6 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
                 >
                   <div>
-                    <p className="font-mono text-[10px] text-[#D4A853]/50 uppercase tracking-widest mb-1">Next Step</p>
+                    <p className="font-mono text-[10px] text-[#D4A853]/70 uppercase tracking-widest mb-1">Next Step</p>
                     <p className="text-sm text-white font-serif">Get the full diagnosis with the precise fix.</p>
                     <p className="font-mono text-[10px] text-[#7A6F65] mt-1">Delivered in 72h. Async. No calls required.</p>
                   </div>

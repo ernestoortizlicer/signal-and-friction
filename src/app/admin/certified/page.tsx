@@ -138,7 +138,7 @@ export default function AdminCertifiedManager() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0A0908] flex items-center justify-center font-mono text-xs text-[#9A8F82] animate-pulse">
+      <div className="min-h-screen bg-[#0A0908] flex items-center justify-center font-mono text-xs text-[#B0A89E] animate-pulse">
         Loading certified practitioners database...
       </div>
     );
@@ -150,7 +150,7 @@ export default function AdminCertifiedManager() {
         {/* Navigation & Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#D4A853]/8 pb-8">
           <div>
-            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#9A8F82] block mb-2">Licensed Partners Directory</span>
+            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#B0A89E] block mb-2">Licensed Partners Directory</span>
             <h1 className="text-4xl font-serif text-[#F5F0EB] tracking-tight">S&amp;F Certified™ Administration</h1>
           </div>
           <div className="flex items-center gap-4 mt-4 md:mt-0">
@@ -168,7 +168,7 @@ export default function AdminCertifiedManager() {
           <button
             onClick={() => setActiveTab("roster")}
             className={`pb-4 font-mono text-xs uppercase tracking-widest border-b-2 transition-all duration-300 cursor-pointer ${
-              activeTab === "roster" ? "border-[#D4A853] text-[#D4A853]" : "border-transparent text-[#9A8F82] hover:text-[#9A8F82]"
+              activeTab === "roster" ? "border-[#D4A853] text-[#D4A853]" : "border-transparent text-[#B0A89E] hover:text-[#B0A89E]"
             }`}
           >
             Practitioners Roster
@@ -176,7 +176,7 @@ export default function AdminCertifiedManager() {
           <button
             onClick={() => setActiveTab("marketing")}
             className={`pb-4 font-mono text-xs uppercase tracking-widest border-b-2 transition-all duration-300 cursor-pointer ${
-              activeTab === "marketing" ? "border-[#D4A853] text-[#D4A853]" : "border-transparent text-[#9A8F82] hover:text-[#9A8F82]"
+              activeTab === "marketing" ? "border-[#D4A853] text-[#D4A853]" : "border-transparent text-[#B0A89E] hover:text-[#B0A89E]"
             }`}
           >
             Marketing &amp; Sales Kits
@@ -193,7 +193,7 @@ export default function AdminCertifiedManager() {
             { label: "Average CSAT", value: `${Math.round(practitioners.reduce((acc, curr) => acc + curr.satisfaction_score, 0) / (practitioners.length || 1))}%`, desc: "Minimum compliance: 80%" }
           ].map((stat, i) => (
             <div key={i} className="border border-[#D4A853]/10 p-5 bg-[#110F0D] rounded-2xl relative overflow-hidden">
-              <span className="font-mono text-xs text-[#9A8F82] uppercase tracking-wider block mb-2">{stat.label}</span>
+              <span className="font-mono text-xs text-[#B0A89E] uppercase tracking-wider block mb-2">{stat.label}</span>
               <span className="font-serif text-3xl font-bold text-[#F5F0EB] block mb-1">{stat.value}</span>
               <span className="text-xs text-[#7A6F65] font-mono">{stat.desc}</span>
             </div>
@@ -223,7 +223,7 @@ export default function AdminCertifiedManager() {
               <tbody>
                 {practitioners.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-[#9A8F82] italic">
+                    <td colSpan={7} className="py-8 text-center text-[#B0A89E] italic">
                       No certified practitioners registered yet.
                     </td>
                   </tr>
@@ -236,13 +236,13 @@ export default function AdminCertifiedManager() {
                     >
                       <td className="py-4">
                         <span className="text-[#F5F0EB] font-serif font-bold block">{p.clients?.company_name || "Unknown Company"}</span>
-                        <span className="text-xs text-[#9A8F82]">{p.clients?.contact_name || "Unknown"} · {p.clients?.contact_email}</span>
+                        <span className="text-xs text-[#B0A89E]">{p.clients?.contact_name || "Unknown"} · {p.clients?.contact_email}</span>
                       </td>
-                      <td className="text-[#9A8F82] font-serif italic max-w-[200px] truncate">
+                      <td className="text-[#B0A89E] font-serif italic max-w-[200px] truncate">
                         {p.certification_programs?.name}
                       </td>
-                      <td className="text-[#9A8F82]">{new Date(p.certified_at).toLocaleDateString()}</td>
-                      <td className="text-[#9A8F82]">{new Date(p.expires_at).toLocaleDateString()}</td>
+                      <td className="text-[#B0A89E]">{new Date(p.certified_at).toLocaleDateString()}</td>
+                      <td className="text-[#B0A89E]">{new Date(p.expires_at).toLocaleDateString()}</td>
                       <td>
                         <span className={`text-xs uppercase px-2 py-0.5 border rounded-full ${
                           p.status === "active"
@@ -270,7 +270,7 @@ export default function AdminCertifiedManager() {
                             </button>
                             <button
                               onClick={() => setEditingId(null)}
-                              className="px-2 py-1 border border-white/10 text-[#9A8F82] hover:text-white uppercase tracking-wider text-xs rounded cursor-pointer"
+                              className="px-2 py-1 border border-white/10 text-[#B0A89E] hover:text-white uppercase tracking-wider text-xs rounded cursor-pointer"
                             >
                               Cancel
                             </button>
@@ -310,7 +310,7 @@ export default function AdminCertifiedManager() {
                 {/* CSAT audit slider */}
                 <div className="space-y-4">
                   <div className="flex justify-between">
-                    <span className="text-[#9A8F82] uppercase tracking-wider">Customer Satisfaction Score (CSAT):</span>
+                    <span className="text-[#B0A89E] uppercase tracking-wider">Customer Satisfaction Score (CSAT):</span>
                     <span className="text-[#D4A853] font-bold">{editScore}%</span>
                   </div>
                   <input
@@ -331,7 +331,7 @@ export default function AdminCertifiedManager() {
 
                 {/* Status selector */}
                 <div className="space-y-2">
-                  <label className="text-[#9A8F82] uppercase tracking-wider block mb-1">Licence Operational Status:</label>
+                  <label className="text-[#B0A89E] uppercase tracking-wider block mb-1">Licence Operational Status:</label>
                   <div className="flex gap-2">
                     {(["active", "suspended", "expired"] as const).map((status) => (
                       <button
@@ -341,7 +341,7 @@ export default function AdminCertifiedManager() {
                         className={`flex-1 py-2 border rounded text-center transition-all cursor-pointer ${
                           editStatus === status
                             ? "border-[#D4A853] bg-[#D4A853]/5 text-white font-bold"
-                            : "border-[#D4A853]/8 text-[#9A8F82] hover:text-white"
+                            : "border-[#D4A853]/8 text-[#B0A89E] hover:text-white"
                         }`}
                       >
                         {status.toUpperCase()}
@@ -384,7 +384,7 @@ export default function AdminCertifiedManager() {
               >
                 <button
                   onClick={() => setSelectedPractitioner(null)}
-                  className="absolute top-4 right-4 text-xs hover:text-[#D4A853] text-[#9A8F82] transition-colors"
+                  className="absolute top-4 right-4 text-xs hover:text-[#D4A853] text-[#B0A89E] transition-colors"
                 >
                   [CLOSE]
                 </button>
@@ -401,12 +401,12 @@ export default function AdminCertifiedManager() {
                 <div className="space-y-4 text-xs">
                   <div className="grid grid-cols-2 gap-4 border-b border-[#D4A853]/8 pb-4">
                     <div>
-                      <span className="text-[#9A8F82] block text-xs uppercase">Primary Contact</span>
+                      <span className="text-[#B0A89E] block text-xs uppercase">Primary Contact</span>
                       <span className="text-[#F5F0EB] block font-bold mt-0.5">{selectedPractitioner.clients?.contact_name || "N/A"}</span>
-                      <span className="text-[#9A8F82] text-xs">{selectedPractitioner.clients?.contact_email || "N/A"}</span>
+                      <span className="text-[#B0A89E] text-xs">{selectedPractitioner.clients?.contact_email || "N/A"}</span>
                     </div>
                     <div>
-                      <span className="text-[#9A8F82] block text-xs uppercase">License Status</span>
+                      <span className="text-[#B0A89E] block text-xs uppercase">License Status</span>
                       <span className={`inline-block text-xs uppercase px-2 py-0.5 border rounded mt-1 ${
                         selectedPractitioner.status === "active"
                           ? "bg-[#5C9A6B]/10 border-[#5C9A6B]/20 text-[#5C9A6B]"
@@ -421,22 +421,22 @@ export default function AdminCertifiedManager() {
 
                   <div className="grid grid-cols-2 gap-4 border-b border-[#D4A853]/8 pb-4">
                     <div>
-                      <span className="text-[#9A8F82] block text-xs uppercase">Certified At</span>
+                      <span className="text-[#B0A89E] block text-xs uppercase">Certified At</span>
                       <span className="text-[#F5F0EB] block mt-0.5">{new Date(selectedPractitioner.certified_at).toLocaleDateString()}</span>
                     </div>
                     <div>
-                      <span className="text-[#9A8F82] block text-xs uppercase">Expires At</span>
+                      <span className="text-[#B0A89E] block text-xs uppercase">Expires At</span>
                       <span className="text-[#F5F0EB] block mt-0.5">{new Date(selectedPractitioner.expires_at).toLocaleDateString()}</span>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 border-b border-[#D4A853]/8 pb-4">
                     <div>
-                      <span className="text-[#9A8F82] block text-xs uppercase">Syllabus Track</span>
-                      <span className="text-[#F5F0EB] block mt-0.5 font-serif italic text-[#9A8F82]">{selectedPractitioner.certification_programs?.name}</span>
+                      <span className="text-[#B0A89E] block text-xs uppercase">Syllabus Track</span>
+                      <span className="text-[#F5F0EB] block mt-0.5 font-serif italic text-[#B0A89E]">{selectedPractitioner.certification_programs?.name}</span>
                     </div>
                     <div>
-                      <span className="text-[#9A8F82] block text-xs uppercase">CSAT Score</span>
+                      <span className="text-[#B0A89E] block text-xs uppercase">CSAT Score</span>
                       <span className={`text-sm font-bold block mt-0.5 ${selectedPractitioner.satisfaction_score >= 80 ? "text-[#D4A853]" : "text-[#C85C5C]"}`}>
                         {selectedPractitioner.satisfaction_score}%
                       </span>
@@ -444,8 +444,8 @@ export default function AdminCertifiedManager() {
                   </div>
 
                   <div className="bg-[#110F0D]/25 border border-[#D4A853]/8 p-4 rounded mt-4">
-                    <span className="text-[#9A8F82] block text-xs uppercase mb-1">Authorization Details</span>
-                    <div className="space-y-1 text-xs text-[#9A8F82]">
+                    <span className="text-[#B0A89E] block text-xs uppercase mb-1">Authorization Details</span>
+                    <div className="space-y-1 text-xs text-[#B0A89E]">
                       <div><span className="text-[#F5F0EB]">License ID:</span> {selectedPractitioner.id}</div>
                       <div><span className="text-[#F5F0EB]">Validation Method:</span> Cryptographic Signature</div>
                       <div><span className="text-[#F5F0EB]">SLA Active:</span> {selectedPractitioner.status === 'active' ? '✓ YES' : '✗ NO'}</div>
@@ -466,7 +466,7 @@ export default function AdminCertifiedManager() {
             <div className="border border-[#D4A853]/8 p-6 bg-[#121110]/40 rounded flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h3 className="font-serif text-lg text-white font-bold">Certified Licensing Outbound &amp; Sales Assets</h3>
-                <p className="text-xs text-[#9A8F82] font-mono mt-1">Copy outreach sequences and email cycles built by Agent #20 &amp; Agent #21</p>
+                <p className="text-xs text-[#B0A89E] font-mono mt-1">Copy outreach sequences and email cycles built by Agent #20 &amp; Agent #21</p>
               </div>
             </div>
 
@@ -490,19 +490,19 @@ export default function AdminCertifiedManager() {
                 <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                   <div>
                     <h5 className="text-white font-bold">Email 1: The Diagnostics Paradigm Shift (Day 1)</h5>
-                    <p className="text-[#9A8F82] mt-1 whitespace-pre-wrap leading-relaxed border-l border-[#D4A853]/8 pl-3">
+                    <p className="text-[#B0A89E] mt-1 whitespace-pre-wrap leading-relaxed border-l border-[#D4A853]/8 pl-3">
                       Subject: Welcome to the 1% — The S&F Method™ Certification\n\nTraditional agency work is a race to the bottom. Most firms sell suggestions. We sell clinical diagnostics. One finding. One fix. Telemetry-verified. Get your digital playbooks inside...
                     </p>
                   </div>
                   <div className="border-t border-[#D4A853]/8 pt-2">
                     <h5 className="text-white font-bold">Email 2: Anatomy of a Conversion Collapse (Day 3)</h5>
-                    <p className="text-[#9A8F82] mt-1 whitespace-pre-wrap leading-relaxed border-l border-[#D4A853]/8 pl-3">
+                    <p className="text-[#B0A89E] mt-1 whitespace-pre-wrap leading-relaxed border-l border-[#D4A853]/8 pl-3">
                       Subject: Case Study: The 45% onboarding drop\n\nA major SaaS platform localized their app for India, yet conversion plummeted by 45%. We isolated the technical payload delay and SMS gateway latency. Reverse-engineer the case in Module 2...
                     </p>
                   </div>
                   <div className="border-t border-[#D4A853]/8 pt-2">
                     <h5 className="text-white font-bold">Email 3: Done-For-You vs Done-With-You (Day 5)</h5>
-                    <p className="text-[#9A8F82] mt-1 whitespace-pre-wrap leading-relaxed border-l border-[#D4A853]/8 pl-3">
+                    <p className="text-[#B0A89E] mt-1 whitespace-pre-wrap leading-relaxed border-l border-[#D4A853]/8 pl-3">
                       Subject: Lifetime License vs. Monthly Subscription\n\nChoose the track that fits your scale. Lifetime track includes full Socratic Playbook access, direct directory listing, and S&F badges. Monthly track offers entry with quarterly updates...
                     </p>
                   </div>
@@ -525,7 +525,7 @@ export default function AdminCertifiedManager() {
                       Copy Templates
                     </button>
                   </div>
-                  <div className="space-y-3 leading-relaxed text-[#9A8F82]">
+                  <div className="space-y-3 leading-relaxed text-[#B0A89E]">
                     <div>
                       <strong className="text-white">Agency Owners:</strong>
                       <p className="border-l border-[#D4A853]/8 pl-2 mt-1 italic">{"\"Hi [Name], B2B SaaS agencies struggle to charge $5k+ for audits because clients are skeptical. We license S&F Method letting you back audits with PostHog guarantees. Worth a look?\""}</p>
@@ -551,7 +551,7 @@ export default function AdminCertifiedManager() {
                       Copy Script
                     </button>
                   </div>
-                  <div className="max-h-[150px] overflow-y-auto pr-2 text-[#9A8F82] leading-relaxed">
+                  <div className="max-h-[150px] overflow-y-auto pr-2 text-[#B0A89E] leading-relaxed">
                     <p><strong>0:00 - 1:30 | Intro &amp; The CRO Crisis:</strong> {"\"Hi, I'm Ernesto Ortiz. If you run a growth agency, you know the client retention struggle. You deliver suggestions, results are muddy, and they churn. We sell clinical diagnostics...\""}</p>
                     <p className="mt-2"><strong>1:30 - 4:00 | The S&amp;F Protocol:</strong> {"\"We isolate the single friction point killing conversion in 72 hours. We use PostHog telemetry, strict isolation gates, and a results-based guarantee. If we don't hit the target, client gets a refund...\""}</p>
                   </div>
