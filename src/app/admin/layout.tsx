@@ -229,7 +229,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* ── Navigation Sidebar ────────────────────────────── */}
         <aside className="w-16 md:w-60 border-r border-[#D4A853]/8 bg-[#0A0908] flex flex-col py-4 flex-shrink-0">
 
-          <div className="hidden md:block font-mono text-xs text-[#5C5550] tracking-[0.2em] uppercase px-5 pb-3 border-b border-[#D4A853]/6 mb-2">
+          <div className="hidden md:block font-mono text-xs text-[#7A6F65] tracking-[0.2em] uppercase px-5 pb-3 border-b border-[#D4A853]/6 mb-2">
             Modules
           </div>
 
@@ -261,7 +261,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </span>
 
                   {/* Desktop: code + label */}
-                  <span className={`hidden md:inline text-xs tracking-[0.15em] uppercase w-6 flex-shrink-0 font-medium ${isActive ? "text-[#D4A853]" : "text-[#5C5550] group-hover:text-[#9A8F82]"}`}>
+                  <span className={`hidden md:inline text-xs tracking-[0.15em] uppercase w-6 flex-shrink-0 font-medium ${isActive ? "text-[#D4A853]" : "text-[#7A6F65] group-hover:text-[#9A8F82]"}`}>
                     {link.code}
                   </span>
                   <span className="hidden md:inline text-sm tracking-wide font-medium">
@@ -279,7 +279,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Bottom version */}
           <div className="mt-auto px-5 py-4 hidden md:block border-t border-[#D4A853]/6">
-            <div className="font-mono text-xs text-[#3A3530] tracking-[0.15em] uppercase">
+            <div className="font-mono text-xs text-[#7A6F65] tracking-[0.15em] uppercase">
               Engine v2.4
             </div>
           </div>

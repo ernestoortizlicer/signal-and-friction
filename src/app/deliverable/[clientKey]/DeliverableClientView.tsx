@@ -259,7 +259,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
             </div>
             {activeModule && (
               <div className="border border-[#D4A853]/15 bg-[#110F0D]/60 p-5 rounded-lg space-y-3 mt-4">
-                <span className="font-mono text-xs text-[#D4A853]/40 tracking-wider uppercase block">
+                <span className="font-mono text-xs text-[#D4A853]/70 tracking-wider uppercase block">
                   Module Summary &amp; Insight
                 </span>
                 <h4 className="text-xs font-bold font-mono text-[#F5F0EB]">{activeModule.title}</h4>

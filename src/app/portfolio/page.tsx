@@ -115,7 +115,7 @@ export default function PublicPortfolio() {
 
               <div className="flex justify-between items-center text-xs font-mono text-[#7A6F65] pt-2 border-t border-white/[0.03]">
                 <span>{project.period}</span>
-                <span className="text-[#D4A853]/50 border border-[#D4A853]/15 px-2 py-0.5 rounded bg-[#D4A853]/5">{project.telemetry}</span>
+                <span className="text-[#D4A853]/80 border border-[#D4A853]/15 px-2 py-0.5 rounded bg-[#D4A853]/5">{project.telemetry}</span>
               </div>
             </motion.div>
           ))}

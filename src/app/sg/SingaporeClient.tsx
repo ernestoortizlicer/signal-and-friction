@@ -238,7 +238,7 @@ export default function SingaporeClient() {
             className="flex-1 max-w-lg space-y-6"
           >
             <div className="space-y-2">
-              <div className="font-mono text-xs text-[#D4A853]/40 tracking-[0.4em] uppercase">
+              <div className="font-mono text-xs text-[#D4A853]/60 tracking-[0.4em] uppercase">
                 Singapore Diagnostic Portal v4.5
               </div>
               <h1 className="text-[2.8rem] lg:text-[3.6rem] font-bold leading-[1.0] tracking-[-0.03em]">
@@ -297,7 +297,7 @@ export default function SingaporeClient() {
                     <p className="text-xs text-[#7A6F65] italic leading-relaxed">
                       &ldquo;{t.quote_text}&rdquo;
                     </p>
-                    <span className="text-xs font-mono text-[#D4A853]/40 uppercase tracking-wider block mt-0.5">
+                    <span className="text-xs font-mono text-[#D4A853]/60 uppercase tracking-wider block mt-0.5">
                       Verified Client
                     </span>
                   </div>
@@ -322,7 +322,7 @@ export default function SingaporeClient() {
                     <div className="w-[7px] h-[7px] rounded-full bg-[#D4A853]/60 animate-ping" />
                     <div className="w-[7px] h-[7px] rounded-full bg-[#7A6F65]/40" />
                   </div>
-                  <span className="font-mono text-xs text-[#D4A853]/40 tracking-[0.25em] uppercase">
+                  <span className="font-mono text-xs text-[#D4A853]/60 tracking-[0.25em] uppercase">
                     {currentStep.code}
                   </span>
                 </div>
@@ -336,10 +336,10 @@ export default function SingaporeClient() {
               <div className="p-6">
                 {/* Step label */}
                 <div className="mb-5">
-                  <div className="font-mono text-xs text-[#D4A853]/30 tracking-[0.3em] uppercase mb-1">
+                  <div className="font-mono text-xs text-[#D4A853]/60 tracking-[0.3em] uppercase mb-1">
                     {currentStep.label}
                   </div>
-                  <div className="font-mono text-xs text-[#7A6F65]">
+                  <div className="font-mono text-xs text-[#9A8F82]">
                     {currentStep.desc}
                   </div>
                 </div>
@@ -363,10 +363,10 @@ export default function SingaporeClient() {
                           onChange={(e) => setUrl(e.target.value)}
                           placeholder="https://your-product.sg"
                           aria-label="APAC product URL for diagnostic scan"
-                          className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#2A2218] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
+                          className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#4A4540] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
                           style={{ caretColor: "#D4A853" }}
                         />
-                        <div className="font-mono text-xs text-[#9A8F82]/60 tracking-wide flex items-center gap-1.5">
+                        <div className="font-mono text-xs text-[#9A8F82] tracking-wide flex items-center gap-1.5">
                           <span className="w-1 h-1 rounded-full bg-[#5C9A6B]/50" />
                           Trusted by APAC SaaS founders in SG, AU, and MY.
                         </div>
@@ -399,11 +399,11 @@ export default function SingaporeClient() {
                               className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                 funnelPain === opt.key
                                   ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                  : "border-l-transparent text-[#7A6F65] hover:text-[#9A8F82] hover:bg-white/[0.01]"
+                                  : "border-l-transparent text-[#9A8F82] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
                               }`}
                             >
                               <div className="text-xs tracking-wide">{opt.label}</div>
-                              <div className="text-xs text-[#7A6F65] mt-0.5">{opt.sub}</div>
+                              <div className="text-xs text-[#9A8F82]/80 mt-0.5">{opt.sub}</div>
                             </button>
                           ))}
                         </div>
@@ -439,11 +439,11 @@ export default function SingaporeClient() {
                               className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                 segmentSelection === opt.key
                                   ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                  : "border-l-transparent text-[#7A6F65] hover:text-[#9A8F82] hover:bg-white/[0.01]"
+                                  : "border-l-transparent text-[#9A8F82] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
                               }`}
                             >
                               <div className="text-xs tracking-wide">{opt.label}</div>
-                              <div className="text-xs text-[#7A6F65] mt-0.5">{opt.sub}</div>
+                              <div className="text-xs text-[#9A8F82]/80 mt-0.5">{opt.sub}</div>
                             </button>
                           ))}
                         </div>
@@ -480,11 +480,11 @@ export default function SingaporeClient() {
                                 className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                   customAnswer === opt.label
                                     ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                    : "border-l-transparent text-[#7A6F65] hover:text-[#9A8F82] hover:bg-white/[0.01]"
+                                    : "border-l-transparent text-[#9A8F82] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
                                 }`}
                               >
                                 <div className="text-xs tracking-wide">{opt.label}</div>
-                                <div className="text-xs text-[#7A6F65] mt-0.5">{opt.sub}</div>
+                                <div className="text-xs text-[#9A8F82]/80 mt-0.5">{opt.sub}</div>
                               </button>
                             ))
                           ) : (
@@ -496,11 +496,11 @@ export default function SingaporeClient() {
                                 className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                   customAnswer === opt.label
                                     ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                    : "border-l-transparent text-[#7A6F65] hover:text-[#9A8F82] hover:bg-white/[0.01]"
+                                    : "border-l-transparent text-[#9A8F82] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
                                 }`}
                               >
                                 <div className="text-xs tracking-wide">{opt.label}</div>
-                                <div className="text-xs text-[#7A6F65] mt-0.5">{opt.sub}</div>
+                                <div className="text-xs text-[#9A8F82]/80 mt-0.5">{opt.sub}</div>
                               </button>
                             ))
                           )}
@@ -536,14 +536,14 @@ export default function SingaporeClient() {
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="you@company.sg"
                             aria-label="Email address for APAC diagnostic report delivery"
-                            className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#2A2218] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
+                            className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#4A4540] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
                             style={{ caretColor: "#D4A853" }}
                           />
-                          <div className="mt-2 font-mono text-xs text-[#9A8F82]/50 tracking-wide">
+                          <div className="mt-2 font-mono text-xs text-[#9A8F82] tracking-wide">
                             APAC results in 72h. PDPA compliant. No sales calls.
                           </div>
                         </div>
-                        <div className="border border-[#D4A853]/10 bg-[#D4A853]/[0.03] px-3 py-2 font-mono text-xs text-[#9A8F82]/70 leading-relaxed flex items-center gap-2">
+                        <div className="border border-[#D4A853]/10 bg-[#D4A853]/[0.03] px-3 py-2 font-mono text-xs text-[#9A8F82] leading-relaxed flex items-center gap-2">
                           <span className="text-[#D4A853]">⚑</span>
                           SGD $2,700 guarantee or full Stripe refund. 72h async. Zero sales calls.
                         </div>

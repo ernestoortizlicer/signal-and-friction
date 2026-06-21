@@ -114,52 +114,6 @@ const CASE_STUDIES: CaseStudy[] = [
     quizExplanation: "Reciprocal Value Offset. The user receives a direct performance benefit in exchange for consenting to share usage data."
   },
   {
-    id: "wy_llc_saas",
-    title: "B2B SaaS Founder: Jurisdiction Arbitrage + Conversion Gate",
-    metrics: "Founder closes $18k/month in contracts but loses 47% net to taxes. Checkout conversion drops 23% when annual billing is introduced. Cash-flow gap of $700/month threatens relocation plan.",
-    context: "Non-US founder operating via Wyoming LLC, servicing EU clients. Clients resist annual billing due to lack of prorated refund clarity. Fiscal residency change planned but not yet executed.",
-    frictionOptions: [
-      "Tax: Active Spain IRPF exposure during relocation transition",
-      "Cognitive: Annual billing refund anxiety (no prorated guarantee shown)",
-      "Trust Deficit: Non-US entity perception gap with EU enterprise buyers"
-    ],
-    concepts: [
-      { title: "Concept 1: Fiscal Drag During Transition Windows (Tax & Compliance)", description: "Changing fiscal residency mid-year does not eliminate prior-year tax liability in the source country. Spain's Art. 9 LIRPF applies 183-day presence test plus economic interests test. A founder cannot reduce Spain IRPF exposure until the year after official registration abroad AND deregistration from Spain's Censo de Obligados Tributarios (Modelo 030)." },
-      { title: "Concept 2: Annual Billing Refund Anxiety (Behavioral Economics)", description: "Enterprise B2B buyers resist annual billing not because of cash flow — but because of perceived lock-in risk. The Fogg Behavioral Model predicts that motivation (desire for annual discount) drops when effort (perceived risk of no exit) is too high. Adding a 30-day prorated refund clause directly into the pricing page eliminates this friction and increases annual plan selection by 28-35%." },
-      { title: "Concept 3: Non-US Entity Trust Architecture (Conversion Architecture)", description: "EU enterprise procurement teams run vendor checks via Crunchbase, LinkedIn, and company registries. A Wyoming LLC without a public US presence (Stripe checkout with US Merchant descriptor + LinkedIn company page with HQ city) creates a trust gap. Mitigating it requires a US-mapped Stripe descriptor, a professional company LinkedIn page, and optionally a virtual US address for the LLC." }
-    ],
-    quizQuestion: "A SaaS founder moves from Spain to Paraguay mid-year on July 15. He files Modelo 030 in October. Spain's tax authority sends a demand for full-year IRPF on consulting income. Is Spain's claim legally valid for that year?",
-    quizAnswers: [
-      "No — once Modelo 030 is filed, Spain's tax claim terminates immediately",
-      "Yes — Spain applies the 183-day test and the economic-interests test; mid-year departure likely leaves the founder as a Spanish tax resident for the full year",
-      "Partially — only income earned before the move date is taxable in Spain"
-    ],
-    quizExplanation: "Yes, Spain's claim is valid for the full year. Art. 9 LIRPF counts days of physical presence in Spain AND applies a center-of-economic-interests test. Departing mid-year likely triggers residency for the entire fiscal year. Clean break requires spending the full calendar year outside Spain."
-  },
-  {
-    id: "pricing_psychology_b2b",
-    title: "High-Ticket B2B Pricing Psychology: When Price Increases Conversions",
-    metrics: "Consulting firm at $1,500/project sees 14% conversion. After raising to $4,500, conversion drops to 6% — but revenue per close increases 3x and client quality improves dramatically. Total monthly revenue rises 29%.",
-    context: "B2B consulting targeting Series A SaaS companies. Original pricing felt budget-level. Post-raise, enterprise buyers engaged more seriously. Cognitive reframe from 'vendor' to 'strategic advisor' occurred at $4k+ threshold.",
-    frictionOptions: [
-      "Value Deficit: $1,500 price point signals junior/tactical work to enterprise buyers",
-      "Trust Deficit: Low price anchors 'advisor' positioning against internal alternatives",
-      "Cognitive: Price elasticity misread — chasing volume over margin"
-    ],
-    concepts: [
-      { title: "Concept 1: Veblen Good Dynamics in B2B Services (Pricing Logic)", description: "In B2B high-ticket consulting, price is a quality signal. The Veblen Effect applies: above a threshold (~$3-5k per project for Series A SaaS), buyer decision-making shifts from price-sensitivity to outcome-confidence. A $4,500 price point activates procurement budgets that a $1,500 price point cannot touch — it falls below the minimum threshold of 'strategic spend' in most company expense policies." },
-      { title: "Concept 2: Anchoring and Reference Pricing (Behavioral Economics)", description: "Enterprise buyers don't evaluate price in isolation — they compare against alternatives: an internal hire ($6-10k/month), a consulting firm ($15-25k/project), or doing nothing. Anchoring your price against the highest-cost alternative and framing the gap as 'risk-adjusted ROI' removes price sensitivity entirely. A $4,500 project that prevents a $50k conversion failure has a 10x ROI frame." },
-      { title: "Concept 3: Founder Psychology and Pricing Courage (Conversion Architecture)", description: "The most common pricing mistake is undercutting out of fear of rejection. The Signal & Friction model frames pricing as a trust signal: low prices create cognitive dissonance ('if it's this cheap, how good can it be?'). Raising prices selectively filters out low-quality clients, increases perceived authority, and attracts buyers who trust the outcome — rather than buyers who need to minimize risk." }
-    ],
-    quizQuestion: "A consultant raises hourly rate from $120 to $350. Pipeline closes drop from 8/month to 3/month. Revenue goes from $4,800 to $6,300/month. What happened to the conversion rate and was it the right move?",
-    quizAnswers: [
-      "Conversion rate dropped 62.5% — this is a failure that needs reversal",
-      "Conversion rate dropped 62.5% — but revenue increased 31% and client quality improved; this is a correct Veblen pricing move if churn stays low",
-      "Conversion rate is irrelevant; only total revenue matters at any price point"
-    ],
-    quizExplanation: "Option B is correct. The Veblen pricing effect is confirmed: fewer closes, higher revenue per close. The key variable to track is not conversion rate alone but Revenue Per Close × Client Quality × Referral Rate. At $350/hr the consultant attracts clients who are more committed and less likely to ghost or demand revisions."
-  },
-  {
     id: "saas_asia",
     title: "$50M SaaS Asian Expansion Collapse",
     metrics: "Conversion drops by 60% on Singapore/Japan local checkouts. User dropoff occurs at pricing plan confirmation (4.2 minutes average latency).",
@@ -237,39 +191,6 @@ const CHALLENGE_ELEVATIONS: Record<string, {
       { num: 3, category: "Copywriting", categoryColor: "text-[#D4A853]", title: "Micro-Copy Teardown: Designing Frictionless Consent Elements", summary: "How micro-copy adjustments change user perception from 'spying' to 'optimizing'.", body: "Words matter. Shifting consent banner text from passive telemetry-oriented tracking jargon to active user-performance enhancements alters the cognitive frame from defense to cooperation." }
     ]
   },
-  wy_llc_saas: {
-    gaps: [
-      { label: "Tax & Compliance Gap", current: 55, target: 95, colorClass: "text-[#C85C5C]", barColor: "from-[#C85C5C] to-[#D4A853]" },
-      { label: "Conversion Architecture Gap", current: 60, target: 90, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" },
-      { label: "Behavioral Economics Gap", current: 70, target: 92, colorClass: "text-[#5C9A6B]", barColor: "from-[#5C9A6B] to-[#D4A853]" }
-    ],
-    studyPlan: [
-      { step: "01", title: "Map Fiscal Year Exposure Window", desc: "Calculate the 183-day presence count for the current year. Determine if the economic-interests test (pension source, company domicile) overrides the physical presence test under Spain's Art. 9 LIRPF." },
-      { step: "02", title: "Deploy Annual Billing Trust Patch", desc: "Add a prorated refund clause to the pricing page. Frame it as: 'Annual plan. Cancel anytime — unused months refunded within 48h.' A/B test against current pricing page." },
-      { step: "03", title: "Build EU Enterprise Trust Architecture", desc: "Establish US-mapped Stripe merchant descriptor, create LinkedIn company page with US headquarters, add Terms of Service with GDPR DPA clause. These three items eliminate the non-US entity trust gap for EU procurement." }
-    ],
-    articles: [
-      { num: 1, category: "Tax & Compliance", categoryColor: "text-[#C85C5C]", title: "Spain IRPF Art. 9 — Residency Trap for Digital Nomads", summary: "Why departing Spain mid-year does not eliminate full-year tax liability.", body: "Spain's IRPF applies the 183-day physical presence test AND a center-of-economic-interests test. A founder who earns pension income from Spain, maintains a Spanish bank as primary account, or has a Spanish spouse may be classified as a Spanish tax resident for the entire fiscal year regardless of departure date. Clean break requires the full calendar year spent outside Spain + Modelo 030 filed + Hacienda acknowledgment." },
-      { num: 2, category: "Conversion Architecture", categoryColor: "text-[#D4A853]", title: "Annual Billing Refund Architecture — Eliminating Lock-In Anxiety", summary: "How prorated refund clauses increase annual plan conversion by 28-35%.", body: "Enterprise B2B buyers do not fear annual billing — they fear perceived lock-in with no exit. Adding a clear 30-day prorated refund clause (visible on the pricing page, not buried in ToS) removes this barrier. The clause costs close to zero in practice since churn in the first 30 days of an annual contract is typically under 2%." },
-      { num: 3, category: "Trust Architecture", categoryColor: "text-[#5C9A6B]", title: "Wyoming LLC Trust Stack for EU Enterprise Clients", summary: "Building credibility signals for non-US entities operating in European B2B markets.", body: "EU enterprise procurement teams verify vendors through Crunchbase, LinkedIn, and Stripe merchant category codes. A Wyoming LLC with a US merchant descriptor, a professional LinkedIn company page listing a US city as headquarters, and a GDPR Data Processing Agreement as part of the Master Services Agreement completes the trust stack needed to pass EU procurement reviews." }
-    ]
-  },
-  pricing_psychology_b2b: {
-    gaps: [
-      { label: "Pricing Logic Gap", current: 45, target: 95, colorClass: "text-amber-400", barColor: "from-amber-500 to-[#D4A853]" },
-      { label: "Behavioral Economics Gap", current: 65, target: 90, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" }
-    ],
-    studyPlan: [
-      { step: "01", title: "Compute Your Veblen Threshold", desc: "Map the typical procurement budget categories for your target ICP. Identify the minimum spend threshold that triggers 'strategic vendor' classification vs. 'tactical expense'. Price above the lower boundary of the strategic tier." },
-      { step: "02", title: "Build a Reference Anchoring Frame", desc: "Create a pricing page section showing the cost of alternatives: internal hire, competing agency, or doing nothing. Position your price as the risk-adjusted midpoint that captures 80% of the value at 30% of the cost." },
-      { step: "03", title: "Measure Revenue Per Close, Not Conversion Rate", desc: "Track: Revenue Per Close × Avg. Contract Length × Referral Rate. This composite metric shows whether a price increase was the right move even if raw conversion rate dropped. Set a 90-day threshold to evaluate the full impact." }
-    ],
-    articles: [
-      { num: 1, category: "Pricing Logic", categoryColor: "text-amber-400", title: "Veblen Goods in B2B Consulting: When Price Signals Quality", summary: "Why raising prices can increase conversions for high-ticket advisory services.", body: "In B2B professional services, price is the single strongest quality signal available before a buyer experiences the work. Below a Veblen threshold (typically $3,000-$8,000 for B2B SaaS consulting), buyers apply consumer-market logic: lower price = lower quality. Above the threshold, they apply institutional-market logic: price signals commitment, rigor, and selective client intake." },
-      { num: 2, category: "Behavioral Economics", categoryColor: "text-[#D4A853]", title: "Reference Price Anchoring in B2B Sales Conversations", summary: "Using competitive alternatives as anchors to shift price sensitivity.", body: "Anchoring theory shows that the first number introduced in a negotiation frames all subsequent judgment. By leading with the cost of alternatives (an internal hire at $7k/month, a McKinsey engagement at $50k/project), your $4,500 project price becomes the obvious choice. The cognitive labor of comparison is offloaded by the seller, removing the buyer's need to justify the spend internally." },
-      { num: 3, category: "Conversion Architecture", categoryColor: "text-[#5C9A6B]", title: "Redefining Conversion Metrics for High-Ticket B2B Services", summary: "Why optimizing for raw close rate destroys revenue in premium positioning.", body: "At $150/hr vs. $350/hr with the same 40h engagement, the Revenue Per Close difference is $8,000. If $150/hr closes 8/month and $350/hr closes 3/month, the total revenue is $4,800 vs. $42,000 — not $6,300. The key insight: each high-ticket close also has a higher referral coefficient (premium clients have premium networks), compounding the long-term revenue effect." }
-    ]
-  },
   saas_asia: {
     gaps: [
       { label: "Tax & Compliance Gap", current: 50, target: 95, colorClass: "text-[#C85C5C]", barColor: "from-[#C85C5C] to-[#D4A853]" },
@@ -345,7 +266,6 @@ export default function LearningDashboard() {
   const [diagnosticVelocity, setDiagnosticVelocity] = useState<number | null>(null);
   const [coverageScore, setCoverageScore] = useState<number | null>(null);
   const [sessionElapsed, setSessionElapsed] = useState<number | null>(null);
-  const [semanticDivergence, setSemanticDivergence] = useState<number | null>(null);
 
   const [quizScore, setQuizScore] = useState<number | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -405,7 +325,7 @@ export default function LearningDashboard() {
         headers: { ...headers, "Content-Type": "application/json" },
         body: JSON.stringify({ feedback: feedbackText })
       });
-      alert(`✓ Selección Confirmada: Ponderaciones del Borrador ${selectedDraftId} reforzadas.`);
+      alert(`✓ Selection Confirmed: Draft ${selectedDraftId} weights reinforced.`);
       setFeedbackText("");
       setSelectedDraftId(null);
     } catch (err) { console.error("Error saving draft feedback:", err); }
@@ -425,7 +345,6 @@ export default function LearningDashboard() {
     setDiagnosticVelocity(null);
     setCoverageScore(null);
     setSessionElapsed(null);
-    setSemanticDivergence(null);
   };
 
   // Radar math
@@ -467,18 +386,18 @@ export default function LearningDashboard() {
       <div className="flex flex-wrap justify-between items-start gap-3 border-b border-[#D4A853]/15 pb-4 relative z-10">
         <div>
           <span className="font-mono text-xs text-[#D4A853]/40 tracking-[0.4em] uppercase block">
-            Sistema de Eminencia
+            Eminence System
           </span>
           <h1 className="text-2xl font-bold tracking-tight">
-            <span className="text-[#D4A853]">Laboratorio</span> de Combate
+            Combat <span className="text-[#D4A853]">Learning Lab</span>
           </h1>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-mono text-xs text-[#5C9A6B] border border-[#5C9A6B]/25 px-3 py-1 rounded-full bg-[#5C9A6B]/5">
-            {conceptsMastered} Conceptos Dominados
+            {conceptsMastered} Concepts Mastered
           </span>
           <span className="font-mono text-xs text-[#D4A853] border border-[#D4A853]/25 px-3 py-1 rounded-full bg-[#D4A853]/5">
-            Fábrica IP Activa
+            IP Factory Active
           </span>
         </div>
       </div>
@@ -486,8 +405,8 @@ export default function LearningDashboard() {
       {/* Tabs */}
       <div className="flex border-b border-[#D4A853]/10 gap-6 relative z-10">
         {([
-          { key: 'hyper_leap', label: 'Modo Combate' },
-          { key: 'socratic',   label: 'Laboratorio IP' },
+          { key: 'hyper_leap', label: 'Combat Mode' },
+          { key: 'socratic',   label: 'IP Lab' },
         ] as const).map(tab => (
           <button
             key={tab.key}
@@ -522,10 +441,10 @@ export default function LearningDashboard() {
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl">
                 <div className="flex items-center justify-between mb-4">
                   <span className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase">
-                    01 — Selección de Escenario
+                    01 — Scenario Selection
                   </span>
                   <span className="font-mono text-[10px] uppercase tracking-wider text-[#C85C5C] border border-[#C85C5C]/20 px-2 py-0.5 rounded-full bg-[#C85C5C]/5">
-                    Modo Divergente
+                    Divergent Mode
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -547,7 +466,7 @@ export default function LearningDashboard() {
                     >
                       <div className="text-xs font-bold leading-snug line-clamp-2">{cs.title}</div>
                       {selectedChallengeId === cs.id && (
-                        <span className="text-[10px] text-[#D4A853] block mt-1 uppercase tracking-wider">Activo</span>
+                        <span className="text-[10px] text-[#D4A853] block mt-1 uppercase tracking-wider">Active</span>
                       )}
                     </button>
                   ))}
@@ -557,17 +476,17 @@ export default function LearningDashboard() {
               {/* Main Challenge Card */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-4">
                 <span className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase">
-                  02 — Escenario de Crisis
+                  02 — Crisis Scenario
                 </span>
                 <h3 className="text-base font-bold text-white font-serif leading-snug">{activeChallenge.title}</h3>
 
                 <div className="border border-[#D4A853]/10 bg-[#0A0908] p-4 rounded-xl text-xs space-y-3">
                   <div>
-                    <span className="text-[#D4A853] font-semibold block uppercase text-[10px] tracking-wider mb-1">Cuello de Botella — Métricas</span>
+                    <span className="text-[#D4A853] font-semibold block uppercase text-[10px] tracking-wider mb-1">Metrics Bottleneck</span>
                     <p className="text-[#9A8F82] leading-relaxed">{activeChallenge.metrics}</p>
                   </div>
                   <div className="border-t border-[#D4A853]/8 pt-3">
-                    <span className="text-[#D4A853] font-semibold block uppercase text-[10px] tracking-wider mb-1">Contexto Operativo</span>
+                    <span className="text-[#D4A853] font-semibold block uppercase text-[10px] tracking-wider mb-1">Environmental Context</span>
                     <p className="text-[#9A8F82] leading-relaxed">{activeChallenge.context}</p>
                   </div>
                 </div>
@@ -577,7 +496,7 @@ export default function LearningDashboard() {
                     {/* Friction options — 2 cols max */}
                     <div>
                       <label className="text-xs text-[#9A8F82] uppercase tracking-wider block mb-2">
-                        Aisla los mecanismos de fricción (selecciona todos los aplicables):
+                        Isolate friction mechanisms (select all that apply):
                       </label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {activeChallenge.frictionOptions.map((option, idx) => {
@@ -609,7 +528,7 @@ export default function LearningDashboard() {
                     {/* Hypothesis */}
                     <div>
                       <label className="text-xs text-[#9A8F82] uppercase tracking-wider block mb-2">
-                        Hipótesis diagnóstica clínica:
+                        Clinical diagnostic hypothesis:
                       </label>
                       <textarea
                         value={hlInput}
@@ -619,7 +538,7 @@ export default function LearningDashboard() {
                             setTypingStartedAt(Date.now());
                           }
                         }}
-                        placeholder="Escribe tu estrategia diagnóstica. Enfócate en cómo las restricciones técnicas interactúan con la fricción conductual..."
+                        placeholder="Write your diagnostic strategy. Focus on how technical constraints interact with behavioral friction..."
                         className="w-full bg-[#0A0908] border border-[#D4A853]/8 focus:border-[#D4A853] focus:outline-none p-3 text-xs rounded-xl h-24 text-[#F5F0EB] font-mono resize-none"
                       />
                     </div>
@@ -628,52 +547,20 @@ export default function LearningDashboard() {
                       <button
                         type="button"
                         onClick={() => {
-                          // Telemetry computation
-                          let wpm = 0;
-                          let elapsed = 0;
                           if (typingStartedAt) {
-                            elapsed = Math.round((Date.now() - typingStartedAt) / 1000);
+                            const elapsedSecs = (Date.now() - typingStartedAt) / 1000;
                             const wordCount = hlInput.trim().split(/\s+/).filter(Boolean).length;
-                            wpm = wordCount > 0 && elapsed > 0 ? Math.round((wordCount / elapsed) * 60) : 0;
+                            const wpm = wordCount > 0 && elapsedSecs > 0 ? Math.round((wordCount / elapsedSecs) * 60) : 0;
                             setDiagnosticVelocity(wpm);
-                            setSessionElapsed(elapsed);
+                            setSessionElapsed(Math.round(elapsedSecs));
                           }
-                          const cov = Math.round((hlSelectedOptions.length / activeChallenge.frictionOptions.length) * 100);
-                          setCoverageScore(cov);
-
-                          // Semantic divergence: % of user's key words NOT found in the canonical concepts
-                          const canonicalText = activeChallenge.concepts.map(c => c.description + ' ' + c.title).join(' ').toLowerCase();
-                          const canonicalWords = new Set(canonicalText.split(/\W+/).filter(w => w.length > 4));
-                          const userWords = hlInput.toLowerCase().split(/\W+/).filter(w => w.length > 4);
-                          const unique = userWords.filter(w => !canonicalWords.has(w));
-                          const divergence = userWords.length > 0 ? Math.round((unique.length / userWords.length) * 100) : 0;
-                          setSemanticDivergence(divergence);
-
-                          // Feature 8: Auto-update radar based on domain relevance + coverage
-                          const domainMap: Record<string, string[]> = {
-                            "tiktok": ["Behavioral Economics", "Technical Systems"],
-                            "figma": ["Cognitive Load", "Pricing Logic"],
-                            "vercel": ["Behavioral Economics", "Conversion Architecture"],
-                            "saas_asia": ["Tax & Compliance", "Technical Systems"],
-                            "wy_llc_saas": ["Tax & Compliance", "Conversion Architecture", "Behavioral Economics"],
-                            "pricing_psychology_b2b": ["Pricing Logic", "Behavioral Economics", "Conversion Architecture"],
-                          };
-                          const domainsToBoost = domainMap[activeChallenge.id] || [];
-                          const boost = Math.round((cov / 100) * 8);
-                          if (boost > 0) {
-                            setRadarDomains(prev => prev.map(d =>
-                              domainsToBoost.includes(d.name)
-                                ? { ...d, score: Math.min(d.score + boost, 100) }
-                                : d
-                            ));
-                          }
-
+                          setCoverageScore(Math.round((hlSelectedOptions.length / activeChallenge.frictionOptions.length) * 100));
                           setHlActive(true);
                         }}
                         disabled={!hlInput.trim() || hlSelectedOptions.length === 0}
                         className="px-5 py-2.5 bg-[#D4A853] text-[#0A0908] text-xs font-mono font-bold uppercase tracking-wider transition-all hover:bg-[#E8C97A] active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-xl"
                       >
-                        Ejecutar Revelación Socrática →
+                        Execute Socratic Reverse-Reveal →
                       </button>
                     </div>
                   </div>
@@ -686,64 +573,39 @@ export default function LearningDashboard() {
                     {/* Hypothesis recap */}
                     <div>
                       <h4 className="text-xs text-[#5C9A6B] uppercase tracking-widest font-semibold mb-1">
-                        ✓ Revelación Socrática Completada
+                        ✓ Socratic Reverse-Reveal Complete
                       </h4>
                       <p className="text-xs text-[#9A8F82] leading-relaxed">
-                        Hipótesis: <span className="text-white italic">&ldquo;{hlInput}&rdquo;</span>
+                        Hypothesis: <span className="text-white italic">&ldquo;{hlInput}&rdquo;</span>
                       </p>
                     </div>
 
-                    {/* Cognitive Telemetry Matrix — Feature 7 */}
+                    {/* Cognitive Telemetry */}
                     {coverageScore !== null && (
-                      <div className="border border-[#D4A853]/20 bg-[#0A0908]/70 p-4 rounded-xl space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono text-[10px] text-[#D4A853]/60 uppercase tracking-widest">
-                            Matriz de Telemetría Cognitiva
-                          </span>
-                          <span className="font-mono text-[9px] text-[#7A6F65] uppercase">Sesión en Vivo</span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          {[
-                            {
-                              label: "Velocidad de Diagnóstico",
-                              value: diagnosticVelocity !== null ? `${diagnosticVelocity} PPM` : "—",
-                              sub: "Velocidad de escritura",
-                              accent: diagnosticVelocity !== null && diagnosticVelocity > 50 ? "text-[#5C9A6B]" : "text-[#D4A853]",
-                              bar: diagnosticVelocity !== null ? Math.min((diagnosticVelocity / 80) * 100, 100) : 0,
-                            },
-                            {
-                              label: "Cobertura de Mecanismos",
-                              value: `${coverageScore}%`,
-                              sub: "Fricción identificada",
-                              accent: coverageScore === 100 ? "text-[#5C9A6B]" : coverageScore >= 67 ? "text-[#D4A853]" : "text-[#C85C5C]",
-                              bar: coverageScore,
-                            },
-                            {
-                              label: "Divergencia Semántica",
-                              value: semanticDivergence !== null ? `${semanticDivergence}%` : "—",
-                              sub: "Enfoque novedoso",
-                              accent: semanticDivergence !== null && semanticDivergence > 40 ? "text-[#A855F7]" : "text-[#9A8F82]",
-                              bar: semanticDivergence ?? 0,
-                            },
-                            {
-                              label: "Tiempo de Envío",
-                              value: sessionElapsed !== null ? `${sessionElapsed}s` : "—",
-                              sub: "Latencia de decisión",
-                              accent: sessionElapsed !== null && sessionElapsed < 60 ? "text-[#5C9A6B]" : "text-[#9A8F82]",
-                              bar: sessionElapsed !== null ? Math.max(100 - (sessionElapsed / 300) * 100, 10) : 0,
-                            },
-                          ].map(m => (
-                            <div key={m.label} className="bg-black/40 border border-[#D4A853]/8 p-3 rounded-xl space-y-1.5">
-                              <div className="flex justify-between items-baseline">
-                                <span className="font-mono text-[9px] text-[#7A6F65] uppercase">{m.label}</span>
-                                <span className={`font-mono text-sm font-bold ${m.accent}`}>{m.value}</span>
-                              </div>
-                              <div className="h-1 bg-black/60 rounded-full overflow-hidden">
-                                <div className={`h-full rounded-full bg-current ${m.accent} opacity-70`} style={{ width: `${m.bar}%` }} />
-                              </div>
-                              <span className="font-mono text-[8px] text-[#5C5550] block">{m.sub}</span>
-                            </div>
-                          ))}
+                      <div className="border border-[#D4A853]/15 bg-[#0A0908]/60 p-4 rounded-xl">
+                        <span className="font-mono text-[10px] text-[#D4A853]/60 uppercase tracking-widest block mb-3">
+                          Cognitive Telemetry
+                        </span>
+                        <div className="grid grid-cols-3 gap-3 text-center">
+                          <div>
+                            <span className="font-mono text-[10px] text-[#9A8F82] uppercase block mb-1">Velocity</span>
+                            <span className="font-serif text-xl font-bold text-[#D4A853]">{diagnosticVelocity ?? "—"}</span>
+                            <span className="font-mono text-[10px] text-[#5C5550] block">WPM</span>
+                          </div>
+                          <div>
+                            <span className="font-mono text-[10px] text-[#9A8F82] uppercase block mb-1">Coverage</span>
+                            <span className={`font-serif text-xl font-bold ${
+                              coverageScore === 100 ? "text-[#5C9A6B]" :
+                              coverageScore >= 67 ? "text-[#D4A853]" :
+                              "text-[#C85C5C]"
+                            }`}>{coverageScore}%</span>
+                            <span className="font-mono text-[10px] text-[#5C5550] block">Mechanisms</span>
+                          </div>
+                          <div>
+                            <span className="font-mono text-[10px] text-[#9A8F82] uppercase block mb-1">Session</span>
+                            <span className="font-serif text-xl font-bold text-[#F5F0EB]">{sessionElapsed ?? "—"}s</span>
+                            <span className="font-mono text-[10px] text-[#5C5550] block">Elapsed</span>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -764,7 +626,7 @@ export default function LearningDashboard() {
 
                       <div>
                         <span className="font-mono text-[10px] text-[#D4A853] tracking-widest uppercase block mb-1">
-                          Informe de Elevación — Mapa de Brechas
+                          Elevation Report — Cognitive Gap Map
                         </span>
                         <div className="space-y-3">
                           {elev.gaps.map((g, idx) => (
@@ -783,7 +645,7 @@ export default function LearningDashboard() {
 
                       <div className="border-t border-[#D4A853]/15 pt-4">
                         <span className="font-mono text-[10px] text-[#D4A853] tracking-widest uppercase block mb-3">
-                          Plan de Estudio Hyper-Leap
+                          Hyper-Leap Study Plan
                         </span>
                         <div className="space-y-2">
                           {elev.studyPlan.map((s, idx) => (
@@ -800,7 +662,7 @@ export default function LearningDashboard() {
 
                       <div className="border-t border-[#D4A853]/15 pt-4">
                         <span className="font-mono text-[10px] text-[#D4A853] tracking-widest uppercase block mb-3">
-                          Artículos Prioritarios (Cierre de Brechas)
+                          Priority Articles (Gap Closure)
                         </span>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                           {elev.articles.map((art) => (
@@ -825,7 +687,7 @@ export default function LearningDashboard() {
                                 )}
                               </div>
                               <span className="text-xs text-[#D4A853] font-bold mt-2">
-                                {expandedArticle === art.num ? "Colapsar ↑" : "Leer →"}
+                                {expandedArticle === art.num ? "Collapse ↑" : "Read →"}
                               </span>
                             </div>
                           ))}
@@ -840,7 +702,7 @@ export default function LearningDashboard() {
                         onClick={resetChallenge}
                         className="px-4 py-2 border border-white/10 text-xs text-[#9A8F82] hover:text-white cursor-pointer uppercase font-mono rounded-xl transition-colors"
                       >
-                        Reiniciar
+                        Reset
                       </button>
                       <button
                         type="button"
@@ -860,7 +722,6 @@ export default function LearningDashboard() {
                               coverage_score_pct: coverageScore,
                               diagnostic_velocity_wpm: diagnosticVelocity,
                               time_to_submit_seconds: sessionElapsed,
-                              semantic_divergence_pct: semanticDivergence,
                             },
                             elevation_report: {
                               gaps: elev.gaps.map(g => ({ label: g.label, current: g.current, target: g.target })),
@@ -880,41 +741,7 @@ export default function LearningDashboard() {
                         }}
                         className="px-4 py-2 border border-[#D4A853]/25 text-xs text-[#D4A853] hover:bg-[#D4A853]/5 cursor-pointer uppercase font-mono rounded-xl transition-colors"
                       >
-                        Exportar Nodo IP ↓
-                      </button>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          const ipPayload = {
-                            id: `${activeChallenge.id}-${Date.now()}`,
-                            title: activeChallenge.title,
-                            thesis: hlInput,
-                            antithesis: activeChallenge.concepts[0]?.description ?? "",
-                            synthesis: activeChallenge.concepts.map(c => c.title).join("; "),
-                            domain: (CHALLENGE_ELEVATIONS[activeChallenge.id] || CHALLENGE_ELEVATIONS.saas_asia).gaps[0]?.label.replace(" Gap", "") ?? "Conversion Architecture",
-                            confidence: Math.round(((coverageScore ?? 0) + (quizScore ?? 0)) / 2),
-                            tags: hlSelectedOptions.map(i => activeChallenge.frictionOptions[i]),
-                            sourceContext: activeChallenge.metrics,
-                          };
-                          try {
-                            const res = await fetch('/api/ip-package', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify(ipPayload),
-                            });
-                            const data = await res.json();
-                            if (data.ok) {
-                              alert(`✓ Nodo IP certificado e inyectado en la base de datos. ID: ${data.id}`);
-                            } else {
-                              alert(`⚠ Paquete IP enviado pero la DB no está configurada aún: ${data.error || 'No ip_nodes table'}`);
-                            }
-                          } catch {
-                            alert('⚠ El endpoint del Pipeline IP no está activo aún — exporta JSON en su lugar.');
-                          }
-                        }}
-                        className="px-4 py-2 border border-[#A855F7]/25 text-xs text-[#A855F7] hover:bg-[#A855F7]/5 cursor-pointer uppercase font-mono rounded-xl transition-colors"
-                      >
-                        Certificar Nodo IP →
+                        Export IP Node ↓
                       </button>
                       <button
                         type="button"
@@ -928,11 +755,11 @@ export default function LearningDashboard() {
                             })
                           );
                           setConceptsMastered(prev => prev + 3);
-                          alert("✓ Conceptos absorbidos. Radar actualizado.");
+                          alert("✓ Concepts absorbed. Radar updated.");
                         }}
                         className="px-4 py-2 bg-[#5C9A6B]/10 border border-[#5C9A6B]/30 text-[#5C9A6B] text-xs font-bold uppercase tracking-wider cursor-pointer font-mono rounded-xl transition-colors hover:bg-[#5C9A6B]/20 ml-auto"
                       >
-                        Absorber Conceptos
+                        Absorb Concepts
                       </button>
                     </div>
                   </motion.div>
@@ -943,20 +770,11 @@ export default function LearningDashboard() {
             {/* RIGHT: Radar + Quiz */}
             <div className="xl:col-span-4 space-y-4">
 
-              {/* Cognitive Gap Map — Feature 8 */}
-              <div className={`border bg-[#110F0D] p-5 rounded-2xl transition-all duration-500 ${
-                hlActive && coverageScore !== null ? "border-[#D4A853]/40 shadow-[0_0_20px_rgba(212,168,83,0.08)]" : "border-[#D4A853]/15"
-              }`}>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase">
-                    03 — Mapa de Brechas Cognitivas
-                  </span>
-                  {hlActive && coverageScore !== null && (
-                    <span className="font-mono text-[9px] text-[#5C9A6B] border border-[#5C9A6B]/25 px-2 py-0.5 rounded-full bg-[#5C9A6B]/5 animate-pulse">
-                      Feed en Directo
-                    </span>
-                  )}
-                </div>
+              {/* Cognitive Radar */}
+              <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl">
+                <span className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase block mb-4">
+                  03 — Cognitive Radar
+                </span>
                 <div className="flex justify-center">
                   <svg width={radarW} height={radarH} className="overflow-visible">
                     <defs>
@@ -999,39 +817,25 @@ export default function LearningDashboard() {
                 </div>
                 <div className="mt-4 space-y-1.5 border-t border-[#D4A853]/8 pt-3">
                   <div className="flex justify-between items-center text-xs mb-2">
-                    <span className="text-[#D4A853] uppercase tracking-wider font-bold text-[10px]">Conceptos Dominados</span>
+                    <span className="text-[#D4A853] uppercase tracking-wider font-bold text-[10px]">Concepts Mastered</span>
                     <span className="text-white font-bold bg-[#D4A853]/10 px-2 py-0.5 rounded-full border border-[#D4A853]/20 text-[10px]">{conceptsMastered}</span>
                   </div>
                   {radarDomains.map(d => (
-                    <div key={d.name} className="space-y-0.5">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-[#9A8F82] truncate mr-2">{d.name}</span>
-                        <span className="text-[#D4A853] flex-shrink-0 font-mono">{d.score}</span>
-                      </div>
-                      <div className="h-[2px] bg-black/40 rounded-full overflow-hidden">
-                        <div className="h-full rounded-full bg-[#D4A853]/50" style={{ width: `${d.score}%` }} />
-                      </div>
+                    <div key={d.name} className="flex justify-between items-center text-xs">
+                      <span className="text-[#9A8F82] truncate mr-2">{d.name}</span>
+                      <span className="text-[#D4A853] flex-shrink-0 font-mono">{d.score}</span>
                     </div>
                   ))}
-                  {hlActive && semanticDivergence !== null && (
-                    <div className="border-t border-[#D4A853]/8 pt-2 mt-1">
-                      <div className="flex justify-between text-[9px] font-mono">
-                        <span className="text-[#A855F7]">Divergencia Semántica</span>
-                        <span className="text-[#A855F7] font-bold">{semanticDivergence}%</span>
-                      </div>
-                      <p className="text-[8px] text-[#7A6F65] mt-0.5">Enfoque novedoso vs. análisis canónico</p>
-                    </div>
-                  )}
                 </div>
               </div>
 
               {/* Quick Diagnostic Quiz */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-3">
                 <span className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase">
-                  04 — Diagnóstico Rápido
+                  04 — Quick Diagnostic
                 </span>
                 <div className="border border-[#D4A853]/8 bg-[#0A0908] p-3 rounded-xl">
-                  <span className="text-[10px] text-[#D4A853] uppercase block mb-1">Escenario Activo</span>
+                  <span className="text-[10px] text-[#D4A853] uppercase block mb-1">Active Scenario</span>
                   <p className="text-xs text-[#9A8F82] leading-relaxed">{activeChallenge.quizQuestion}</p>
                 </div>
                 <div className="space-y-1.5">
@@ -1059,7 +863,7 @@ export default function LearningDashboard() {
                       ? "bg-[#5C9A6B]/5 border-[#5C9A6B]/20 text-[#5C9A6B]"
                       : "bg-[#C85C5C]/5 border-[#C85C5C]/20 text-[#C85C5C]"
                   }`}>
-                    {quizScore === 100 ? "✓ CORRECTO. " : "✗ INCORRECTO. "}
+                    {quizScore === 100 ? "✓ CORRECT. " : "✗ INCORRECT. "}
                     {activeChallenge.quizExplanation}
                   </div>
                 )}
@@ -1081,7 +885,7 @@ export default function LearningDashboard() {
             <div className="xl:col-span-8 space-y-4">
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl">
                 <span className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase block mb-4">
-                  01 — Motor de Borradores Socrático
+                  01 — Socratic Draft Engine
                 </span>
 
                 {/* Article selector chips — always scrollable, never grid */}
@@ -1205,12 +1009,12 @@ export default function LearningDashboard() {
                       className="space-y-3 border-t border-[#D4A853]/15 pt-4 mt-4"
                     >
                       <label className="font-mono text-xs text-[#D4A853]/60 tracking-wider uppercase block">
-                        Notas de Refinamiento Socrático
+                        Socratic Refinement Notes
                       </label>
                       <textarea
                         value={feedbackText}
                         onChange={(e) => setFeedbackText(e.target.value)}
-                        placeholder="Especifica por qué estos argumentos se alinean con tu modelo de divergencia..."
+                        placeholder="Specify why these arguments align with your divergence model..."
                         className="w-full bg-[#0A0908] border border-[#2A2218] focus:border-[#D4A853] focus:outline-none p-3 text-xs font-mono rounded-xl h-20 text-[#F5F0EB] resize-none"
                       />
                       <div className="flex justify-end gap-2">
@@ -1219,14 +1023,14 @@ export default function LearningDashboard() {
                           onClick={() => setSelectedDraftId(null)}
                           className="px-4 py-2 border border-[#2A2218] text-xs font-mono text-[#7A6F65] hover:text-[#9A8F82] cursor-pointer rounded-xl"
                         >
-                          Limpiar
+                          Clear
                         </button>
                         <button
                           type="button"
                           onClick={submitSocraticPreference}
                           className="px-4 py-2 bg-[#D4A853] text-[#0A0908] text-xs font-mono font-bold uppercase tracking-wider cursor-pointer rounded-xl"
                         >
-                          Reforzar Ponderaciones
+                          Reinforce Weights
                         </button>
                       </div>
                     </motion.div>
@@ -1241,7 +1045,7 @@ export default function LearningDashboard() {
               {/* Dialectic Chain — spine-based, zero flex-row */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl overflow-hidden">
                 <span className="font-mono text-[10px] text-[#D4A853]/40 tracking-[0.3em] uppercase block mb-5">
-                  02 — Cadena Dialéctica
+                  02 — Dialectic Chain
                 </span>
                 <div className="relative">
                   {/* Spine */}
@@ -1260,7 +1064,7 @@ export default function LearningDashboard() {
                   {/* Relation label */}
                   <div className="relative pl-7 mb-2">
                     <div className="absolute left-[2px] top-0.5 font-mono text-[9px] text-[#7A6F65]">↓</div>
-                    <span className="font-mono text-[9px] text-[#7A6F65] uppercase">contradice</span>
+                    <span className="font-mono text-[9px] text-[#7A6F65] uppercase">contradicts</span>
                   </div>
 
                   {/* Node: Anti-thesis */}
@@ -1276,7 +1080,7 @@ export default function LearningDashboard() {
                   {/* Relation label */}
                   <div className="relative pl-7 mb-2">
                     <div className="absolute left-[2px] top-0.5 font-mono text-[9px] text-[#5C9A6B]">↓</div>
-                    <span className="font-mono text-[9px] text-[#5C9A6B] uppercase">sintetiza</span>
+                    <span className="font-mono text-[9px] text-[#5C9A6B] uppercase">synthesizes</span>
                   </div>
 
                   {/* Node: Synthesis */}
@@ -1293,12 +1097,12 @@ export default function LearningDashboard() {
 
               {/* Engine Config */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-4">
-                <h3 className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase">Configuración del Motor Socrático</h3>
+                <h3 className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase">Socratic Engine Config</h3>
                 <div className="space-y-2 text-xs">
                   {[
-                    { label: "Agentes Activos", value: "3 (Estratega, Científico, Arquitecto)" },
+                    { label: "Active Agents", value: "3 (Strategist, Scientist, Architect)" },
                     { label: "KB Version", value: "v3.4.0" },
-                    { label: "Índice Socrático", value: "96.8 / 100" },
+                    { label: "Socratic Index", value: "96.8 / 100" },
                   ].map(row => (
                     <div key={row.label} className="flex justify-between gap-2">
                       <span className="text-[#9A8F82] flex-shrink-0">{row.label}:</span>
@@ -1307,13 +1111,13 @@ export default function LearningDashboard() {
                   ))}
                 </div>
                 <p className="text-xs text-[#9A8F82] leading-relaxed pt-2 border-t border-[#D4A853]/8">
-                  El Motor de Borradores Socrático sintetiza múltiples perspectivas de expertos para construir documentos de análisis de conversión de alto estatus.
+                  The Socratic Draft Engine synthesizes multiple expert viewpoints to construct high-status conversion analysis documents.
                 </p>
               </div>
 
               {/* Mastery Index */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-3">
-                <span className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase block">Índice de Maestría</span>
+                <span className="font-mono text-xs text-[#D4A853]/40 tracking-widest uppercase block">Mastery Index</span>
                 {DOMAINS.map((d) => (
                   <div key={d.name}>
                     <div className="flex justify-between text-xs mb-1">

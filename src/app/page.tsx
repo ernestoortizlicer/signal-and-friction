@@ -37,7 +37,7 @@ function UtcClock() {
     return () => clearInterval(id);
   }, []);
   return (
-    <span className="font-mono text-[0.6rem] text-[#D4A853]/50 tracking-[0.2em] tabular-nums glow-text">
+    <span className="font-mono text-[0.6rem] text-[#D4A853]/80 tracking-[0.2em] tabular-nums glow-text">
       UTC {time}
     </span>
   );
@@ -219,7 +219,7 @@ export default function Home() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-[#5C9A6B] pulse-cyan" style={{ boxShadow: "0 0 6px rgba(92,154,107,0.5)" }} />
-            <span className="font-mono text-[0.5rem] text-[#5C9A6B]/60 tracking-[0.15em] uppercase">
+            <span className="font-mono text-[0.5rem] text-[#5C9A6B] tracking-[0.15em] uppercase">
               Online
             </span>
           </div>
@@ -239,7 +239,7 @@ export default function Home() {
             className="flex-1 max-w-lg space-y-6"
           >
             <div className="space-y-2">
-              <div className="font-mono text-[0.5rem] text-[#D4A853]/40 tracking-[0.4em] uppercase">
+              <div className="font-mono text-[0.5rem] text-[#D4A853]/70 tracking-[0.4em] uppercase">
                 Conversion Diagnostic System v4.5
               </div>
               <h1 className="text-[2.8rem] lg:text-[3.6rem] font-bold leading-[1.0] tracking-[-0.03em]">
@@ -283,10 +283,10 @@ export default function Home() {
               <div className="pt-4 space-y-2 hidden md:block">
                 {testimonials.slice(0, 2).map((t, i) => (
                   <div key={i} className="border-l border-[#D4A853]/10 pl-3 py-1">
-                    <p className="text-[0.65rem] text-[#6A5F55] italic leading-relaxed">
+                    <p className="text-[0.65rem] text-[#9A8F82] italic leading-relaxed">
                       &ldquo;{t.quote_text}&rdquo;
                     </p>
-                    <span className="text-[0.55rem] font-mono text-[#D4A853]/40 uppercase tracking-wider block mt-0.5">
+                    <span className="text-[0.55rem] font-mono text-[#D4A853]/70 uppercase tracking-wider block mt-0.5">
                       Verified Client
                     </span>
                   </div>
@@ -311,7 +311,7 @@ export default function Home() {
                     <div className="w-[7px] h-[7px] rounded-full bg-[#D4A853]/60 animate-ping" />
                     <div className="w-[7px] h-[7px] rounded-full bg-[#6A5F55]/40" />
                   </div>
-                  <span className="font-mono text-[0.5rem] text-[#D4A853]/40 tracking-[0.25em] uppercase">
+                  <span className="font-mono text-[0.5rem] text-[#D4A853]/70 tracking-[0.25em] uppercase">
                     {currentStep.code}
                   </span>
                 </div>
@@ -324,10 +324,10 @@ export default function Home() {
               <div className="p-6">
                 {/* Step label */}
                 <div className="mb-5">
-                  <div className="font-mono text-[0.5rem] text-[#D4A853]/30 tracking-[0.3em] uppercase mb-1">
+                  <div className="font-mono text-[0.5rem] text-[#D4A853]/70 tracking-[0.3em] uppercase mb-1">
                     {currentStep.label}
                   </div>
-                  <div className="font-mono text-[0.65rem] text-[#6A5F55]">
+                  <div className="font-mono text-[0.65rem] text-[#9A8F82]">
                     {currentStep.desc}
                   </div>
                 </div>
@@ -351,10 +351,10 @@ export default function Home() {
                           onChange={(e) => setUrl(e.target.value)}
                           placeholder="https://your-product.com"
                           aria-label="Product URL for diagnostic scan"
-                          className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#2A2218] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
+                          className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#4A4540] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
                           style={{ caretColor: "#D4A853" }}
                         />
-                        <div className="font-mono text-[0.5rem] text-[#9A8F82]/60 tracking-wide flex items-center gap-1.5">
+                        <div className="font-mono text-[0.5rem] text-[#9A8F82] tracking-wide flex items-center gap-1.5">
                           <span className="w-1 h-1 rounded-full bg-[#5C9A6B]/50" />
                           Join 50+ B2B SaaS founders who have diagnosed their funnel.
                         </div>
@@ -387,17 +387,17 @@ export default function Home() {
                               className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                 funnelPain === opt.key
                                   ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                  : "border-l-transparent text-[#6A5F55] hover:text-[#9A8F82] hover:bg-white/[0.01]"
+                                  : "border-l-transparent text-[#9A8F82] hover:text-[#9A8F82] hover:bg-white/[0.01]"
                               }`}
                             >
                               <div className="text-xs tracking-wide">{opt.label}</div>
-                              <div className="text-[0.55rem] text-[#6A5F55] mt-0.5">{opt.sub}</div>
+                              <div className="text-[0.55rem] text-[#9A8F82] mt-0.5">{opt.sub}</div>
                             </button>
                           ))}
                         </div>
                         <div className="flex gap-px pt-1">
                           <button type="button" onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#6A5F55] hover:text-[#9A8F82] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer">
+                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#9A8F82] hover:text-[#9A8F82] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer">
                             ← Back
                           </button>
                           <button type="button" onClick={nextStep}
@@ -427,17 +427,17 @@ export default function Home() {
                               className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                 segmentSelection === opt.key
                                   ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                  : "border-l-transparent text-[#6A5F55] hover:text-[#9A8F82] hover:bg-white/[0.01]"
+                                  : "border-l-transparent text-[#9A8F82] hover:text-[#9A8F82] hover:bg-white/[0.01]"
                               }`}
                             >
                               <div className="text-xs tracking-wide">{opt.label}</div>
-                              <div className="text-[0.55rem] text-[#6A5F55] mt-0.5">{opt.sub}</div>
+                              <div className="text-[0.55rem] text-[#9A8F82] mt-0.5">{opt.sub}</div>
                             </button>
                           ))}
                         </div>
                         <div className="flex gap-px pt-1">
                           <button type="button" onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#6A5F55] hover:text-[#9A8F82] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer">
+                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#9A8F82] hover:text-[#9A8F82] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer">
                             ← Back
                           </button>
                           <button type="button" onClick={nextStep}
@@ -468,11 +468,11 @@ export default function Home() {
                                 className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                   customAnswer === opt.label
                                     ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                    : "border-l-transparent text-[#6A5F55] hover:text-[#9A8F82] hover:bg-white/[0.01]"
+                                    : "border-l-transparent text-[#9A8F82] hover:text-[#9A8F82] hover:bg-white/[0.01]"
                                 }`}
                               >
                                 <div className="text-xs tracking-wide">{opt.label}</div>
-                                <div className="text-[0.55rem] text-[#6A5F55] mt-0.5">{opt.sub}</div>
+                                <div className="text-[0.55rem] text-[#9A8F82] mt-0.5">{opt.sub}</div>
                               </button>
                             ))
                           ) : (
@@ -484,18 +484,18 @@ export default function Home() {
                                 className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                   customAnswer === opt.label
                                     ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                    : "border-l-transparent text-[#6A5F55] hover:text-[#9A8F82] hover:bg-white/[0.01]"
+                                    : "border-l-transparent text-[#9A8F82] hover:text-[#9A8F82] hover:bg-white/[0.01]"
                                 }`}
                               >
                                 <div className="text-xs tracking-wide">{opt.label}</div>
-                                <div className="text-[0.55rem] text-[#6A5F55] mt-0.5">{opt.sub}</div>
+                                <div className="text-[0.55rem] text-[#9A8F82] mt-0.5">{opt.sub}</div>
                               </button>
                             ))
                           )}
                         </div>
                         <div className="flex gap-px pt-1">
                           <button type="button" onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#6A5F55] hover:text-[#9A8F82] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer">
+                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#9A8F82] hover:text-[#9A8F82] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer">
                             ← Back
                           </button>
                           <button type="button" onClick={nextStep}
@@ -524,14 +524,14 @@ export default function Home() {
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="you@company.com"
                             aria-label="Email address for diagnostic report delivery"
-                            className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#2A2218] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
+                            className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#4A4540] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
                             style={{ caretColor: "#D4A853" }}
                           />
-                          <div className="mt-2 font-mono text-[0.5rem] text-[#9A8F82]/50 tracking-wide">
+                          <div className="mt-2 font-mono text-[0.5rem] text-[#9A8F82] tracking-wide">
                             Results in 72h. No marketing spam. No calls required.
                           </div>
                         </div>
-                        <div className="border border-[#D4A853]/10 bg-[#D4A853]/[0.03] px-3 py-2 font-mono text-[0.5rem] text-[#9A8F82]/70 leading-relaxed flex items-center gap-2">
+                        <div className="border border-[#D4A853]/10 bg-[#D4A853]/[0.03] px-3 py-2 font-mono text-[0.5rem] text-[#9A8F82] leading-relaxed flex items-center gap-2">
                           <span className="text-[#D4A853]">⚑</span>
                           20% growth guarantee or full refund via Stripe. 72h async. Zero sales calls.
                         </div>
@@ -578,10 +578,10 @@ export default function Home() {
 
               {/* Console footer */}
               <div className="border-t border-[#D4A853]/5 px-5 py-2 flex justify-between items-center">
-                <span className="font-mono text-[0.4rem] text-[#2A2218] tracking-[0.15em] uppercase">
+                <span className="font-mono text-[0.4rem] text-[#7A6F65] tracking-[0.15em] uppercase">
                   S&amp;F Diagnostic Engine v4.5
                 </span>
-                <span className="font-mono text-[0.4rem] text-[#2A2218] tracking-wider">
+                <span className="font-mono text-[0.4rem] text-[#7A6F65] tracking-wider">
                   E2E Encrypted
                 </span>
               </div>
@@ -622,7 +622,7 @@ export default function Home() {
                 onChange={(e) => setCalcVisitors(Number(e.target.value))}
                 className="w-full h-1 bg-[#2A2218] rounded appearance-none cursor-pointer accent-[#D4A853]"
               />
-              <div className="flex justify-between text-[0.5rem] text-[#6A5F55]">
+              <div className="flex justify-between text-[0.5rem] text-[#9A8F82]">
                 <span>5,000</span>
                 <span>50,000</span>
                 <span>100,000</span>
@@ -644,7 +644,7 @@ export default function Home() {
                 onChange={(e) => setCalcConvRate(Number(e.target.value))}
                 className="w-full h-1 bg-[#2A2218] rounded appearance-none cursor-pointer accent-[#D4A853]"
               />
-              <div className="flex justify-between text-[0.5rem] text-[#6A5F55]">
+              <div className="flex justify-between text-[0.5rem] text-[#9A8F82]">
                 <span>0.5%</span>
                 <span>2.5%</span>
                 <span>5.0%</span>
@@ -666,7 +666,7 @@ export default function Home() {
                 onChange={(e) => setCalcLtv(Number(e.target.value))}
                 className="w-full h-1 bg-[#2A2218] rounded appearance-none cursor-pointer accent-[#D4A853]"
               />
-              <div className="flex justify-between text-[0.5rem] text-[#6A5F55]">
+              <div className="flex justify-between text-[0.5rem] text-[#9A8F82]">
                 <span>$50</span>
                 <span>$1,000</span>
                 <span>$2,000</span>
@@ -751,13 +751,13 @@ export default function Home() {
           </table>
         </div>
 
-        <div className="text-center font-mono text-[0.55rem] text-[#6A5F55]">
+        <div className="text-center font-mono text-[0.55rem] text-[#9A8F82]">
           Read the complete legally binding covenant: <Link href="/legal/guarantee" className="text-[#D4A853] hover:underline">S&amp;F Performance Terms &amp; Conditions</Link>.
         </div>
       </section>
 
       {/* ── Footer ──────────────────────────────────────── */}
-      <footer className="w-full border-t border-white/[0.03] py-8 px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-[0.45rem] font-mono text-[#6A5F55] relative z-10 bg-[#0A0908]">
+      <footer className="w-full border-t border-white/[0.03] py-8 px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-[0.45rem] font-mono text-[#9A8F82] relative z-10 bg-[#0A0908]">
         <div className="flex flex-col md:flex-row items-center gap-4">
           <span>© {new Date().getFullYear()} Signal &amp; Friction Method™. All rights reserved.</span>
           <span className="hidden md:inline">|</span>

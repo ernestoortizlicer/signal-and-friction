@@ -197,7 +197,7 @@ export default function ScanPage() {
                 onKeyDown={e => e.key === 'Enter' && phase === 'idle' && runScan()}
                 placeholder="yourstore.com/checkout"
                 disabled={phase === 'scanning'}
-                className="w-full bg-[#110F0D] border border-[#D4A853]/20 focus:border-[#D4A853] focus:outline-none pl-[72px] pr-4 py-3.5 text-sm text-white rounded-xl transition-all placeholder:text-[#4A4540] disabled:opacity-50"
+                className="w-full bg-[#110F0D] border border-[#D4A853]/20 focus:border-[#D4A853] focus:outline-none pl-[72px] pr-4 py-3.5 text-sm text-white rounded-xl transition-all placeholder:text-[#7A6F65] disabled:opacity-50"
               />
             </div>
             <button
@@ -243,14 +243,14 @@ export default function ScanPage() {
                     <span className={`font-mono text-xs transition-colors duration-300 ${
                       idx < stageIndex ? "text-[#5C9A6B]" :
                       idx === stageIndex ? "text-white" :
-                      "text-[#4A4540]"
+                      "text-[#7A6F65]"
                     }`}>
                       {stage.label}
                     </span>
                   </div>
                 ))}
               </div>
-              <p className="text-[10px] text-[#5C5550] font-mono">
+              <p className="text-[10px] text-[#7A6F65] font-mono">
                 This may take 15–25 seconds. PageSpeed analyzes your mobile checkout path in real time.
               </p>
             </motion.div>
@@ -318,10 +318,10 @@ export default function ScanPage() {
                       <p className="font-mono text-[10px] text-[#7A6F65] uppercase">{m.label}</p>
                       <p className={`font-serif text-2xl font-bold ${STATUS_COLOR[m.status]}`}>{m.value}</p>
                       <div className="flex justify-between items-center">
-                        <span className="font-mono text-[9px] text-[#5C5550]">{m.sub}</span>
+                        <span className="font-mono text-[9px] text-[#7A6F65]">{m.sub}</span>
                         <span className={`font-mono text-[9px] font-bold ${STATUS_COLOR[m.status]}`}>{STATUS_LABEL[m.status]}</span>
                       </div>
-                      <p className="font-mono text-[9px] text-[#4A4540]">Benchmark: {m.benchmark}</p>
+                      <p className="font-mono text-[9px] text-[#7A6F65]">Benchmark: {m.benchmark}</p>
                     </div>
                   ))}
                 </div>
@@ -334,7 +334,7 @@ export default function ScanPage() {
                   <span className="font-mono text-xs text-[#D4A853] font-bold">{report.signals.platform}</span>
                   {report.signals.hasStripe && (
                     <>
-                      <span className="text-[#4A4540]">·</span>
+                      <span className="text-[#7A6F65]">·</span>
                       <span className="font-mono text-[10px] text-[#9A8F82]">
                         Stripe.js {report.signals.stripeAsync ? '(async ✓)' : '(sync — blocking ✗)'}
                       </span>
@@ -407,7 +407,7 @@ export default function ScanPage() {
                           onChange={e => { setEmail(e.target.value); setEmailError(""); }}
                           onKeyDown={e => e.key === 'Enter' && unlockWithEmail()}
                           placeholder="your@company.com"
-                          className="flex-1 bg-black/40 border border-[#D4A853]/20 focus:border-[#D4A853] focus:outline-none px-4 py-2.5 text-xs text-white rounded-xl placeholder:text-[#4A4540]"
+                          className="flex-1 bg-black/40 border border-[#D4A853]/20 focus:border-[#D4A853] focus:outline-none px-4 py-2.5 text-xs text-white rounded-xl placeholder:text-[#7A6F65]"
                         />
                         <button
                           onClick={unlockWithEmail}
@@ -418,7 +418,7 @@ export default function ScanPage() {
                         </button>
                       </div>
                       {emailError && <p className="text-[10px] text-[#C85C5C] font-mono mt-1">{emailError}</p>}
-                      <p className="font-mono text-[9px] text-[#4A4540] mt-2">
+                      <p className="font-mono text-[9px] text-[#7A6F65] mt-2">
                         No spam. One diagnostic email, then direct access to the full friction report.
                       </p>
                     </div>
@@ -502,7 +502,7 @@ export default function ScanPage() {
                 </div>
               ))}
             </div>
-            <p className="font-mono text-[10px] text-[#4A4540] text-center">
+            <p className="font-mono text-[10px] text-[#7A6F65] text-center">
               Powered by Google PageSpeed Insights + Signal &amp; Friction proprietary friction analysis engine.
             </p>
           </div>

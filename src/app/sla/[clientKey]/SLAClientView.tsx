@@ -385,7 +385,7 @@ export default function SLAClientView({ staticClientKey }: { staticClientKey: st
               This page refreshes automatically when your diagnostic is ready.
             </span>
           </div>
-          <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[#D4A853]/20">
+          <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[#D4A853]/60">
             signal-and-friction.com
           </span>
         </div>
