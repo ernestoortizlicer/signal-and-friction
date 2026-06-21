@@ -37,7 +37,7 @@ function UtcClock() {
     return () => clearInterval(id);
   }, []);
   return (
-    <span className="font-mono text-[0.6rem] text-[#D4A853]/80 tracking-[0.2em] tabular-nums glow-text">
+    <span className="font-mono text-xs text-[#D4A853]/80 tracking-[0.2em] tabular-nums glow-text">
       UTC {time}
     </span>
   );
@@ -212,14 +212,14 @@ export default function Home() {
             </svg>
             <div className="absolute inset-0 blur-md bg-[#D4A853]/20 rounded-full" />
           </div>
-          <span className="font-mono text-[0.55rem] text-[#D4A853]/70 tracking-[0.35em] uppercase font-semibold">
+          <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.35em] uppercase font-semibold">
             Signal &amp; Friction
           </span>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-[#5C9A6B] pulse-cyan" style={{ boxShadow: "0 0 6px rgba(92,154,107,0.5)" }} />
-            <span className="font-mono text-[0.5rem] text-[#5C9A6B] tracking-[0.15em] uppercase">
+            <span className="font-mono text-xs text-[#5C9A6B] tracking-[0.15em] uppercase">
               Online
             </span>
           </div>
@@ -239,7 +239,7 @@ export default function Home() {
             className="flex-1 max-w-lg space-y-6"
           >
             <div className="space-y-2">
-              <div className="font-mono text-[0.5rem] text-[#D4A853]/70 tracking-[0.4em] uppercase">
+              <div className="font-mono text-xs text-[#D4A853]/70 tracking-[0.4em] uppercase">
                 Conversion Diagnostic System v4.5
               </div>
               <h1 className="text-[2.8rem] lg:text-[3.6rem] font-bold leading-[1.0] tracking-[-0.03em]">
@@ -283,10 +283,10 @@ export default function Home() {
               <div className="pt-4 space-y-2 hidden md:block">
                 {testimonials.slice(0, 2).map((t, i) => (
                   <div key={i} className="border-l border-[#D4A853]/10 pl-3 py-1">
-                    <p className="text-[0.65rem] text-[#B0A89E] italic leading-relaxed">
+                    <p className="text-xs text-[#B0A89E] italic leading-relaxed">
                       &ldquo;{t.quote_text}&rdquo;
                     </p>
-                    <span className="text-[0.55rem] font-mono text-[#D4A853]/70 uppercase tracking-wider block mt-0.5">
+                    <span className="text-xs font-mono text-[#D4A853]/70 uppercase tracking-wider block mt-0.5">
                       Verified Client
                     </span>
                   </div>
@@ -311,11 +311,11 @@ export default function Home() {
                     <div className="w-[7px] h-[7px] rounded-full bg-[#D4A853]/60 animate-ping" />
                     <div className="w-[7px] h-[7px] rounded-full bg-[#6A5F55]/40" />
                   </div>
-                  <span className="font-mono text-[0.5rem] text-[#D4A853]/70 tracking-[0.25em] uppercase">
+                  <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.25em] uppercase">
                     {currentStep.code}
                   </span>
                 </div>
-                <span className="font-mono text-[0.55rem] text-[#B0A89E] tabular-nums">
+                <span className="font-mono text-xs text-[#7A6F65] tabular-nums">
                   Step {step} of 5
                 </span>
               </div>
@@ -324,10 +324,10 @@ export default function Home() {
               <div className="p-6">
                 {/* Step label */}
                 <div className="mb-5">
-                  <div className="font-mono text-[0.5rem] text-[#D4A853]/70 tracking-[0.3em] uppercase mb-1">
+                  <div className="font-mono text-xs text-[#D4A853]/70 tracking-[0.3em] uppercase mb-1">
                     {currentStep.label}
                   </div>
-                  <div className="font-mono text-[0.65rem] text-[#B0A89E]">
+                  <div className="font-mono text-xs text-[#B0A89E]">
                     {currentStep.desc}
                   </div>
                 </div>
@@ -354,14 +354,14 @@ export default function Home() {
                           className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#7A6F65] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
                           style={{ caretColor: "#D4A853" }}
                         />
-                        <div className="font-mono text-[0.5rem] text-[#B0A89E] tracking-wide flex items-center gap-1.5">
+                        <div className="font-mono text-xs text-[#B0A89E] tracking-wide flex items-center gap-1.5">
                           <span className="w-1 h-1 rounded-full bg-[#5C9A6B]/50" />
                           Join 50+ B2B SaaS founders who have diagnosed their funnel.
                         </div>
                         <button
                           type="button"
                           onClick={nextStep}
-                          className="w-full py-3 border border-[#D4A853]/20 text-[#D4A853] hover:bg-[#D4A853]/5 active:bg-[#D4A853]/10 transition-all duration-200 font-mono text-[0.6rem] uppercase tracking-[0.25em] cursor-pointer"
+                          className="w-full py-3 border border-[#D4A853]/20 text-[#D4A853] hover:bg-[#D4A853]/5 active:bg-[#D4A853]/10 transition-all duration-200 font-mono text-xs uppercase tracking-[0.25em] cursor-pointer"
                         >
                           Scan My Funnel →
                         </button>
@@ -387,21 +387,21 @@ export default function Home() {
                               className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                 funnelPain === opt.key
                                   ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                  : "border-l-transparent text-[#B0A89E] hover:text-[#B0A89E] hover:bg-white/[0.01]"
+                                  : "border-l-transparent text-[#B0A89E] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
                               }`}
                             >
                               <div className="text-xs tracking-wide">{opt.label}</div>
-                              <div className="text-[0.55rem] text-[#B0A89E] mt-0.5">{opt.sub}</div>
+                              <div className="text-xs text-[#B0A89E] mt-0.5">{opt.sub}</div>
                             </button>
                           ))}
                         </div>
                         <div className="flex gap-px pt-1">
                           <button type="button" onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#B0A89E] hover:text-[#B0A89E] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer">
+                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#B0A89E] transition-all font-mono text-xs uppercase tracking-[0.15em] cursor-pointer">
                             ← Back
                           </button>
                           <button type="button" onClick={nextStep}
-                            className="w-2/3 py-2.5 border border-[#D4A853]/20 text-[#D4A853] hover:bg-[#D4A853]/5 transition-all font-mono text-[0.6rem] uppercase tracking-[0.25em] cursor-pointer">
+                            className="w-2/3 py-2.5 border border-[#D4A853]/20 text-[#D4A853] hover:bg-[#D4A853]/5 transition-all font-mono text-xs uppercase tracking-[0.25em] cursor-pointer">
                             Proceed →
                           </button>
                         </div>
@@ -427,21 +427,21 @@ export default function Home() {
                               className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                 segmentSelection === opt.key
                                   ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                  : "border-l-transparent text-[#B0A89E] hover:text-[#B0A89E] hover:bg-white/[0.01]"
+                                  : "border-l-transparent text-[#B0A89E] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
                               }`}
                             >
                               <div className="text-xs tracking-wide">{opt.label}</div>
-                              <div className="text-[0.55rem] text-[#B0A89E] mt-0.5">{opt.sub}</div>
+                              <div className="text-xs text-[#B0A89E] mt-0.5">{opt.sub}</div>
                             </button>
                           ))}
                         </div>
                         <div className="flex gap-px pt-1">
                           <button type="button" onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#B0A89E] hover:text-[#B0A89E] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer">
+                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#B0A89E] transition-all font-mono text-xs uppercase tracking-[0.15em] cursor-pointer">
                             ← Back
                           </button>
                           <button type="button" onClick={nextStep}
-                            className="w-2/3 py-2.5 border border-[#D4A853]/20 text-[#D4A853] hover:bg-[#D4A853]/5 transition-all font-mono text-[0.6rem] uppercase tracking-[0.25em] cursor-pointer">
+                            className="w-2/3 py-2.5 border border-[#D4A853]/20 text-[#D4A853] hover:bg-[#D4A853]/5 transition-all font-mono text-xs uppercase tracking-[0.25em] cursor-pointer">
                             Proceed →
                           </button>
                         </div>
@@ -468,11 +468,11 @@ export default function Home() {
                                 className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                   customAnswer === opt.label
                                     ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                    : "border-l-transparent text-[#B0A89E] hover:text-[#B0A89E] hover:bg-white/[0.01]"
+                                    : "border-l-transparent text-[#B0A89E] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
                                 }`}
                               >
                                 <div className="text-xs tracking-wide">{opt.label}</div>
-                                <div className="text-[0.55rem] text-[#B0A89E] mt-0.5">{opt.sub}</div>
+                                <div className="text-xs text-[#B0A89E] mt-0.5">{opt.sub}</div>
                               </button>
                             ))
                           ) : (
@@ -484,22 +484,22 @@ export default function Home() {
                                 className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
                                   customAnswer === opt.label
                                     ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                    : "border-l-transparent text-[#B0A89E] hover:text-[#B0A89E] hover:bg-white/[0.01]"
+                                    : "border-l-transparent text-[#B0A89E] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
                                 }`}
                               >
                                 <div className="text-xs tracking-wide">{opt.label}</div>
-                                <div className="text-[0.55rem] text-[#B0A89E] mt-0.5">{opt.sub}</div>
+                                <div className="text-xs text-[#B0A89E] mt-0.5">{opt.sub}</div>
                               </button>
                             ))
                           )}
                         </div>
                         <div className="flex gap-px pt-1">
                           <button type="button" onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#B0A89E] hover:text-[#B0A89E] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer">
+                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#B0A89E] transition-all font-mono text-xs uppercase tracking-[0.15em] cursor-pointer">
                             ← Back
                           </button>
                           <button type="button" onClick={nextStep}
-                            className="w-2/3 py-2.5 border border-[#D4A853]/20 text-[#D4A853] hover:bg-[#D4A853]/5 transition-all font-mono text-[0.6rem] uppercase tracking-[0.25em] cursor-pointer">
+                            className="w-2/3 py-2.5 border border-[#D4A853]/20 text-[#D4A853] hover:bg-[#D4A853]/5 transition-all font-mono text-xs uppercase tracking-[0.25em] cursor-pointer">
                             Proceed →
                           </button>
                         </div>
@@ -527,23 +527,23 @@ export default function Home() {
                             className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#7A6F65] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
                             style={{ caretColor: "#D4A853" }}
                           />
-                          <div className="mt-2 font-mono text-[0.5rem] text-[#B0A89E] tracking-wide">
+                          <div className="mt-2 font-mono text-xs text-[#B0A89E] tracking-wide">
                             Results in 72h. No marketing spam. No calls required.
                           </div>
                         </div>
-                        <div className="border border-[#D4A853]/10 bg-[#D4A853]/[0.03] px-3 py-2 font-mono text-[0.5rem] text-[#B0A89E] leading-relaxed flex items-center gap-2">
+                        <div className="border border-[#D4A853]/10 bg-[#D4A853]/[0.03] px-3 py-2 font-mono text-xs text-[#B0A89E] leading-relaxed flex items-center gap-2">
                           <span className="text-[#D4A853]">⚑</span>
                           20% growth guarantee or full refund via Stripe. 72h async. Zero sales calls.
                         </div>
                         <div className="flex gap-px">
                           <button type="button" disabled={loading} onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#B0A89E] transition-all font-mono text-[0.55rem] uppercase tracking-[0.15em] cursor-pointer disabled:opacity-30">
+                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#B0A89E] transition-all font-mono text-xs uppercase tracking-[0.15em] cursor-pointer disabled:opacity-30">
                             ← Back
                           </button>
                           <button
                             type="submit"
                             disabled={loading}
-                            className="relative w-2/3 py-3 bg-[#D4A853] text-[#0A0908] font-mono text-[0.6rem] uppercase tracking-[0.25em] cursor-pointer disabled:opacity-50 transition-all hover:bg-[#E8C97A] active:scale-[0.99] overflow-hidden font-bold"
+                            className="relative w-2/3 py-3 bg-[#D4A853] text-[#0A0908] font-mono text-xs uppercase tracking-[0.25em] cursor-pointer disabled:opacity-50 transition-all hover:bg-[#E8C97A] active:scale-[0.99] overflow-hidden font-bold"
                           >
                             {loading ? (
                               <span className="flex items-center justify-center gap-2">
@@ -568,7 +568,7 @@ export default function Home() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="mt-4 py-2 px-3 border-l-2 border-[#C85C5C]/50 bg-[#C85C5C]/5 font-mono text-[0.6rem] text-[#C85C5C]/80 tracking-wide"
+                      className="mt-4 py-2 px-3 border-l-2 border-[#C85C5C]/50 bg-[#C85C5C]/5 font-mono text-xs text-[#C85C5C]/80 tracking-wide"
                     >
                       ERR: {errorMsg}
                     </motion.div>
@@ -578,10 +578,10 @@ export default function Home() {
 
               {/* Console footer */}
               <div className="border-t border-[#D4A853]/5 px-5 py-2 flex justify-between items-center">
-                <span className="font-mono text-[0.4rem] text-[#7A6F65] tracking-[0.15em] uppercase">
+                <span className="font-mono text-xs text-[#7A6F65] tracking-[0.15em] uppercase">
                   S&amp;F Diagnostic Engine v4.5
                 </span>
-                <span className="font-mono text-[0.4rem] text-[#7A6F65] tracking-wider">
+                <span className="font-mono text-xs text-[#7A6F65] tracking-wider">
                   E2E Encrypted
                 </span>
               </div>
@@ -593,7 +593,7 @@ export default function Home() {
       {/* ── Section 2: S&F Results-Based Guarantee & Calculator ── */}
       <section className="w-full max-w-6xl mx-auto px-6 py-20 relative z-10 border-t border-[#D4A853]/8 space-y-12">
         <div className="text-center space-y-3">
-          <span className="font-mono text-[0.5rem] text-[#D4A853] tracking-[0.4em] uppercase border border-[#D4A853]/25 px-2.5 py-1 rounded bg-[#D4A853]/5 inline-block">
+          <span className="font-mono text-xs text-[#D4A853] tracking-[0.4em] uppercase border border-[#D4A853]/25 px-2.5 py-1 rounded bg-[#D4A853]/5 inline-block">
             Risk Reversal Engine
           </span>
           <h2 className="text-2xl lg:text-4xl font-serif text-white tracking-tight">
@@ -606,7 +606,7 @@ export default function Home() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Sliders Left */}
-          <div className="lg:col-span-7 border border-[#D4A853]/8 bg-[#0A0908]/95 p-6 rounded space-y-6 font-mono text-[0.62rem]">
+          <div className="lg:col-span-7 border border-[#D4A853]/8 bg-[#0A0908]/95 p-6 rounded space-y-6 font-mono text-xs">
             {/* Visitors Slider */}
             <div className="space-y-2">
               <div className="flex justify-between">
@@ -622,7 +622,7 @@ export default function Home() {
                 onChange={(e) => setCalcVisitors(Number(e.target.value))}
                 className="w-full h-1 bg-[#2A2218] rounded appearance-none cursor-pointer accent-[#D4A853]"
               />
-              <div className="flex justify-between text-[0.5rem] text-[#B0A89E]">
+              <div className="flex justify-between text-xs text-[#B0A89E]">
                 <span>5,000</span>
                 <span>50,000</span>
                 <span>100,000</span>
@@ -644,7 +644,7 @@ export default function Home() {
                 onChange={(e) => setCalcConvRate(Number(e.target.value))}
                 className="w-full h-1 bg-[#2A2218] rounded appearance-none cursor-pointer accent-[#D4A853]"
               />
-              <div className="flex justify-between text-[0.5rem] text-[#B0A89E]">
+              <div className="flex justify-between text-xs text-[#B0A89E]">
                 <span>0.5%</span>
                 <span>2.5%</span>
                 <span>5.0%</span>
@@ -666,7 +666,7 @@ export default function Home() {
                 onChange={(e) => setCalcLtv(Number(e.target.value))}
                 className="w-full h-1 bg-[#2A2218] rounded appearance-none cursor-pointer accent-[#D4A853]"
               />
-              <div className="flex justify-between text-[0.5rem] text-[#B0A89E]">
+              <div className="flex justify-between text-xs text-[#B0A89E]">
                 <span>$50</span>
                 <span>$1,000</span>
                 <span>$2,000</span>
@@ -696,7 +696,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="border border-[#D4A853]/25 bg-[#0A0908] p-3 rounded text-[0.55rem] text-[#B0A89E] leading-relaxed">
+            <div className="border border-[#D4A853]/25 bg-[#0A0908] p-3 rounded text-xs text-[#B0A89E] leading-relaxed">
               Calculations are based on a 20% relative increase in your current conversion rate (e.g. from {calcConvRate.toFixed(1)}% to {(calcConvRate * 1.2).toFixed(2)}%). Backed by the S&amp;F Results-Based Guarantee.
             </div>
           </div>
@@ -706,7 +706,7 @@ export default function Home() {
       {/* ── Section 3: Why Our Guarantee Beats AI ── */}
       <section className="w-full max-w-6xl mx-auto px-6 py-20 relative z-10 border-t border-[#D4A853]/8 space-y-12">
         <div className="text-center space-y-3">
-          <span className="font-mono text-[0.5rem] text-[#D4A853] tracking-[0.4em] uppercase border border-[#D4A853]/25 px-2.5 py-1 rounded bg-[#D4A853]/5 inline-block">
+          <span className="font-mono text-xs text-[#D4A853] tracking-[0.4em] uppercase border border-[#D4A853]/25 px-2.5 py-1 rounded bg-[#D4A853]/5 inline-block">
             Comparison Audit
           </span>
           <h2 className="text-2xl lg:text-4xl font-serif text-white tracking-tight">
@@ -717,7 +717,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="border border-[#D4A853]/8 bg-[#0A0908]/95 rounded overflow-x-auto font-mono text-[0.62rem]">
+        <div className="border border-[#D4A853]/8 bg-[#0A0908]/95 rounded overflow-x-auto font-mono text-xs">
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="border-b border-[#D4A853]/8 bg-[#D4A853]/[0.02] text-[#D4A853] uppercase tracking-wider">
@@ -728,22 +728,22 @@ export default function Home() {
             </thead>
             <tbody className="divide-y divide-white/5 text-[#B0A89E]">
               <tr>
-                <td className="p-4 font-bold text-white uppercase text-[0.58rem]">Risk Allocation</td>
+                <td className="p-4 font-bold text-white uppercase text-xs">Risk Allocation</td>
                 <td className="p-4 text-[#5C9A6B] font-bold">100% Refundable via Stripe if metrics fail.</td>
                 <td className="p-4">Pay upfront with zero performance accountability.</td>
               </tr>
               <tr>
-                <td className="p-4 font-bold text-white uppercase text-[0.58rem]">Verification Engine</td>
+                <td className="p-4 font-bold text-white uppercase text-xs">Verification Engine</td>
                 <td className="p-4">Hardened PostHog telemetry &amp; strict isolation gating.</td>
                 <td className="p-4">Unverified self-reported screenshots.</td>
               </tr>
               <tr>
-                <td className="p-4 font-bold text-white uppercase text-[0.58rem]">Implementation</td>
+                <td className="p-4 font-bold text-white uppercase text-xs">Implementation</td>
                 <td className="p-4">Done-For-You single surgical code/copy tweak.</td>
                 <td className="p-4">Dozens of generic, low-impact suggestions.</td>
               </tr>
               <tr>
-                <td className="p-4 font-bold text-white uppercase text-[0.58rem]">Core Intelligence</td>
+                <td className="p-4 font-bold text-white uppercase text-xs">Core Intelligence</td>
                 <td className="p-4">21 Specialized Agent Mind consortium.</td>
                 <td className="p-4">Single LLM API calls with generic template prompts.</td>
               </tr>
@@ -751,13 +751,13 @@ export default function Home() {
           </table>
         </div>
 
-        <div className="text-center font-mono text-[0.55rem] text-[#B0A89E]">
+        <div className="text-center font-mono text-xs text-[#B0A89E]">
           Read the complete legally binding covenant: <Link href="/legal/guarantee" className="text-[#D4A853] hover:underline">S&amp;F Performance Terms &amp; Conditions</Link>.
         </div>
       </section>
 
       {/* ── Footer ──────────────────────────────────────── */}
-      <footer className="w-full border-t border-white/[0.03] py-8 px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-[0.45rem] font-mono text-[#B0A89E] relative z-10 bg-[#0A0908]">
+      <footer className="w-full border-t border-white/[0.03] py-8 px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-mono text-[#B0A89E] relative z-10 bg-[#0A0908]">
         <div className="flex flex-col md:flex-row items-center gap-4">
           <span>© {new Date().getFullYear()} Signal &amp; Friction Method™. All rights reserved.</span>
           <span className="hidden md:inline">|</span>

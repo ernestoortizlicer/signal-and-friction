@@ -510,7 +510,7 @@ export default function PersonalFinanceCenter() {
 
                 <div className="space-y-3 pt-2">
                   <h4 className="font-mono text-xs text-white uppercase font-bold">Últimas Transacciones Stripe</h4>
-                  <div className="border border-[#D4A853]/8 rounded overflow-hidden font-mono text-[0.58rem]">
+                  <div className="border border-[#D4A853]/8 rounded overflow-hidden font-mono text-xs">
                     <div className="grid grid-cols-12 bg-white/5 p-2 font-bold text-[#B0A89E] border-b border-[#D4A853]/8">
                       <div className="col-span-3">Cliente</div>
                       <div className="col-span-3">Producto / ID Precio</div>
@@ -1440,7 +1440,7 @@ export default function PersonalFinanceCenter() {
 
                       {/* Agent #21 Quarterly Recommendation Report */}
                       <div className="border border-[#D4A853]/20 bg-[#D4A853]/5 p-4 rounded space-y-3 font-mono">
-                        <span className="text-[#D4A853] font-bold block uppercase text-[0.58rem] tracking-wider">
+                        <span className="text-[#D4A853] font-bold block uppercase text-xs tracking-wider">
                           Quarterly Recommendation Report — Agent #21 (Global Expansion Hacker)
                         </span>
                         <div className="text-xs text-[#B0A89E] leading-relaxed space-y-2">

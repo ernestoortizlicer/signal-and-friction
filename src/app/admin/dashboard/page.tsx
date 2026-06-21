@@ -1957,7 +1957,7 @@ export default function AdminDashboard() {
                     </div>
 
                     {modalGuaranteeActive && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-[0.62rem]">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
                         {/* Gate checklist */}
                         <div className="space-y-2 border-r border-[#D4A853]/8 pr-4">
                           <span className="text-[#B0A89E] uppercase block mb-1">Checklist de Gates:</span>
@@ -2077,7 +2077,7 @@ export default function AdminDashboard() {
                     ) : (
                       selectedClientInteractions.map((inter, i) => (
                         <div key={inter.id || i} className="bg-black/30 p-3 border border-[#D4A853]/8 rounded space-y-1.5">
-                          <div className="flex justify-between text-[0.58rem] font-mono">
+                          <div className="flex justify-between text-xs font-mono">
                             <span className="text-[#D4A853]">{inter.dominant_friction_mechanism?.replace(/_/g, " ").toUpperCase()}</span>
                             <span className="text-[#B0A89E]">{new Date(inter.created_at).toLocaleDateString()}</span>
                           </div>
