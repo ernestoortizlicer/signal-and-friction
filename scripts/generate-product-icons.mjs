@@ -16,18 +16,19 @@ const OUT_DIR = path.join(__dirname, "../public/product-icons");
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
 const PRODUCTS = [
-  { slug: "dfy-beta-diagnostic",  name: "Beta Diagnostic",  tier: "DFY", price: "$2,000",    color: "#7C3AED", icon: "◈" },
-  { slug: "dfy-intervention",     name: "Intervention",     tier: "DFY", price: "$3,000",    color: "#7C3AED", icon: "⟁" },
-  { slug: "dfy-monitoring",       name: "Monitoring",       tier: "DFY", price: "$2,500/mo", color: "#7C3AED", icon: "⊙" },
-  { slug: "dfy-expansion",        name: "Expansion",        tier: "DFY", price: "$2,000",    color: "#7C3AED", icon: "⊞" },
-  { slug: "dfy-autonomy-kit",     name: "Autonomy Kit",     tier: "DFY", price: "$5,000",    color: "#7C3AED", icon: "⬡" },
-  { slug: "dwy-beta-diagnostic",  name: "Beta Diagnostic",  tier: "DWY", price: "$350",      color: "#0EA5E9", icon: "◈" },
-  { slug: "dwy-intervention",     name: "Intervention",     tier: "DWY", price: "$750",      color: "#0EA5E9", icon: "⟁" },
-  { slug: "dwy-monitoring",       name: "Monitoring",       tier: "DWY", price: "$500/mo",   color: "#0EA5E9", icon: "⊙" },
-  { slug: "dwy-expansion",        name: "Expansion",        tier: "DWY", price: "$350",      color: "#0EA5E9", icon: "⊞" },
-  { slug: "dwy-autonomy-kit",     name: "Autonomy Kit",     tier: "DWY", price: "$1,500",    color: "#0EA5E9", icon: "⬡" },
-  { slug: "certified-practitioner", name: "Practitioner",   tier: "CERTIFIED", price: "$4,500/yr", color: "#F59E0B", icon: "✦" },
-  { slug: "certified-agency",     name: "Agency",           tier: "CERTIFIED", price: "$4,500/yr", color: "#F59E0B", icon: "✦✦" },
+  { slug: "dfy-beta-diagnostic",   name: "Beta Diagnostic",  tier: "DFY",       price: "$2,000",    color: "#7C3AED", icon: "◈"  },
+  { slug: "dfy-intervention",      name: "Intervention",     tier: "DFY",       price: "$3,000",    color: "#7C3AED", icon: "⟁"  },
+  { slug: "dfy-monitoring",        name: "Monitoring",       tier: "DFY",       price: "$2,500/mo", color: "#7C3AED", icon: "⊙"  },
+  { slug: "dfy-expansion",         name: "Expansion",        tier: "DFY",       price: "$2,000",    color: "#7C3AED", icon: "⊞"  },
+  { slug: "dfy-autonomy-kit",      name: "Autonomy Kit",     tier: "DFY",       price: "$5,000",    color: "#7C3AED", icon: "⬡"  },
+  { slug: "dwy-beta-diagnostic",   name: "Beta Diagnostic",  tier: "DWY",       price: "$350",      color: "#0EA5E9", icon: "◈"  },
+  { slug: "dwy-intervention",      name: "Intervention",     tier: "DWY",       price: "$750",      color: "#0EA5E9", icon: "⟁"  },
+  { slug: "dwy-monitoring",        name: "Monitoring",       tier: "DWY",       price: "$500/mo",   color: "#0EA5E9", icon: "⊙"  },
+  { slug: "dwy-expansion",         name: "Expansion",        tier: "DWY",       price: "$350",      color: "#0EA5E9", icon: "⊞"  },
+  { slug: "dwy-autonomy-kit",      name: "Autonomy Kit",     tier: "DWY",       price: "$1,500",    color: "#0EA5E9", icon: "⬡"  },
+  { slug: "certified-practitioner",name: "Practitioner",     tier: "CERTIFIED", price: "$4,500/yr", color: "#F59E0B", icon: "✦"  },
+  { slug: "certified-agency",      name: "Agency",           tier: "CERTIFIED", price: "$4,500/yr", color: "#F59E0B", icon: "✦✦" },
+  { slug: "certified-renewal",     name: "Renewal",          tier: "CERTIFIED", price: "$2,200/yr", color: "#F59E0B", icon: "↻"  },
 ];
 
 function buildHTML(p) {
