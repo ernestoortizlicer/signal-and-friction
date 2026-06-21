@@ -68,7 +68,9 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
 
   // Sync checklist when live data arrives
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (d.checklist) setChecklist(d.checklist);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (d.learningModules?.[0]) setSelectedModuleId(d.learningModules[0].id);
   }, [d]);
 

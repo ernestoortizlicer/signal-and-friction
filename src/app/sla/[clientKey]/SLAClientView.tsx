@@ -46,7 +46,7 @@ export default function SLAClientView({ staticClientKey }: { staticClientKey: st
   const [data, setData] = useState<SLAData | null>(null);
   const [countdown, setCountdown] = useState("--:--:--");
   const [fetching, setFetching] = useState(true);
-  const fetchedAt = useRef<number>(Date.now());
+  const fetchedAt = useRef<number>(0);
   const hoursRemainingRef = useRef<number>(0);
 
   const fetchData = () => {

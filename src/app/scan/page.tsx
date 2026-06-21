@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface FrictionMechanism {
@@ -166,9 +167,9 @@ export default function ScanPage() {
 
         {/* Header */}
         <header className="space-y-4">
-          <a href="/" className="inline-block font-mono text-xs text-[#D4A853]/70 hover:text-[#D4A853] transition-colors uppercase tracking-[0.3em] mb-6">
+          <Link href="/" className="inline-block font-mono text-xs text-[#D4A853]/70 hover:text-[#D4A853] transition-colors uppercase tracking-[0.3em] mb-6">
             ← Signal &amp; Friction
-          </a>
+          </Link>
           <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight text-white leading-tight">
             Checkout Friction Audit
           </h1>
@@ -460,12 +461,12 @@ export default function ScanPage() {
                     <p className="text-sm text-white font-serif">Get the full diagnosis with the precise fix.</p>
                     <p className="font-mono text-[10px] text-[#7A6F65] mt-1">Delivered in 72h. Async. No calls required.</p>
                   </div>
-                  <a
+                  <Link
                     href="/"
                     className="px-6 py-3 bg-[#D4A853] text-[#0A0908] font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-[#E8C97A] transition-all whitespace-nowrap"
                   >
                     Request Full Diagnostic →
-                  </a>
+                  </Link>
                 </motion.div>
               )}
 

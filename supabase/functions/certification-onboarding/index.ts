@@ -58,11 +58,10 @@ serve(async (req) => {
     const stripeApiKey = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
     const origin = req.headers.get("origin") || "https://signal-and-friction.pages.dev";
 
-    // Certified Program price IDs (updated 2026-06-21)
     const CERTIFIED_PRICES: Record<string, string> = {
-      annual:  "price_1TkqnwHv7TExyozUG4zwTCmP",  // $4,500 / year
-      monthly: "price_1TkqnwHv7TExyozUWjn59T5y",  // $450 / month
-      renewal: "price_1Tkqp5Hv7TExyozUQkj9swnM",  // $2,200 / year (Year 2+)
+      annual:  Deno.env.get("STRIPE_PRICE_CERTIFIED_ANNUAL")  ?? "price_1TkqnwHv7TExyozUG4zwTCmP",
+      monthly: Deno.env.get("STRIPE_PRICE_CERTIFIED_MONTHLY") ?? "price_1TkqnwHv7TExyozUWjn59T5y",
+      renewal: Deno.env.get("STRIPE_PRICE_CERTIFIED_RENEWAL") ?? "price_1Tkqp5Hv7TExyozUQkj9swnM",
     };
 
     if (action !== "activate") {

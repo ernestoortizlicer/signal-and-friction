@@ -25,12 +25,12 @@ interface Article {
 }
 
 const DOMAINS = [
-  { name: "Economía Conductual", score: 85, color: "#D4A853" },
-  { name: "Arquitectura Conversión", score: 90, color: "#5C9A6B" },
-  { name: "Psicología del Copy", score: 75, color: "#3B82F6" },
-  { name: "Sistemas Técnicos", score: 80, color: "#A855F7" },
-  { name: "Lógica de Precios", score: 95, color: "#F59E0B" },
-  { name: "Fiscalidad & Compliance", score: 70, color: "#C85C5C" },
+  { name: "Behavioral Economics", score: 85, color: "#D4A853" },
+  { name: "Conversion Architecture", score: 90, color: "#5C9A6B" },
+  { name: "Copywriting Psychology", score: 75, color: "#3B82F6" },
+  { name: "Technical Systems", score: 80, color: "#A855F7" },
+  { name: "Pricing Logic", score: 95, color: "#F59E0B" },
+  { name: "Tax & Compliance", score: 70, color: "#C85C5C" },
 ];
 
 interface CaseStudy {
@@ -48,93 +48,93 @@ interface CaseStudy {
 const CASE_STUDIES: CaseStudy[] = [
   {
     id: "tiktok",
-    title: "Colapso de Onboarding Localizado — TikTok India",
-    metrics: "La conversión de instalación a registro cayó un 45%. Tiempo promedio en el formulario de registro: 4.8 minutos antes de abandonar.",
-    context: "Los usuarios operan en redes 3G con dispositivos Android económicos. El flujo de registro utiliza verificación OTP vía SMS localizado.",
+    title: "TikTok India Localized Onboarding Collapse",
+    metrics: "Conversion from install to signup plummeted by 45%. Average time spent on registration form: 4.8 minutes before exit.",
+    context: "Users operate on 3G bandwidth under budget Android devices. Signup flow utilizes localized SMS OTP verification codes.",
     frictionOptions: [
-      "Técnico: Peso del payload en ancho de banda reducido",
-      "Cognitivo: Carga de secuencia OTP vía SMS",
-      "Déficit de Confianza: Desconexión lingüística en la localización"
+      "Technical: Low-bandwidth payload weight",
+      "Cognitive: SMS OTP sequence load",
+      "Trust Deficit: Localization linguistic translation disconnect"
     ],
     concepts: [
-      { title: "Concepto 1: Tolerancia de Latencia en Bajo Ancho de Banda (Sistemas Técnicos)", description: "Los entornos de red 3G en India tienen alta tasa de pérdida de paquetes. El pesado paquete de inicialización al arranque causaba cierres de la app." },
-      { title: "Concepto 2: Barreras de Verificación OTP vía SMS (Ciencia del Comportamiento)", description: "Los retrasos en el gateway SMS llevaban a reenvíos repetidos. El Modelo de Comportamiento de Fogg predice que el alto esfuerzo combinado con baja motivación destruye la activación." },
-      { title: "Concepto 3: Subculturas de Confianza Localizadas (Arquitectura Lingüística)", description: "Las traducciones literales se sentían automatizadas y de bajo estatus. La verdadera localización requiere fraseología regional subcultural para mitigar la ansiedad de registro." }
+      { title: "Concept 1: Low-Bandwidth Latency Tolerance (Technical Systems)", description: "India's 3G network environments have a high packet loss rate. The heavy initialization package loaded on startup caused app crashes." },
+      { title: "Concept 2: SMS OTP Verification Barriers (Behavioral Science)", description: "SMS gateway delays caused users to re-request codes. The Fogg Behavioral Model predicts that high-effort (waiting/switching screens) combined with low motivation (during onboarding) crashes activation." },
+      { title: "Concept 3: Localized Trust Sub-Cultures (Linguistic Architecture)", description: "Literal translations of signup directives felt automated and low-status. True localization requires regional sub-culture phrasing to mitigate registration anxiety." }
     ],
-    quizQuestion: "Las métricas SaaS muestran un 9.2% de tasa de selección de plan de precios, pero solo un 0.4% de confirmación de facturación. Los usuarios permanecen en la página de tarjeta 2.2 minutos. Aísla el mecanismo de fricción.",
+    quizQuestion: "SaaS metrics show a 9.2% pricing tier selection rate, but only 0.4% billing confirmation. Users stay on the card details page for 2.2 minutes. Isolate friction mechanism.",
     quizAnswers: [
-      "Carga Cognitiva: Las opciones de precios son demasiado complejas",
-      "Déficit de Confianza: El paywall carece de SSL claro / parámetros de validación",
-      "Orden de Secuencia: El paso de facturación ocurre antes de la activación del producto"
+      "Cognitive Load: Pricing options are too complex",
+      "Trust Deficit: Paywall lacks clear SSL / validation parameters",
+      "Sequence Order: Billing step occurs before product activation"
     ],
-    quizExplanation: "Se aísla el Déficit de Confianza. Los usuarios pasan 2.2 minutos en el campo de entrada de tarjeta — quieren pagar pero carecen de confianza de seguridad. Es un Déficit de Confianza."
+    quizExplanation: "Trust Deficit is isolated. Users spend 2.2 minutes on the CC input field itself, which implies they want to pay but lack security trust. It is a Trust Deficit."
   },
   {
     id: "figma",
-    title: "Ansiedad en el Paywall Enterprise de Figma",
-    metrics: "Usuarios enterprise navegan a la página de pago pero abandonan en 15 segundos. Alto CTR en el trigger de upgrade, pero cero compras.",
-    context: "Admins de equipo en autoservicio intentando actualizar más de 10 puestos de diseñador. Los campos de Stripe solicitan claves de identificación fiscal corporativa.",
+    title: "Figma Enterprise Paywall Anxiety",
+    metrics: "Enterprise users navigate to payment page but exit within 15 seconds. High click-through on upgrade trigger, but zero purchases.",
+    context: "Self-serve team admins trying to upgrade 10+ designer seats. Stripe billing fields request corporate taxation identification keys.",
     frictionOptions: [
-      "Cognitivo: Densidad masiva de campos multi-paso",
-      "Déficit de Confianza: Parámetros de aislamiento de datos corporativos poco claros",
-      "Déficit de Valor: Mapeo de incrementos de precios por puesto poco claro"
+      "Cognitive: Massive multi-step inputs field density",
+      "Trust Deficit: Unclear corporate data isolation parameters",
+      "Value Deficit: Unclear seats pricing increments mapping"
     ],
     concepts: [
-      { title: "Concepto 1: Checkout B2B con Fiscalidad Diferida (Lógica de Precios)", description: "Forzar datos VAT/NIF a mitad del checkout en SaaS B2B de alto ticket aumenta el abandono de formularios un 40%. La configuración de facturación post-compra convierte un 22% mejor." },
-      { title: "Concepto 2: Ansiedad por Precios por Puesto (Economía Conductual)", description: "El escalado ambiguo de coste por puesto obliga a los compradores a calcular el riesgo en tiempo real. Los simuladores de factura interactivos reducen el abandono un 35%." }
+      { title: "Concept 1: B2B Tax Deferred Checkout (Pricing Logic)", description: "Forcing VAT/EIN data mid-checkout for high-ticket B2B SaaS increases form abandonment by 40%. Post-purchase billing setup converts 22% better." },
+      { title: "Concept 2: Seat Pricing Anxiety (Behavioral Economics)", description: "Ambiguous per-seat cost scaling forces buyers to compute risk in real-time. Interactive invoice simulators reduce seat pricing abandonment by 35%." }
     ],
-    quizQuestion: "Una herramienta para developers muestra que el 78% de los usuarios enterprise llegan a la página de precios pero solo el 2.1% convierten. Tiempo de sesión promedio: 8 minutos. ¿Cuál es la fricción principal?",
+    quizQuestion: "A developer tool shows 78% of enterprise users reach the pricing page but only 2.1% convert. Average session time on pricing: 8 minutes. What is the primary friction?",
     quizAnswers: [
-      "Déficit de Confianza: Preocupaciones sobre privacidad en el aislamiento del código fuente",
-      "Déficit de Valor: Cero beneficios inmediatos por optar",
-      "Cognitivo: Demasiados botones en pantalla"
+      "Trust Deficit: Concerns over source code isolation privacy",
+      "Value Deficit: Zero immediate benefits for opting in",
+      "Cognitive: Too many button triggers on screen"
     ],
-    quizExplanation: "Se aísla el Déficit de Confianza. Los usuarios pasan 8 minutos investigando, no decidiendo — quieren el producto pero temen el riesgo de seguridad institucional. Es un Déficit de Confianza."
+    quizExplanation: "Trust Deficit is isolated. Users spend 8 minutes (researching, not deciding) which signals they want the product but fear institutional security risk — a Trust Deficit."
   },
   {
     id: "vercel",
-    title: "Colapso del Opt-In de Telemetría — Vercel",
-    metrics: "El opt-in de telemetría de developers cae un 60% tras la actualización del banner GDPR. La telemetría es esencial para mejoras de velocidad.",
-    context: "Los developers técnicos rechazan los popups de opt-in. Añadir un dashboard de velocidad que renderiza un 10% más rápido con telemetría aumenta el opt-in un 35%.",
+    title: "Vercel Telemetry Opt-In Collapse",
+    metrics: "Developer telemetry opt-in drops 60% after GDPR banner update. Product telemetry essential for speed improvements.",
+    context: "Technical developers reject opt-in popups. Adding speed dashboard renders 10% faster with telemetry increases opt-in by 35%.",
     frictionOptions: [
-      "Déficit de Confianza: Preocupaciones sobre privacidad en el aislamiento del código fuente",
-      "Déficit de Valor: Cero beneficios inmediatos por optar",
-      "Cognitivo: Demasiados botones en pantalla"
+      "Trust Deficit: Concerns over source code isolation privacy",
+      "Value Deficit: Zero immediate benefits for opting in",
+      "Cognitive: Too many button triggers on screen"
     ],
     concepts: [
-      { title: "Concepto 1: Compensación por Déficit de Valor (Economía Conductual)", description: "Solicitar telemetría sin ofrecer un beneficio recíproco inmediato viola la economía de reciprocidad. Los usuarios exigen una compensación de valor." },
-      { title: "Concepto 2: Transparencia en Aislamiento de Privacidad (Déficit de Confianza)", description: "Asegurar a los usuarios que todos los tokens de telemetría están hasheados y ningún repositorio de código es indexado elimina las ansiedades de seguridad." }
+      { title: "Concept 1: Value Deficit Offset (Behavioral Economics)", description: "Asking for data telemetry without offering a speed upgrade or discount violates reciprocal economics. Users demand a value offset." },
+      { title: "Concept 2: Privacy Isolation Transparency (Trust Deficit)", description: "Assuring users that all telemetry tokens are hashed and zero code repositories are indexed removes security anxieties." }
     ],
-    quizQuestion: "Los developers rechazan los popups de opt-in. Añadir 'El dashboard de velocidad renderiza un 10% más rápido con telemetría en caché' aumenta el opt-in un 35%. ¿Por qué?",
+    quizQuestion: "Developers reject opt-in popups. Adding 'Speed dashboard renders 10% faster with telemetry cached' increases opt-in by 35%. Why?",
     quizAnswers: [
-      "Se resuelve el Déficit de Confianza",
-      "Se establece una Compensación de Valor Recíproco",
-      "Se reduce la carga cognitiva"
+      "Trust Deficit is solved",
+      "Reciprocal Value Offset is established",
+      "Cognitive load is reduced"
     ],
-    quizExplanation: "Compensación de Valor Recíproco. El usuario recibe un beneficio directo de rendimiento a cambio de consentir compartir datos de uso."
+    quizExplanation: "Reciprocal Value Offset. The user receives a direct performance benefit in exchange for consenting to share usage data."
   },
   {
     id: "saas_asia",
-    title: "Colapso de Expansión SaaS en Asia — $50M",
-    metrics: "La conversión cae un 60% en los checkouts locales de Singapur/Japón. El abandono ocurre en la confirmación del plan de precios (latencia promedio 4.2 minutos).",
-    context: "Plataforma CRM con sede en EE.UU. Localizaron idiomas pero los pagos se liquidan en USD con estructuras estándar de validación de tarjetas de EE.UU.",
+    title: "$50M SaaS Asian Expansion Collapse",
+    metrics: "Conversion drops by 60% on Singapore/Japan local checkouts. User dropoff occurs at pricing plan confirmation (4.2 minutes average latency).",
+    context: "US-based CRM platform. They localized languages but payments are settled in USD with standard US credit card validation structures.",
     frictionOptions: [
-      "Técnico: Latencia del gateway de pago (enrutamiento EE.UU.)",
-      "Cognitivo: Discrepancia de facturación por tipo de cambio (FX)",
-      "Déficit de Confianza: Ausencia de símbolos de pago locales de confianza (PayNow / JCB)"
+      "Technical: Payment gateway latency (US routing)",
+      "Cognitive: Foreign Exchange (FX) billing discrepancy",
+      "Trust Deficit: Lack of local payment trust symbols (PayNow / JCB)"
     ],
     concepts: [
-      { title: "Concepto 1: Latencia en Liquidación Cross-Border", description: "Enrutar el procesamiento de tarjetas local a través de gateways de EE.UU. lleva a una tasa de rechazo de transacciones del 15%. El enrutamiento a través de adquirentes locales lo resuelve." },
-      { title: "Concepto 2: Brechas de Confianza en Pagos Locales (Déficit de Confianza)", description: "En Singapur, PayNow tiene una cuota de mercado del 65%. Entrar en SE Asia sin integrar los paradigmas de pago locales aumenta el abandono un 40%." },
-      { title: "Concepto 3: Transparencia en Tipo de Cambio (Cognitivo)", description: "Mostrar precios en USD en lugar de SGD/JPY localizado obliga a los usuarios a calcular tipos de cambio manualmente, generando fatiga de checkout." }
+      { title: "Concept 1: Cross-Border Card Settlement Latency", description: "Routing local credit card processing through US gateways leads to a 15% transaction decline rate. Local acquirer routing solves this." },
+      { title: "Concept 2: Local Payment Trust Gaps (Trust Deficit)", description: "In Singapore, PayNow holds a 65% market share. Rushing to enter SE Asia without integrating local payment paradigms increases abandonment by 40%." },
+      { title: "Concept 3: Foreign Exchange Transparency (Cognitive)", description: "Showing USD pricing instead of localized SGD/JPY currencies forces users to compute exchange rates manually, leading to checkout fatigue." }
     ],
-    quizQuestion: "Una plataforma CRM se expande a Japón. La conversión en checkout cae un 40%. Solo aceptan Visa/Mastercard en USD, ignorando JCB y precios en Yen. Identifica la fricción principal.",
+    quizQuestion: "CRM platform expands to Japan. Checkout conversion drops 40%. They only accept Visa/Mastercard in USD, ignoring JCB and Yen pricing. Identify primary friction.",
     quizAnswers: [
-      "Déficit de Valor: Los usuarios japoneses no ven el valor del CRM",
-      "Confianza y Cognitivo: Ausencia de precios en Yen local y canales de pago JCB",
-      "Técnico: Carga lenta de páginas desde servidores en EE.UU."
+      "Value Deficit: Japanese users don't see CRM value",
+      "Trust & Cognitive: Lack of local Yen pricing and JCB payment channels",
+      "Technical: Slow page loads from US servers"
     ],
-    quizExplanation: "Confianza y Cognitivo. Los compradores B2B japoneses requieren opciones de pago locales (JCB) y total claridad en precios (JPY) para autorizar gasto corporativo."
+    quizExplanation: "Trust & Cognitive. Japanese B2B users require local payment options (JCB) and absolute pricing clarity (JPY) to authorize corporate spending."
   }
 ];
 
@@ -145,66 +145,66 @@ const CHALLENGE_ELEVATIONS: Record<string, {
 }> = {
   tiktok: {
     gaps: [
-      { label: "Brecha de Carga Cognitiva", current: 40, target: 85, colorClass: "text-[#C85C5C]", barColor: "from-[#C85C5C] to-[#D4A853]" },
-      { label: "Brecha de Ciencia del Comportamiento", current: 45, target: 90, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" }
+      { label: "Cognitive Load Gap", current: 40, target: 85, colorClass: "text-[#C85C5C]", barColor: "from-[#C85C5C] to-[#D4A853]" },
+      { label: "Behavioral Science Gap", current: 45, target: 90, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" }
     ],
     studyPlan: [
-      { step: "01", title: "Reducción de Peso del Payload Móvil", desc: "Dividir bundle y lazy-load de assets pesados para garantizar que el chunk JS inicial sea inferior a 150KB para conexiones 3G lentas." },
-      { step: "02", title: "Mitigación de Retrasos en Gateway SMS", desc: "Optimizar el enrutamiento del proveedor SMS e integrar una cuenta regresiva de 60s antes de reenvíos, siguiendo los protocolos de reducción de esfuerzo de Fogg." },
-      { step: "03", title: "Alineación de Confianza Lingüística", desc: "Reescribir las instrucciones de onboarding usando coloquialismos regionales en Hindi/lenguas locales en lugar de inglés frío y traducido automáticamente." }
+      { step: "01", title: "Mobile Payload Weight Reduction", desc: "Bundle split and lazy load heavy assets to ensure the initial JS chunk is under 150KB for poor 3G connections." },
+      { step: "02", title: "SMS Gateway Delay Mitigations", desc: "Optimize SMS provider routing and integrate a 60-second countdown before re-requests, matching Fogg's effort reduction protocols." },
+      { step: "03", title: "Linguistic Trust Alignment", desc: "Rewrite onboarding instructions using common Hindi/regional colloquialisms rather than cold, machine-translated English." }
     ],
     articles: [
-      { num: 1, category: "Carga Cognitiva", categoryColor: "text-[#C85C5C]", title: "Fricción en Formularios Móviles y Optimización Conductual de Fogg", summary: "Reducción del esfuerzo de tareas en páginas de onboarding para entornos móviles de alta fricción.", body: "Cuando se opera en entornos móviles con alta latencia (ej. red 3G), cualquier incremento menor de tarea (como cambiar pantallas o esperar códigos SMS) provoca abandono. Al optimizar campos de formulario, reducir requisitos de entrada y diseñar instrucciones en línea simples, las plataformas SaaS pueden aumentar sus tasas de completitud de registro móvil hasta un 45%." },
-      { num: 2, category: "Comportamiento", categoryColor: "text-[#D4A853]", title: "Protocolos de Resiliencia de Gateway SMS en Mercados Emergentes", summary: "Gestión de códigos OTP retrasados usando rutas SMS transaccionales locales.", body: "Los códigos OTP retrasados llevan a los usuarios a hacer clic en 'Reenviar' repetidamente, acumulando colas en el gateway. Implementar contadores regresivos inteligentes del lado del cliente y elegir agregadores SMS regionales de primer nivel (ej. rutas locales de Twilio) previene el fallo de activación." },
-      { num: 3, category: "Confianza", categoryColor: "text-[#D4A853]", title: "Señales de Confianza Lingüística y Copywriting Hiper-Localizado", summary: "Cómo los matices de traducción impactan la seguridad percibida y el estatus en apps localizadas.", body: "Las traducciones literales carecen de autoridad local y generan déficits de confianza. Colaborar con copywriters locales para usar modismos regionales en acciones clave de generación de confianza (como permisos de facturación) mejora drásticamente la conversión." }
+      { num: 1, category: "Cognitive Load", categoryColor: "text-[#C85C5C]", title: "Mobile Form Friction & Fogg Behavioral Optimization", summary: "Reducing task effort in onboarding pages for high-friction mobile environments.", body: "When operating in mobile environments with high latency (e.g., 3G network), any minor task increase (like switching screens or waiting for SMS codes) causes user drop-off. By optimizing form fields, reducing input requirements, and designing simple inline instructions, SaaS platforms can increase their mobile signup completion rates by up to 45%." },
+      { num: 2, category: "Behavior", categoryColor: "text-[#D4A853]", title: "SMS Gateway Resilience Protocols in Developing Markets", summary: "Handling delayed OTP verification codes using local transactional SMS routes.", body: "Delayed OTP codes lead to users clicking 'Resend' repeatedly, compounding gateway queues. Implementing smart client-side countdowns and choosing top-tier regional SMS aggregators (e.g., Twilio local routes) prevents activation failure." },
+      { num: 3, category: "Trust", categoryColor: "text-[#D4A853]", title: "Linguistic Trust Signals & Hyper-Localized Copywriting", summary: "How translation nuances impact perceived security and status in localized apps.", body: "Literal translations lack local authority and breed trust deficits. Collaborating with local copywriters to use regional idioms for critical trust-building actions (like billing permissions) dramatically improves conversion." }
     ]
   },
   figma: {
     gaps: [
-      { label: "Brecha de Carga Cognitiva", current: 55, target: 90, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" },
-      { label: "Brecha de Lógica de Precios", current: 60, target: 95, colorClass: "text-[#5C9A6B]", barColor: "from-[#5C9A6B] to-[#D4A853]" }
+      { label: "Cognitive Load Gap", current: 55, target: 90, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" },
+      { label: "Pricing Logic Gap", current: 60, target: 95, colorClass: "text-[#5C9A6B]", barColor: "from-[#5C9A6B] to-[#D4A853]" }
     ],
     studyPlan: [
-      { step: "01", title: "Flujo de Ingesta Fiscal Diferida", desc: "Permitir a los admins de equipo pagar primero, e ingerir identificadores VAT/NIF corporativos post-compra dentro del portal de facturación." },
-      { step: "02", title: "Simulador Interactivo de Expansión de Factura", desc: "Construir un slider interactivo en línea que muestre el coste mensual preciso por cambio de puesto de diseñador antes de hacer clic en 'Actualizar'." },
-      { step: "03", title: "Simplificación del Formulario de Pago B2B", desc: "Eliminar campos de Dirección de Facturación innecesarios, utilizando la verificación de solo código postal de Stripe donde sea posible." }
+      { step: "01", title: "Deferred Tax Ingestion Flow", desc: "Allow team admins to pay first, and ingest VAT/corporate tax identifiers post-purchase inside the billing portal." },
+      { step: "02", title: "Interactive Invoice Expansion Simulator", desc: "Build an inline interactive slider showing the precise monthly cost per designer seat change before clicking 'Upgrade'." },
+      { step: "03", title: "B2B Payment Form Simplification", desc: "Remove unnecessary Billing Address input fields, relying on Stripe's smart postal-code-only verification where possible." }
     ],
     articles: [
-      { num: 1, category: "Carga Cognitiva", categoryColor: "text-[#D4A853]", title: "Optimización de Checkout B2B y Diferimiento de Fricción Fiscal", summary: "Por qué exigir números de identificación fiscal corporativa durante el checkout aumenta el abandono.", body: "Exigir números VAT/NIF a mitad del checkout obliga a los compradores corporativos a buscar documentos internos, aumentando el tiempo y las tasas de salida. Mover la verificación del perfil fiscal a la configuración post-compra aumenta la conversión inmediata un 22%." },
-      { num: 2, category: "Precios", categoryColor: "text-[#5C9A6B]", title: "Modelos de Precios por Puesto y Widgets de Simulador de Factura", summary: "Uso de widgets interactivos para eliminar ambigüedad en la expansión de precios SaaS de alto ticket.", body: "La ansiedad de expansión de precios ocurre cuando los compradores corporativos temen cargos ocultos. Las representaciones de cálculos claros en tiempo real que muestran cambios de precio por adición de puesto generan confianza y llevan a tamaños de pedido promedio un 30% mayores." },
-      { num: 3, category: "Confianza", categoryColor: "text-[#D4A853]", title: "Señales de Confianza Enterprise y Tasas de Autorización de Tarjeta Corporativa", summary: "Minimizando rechazos bancarios y errores de autorización en transacciones B2B de alto valor.", body: "Las transacciones con tarjetas corporativas de alto valor enfrentan verificaciones agresivas de fraude. Usar Stripe Radar, 3D Secure y códigos de categoría de comerciante claros previene rechazos falsos y proporciona un camino de fallback elegante." }
+      { num: 1, category: "Cognitive Load", categoryColor: "text-[#D4A853]", title: "B2B Checkout Optimization & Deferring Tax Friction", summary: "Why demanding corporate tax ID numbers during checkout increases cart abandonment.", body: "Demanding VAT/EIN registration numbers mid-checkout forces corporate buyers to search internal documents, increasing checkout time and exit rates. Moving tax profile verification to the post-purchase setup increases immediate conversion by 22%." },
+      { num: 2, category: "Pricing", categoryColor: "text-[#5C9A6B]", title: "Seat-Based Pricing Models & Invoice Simulator Widgets", summary: "Using interactive widgets to clear ambiguity in high-ticket SaaS pricing expansion.", body: "Pricing expansion anxiety occurs when corporate buyers fear hidden charges. Renders of clear, real-time calculations showing price changes per seat addition build confidence and lead to 30% larger average order sizes." },
+      { num: 3, category: "Trust", categoryColor: "text-[#D4A853]", title: "Enterprise Trust Signals & Corporate Card Authorization Rates", summary: "Minimizing bank declines and authorization errors for high-value B2B transactions.", body: "High-value corporate card transactions face aggressive fraud checking. Using Stripe Radar, 3D Secure, and clear merchant category codes prevents false declines and provides an elegant fallback path." }
     ]
   },
   vercel: {
     gaps: [
-      { label: "Brecha de Déficit de Valor", current: 30, target: 85, colorClass: "text-[#C85C5C]", barColor: "from-[#C85C5C] to-[#D4A853]" },
-      { label: "Brecha de Déficit de Confianza", current: 50, target: 90, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" }
+      { label: "Value Deficit Gap", current: 30, target: 85, colorClass: "text-[#C85C5C]", barColor: "from-[#C85C5C] to-[#D4A853]" },
+      { label: "Trust Deficit Gap", current: 50, target: 90, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" }
     ],
     studyPlan: [
-      { step: "01", title: "Diseño de Compensación de Valor Recíproco", desc: "Recompensar explícitamente el opt-in de telemetría desbloqueando una función premium del dashboard (ej. caché de carga un 10% más rápido)." },
-      { step: "02", title: "Verificación de Hash Anonimizado", desc: "Publicar código open source detallando cómo el código cliente es hasheado localmente, probando que ningún repositorio en bruto es transmitido." },
-      { step: "03", title: "Rediseño de Micro-Copy de Consentimiento", desc: "Cambiar el estándar 'Permitir seguimiento' a 'Acelerar el renderizado de UI con métricas de análisis en caché en la nube'." }
+      { step: "01", title: "Reciprocal Value Offset Design", desc: "Explicitly reward opting in to telemetry by unlocking a premium dashboard feature (e.g. 10% faster load caching)." },
+      { step: "02", title: "Anonymized Hash Verification", desc: "Publish open source code detailing how client code is hashed locally, proving zero raw repositories are transmitted." },
+      { step: "03", title: "Micro-Copy Consent Redesign", desc: "Change standard 'Allow tracking' to 'Accelerate UI rendering with cloud-cached analytics metrics'." }
     ],
     articles: [
-      { num: 1, category: "Déficit de Valor", categoryColor: "text-[#C85C5C]", title: "Principio de Reciprocidad y Compensaciones de Valor en Flujos de Opt-in", summary: "Diseñando intercambios de beneficio mutuo para superar los muros de privacidad de datos de usuarios.", body: "Solicitar telemetría de usuario sin un beneficio recíproco inmediato lleva al opt-out automático. Ofrecer ventajas claras (como mejoras de rendimiento o caché localizado) aumenta las tasas de consentimiento hasta un 35%." },
-      { num: 2, category: "Déficit de Confianza", categoryColor: "text-[#D4A853]", title: "Telemetría de Analítica Privacy-First y Soberanía de Datos", summary: "Ganando confianza de developers técnicos a través de transparencia criptográfica.", body: "Los developers son altamente suspicaces de los rastreadores de telemetría. Demostrar que todos los puntos de datos ingeridos están salteados y hasheados del lado del cliente, con plena adherencia al GDPR, elimina los miedos de responsabilidad corporativa." },
-      { num: 3, category: "Copywriting", categoryColor: "text-[#D4A853]", title: "Análisis de Micro-Copy: Diseñando Elementos de Consentimiento sin Fricción", summary: "Cómo los ajustes de micro-copy cambian la percepción del usuario de 'espionaje' a 'optimización'.", body: "Las palabras importan. Cambiar el texto del banner de consentimiento de jerga de seguimiento pasiva a mejoras de rendimiento activas del usuario altera el marco cognitivo de defensa a cooperación." }
+      { num: 1, category: "Value Deficit", categoryColor: "text-[#C85C5C]", title: "Reciprocity Principle & Value Offsets in Opt-in Flows", summary: "Designing mutual-benefit exchanges to bypass user data privacy walls.", body: "Asking for user telemetry without an immediate reciprocal benefit leads to automatic opt-out. Offering clear advantages (such as performance upgrades or localized caching) increases consent rates by up to 35%." },
+      { num: 2, category: "Trust Deficit", categoryColor: "text-[#D4A853]", title: "Privacy-First Analytics Telemetry & Data Sovereignty", summary: "Gaining technical developer trust through cryptographic transparency.", body: "Developers are highly suspicious of telemetry trackers. Demonstrating that all ingested data points are salted and hashed client-side, with full adherence to GDPR, removes corporate liability fears." },
+      { num: 3, category: "Copywriting", categoryColor: "text-[#D4A853]", title: "Micro-Copy Teardown: Designing Frictionless Consent Elements", summary: "How micro-copy adjustments change user perception from 'spying' to 'optimizing'.", body: "Words matter. Shifting consent banner text from passive telemetry-oriented tracking jargon to active user-performance enhancements alters the cognitive frame from defense to cooperation." }
     ]
   },
   saas_asia: {
     gaps: [
-      { label: "Brecha de Fiscalidad & Compliance", current: 50, target: 95, colorClass: "text-[#C85C5C]", barColor: "from-[#C85C5C] to-[#D4A853]" },
-      { label: "Brecha de Sistemas Técnicos", current: 40, target: 90, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" }
+      { label: "Tax & Compliance Gap", current: 50, target: 95, colorClass: "text-[#C85C5C]", barColor: "from-[#C85C5C] to-[#D4A853]" },
+      { label: "Technical Systems Gap", current: 40, target: 90, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" }
     ],
     studyPlan: [
-      { step: "01", title: "Configuración de Enrutamiento de Adquirente Soberano", desc: "Establecer raíles de adquisición locales en Singapur (ej. procesadores DBS/UOB) para evitar retrasos de liquidación internacional y tasas de rechazo >15%." },
-      { step: "02", title: "Auditoría de Localización Lingüística y de Moneda", desc: "Asegurar que los planes de precios se resuelvan en moneda nativa (SGD o JPY) con tipos impositivos locales (GST) automáticamente incluidos o diferidos post-checkout." },
-      { step: "03", title: "Integración de Wallet Local y Transferencia Bancaria", desc: "Configurar endpoints de PayNow (Singapur) y JCB (Japón). Verificar aprovisionamiento automático basado en webhook para capturar la cuota >60% de compradores sin tarjeta." }
+      { step: "01", title: "Sovereign Acquirer Routing Setup", desc: "Establish local acquiring rails in Singapore (e.g., DBS/UOB card processors) to bypass international settlement delays and 15%+ decline rates." },
+      { step: "02", title: "Linguistic and Currency Localization Audit", desc: "Ensure pricing plans resolve immediately in native currency (SGD or JPY) with local tax rates (GST) automatically factored in or deferred post-checkout." },
+      { step: "03", title: "Local Wallet & Bank Transfer Integration", desc: "Configure PayNow (Singapore) and JCB (Japan) endpoints. Verify automatic webhook-based provisioning to capture the 60%+ non-card buyer share." }
     ],
     articles: [
-      { num: 1, category: "Fiscal", categoryColor: "text-[#C85C5C]", title: "Reinversión Libre de Impuestos y LLC Pass-Through en SE Asia", summary: "Estructurando holdings bajo la exención FSI-S de Singapur y el marco del Art. 13(1)(a) para reinvertir beneficios SaaS.", body: "Al establecer una estructura holding Singapore Private Limited (Pte. Ltd.), los fundadores acceden a un sistema territorial de nivel único. Bajo el Art. 13(1)(a) de la Ley del Impuesto sobre la Renta, los ingresos de servicios de origen extranjero recibidos en Singapur están completamente exentos si el tipo del impuesto corporativo del país de origen es al menos del 15%." },
-      { num: 2, category: "Legal", categoryColor: "text-[#D4A853]", title: "Protocolos de Compliance SaaS bajo Directrices MAS de Singapur", summary: "Dominando la gestión del riesgo tecnológico (TRM) y las directivas de outsourcing definidas por la Autoridad Monetaria de Singapur.", body: "Las arquitecturas SaaS que operan en Singapur y sirven a fintechs, consultorías financieras o gestionan raíles de pago de alta frecuencia caen dentro del ámbito consultivo de las Directrices de Outsourcing y Gestión de Riesgos Tecnológicos (TRM) de la Autoridad Monetaria de Singapur (MAS)." },
-      { num: 3, category: "Checkout", categoryColor: "text-[#D4A853]", title: "Fricción de Pago Cross-Border: Optimizando Tasas de Checkout Local", summary: "Resolviendo latencia de gateways regionales, discrepancias de moneda y códigos de rechazo usando endpoints de adquisición local.", body: "La liquidación de tarjetas de crédito cross-border es una de las causas más comunes de fuga silenciosa de conversión. Enrutar transacciones a través de bancos adquirentes mercantiles locales (ej. DBS/UOB en Singapur, Sumitomo Mitsui en Japón) logra una tasa de autorización del 98%+." }
+      { num: 1, category: "Tax", categoryColor: "text-[#C85C5C]", title: "Tax-Free Reinvestment & PASS-Through LLCs in SE Asia", summary: "Structuring holding companies under Singapore FSI-S and Section 13(1)(a) tax exemption frameworks for reinvesting SaaS profits.", body: "By establishing a Singapore Private Limited (Pte. Ltd.) holding structure, founders access a single-tier territorial tax system. Under Section 13(1)(a) of the Income Tax Act, foreign-sourced service income received in Singapore is fully tax-exempt if the source country corporate tax rate is at least 15%." },
+      { num: 2, category: "Law", categoryColor: "text-[#D4A853]", title: "SaaS Compliance Protocols under SG MAS Guidelines", summary: "Mastering technology risk management (TRM) and outsourcing directives defined by the Monetary Authority of Singapore.", body: "SaaS architectures operating in Singapore that serve fintechs, financial consultancies, or handle high-frequency payment rails fall within the advisory scope of the Monetary Authority of Singapore (MAS) Guidelines on Outsourcing and Technology Risk Management (TRM)." },
+      { num: 3, category: "Checkout", categoryColor: "text-[#D4A853]", title: "Cross-Border Payment Friction: Optimizing Local Checkout Rates", summary: "Resolving regional gateway latency, currency mismatches, and credit card decline codes by using local acquiring endpoints.", body: "Cross-border credit card settlement is one of the most common causes of silent conversion leakage. Routing transactions through local merchant acquiring banks (e.g. DBS/UOB in Singapore, Sumitomo Mitsui in Japan) achieves a 98%+ authorization rate." }
     ]
   }
 };
@@ -261,7 +261,7 @@ export default function LearningDashboard() {
   const [expandedArticle, setExpandedArticle] = useState<number | null>(null);
   const [conceptsMastered, setConceptsMastered] = useState(14);
 
-  // Telemetría Cognitiva
+  // Cognitive Telemetry
   const [typingStartedAt, setTypingStartedAt] = useState<number | null>(null);
   const [diagnosticVelocity, setDiagnosticVelocity] = useState<number | null>(null);
   const [coverageScore, setCoverageScore] = useState<number | null>(null);
@@ -325,7 +325,7 @@ export default function LearningDashboard() {
         headers: { ...headers, "Content-Type": "application/json" },
         body: JSON.stringify({ feedback: feedbackText })
       });
-      alert(`✓ Selección Confirmada: Borrador ${selectedDraftId} pesos reforzados.`);
+      alert(`✓ Selection Confirmed: Draft ${selectedDraftId} weights reinforced.`);
       setFeedbackText("");
       setSelectedDraftId(null);
     } catch (err) { console.error("Error saving draft feedback:", err); }
@@ -394,10 +394,10 @@ export default function LearningDashboard() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-mono text-xs text-[#5C9A6B] border border-[#5C9A6B]/25 px-3 py-1 rounded-full bg-[#5C9A6B]/5">
-            {conceptsMastered} Conceptos Dominados
+            {conceptsMastered} Concepts Mastered
           </span>
           <span className="font-mono text-xs text-[#D4A853] border border-[#D4A853]/25 px-3 py-1 rounded-full bg-[#D4A853]/5">
-            IP Factory Activo
+            IP Factory Active
           </span>
         </div>
       </div>
@@ -405,7 +405,7 @@ export default function LearningDashboard() {
       {/* Tabs */}
       <div className="flex border-b border-[#D4A853]/10 gap-6 relative z-10">
         {([
-          { key: 'hyper_leap', label: 'Modo Combate' },
+          { key: 'hyper_leap', label: 'Combat Mode' },
           { key: 'socratic',   label: 'IP Lab' },
         ] as const).map(tab => (
           <button
@@ -441,10 +441,10 @@ export default function LearningDashboard() {
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl">
                 <div className="flex items-center justify-between mb-4">
                   <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase">
-                    01 — Selección de Escenario
+                    01 — Scenario Selection
                   </span>
                   <span className="font-mono text-[10px] uppercase tracking-wider text-[#C85C5C] border border-[#C85C5C]/20 px-2 py-0.5 rounded-full bg-[#C85C5C]/5">
-                    Modo Divergente
+                    Divergent Mode
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -466,7 +466,7 @@ export default function LearningDashboard() {
                     >
                       <div className="text-xs font-bold leading-snug line-clamp-2">{cs.title}</div>
                       {selectedChallengeId === cs.id && (
-                        <span className="text-[10px] text-[#D4A853] block mt-1 uppercase tracking-wider">Activo</span>
+                        <span className="text-[10px] text-[#D4A853] block mt-1 uppercase tracking-wider">Active</span>
                       )}
                     </button>
                   ))}
@@ -476,17 +476,17 @@ export default function LearningDashboard() {
               {/* Main Challenge Card */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-4">
                 <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase">
-                  02 — Escenario Crisis
+                  02 — Crisis Scenario
                 </span>
                 <h3 className="text-base font-bold text-white font-serif leading-snug">{activeChallenge.title}</h3>
 
                 <div className="border border-[#D4A853]/10 bg-[#0A0908] p-4 rounded-xl text-xs space-y-3">
                   <div>
-                    <span className="text-[#D4A853] font-semibold block uppercase text-[10px] tracking-wider mb-1">Cuello de Botella — Métricas</span>
+                    <span className="text-[#D4A853] font-semibold block uppercase text-[10px] tracking-wider mb-1">Metrics Bottleneck</span>
                     <p className="text-[#B0A89E] leading-relaxed">{activeChallenge.metrics}</p>
                   </div>
                   <div className="border-t border-[#D4A853]/8 pt-3">
-                    <span className="text-[#D4A853] font-semibold block uppercase text-[10px] tracking-wider mb-1">Contexto Ambiental</span>
+                    <span className="text-[#D4A853] font-semibold block uppercase text-[10px] tracking-wider mb-1">Environmental Context</span>
                     <p className="text-[#B0A89E] leading-relaxed">{activeChallenge.context}</p>
                   </div>
                 </div>
@@ -496,7 +496,7 @@ export default function LearningDashboard() {
                     {/* Friction options — 2 cols max */}
                     <div>
                       <label className="text-xs text-[#B0A89E] uppercase tracking-wider block mb-2">
-                        Aislar mecanismos de fricción (selecciona todos los que aplican):
+                        Isolate friction mechanisms (select all that apply):
                       </label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {activeChallenge.frictionOptions.map((option, idx) => {
@@ -528,7 +528,7 @@ export default function LearningDashboard() {
                     {/* Hypothesis */}
                     <div>
                       <label className="text-xs text-[#B0A89E] uppercase tracking-wider block mb-2">
-                        Hipótesis diagnóstica clínica:
+                        Clinical diagnostic hypothesis:
                       </label>
                       <textarea
                         value={hlInput}
@@ -560,7 +560,7 @@ export default function LearningDashboard() {
                         disabled={!hlInput.trim() || hlSelectedOptions.length === 0}
                         className="px-5 py-2.5 bg-[#D4A853] text-[#0A0908] text-xs font-mono font-bold uppercase tracking-wider transition-all hover:bg-[#E8C97A] active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-xl"
                       >
-                        Ejecutar Reverse-Reveal Socrático →
+                        Execute Socratic Reverse-Reveal →
                       </button>
                     </div>
                   </div>
@@ -573,18 +573,18 @@ export default function LearningDashboard() {
                     {/* Hypothesis recap */}
                     <div>
                       <h4 className="text-xs text-[#5C9A6B] uppercase tracking-widest font-semibold mb-1">
-                        ✓ Reverse-Reveal Socrático Completado
+                        ✓ Socratic Reverse-Reveal Complete
                       </h4>
                       <p className="text-xs text-[#B0A89E] leading-relaxed">
-                        Hipótesis: <span className="text-white italic">&ldquo;{hlInput}&rdquo;</span>
+                        Hypothesis: <span className="text-white italic">&ldquo;{hlInput}&rdquo;</span>
                       </p>
                     </div>
 
-                    {/* Telemetría Cognitiva */}
+                    {/* Cognitive Telemetry */}
                     {coverageScore !== null && (
                       <div className="border border-[#D4A853]/15 bg-[#0A0908]/60 p-4 rounded-xl">
                         <span className="font-mono text-[10px] text-[#D4A853]/70 uppercase tracking-widest block mb-3">
-                          Telemetría Cognitiva
+                          Cognitive Telemetry
                         </span>
                         <div className="grid grid-cols-3 gap-3 text-center">
                           <div>
@@ -626,7 +626,7 @@ export default function LearningDashboard() {
 
                       <div>
                         <span className="font-mono text-[10px] text-[#D4A853] tracking-widest uppercase block mb-1">
-                          Informe de Elevación — Mapa de Brechas Cognitivas
+                          Elevation Report — Cognitive Gap Map
                         </span>
                         <div className="space-y-3">
                           {elev.gaps.map((g, idx) => (
@@ -645,7 +645,7 @@ export default function LearningDashboard() {
 
                       <div className="border-t border-[#D4A853]/15 pt-4">
                         <span className="font-mono text-[10px] text-[#D4A853] tracking-widest uppercase block mb-3">
-                          Plan de Estudio Hyper-Leap
+                          Hyper-Leap Study Plan
                         </span>
                         <div className="space-y-2">
                           {elev.studyPlan.map((s, idx) => (
@@ -662,7 +662,7 @@ export default function LearningDashboard() {
 
                       <div className="border-t border-[#D4A853]/15 pt-4">
                         <span className="font-mono text-[10px] text-[#D4A853] tracking-widest uppercase block mb-3">
-                          Artículos Prioritarios (Cierre de Brechas)
+                          Priority Articles (Gap Closure)
                         </span>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                           {elev.articles.map((art) => (
@@ -687,7 +687,7 @@ export default function LearningDashboard() {
                                 )}
                               </div>
                               <span className="text-xs text-[#D4A853] font-bold mt-2">
-                                {expandedArticle === art.num ? "Cerrar ↑" : "Leer →"}
+                                {expandedArticle === art.num ? "Collapse ↑" : "Read →"}
                               </span>
                             </div>
                           ))}
@@ -741,25 +741,25 @@ export default function LearningDashboard() {
                         }}
                         className="px-4 py-2 border border-[#D4A853]/25 text-xs text-[#D4A853] hover:bg-[#D4A853]/5 cursor-pointer uppercase font-mono rounded-xl transition-colors"
                       >
-                        Exportar Nodo IP ↓
+                        Export IP Node ↓
                       </button>
                       <button
                         type="button"
                         onClick={() => {
                           setRadarDomains(prev =>
                             prev.map(d => {
-                              if (d.name === "Economía Conductual") return { ...d, score: Math.min(d.score + 10, 100) };
-                              if (d.name === "Sistemas Técnicos") return { ...d, score: Math.min(d.score + 12, 100) };
-                              if (d.name === "Fiscalidad & Compliance") return { ...d, score: Math.min(d.score + 8, 100) };
+                              if (d.name === "Behavioral Economics") return { ...d, score: Math.min(d.score + 10, 100) };
+                              if (d.name === "Technical Systems") return { ...d, score: Math.min(d.score + 12, 100) };
+                              if (d.name === "Tax & Compliance") return { ...d, score: Math.min(d.score + 8, 100) };
                               return d;
                             })
                           );
                           setConceptsMastered(prev => prev + 3);
-                          alert("✓ Conceptos absorbidos. Radar actualizado.");
+                          alert("✓ Concepts absorbed. Radar updated.");
                         }}
                         className="px-4 py-2 bg-[#5C9A6B]/10 border border-[#5C9A6B]/30 text-[#5C9A6B] text-xs font-bold uppercase tracking-wider cursor-pointer font-mono rounded-xl transition-colors hover:bg-[#5C9A6B]/20 ml-auto"
                       >
-                        Absorber Conceptos
+                        Absorb Concepts
                       </button>
                     </div>
                   </motion.div>
@@ -773,7 +773,7 @@ export default function LearningDashboard() {
               {/* Cognitive Radar */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl">
                 <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase block mb-4">
-                  03 — Radar Cognitivo
+                  03 — Cognitive Radar
                 </span>
                 <div className="flex justify-center">
                   <svg width={radarW} height={radarH} className="overflow-visible">
@@ -817,7 +817,7 @@ export default function LearningDashboard() {
                 </div>
                 <div className="mt-4 space-y-1.5 border-t border-[#D4A853]/8 pt-3">
                   <div className="flex justify-between items-center text-xs mb-2">
-                    <span className="text-[#D4A853] uppercase tracking-wider font-bold text-[10px]">Conceptos Dominados</span>
+                    <span className="text-[#D4A853] uppercase tracking-wider font-bold text-[10px]">Concepts Mastered</span>
                     <span className="text-white font-bold bg-[#D4A853]/10 px-2 py-0.5 rounded-full border border-[#D4A853]/20 text-[10px]">{conceptsMastered}</span>
                   </div>
                   {radarDomains.map(d => (
@@ -832,10 +832,10 @@ export default function LearningDashboard() {
               {/* Quick Diagnostic Quiz */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-3">
                 <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase">
-                  04 — Diagnóstico Rápido
+                  04 — Quick Diagnostic
                 </span>
                 <div className="border border-[#D4A853]/8 bg-[#0A0908] p-3 rounded-xl">
-                  <span className="text-[10px] text-[#D4A853] uppercase block mb-1">Escenario Activo</span>
+                  <span className="text-[10px] text-[#D4A853] uppercase block mb-1">Active Scenario</span>
                   <p className="text-xs text-[#B0A89E] leading-relaxed">{activeChallenge.quizQuestion}</p>
                 </div>
                 <div className="space-y-1.5">
@@ -863,7 +863,7 @@ export default function LearningDashboard() {
                       ? "bg-[#5C9A6B]/5 border-[#5C9A6B]/20 text-[#5C9A6B]"
                       : "bg-[#C85C5C]/5 border-[#C85C5C]/20 text-[#C85C5C]"
                   }`}>
-                    {quizScore === 100 ? "✓ CORRECTO. " : "✗ INCORRECTO. "}
+                    {quizScore === 100 ? "✓ CORRECT. " : "✗ INCORRECT. "}
                     {activeChallenge.quizExplanation}
                   </div>
                 )}
@@ -885,7 +885,7 @@ export default function LearningDashboard() {
             <div className="xl:col-span-8 space-y-4">
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl">
                 <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase block mb-4">
-                  01 — Motor de Borradores Socrático
+                  01 — Socratic Draft Engine
                 </span>
 
                 {/* Article selector chips — always scrollable, never grid */}
@@ -979,10 +979,10 @@ export default function LearningDashboard() {
                           <span className="font-mono text-xs text-[#D4A853] tracking-wider uppercase block mb-2">Draft 0{num}</span>
                           <p className="text-xs text-[#B0A89E] leading-relaxed font-mono">
                             {num === 1
-                              ? "Focalizarse en fricción de conversión high-ticket. Destacar déficits visuales adyacentes a los triggers de clic clave."
+                              ? "Focus on high-ticket conversion friction. Highlight visual deficits adjacent to key click triggers."
                               : num === 2
-                              ? "Analizar restricciones de carga cognitiva usando el Modelo de Comportamiento de Fogg. Detallar umbrales de latencia."
-                              : "Utilizar fraseología de alto contraste y estatus, evitando clichés de consultoría para establecer autoridad inmediata."
+                              ? "Analyze cognitive load constraints using the Fogg Behavior Model. Detail latency thresholds."
+                              : "Utilize high-status contrast phrasing, avoiding consulting clichés to establish immediate authority."
                             }
                           </p>
                         </div>
@@ -1009,7 +1009,7 @@ export default function LearningDashboard() {
                       className="space-y-3 border-t border-[#D4A853]/15 pt-4 mt-4"
                     >
                       <label className="font-mono text-xs text-[#D4A853]/70 tracking-wider uppercase block">
-                        Notas de Refinamiento Socrático
+                        Socratic Refinement Notes
                       </label>
                       <textarea
                         value={feedbackText}
@@ -1030,7 +1030,7 @@ export default function LearningDashboard() {
                           onClick={submitSocraticPreference}
                           className="px-4 py-2 bg-[#D4A853] text-[#0A0908] text-xs font-mono font-bold uppercase tracking-wider cursor-pointer rounded-xl"
                         >
-                          Reforzar Pesos
+                          Reinforce Weights
                         </button>
                       </div>
                     </motion.div>
@@ -1045,7 +1045,7 @@ export default function LearningDashboard() {
               {/* Dialectic Chain — spine-based, zero flex-row */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl overflow-hidden">
                 <span className="font-mono text-[10px] text-[#D4A853]/70 tracking-[0.3em] uppercase block mb-5">
-                  02 — Cadena Dialéctica
+                  02 — Dialectic Chain
                 </span>
                 <div className="relative">
                   {/* Spine */}
@@ -1057,14 +1057,14 @@ export default function LearningDashboard() {
                     <div className="font-mono text-[10px] text-[#D4A853] uppercase mb-0.5">Product Strategist</div>
                     <div className="font-mono text-[10px] text-[#D4A853]/70 mb-1.5">Arg 01</div>
                     <p className="text-xs text-[#B0A89E] leading-relaxed">
-                      El funnel requiere reducción de opciones para minimizar la fatiga de decisión en checkout.
+                      Funnel requires card reduction to minimize decision fatigue on checkout.
                     </p>
                   </div>
 
                   {/* Relation label */}
                   <div className="relative pl-7 mb-2">
                     <div className="absolute left-[2px] top-0.5 font-mono text-[9px] text-[#7A6F65]">↓</div>
-                    <span className="font-mono text-[9px] text-[#7A6F65] uppercase">contradice</span>
+                    <span className="font-mono text-[9px] text-[#7A6F65] uppercase">contradicts</span>
                   </div>
 
                   {/* Node: Anti-thesis */}
@@ -1073,14 +1073,14 @@ export default function LearningDashboard() {
                     <div className="font-mono text-[10px] text-[#C85C5C] uppercase mb-0.5">Behavioral Scientist</div>
                     <div className="font-mono text-[10px] text-[#C85C5C]/40 mb-1.5">Pivot 02</div>
                     <p className="text-xs text-[#B0A89E] leading-relaxed">
-                      La reducción de opciones falla si el valor es indefinido. El slider calculador construye el habit loop primero.
+                      Card reduction fails if value is undefined. Calculator slider builds habit loop first.
                     </p>
                   </div>
 
                   {/* Relation label */}
                   <div className="relative pl-7 mb-2">
                     <div className="absolute left-[2px] top-0.5 font-mono text-[9px] text-[#5C9A6B]">↓</div>
-                    <span className="font-mono text-[9px] text-[#5C9A6B] uppercase">sintetiza</span>
+                    <span className="font-mono text-[9px] text-[#5C9A6B] uppercase">synthesizes</span>
                   </div>
 
                   {/* Node: Synthesis */}
@@ -1089,7 +1089,7 @@ export default function LearningDashboard() {
                     <div className="font-mono text-[10px] text-[#5C9A6B] uppercase mb-0.5">Linguistic Architect</div>
                     <div className="font-mono text-[10px] text-[#5C9A6B]/40 mb-1.5">Synthesis 03</div>
                     <p className="text-xs text-[#B0A89E] leading-relaxed">
-                      Encuadrar la calculadora como herramienta interactiva: el usuario aísla el valor, eliminando la ansiedad de facturación.
+                      Frame calculator as interactive tool: user isolates value, removing billing anxiety.
                     </p>
                   </div>
                 </div>
@@ -1097,12 +1097,12 @@ export default function LearningDashboard() {
 
               {/* Engine Config */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-4">
-                <h3 className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase">Config Motor Socrático</h3>
+                <h3 className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase">Socratic Engine Config</h3>
                 <div className="space-y-2 text-xs">
                   {[
-                    { label: "Agentes Activos", value: "3 (Strategist, Scientist, Architect)" },
-                    { label: "Versión KB", value: "v3.4.0" },
-                    { label: "Índice Socrático", value: "96.8 / 100" },
+                    { label: "Active Agents", value: "3 (Strategist, Scientist, Architect)" },
+                    { label: "KB Version", value: "v3.4.0" },
+                    { label: "Socratic Index", value: "96.8 / 100" },
                   ].map(row => (
                     <div key={row.label} className="flex justify-between gap-2">
                       <span className="text-[#B0A89E] flex-shrink-0">{row.label}:</span>
@@ -1111,13 +1111,13 @@ export default function LearningDashboard() {
                   ))}
                 </div>
                 <p className="text-xs text-[#B0A89E] leading-relaxed pt-2 border-t border-[#D4A853]/8">
-                  El Motor de Borradores Socrático sintetiza múltiples perspectivas expertas para construir documentos de análisis de conversión de alto estatus.
+                  The Socratic Draft Engine synthesizes multiple expert viewpoints to construct high-status conversion analysis documents.
                 </p>
               </div>
 
-              {/* Índice de Maestría */}
+              {/* Mastery Index */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-3">
-                <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase block">Índice de Maestría</span>
+                <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase block">Mastery Index</span>
                 {DOMAINS.map((d) => (
                   <div key={d.name}>
                     <div className="flex justify-between text-xs mb-1">
