@@ -58,21 +58,24 @@ serve(async (req) => {
     const stripeApiKey = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
     const origin = req.headers.get("origin") || "https://signal-and-friction.pages.dev";
 
+    // Certified Program price IDs (updated 2026-06-21)
+    const CERTIFIED_PRICES: Record<string, string> = {
+      annual:  "price_1TkqnwHv7TExyozUG4zwTCmP",  // $4,500 / year
+      monthly: "price_1TkqnwHv7TExyozUWjn59T5y",  // $450 / month
+      renewal: "price_1Tkqp5Hv7TExyozUQkj9swnM",  // $2,200 / year (Year 2+)
+    };
+
     if (action !== "activate") {
       // Create Stripe Checkout Session or Simulated URL
       if (stripeApiKey && stripeApiKey !== "sk_test_placeholder") {
         try {
+          const priceId = CERTIFIED_PRICES[tier] || CERTIFIED_PRICES.annual;
           const bodyParams = new URLSearchParams();
-          bodyParams.append("mode", tier === "monthly" ? "subscription" : "payment");
+          bodyParams.append("mode", "subscription"); // all tiers are recurring
           bodyParams.append("customer_email", email);
           bodyParams.append("success_url", `${origin}/certified?success=true&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&agency=${encodeURIComponent(agency)}&website=${encodeURIComponent(website || "")}&tier=${tier}&session_id={CHECKOUT_SESSION_ID}`);
           bodyParams.append("cancel_url", `${origin}/certified?cancelled=true`);
-          bodyParams.append("line_items[0][price_data][currency]", "usd");
-          bodyParams.append("line_items[0][price_data][product_data][name]", `S&F Certified™ License (${tier === "monthly" ? "Monthly" : "Lifetime"})`);
-          bodyParams.append("line_items[0][price_data][unit_amount]", tier === "monthly" ? "25000" : "250000"); // $250 or $2500
-          if (tier === "monthly") {
-            bodyParams.append("line_items[0][price_data][recurring][interval]", "month");
-          }
+          bodyParams.append("line_items[0][price]", priceId);
           bodyParams.append("line_items[0][quantity]", "1");
 
           const sessionRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {

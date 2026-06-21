@@ -152,6 +152,12 @@ export default function CertifiedClient() {
     }
   }, []);
 
+  // Stripe Payment Links — updated 2026-06-21
+  const PAYMENT_LINKS: Record<string, string> = {
+    annual:  "https://buy.stripe.com/00wfZhasLaTG2gl9EK5sA0j",  // $4,500/year
+    monthly: "https://buy.stripe.com/9B628rcATf9W7AF9EK5sA0k",  // $450/month
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -175,9 +181,9 @@ export default function CertifiedClient() {
         setSubmitted(true);
       }
     } catch (err) {
-      console.warn("Falling back to simulation:", err);
-      const origin = typeof window !== "undefined" ? window.location.origin : "https://signal-and-friction.pages.dev";
-      window.location.href = `${origin}/certified?success=true&name=${encodeURIComponent(formData.name)}&email=${encodeURIComponent(formData.email)}&agency=${encodeURIComponent(formData.agency)}&website=${encodeURIComponent(formData.website)}&tier=${tier}&simulated=true`;
+      console.warn("Edge Function unreachable — routing to Stripe Payment Link:", err);
+      const baseLink = PAYMENT_LINKS[tier] || PAYMENT_LINKS.annual;
+      window.location.href = `${baseLink}?prefilled_email=${encodeURIComponent(formData.email)}`;
     } finally {
       setLoading(false);
     }
