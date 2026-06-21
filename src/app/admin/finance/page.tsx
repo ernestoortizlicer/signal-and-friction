@@ -1073,6 +1073,11 @@ export default function PersonalFinanceCenter() {
                   consultingTax: spainIRPF(c),
                   pensionRisk: "amber",
                   consultingRisk: "red",
+                  lifeDesign: {
+                    costOfLiving: "~$2,500/mes", qolIndex: "7.2/10", stressLevel: "Alto",
+                    culturalFit: "10/10 Nativo", gastronomy: "Excelente", saasPrestige: "Medio",
+                    housing1br: "~$1,200/mes", etfTreatment: "19-21% IRPF", climate: "Mediterráneo / Continental", visaDifficulty: "N/A (ciudadano)",
+                  },
                 };
                 const hongKong = {
                   pensionTax: 0,
@@ -1080,7 +1085,12 @@ export default function PersonalFinanceCenter() {
                   consultingTax: hongKongSalariesTax(c),
                   pensionRisk: "green",
                   consultingRisk: c > 60000 ? "amber" : "green",
-                  consultingWarning: "Salaries Tax progresivo · Tipo estándar 15% · Allowance ~$16.9K · Muy competitivo",
+                  consultingWarning: "Salaries Tax progresivo · Tipo estándar 15% · Allowance ~$16.9K",
+                  lifeDesign: {
+                    costOfLiving: "~$4,500/mes", qolIndex: "7.0/10", stressLevel: "Muy Alto",
+                    culturalFit: "4/10", gastronomy: "Excelente", saasPrestige: "Alto",
+                    housing1br: "~$3,500/mes", etfTreatment: "0% plusvalías", climate: "Subtropical húmedo", visaDifficulty: "Alta (talent/inversión)",
+                  },
                 };
                 const uae = {
                   pensionTax: 0,
@@ -1088,7 +1098,12 @@ export default function PersonalFinanceCenter() {
                   consultingTax: uaeIT(c),
                   pensionRisk: "amber",
                   consultingRisk: "green",
-                  consultingWarning: "0% IRPF personal · Free Zone · Visa mínima 183 días · Sin DTT doble imposición",
+                  consultingWarning: "0% IRPF personal · Free Zone · Visa mínima 183 días",
+                  lifeDesign: {
+                    costOfLiving: "~$4,000/mes", qolIndex: "7.5/10", stressLevel: "Medio",
+                    culturalFit: "4/10", gastronomy: "Internacional", saasPrestige: "Alto",
+                    housing1br: "~$2,500/mes", etfTreatment: "0% (sin plusvalías)", climate: "Desierto, calor extremo", visaDifficulty: "Media (183 días/año)",
+                  },
                 };
                 const singapore = {
                   pensionTax: 0,
@@ -1097,7 +1112,55 @@ export default function PersonalFinanceCenter() {
                   pensionRisk: "green",
                   consultingRisk: c > 80000 ? "amber" : "green",
                   consultingWarning: "Territorial · Renta extranjera 0% · Progresivo hasta 22% en renta local",
+                  lifeDesign: {
+                    costOfLiving: "~$4,000/mes", qolIndex: "8.5/10", stressLevel: "Alto",
+                    culturalFit: "5/10", gastronomy: "Excelente (Asia)", saasPrestige: "Muy Alto",
+                    housing1br: "~$2,800/mes", etfTreatment: "0% plusvalías", climate: "Tropical ecuatorial", visaDifficulty: "Media (Employment Pass)",
+                  },
                 };
+                // Uruguay — 0% renta extranjera en holiday fiscal 10 años (D.148/007 Literal A)
+                const uruguay = {
+                  pensionTax: 0,
+                  pensionNote: "Renta extranjera: 0% en holiday 10 años (D.148/007 Literal A)",
+                  consultingTax: 0,
+                  pensionRisk: "green",
+                  consultingRisk: "green",
+                  consultingWarning: "LLC Wyoming exterior: 0% IRNR · Renta extranjera exenta en holiday",
+                  lifeDesign: {
+                    costOfLiving: "~$1,500/mes", qolIndex: "7.0/10", stressLevel: "Bajo",
+                    culturalFit: "8/10 (Español)", gastronomy: "Buena (carne, mate)", saasPrestige: "Bajo-Medio",
+                    housing1br: "~$650/mes", etfTreatment: "0% (holiday 10 años)", climate: "Templado oceánico", visaDifficulty: "Media ($1,500/mes mínimo)",
+                  },
+                };
+                // Paraguay — sistema territorial puro: renta exterior 0%
+                const paraguay = {
+                  pensionTax: 0,
+                  pensionNote: "IRP territorial: renta extranjera 0% · España retiene en origen",
+                  consultingTax: 0,
+                  pensionRisk: "green",
+                  consultingRisk: "green",
+                  consultingWarning: "Sistema territorial puro · LLC exterior: 0% · IRP 10% solo renta local",
+                  lifeDesign: {
+                    costOfLiving: "~$1,000/mes", qolIndex: "6.0/10", stressLevel: "Bajo",
+                    culturalFit: "7/10 (Español)", gastronomy: "Básica (carne, chipá)", saasPrestige: "Muy Bajo",
+                    housing1br: "~$450/mes", etfTreatment: "0% renta extranjera", climate: "Subtropical húmedo", visaDifficulty: "Fácil ($5,000 depósito)",
+                  },
+                };
+                // Filipinas — ciudadanos extranjeros solo tributan renta de fuente filipina
+                const philippines = {
+                  pensionTax: 0,
+                  pensionNote: "Ciudadano extranjero: solo renta fuente Filipinas gravada · Pensión exterior: 0%",
+                  consultingTax: 0,
+                  pensionRisk: "green",
+                  consultingRisk: "green",
+                  consultingWarning: "SRRV: ciudadanos extranjeros 0% sobre renta exterior · BIR confirmation",
+                  lifeDesign: {
+                    costOfLiving: "~$1,200/mes", qolIndex: "6.5/10", stressLevel: "Bajo",
+                    culturalFit: "5/10 (inglés)", gastronomy: "Buena-Básica", saasPrestige: "Medio",
+                    housing1br: "~$650/mes", etfTreatment: "0% renta extranjera", climate: "Tropical, tifones", visaDifficulty: "Media (SRRV $10,000)",
+                  },
+                };
+
                 type RiskKey = "green" | "amber" | "red";
 
                 const riskColor: Record<RiskKey, string> = {
@@ -1120,10 +1183,13 @@ export default function PersonalFinanceCenter() {
                 const pct = (tax: number, base: number) => base > 0 ? ((tax / base) * 100).toFixed(1) + "%" : "0%";
 
                 const countries = [
-                  { key: "spain", label: "España 🇪🇸",         sublabel: "Baseline · Autónomo",         data: spain,    overallRisk: "red" as RiskKey },
-                  { key: "hk",    label: "Hong Kong 🇭🇰",      sublabel: "Salaries Tax · Máx 15%",      data: hongKong, overallRisk: (c > 60000 ? "amber" : "green") as RiskKey },
-                  { key: "uae",   label: "EAU Zona Franca 🇦🇪", sublabel: "0% IRPF personal",            data: uae,      overallRisk: "green" as RiskKey },
-                  { key: "sg",    label: "Singapur 🇸🇬",       sublabel: "Territorial · Progresivo",    data: singapore, overallRisk: (c > 80000 ? "amber" : "green") as RiskKey },
+                  { key: "spain", label: "España 🇪🇸",         sublabel: "Baseline · Autónomo",           data: spain,       overallRisk: "red" as RiskKey,                                  recommended: false },
+                  { key: "hk",    label: "Hong Kong 🇭🇰",      sublabel: "Salaries Tax · Máx 15%",        data: hongKong,    overallRisk: (c > 60000 ? "amber" : "green") as RiskKey,          recommended: false },
+                  { key: "uae",   label: "EAU Zona Franca 🇦🇪", sublabel: "0% IRPF · Free Zone",           data: uae,         overallRisk: "green" as RiskKey,                                  recommended: false },
+                  { key: "sg",    label: "Singapur 🇸🇬",       sublabel: "Territorial · Progresivo",      data: singapore,   overallRisk: (c > 80000 ? "amber" : "green") as RiskKey,          recommended: false },
+                  { key: "uy",    label: "Uruguay 🇺🇾",         sublabel: "0% Renta Ext. · 10 años",       data: uruguay,     overallRisk: "green" as RiskKey,                                  recommended: true  },
+                  { key: "py",    label: "Paraguay 🇵🇾",        sublabel: "Territorial Puro · 0%",         data: paraguay,    overallRisk: "green" as RiskKey,                                  recommended: false },
+                  { key: "ph",    label: "Filipinas 🇵🇭",       sublabel: "0% Renta Ext. · SRRV",         data: philippines, overallRisk: "green" as RiskKey,                                  recommended: false },
                 ];
 
                 return (
@@ -1131,10 +1197,10 @@ export default function PersonalFinanceCenter() {
                     {/* Header */}
                     <div className="flex flex-wrap justify-between items-start gap-3 border-b border-[#D4A853]/8 pb-4">
                       <div>
-                        <h3 className="font-serif text-lg text-[#F5F0EB]">Simulador Fiscal — Jurisdicciones Internacionales</h3>
-                        <p className="font-mono text-xs text-[#D4A853]/70 mt-0.5 uppercase tracking-widest">v3 · Análisis Adversarial · Pensión + Consulting separados</p>
+                        <h3 className="font-serif text-lg text-[#F5F0EB]">Simulador Fiscal + Life Design — 7 Jurisdicciones</h3>
+                        <p className="font-mono text-xs text-[#D4A853]/70 mt-0.5 uppercase tracking-widest">v4 · Análisis Adversarial · Pensión + Consulting + Life Design</p>
                       </div>
-                      <span className="font-mono text-[10px] text-[#C85C5C] uppercase tracking-wider bg-[#C85C5C]/5 border border-[#C85C5C]/20 px-2.5 py-1 rounded">
+                      <span className="font-mono text-xs text-[#C85C5C] uppercase tracking-wider bg-[#C85C5C]/5 border border-[#C85C5C]/20 px-2.5 py-1 rounded">
                         ⚠ Estimaciones — verificar con asesor local
                       </span>
                     </div>
@@ -1149,7 +1215,7 @@ export default function PersonalFinanceCenter() {
                         <input type="range" min="0" max="20000" step="100" value={taxPension}
                           onChange={(e) => setTaxPension(Number(e.target.value))}
                           className="w-full h-1 bg-[#2A2218] rounded-lg appearance-none cursor-pointer accent-[#5C9A6B]" />
-                        <div className="flex justify-between text-[10px] font-mono text-[#7A6F65]">
+                        <div className="flex justify-between text-xs font-mono text-[#7A6F65]">
                           <span>$0</span><span>$10,000</span><span>$20,000</span>
                         </div>
                       </div>
@@ -1161,20 +1227,25 @@ export default function PersonalFinanceCenter() {
                         <input type="range" min="0" max="200000" step="1000" value={taxIncome}
                           onChange={(e) => setTaxIncome(Number(e.target.value))}
                           className="w-full h-1 bg-[#2A2218] rounded-lg appearance-none cursor-pointer accent-[#D4A853]" />
-                        <div className="flex justify-between text-[10px] font-mono text-[#7A6F65]">
+                        <div className="flex justify-between text-xs font-mono text-[#7A6F65]">
                           <span>$0</span><span>$100,000</span><span>$200,000</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Country cards */}
+                    {/* Country cards — 7 jurisdictions */}
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                      {countries.map(({ key, label, sublabel, data, overallRisk }) => {
+                      {countries.map(({ key, label, sublabel, data, overallRisk, recommended }) => {
                         const totalTax = data.pensionTax + data.consultingTax;
                         const totalIncome = p + c;
                         const netTotal = totalIncome - totalTax;
                         return (
-                          <div key={key} className={`border ${riskBorder[overallRisk]} ${riskBg[overallRisk]} p-4 rounded-xl space-y-3`}>
+                          <div key={key} className={`border ${riskBorder[overallRisk]} ${riskBg[overallRisk]} p-4 rounded-xl space-y-3 relative`}>
+                            {recommended && (
+                              <div className="absolute top-2 right-2 font-mono text-[9px] text-[#D4A853] bg-[#D4A853]/10 border border-[#D4A853]/25 px-1.5 py-0.5 rounded uppercase tracking-widest">
+                                Recomendado
+                              </div>
+                            )}
                             {/* Card header */}
                             <div className="border-b border-white/5 pb-2">
                               <div className={`font-mono text-xs font-bold ${riskColor[overallRisk]}`}>{label}</div>
@@ -1183,9 +1254,7 @@ export default function PersonalFinanceCenter() {
 
                             {/* Pension row */}
                             <div className="space-y-1">
-                              <div className="font-mono text-[10px] text-[#B0A89E] uppercase tracking-wider">
-                                Pensión IPT
-                              </div>
+                              <div className="font-mono text-[10px] text-[#B0A89E] uppercase tracking-wider">Pensión IPT</div>
                               <div className="flex justify-between text-xs font-mono">
                                 <span className="text-[#B0A89E]">Tax:</span>
                                 <span className={`font-bold ${riskColor[data.pensionRisk as RiskKey]}`}>
@@ -1197,9 +1266,7 @@ export default function PersonalFinanceCenter() {
 
                             {/* Consulting row */}
                             <div className="space-y-1 border-t border-white/5 pt-2">
-                              <div className="font-mono text-[10px] text-[#B0A89E] uppercase tracking-wider">
-                                Consulting (LLC)
-                              </div>
+                              <div className="font-mono text-[10px] text-[#B0A89E] uppercase tracking-wider">Consulting (LLC)</div>
                               <div className="flex justify-between text-xs font-mono">
                                 <span className="text-[#B0A89E]">Tax:</span>
                                 <span className={`font-bold ${riskColor[data.consultingRisk as RiskKey]}`}>
@@ -1220,12 +1287,36 @@ export default function PersonalFinanceCenter() {
                                 <span className={`font-bold ${riskColor[overallRisk]}`}>{fmt(totalTax)}</span>
                               </div>
                               <div className="flex justify-between text-xs font-mono">
-                                <span className="text-[#B0A89E]">Net take-home:</span>
+                                <span className="text-[#B0A89E]">Neto:</span>
                                 <span className="text-white font-bold">{fmt(netTotal)}</span>
                               </div>
-                              <div className="flex justify-between text-[10px] font-mono">
-                                <span className="text-[#7A6F65]">Eff. rate total:</span>
+                              <div className="flex justify-between text-xs font-mono">
+                                <span className="text-[#7A6F65]">Tipo efectivo:</span>
                                 <span className={riskColor[overallRisk]}>{pct(totalTax, totalIncome)}</span>
+                              </div>
+                            </div>
+
+                            {/* Life Design section */}
+                            <div className="border-t border-[#D4A853]/10 pt-2 space-y-1.5">
+                              <div className="font-mono text-[10px] text-[#D4A853]/70 uppercase tracking-widest mb-1">Life Design</div>
+                              <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+                                {[
+                                  { label: "Coste vida", value: data.lifeDesign.costOfLiving },
+                                  { label: "QoL", value: data.lifeDesign.qolIndex },
+                                  { label: "Estrés", value: data.lifeDesign.stressLevel },
+                                  { label: "Fit cultural", value: data.lifeDesign.culturalFit },
+                                  { label: "Gastronomía", value: data.lifeDesign.gastronomy },
+                                  { label: "SaaS prestige", value: data.lifeDesign.saasPrestige },
+                                  { label: "Housing 1BR", value: data.lifeDesign.housing1br },
+                                  { label: "ETF/Índice", value: data.lifeDesign.etfTreatment },
+                                  { label: "Clima", value: data.lifeDesign.climate },
+                                  { label: "Visa", value: data.lifeDesign.visaDifficulty },
+                                ].map(item => (
+                                  <div key={item.label} className="font-mono">
+                                    <span className="text-[9px] text-[#7A6F65] block">{item.label}</span>
+                                    <span className="text-[9px] text-[#B0A89E] leading-tight block">{item.value}</span>
+                                  </div>
+                                ))}
                               </div>
                             </div>
                           </div>
@@ -1235,14 +1326,14 @@ export default function PersonalFinanceCenter() {
 
                     {/* Consulting recharacterization knot */}
                     <div className="border border-[#C85C5C]/15 bg-[#C85C5C]/3 p-4 rounded-xl space-y-2">
-                      <div className="font-mono text-[10px] text-[#C85C5C] uppercase tracking-wider font-bold">
+                      <div className="font-mono text-xs text-[#C85C5C] uppercase tracking-wider font-bold">
                         Nudo crítico: recaracterización consulting a fuente local
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[10px] font-mono">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-mono">
                         {[
-                          { country: "Hong Kong", risk: "BAJO", detail: "Salaries Tax bien establecido · Máx 15% estándar · Autoridades receptivas · Sin riesgo recaracterización agresivo", color: "text-[#5C9A6B]" },
-                          { country: "EAU Zona Franca", risk: "MEDIO", detail: "0% IRPF confirmado · Free Zone legalmente sólida · Sustancia mínima requerida · Sin DTT con España", color: "text-[#D4A853]" },
-                          { country: "Singapur", risk: "BAJO", detail: "Territorial · Solo renta local gravada · DTT España-SG 2011 · Exige presencia real 183 días", color: "text-[#5C9A6B]" },
+                          { country: "Hong Kong", risk: "BAJO", detail: "Salaries Tax bien establecido · Máx 15% estándar · Autoridades receptivas", color: "text-[#5C9A6B]" },
+                          { country: "EAU Zona Franca", risk: "MEDIO", detail: "0% IRPF confirmado · Free Zone legalmente sólida · Sin DTT con España", color: "text-[#D4A853]" },
+                          { country: "Singapur", risk: "BAJO", detail: "Territorial · Solo renta local gravada · DTT España-SG 2011 · 183 días", color: "text-[#5C9A6B]" },
                         ].map(r => (
                           <div key={r.country} className="border border-white/5 bg-black/20 p-2.5 rounded-lg">
                             <div className={`${r.color} font-bold mb-0.5`}>{r.country} · {r.risk}</div>
@@ -1252,30 +1343,54 @@ export default function PersonalFinanceCenter() {
                       </div>
                     </div>
 
-                    {/* Recommendation + Spain exit verdict */}
+                    {/* Life Design — Recomendación Maestra */}
+                    <div className="border border-[#D4A853]/25 bg-[#D4A853]/3 p-5 rounded-xl space-y-3">
+                      <div className="font-mono text-xs text-[#D4A853] uppercase tracking-wider font-bold border-b border-[#D4A853]/10 pb-2">
+                        Life Design — Recomendación Maestra · Perfil Ernesto (IPT + LLC + Consultoría High-Ticket)
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+                        <div className="space-y-2">
+                          <div className="text-white font-bold">Fase 2 — Oct/Nov 2026 → 2029: Uruguay 🇺🇾</div>
+                          <div className="text-[#B0A89E] leading-relaxed">
+                            Coste de vida mínimo ($1,500/mes) · 0% renta extranjera en holiday 10 años · Fit cultural alto (español) · Bajo estrés · Visa rentista (condición: ingresos mínimos $1,500/mes demostrables) · Buffer mínimo requerido: $6,500
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="text-white font-bold">Fase 3 — 2029+: Singapur 🇸🇬 (si MRR &gt; $10K)</div>
+                          <div className="text-[#B0A89E] leading-relaxed">
+                            Máximo prestige SaaS · DTT España-SG 2011 · 0% renta extranjera territorial · Employment Pass accesible con consulting demostrable · Referencia para clientes Asia-Pacific
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-xs text-[#7A6F65] font-mono border-t border-[#D4A853]/10 pt-2">
+                        Paraguay como opción mínima-viable si liquidez &lt; $6,500 (visa más fácil, menor coste). Filipinas SRRV disponible desde $10K como alternativa tropical de bajo estrés.
+                      </div>
+                    </div>
+
+                    {/* Spain exit + old recommendation */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="border border-[#5C9A6B]/20 bg-[#5C9A6B]/3 p-4 rounded-xl space-y-1.5">
-                        <div className="font-mono text-[10px] text-[#5C9A6B] uppercase tracking-wider font-bold">
-                          Recomendación · Confianza 8/10
+                        <div className="font-mono text-xs text-[#5C9A6B] uppercase tracking-wider font-bold">
+                          Alternativa de Alto Prestige · Confianza 8/10
                         </div>
                         <div className="font-mono text-xs text-white font-bold">Singapur 🇸🇬 / Hong Kong 🇭🇰</div>
-                        <div className="font-mono text-[10px] text-[#B0A89E] leading-relaxed">
-                          Territorial sólido · DTT con España · Consulting LLC exterior 0% · Economías maduras · Sin riesgo recaracterización agresivo · Ideal para perfil high-ticket consultoría
+                        <div className="font-mono text-xs text-[#B0A89E] leading-relaxed">
+                          Territorial sólido · DTT con España · Consulting LLC exterior 0% · Economías maduras · Sin riesgo recaracterización agresivo · Ideal para perfil high-ticket consultoría escala $100K+
                         </div>
                       </div>
                       <div className="border border-[#C85C5C]/15 bg-[#C85C5C]/3 p-4 rounded-xl space-y-1.5">
-                        <div className="font-mono text-[10px] text-[#C85C5C] uppercase tracking-wider font-bold">
+                        <div className="font-mono text-xs text-[#C85C5C] uppercase tracking-wider font-bold">
                           Salida España · Bloqueador real
                         </div>
                         <div className="font-mono text-xs text-white font-bold">Concurso de acreedores</div>
-                        <div className="font-mono text-[10px] text-[#B0A89E] leading-relaxed">
+                        <div className="font-mono text-xs text-[#B0A89E] leading-relaxed">
                           Antes del vuelo: verificar arraigo con abogado concursal. Sin certificado de residencia fiscal extranjero en 2026, España mantiene residencia. 1 enero 2027 = salida limpia. 24 junio = riesgo formal pero bajo si consulting &lt; €3K en 2026.
                         </div>
                       </div>
                     </div>
 
-                    <div className="font-mono text-[10px] text-[#7A6F65] leading-relaxed border-t border-[#D4A853]/8 pt-3">
-                      Todos los cálculos son estimaciones con datos públicos. Hong Kong: Salaries Tax calculado sobre tipo estándar 15% vs. progresivo (el menor), allowance HKD 132,000. Singapur: tipos 2024/25 en SGD (USD × 1.35 aprox). EAU Zona Franca: 0% IRPF personal confirmado. Ninguna cifra substituye verificación con asesor fiscal habilitado en el país destino. Pensión IPT: clasificación bajo Art.7.f LIRPF y tratados DTT debe confirmarse con asesor español.
+                    <div className="font-mono text-xs text-[#7A6F65] leading-relaxed border-t border-[#D4A853]/8 pt-3">
+                      Todos los cálculos son estimaciones con datos públicos. Hong Kong: Salaries Tax calculado sobre tipo estándar 15% vs. progresivo (el menor), allowance HKD 132,000. Singapur: tipos 2024/25 en SGD (USD × 1.35 aprox). EAU Zona Franca: 0% IRPF personal confirmado. Uruguay: D.148/007 Literal A — renta extranjera exenta en holiday fiscal 10 años. Paraguay: sistema territorial puro, IRP 10% solo renta local. Filipinas: ciudadanos extranjeros tributan solo renta fuente filipina. Ninguna cifra substituye verificación con asesor fiscal habilitado en el país destino.
                     </div>
                   </div>
                 );
