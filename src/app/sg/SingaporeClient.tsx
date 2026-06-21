@@ -259,7 +259,6 @@ export default function SingaporeClient() {
             <div className="flex flex-wrap gap-2 pt-1">
               {[
                 { label: "Singapore Regional Office", icon: "🇸🇬" },
-                { label: "Global HQ: Montevideo 🇺🇾", icon: null },
                 { label: "PDPA Compliant", icon: null },
               ].map((chip) => (
                 <span key={chip.label} className="font-mono text-xs text-[#7A6F65] border border-[#D4A853]/10 px-2.5 py-1 rounded-full bg-[#D4A853]/[0.02]">
@@ -771,7 +770,7 @@ export default function SingaporeClient() {
 
       {/* ── Dual HQ Notice ──────────────────────────────── */}
       <div className="border-t border-[#D4A853]/10 bg-[#D4A853]/[0.02] px-6 py-3 font-mono text-xs text-[#7A6F65] text-center">
-        <span className="text-[#D4A853]">Global Structure:</span> Signal &amp; Friction · <span className="text-[#9A8F82]">Global HQ: Montevideo, Uruguay 🇺🇾</span> &nbsp;·&nbsp; <span className="text-[#9A8F82]">APAC Regional Office: Singapore 🇸🇬</span> &nbsp;·&nbsp; All APAC operations &amp; guarantees continue uninterrupted.
+        <span className="text-[#D4A853]">Global Structure:</span> Signal &amp; Friction · <span className="text-[#9A8F82]">APAC Regional Office: Singapore 🇸🇬</span> &nbsp;·&nbsp; All APAC operations &amp; guarantees continue uninterrupted.
       </div>
 
       {/* ── Footer ──────────────────────────────────────── */}
@@ -786,7 +785,7 @@ export default function SingaporeClient() {
           <Link href="/" className="hover:text-white transition-colors uppercase tracking-wider">Global Portal →</Link>
         </div>
         <div className="text-center text-[#4A4540] text-xs mt-1 md:mt-0">
-          Global HQ: Montevideo, Uruguay 🇺🇾 &nbsp;·&nbsp; APAC Regional Office: Singapore 🇸🇬
+          APAC Regional Office: Singapore 🇸🇬
         </div>
         <a href="/admin/login" className="hover:text-white transition-colors uppercase tracking-wider">
           Operator Console →

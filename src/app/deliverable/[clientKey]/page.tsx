@@ -43,5 +43,5 @@ export default async function Page({ params }: { params: Promise<{ clientKey: st
     }
   }
 
-  return <DeliverableClientView data={data} />;
+  return <DeliverableClientView data={data} staticClientKey={clientKey} />;
 }

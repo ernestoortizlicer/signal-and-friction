@@ -21,6 +21,16 @@ export interface ChecklistItem {
   tip: string;
 }
 
+export interface BeforeAfterData {
+  beforeTitle: string;
+  beforeIssue: string;
+  beforeFields: string[];
+  beforeBounce: string;
+  afterTitle: string;
+  afterDomain: string;
+  afterGain: string;
+}
+
 export interface DeliverableData {
   clientKey?: string;
   clientName: string;
@@ -30,6 +40,12 @@ export interface DeliverableData {
   segment?: 'high_ticket' | 'microdosing';
   currentPhase?: 'diagnostic' | 'intervention' | 'monitoring' | 'expansion' | 'autonomy';
   progressPercent?: number;
+  // Previously hardcoded — now dynamic per client
+  founderFocusScore?: number;
+  daysRemaining?: number;
+  guaranteeStatus?: string;
+  telemetryStatus?: string;
+  beforeAfter?: BeforeAfterData;
   learningModules?: LearningModule[];
   checklist?: ChecklistItem[];
   diagnosis: {
@@ -43,6 +59,7 @@ export interface DeliverableData {
 }
 
 export const ACME_FALLBACK: DeliverableData = {
+  clientKey: "acme-corp",
   clientName: "Acme Corp",
   date: "June 19, 2026",
   consultant: "Signal & Friction",
@@ -50,6 +67,19 @@ export const ACME_FALLBACK: DeliverableData = {
   segment: "microdosing",
   currentPhase: "diagnostic",
   progressPercent: 25,
+  founderFocusScore: 85,
+  daysRemaining: 23,
+  guaranteeStatus: "20% Growth Guarantee Active",
+  telemetryStatus: "✓ Traffic & Baseline Confirmed",
+  beforeAfter: {
+    beforeTitle: "Verify Billing & Setup Server",
+    beforeIssue: "Cognitive Load — 6 decision variables before dashboard access",
+    beforeFields: ["Phone Number", "Company Size", "Industry Type", "CRM Version", "AWS Region", "Billing Email"],
+    beforeBounce: "Bounce Probability: ~88%",
+    afterTitle: "Access Your Workspace",
+    afterDomain: "acme.signal-and-friction.app",
+    afterGain: "Calculated Conversion Gain: +350%",
+  },
   learningModules: [
     {
       id: "m-1",

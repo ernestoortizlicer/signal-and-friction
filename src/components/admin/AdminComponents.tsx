@@ -17,6 +17,7 @@ interface StatCardProps {
   accentColor?: string;
   trend?: "up" | "down" | "neutral";
   glowColor?: string;
+  sparklineData?: number[];
 }
 
 export function AdminStatCard({
@@ -25,7 +26,14 @@ export function AdminStatCard({
   detail,
   accentColor = "text-[#F5F0EB]",
   glowColor = "rgba(212,168,83,0.08)",
+  sparklineData,
 }: StatCardProps) {
+  const hasSparkline = sparklineData && sparklineData.length > 0;
+  const sparkMax = hasSparkline ? Math.max(...sparklineData, 1) : 1;
+  const BAR_W = 4;
+  const BAR_GAP = 2;
+  const SPARK_H = 20;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -44,6 +52,22 @@ export function AdminStatCard({
       </span>
       {detail && (
         <span className="text-xs text-[#9A8F82] font-mono">{detail}</span>
+      )}
+      {hasSparkline && (
+        <div className="mt-3 flex items-end gap-[2px]">
+          {sparklineData.map((v, i) => {
+            const barH = Math.max(2, Math.round((v / sparkMax) * SPARK_H));
+            return (
+              <div
+                key={i}
+                title={`$${v.toLocaleString()}`}
+                style={{ width: BAR_W, height: barH, marginRight: i < sparklineData.length - 1 ? BAR_GAP : 0 }}
+                className="bg-[#D4A853]/50 rounded-sm flex-shrink-0 self-end group-hover:bg-[#D4A853]/70 transition-colors"
+              />
+            );
+          })}
+          <span className="ml-auto font-mono text-[10px] text-[#5C5550] self-end pb-px">7d</span>
+        </div>
       )}
     </motion.div>
   );
@@ -214,7 +238,7 @@ export function RevenueProgressBar({
       </div>
       <div className="flex justify-between font-mono text-xs text-[#7A6F65]">
         <span>{displayPct}% complete</span>
-        <span>Phase 2: Uruguay 🇺🇾</span>
+        <span>Phase 2</span>
       </div>
     </div>
   );

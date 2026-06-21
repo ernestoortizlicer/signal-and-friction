@@ -181,10 +181,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <span className="font-mono text-xs text-[#7A6F65] tracking-[0.15em] uppercase hidden sm:block">
             Command Center
           </span>
-          <div className="w-px h-4 bg-[#D4A853]/10 hidden lg:block" />
-          <span className="font-mono text-xs text-[#D4A853] tracking-[0.1em] uppercase hidden lg:block">
-            Phase 2: Uruguay 🇺🇾
-          </span>
         </div>
 
         {/* Center: live telemetry chips */}

@@ -36,6 +36,8 @@ interface DashboardMetrics {
     guarantee_active?: boolean;
     expansion_score?: number;
     projectId?: string;
+    created_at?: string;
+    delivered_at?: string;
     guarantee?: {
       id: string;
       target_improvement_pct: number;
@@ -115,6 +117,17 @@ interface PromptVersion {
   created_at: string;
 }
 
+interface LeadRecord {
+  id: string;
+  email: string;
+  company: string | null;
+  website: string | null;
+  segment: 'DFY' | 'DWY';
+  answers: Record<string, unknown>;
+  source: string;
+  created_at: string;
+}
+
 const springConfig = { type: "spring" as const, stiffness: 100, damping: 18 };
 
 export default function AdminDashboard() {
@@ -122,7 +135,13 @@ export default function AdminDashboard() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [incidents, setIncidents] = useState<AIIncident[]>([]);
   const [promptVersions, setPromptVersions] = useState<PromptVersion[]>([]);
+  const [revenueSparkline, setRevenueSparkline] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
+  const [arrTotal, setArrTotal] = useState<number>(0);
+  const [leads, setLeads] = useState<LeadRecord[]>([]);
+  const [selectedLead, setSelectedLead] = useState<LeadRecord | null>(null);
+  const [showLeadDrawer, setShowLeadDrawer] = useState(false);
+  const [stripeSparklines, setStripeSparklines] = useState<number[]>([]);
 
   // Kanban Filter & Logs/Interactions states
   const [kanbanFilter, setKanbanFilter] = useState<string | null>(null);
@@ -133,6 +152,9 @@ export default function AdminDashboard() {
   const [showDiagnosticForm, setShowDiagnosticForm] = useState(false);
   const [loomUrl, setLoomUrl] = useState("");
   const [figmaUrl, setFigmaUrl] = useState("");
+  const [diagSignal, setDiagSignal] = useState("");
+  const [diagMechanism, setDiagMechanism] = useState("Cognitive Load");
+  const [diagRootCause, setDiagRootCause] = useState("");
   const [diagnosticError, setDiagnosticError] = useState("");
   const [mcpToast, setMcpToast] = useState("");
 
@@ -170,7 +192,11 @@ export default function AdminDashboard() {
     
     if (client.guarantee) {
       setModalTrafficGate(!!client.guarantee.traffic_gate_met);
-      setModalSlaGate(!!client.guarantee.sla_gate_met);
+      // Auto-compute SLA gate: delivered within 72h of lead created_at
+      const autoSla = client.created_at && client.delivered_at
+        ? (new Date(client.delivered_at).getTime() - new Date(client.created_at).getTime()) / 3600000 <= 72
+        : !!client.guarantee.sla_gate_met;
+      setModalSlaGate(autoSla);
       setModalIsolationGate(!!client.guarantee.isolation_gate_met);
       setModalTelemetryGate(!!client.guarantee.telemetry_gate_met);
       setModalTargetImprovement(client.guarantee.target_improvement_pct || 20);
@@ -380,10 +406,58 @@ export default function AdminDashboard() {
         })
       });
 
+      // 4. Write deliverable to Supabase — page goes live immediately, no rebuild needed
+      const clientKey = (selectedClient.company || selectedClient.name || "client")
+        .toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+      const deliverableData = {
+        clientKey,
+        clientName: selectedClient.company || selectedClient.name || "Client",
+        date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+        consultant: "Signal & Friction",
+        loomUrl,
+        figmaUrl: figmaUrl || null,
+        segment: (selectedClient.segment === "DFY" || selectedClient.segment === "high_ticket") ? "high_ticket" : "microdosing",
+        founderFocusScore: 85,
+        daysRemaining: 30,
+        guaranteeStatus: "20% Growth Guarantee Active",
+        telemetryStatus: "✓ Traffic & Baseline Confirmed",
+        diagnosis: {
+          signal: diagSignal || "Custom diagnostic analysis delivered via Loom walkthrough. See video for complete funnel signal breakdown.",
+          friction: {
+            mechanism: diagMechanism || "Cognitive Load",
+            rootCause: diagRootCause || "See Loom video for complete root cause analysis and recommended intervention stack.",
+          },
+          decisions: [],
+        },
+      };
+      await fetch(`${supabaseUrl}/rest/v1/deliverables`, {
+        method: "POST",
+        headers: {
+          ...headers,
+          "Content-Type": "application/json",
+          "Prefer": "resolution=merge-duplicates",
+        },
+        body: JSON.stringify({ client_key: clientKey, data: deliverableData, updated_at: new Date().toISOString() }),
+      });
+
+      // 5. Fire delivery notification email — non-fatal, idempotent
+      fetch(`/api/notify-delivery/${clientKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientEmail: selectedClient.contact_email,
+          clientName: selectedClient.company_name || selectedClient.company || "",
+          clientId: selectedClient.id,
+        }),
+      }).catch(() => {});
+
       setSelectedClient((prev: any) => prev ? { ...prev, status: "delivered" } : null);
       setShowDiagnosticForm(false);
       setLoomUrl("");
       setFigmaUrl("");
+      setDiagSignal("");
+      setDiagMechanism("Cognitive Load");
+      setDiagRootCause("");
       
       // Refresh interactions & logs
       const resLogs = await fetch(`${supabaseUrl}/rest/v1/activity_log?client_id=eq.${selectedClient.id}&order=created_at.desc`, { headers });
@@ -548,6 +622,45 @@ export default function AdminDashboard() {
       });
       const dataPrompts = resPrompts.ok ? await resPrompts.json() : [];
       setPromptVersions(dataPrompts);
+
+      // 4. Fetch revenue sparkline from protocol_executions (up to 7 payments, ascending)
+      const resSparkline = await fetch(
+        `${supabaseUrl}/rest/v1/protocol_executions?select=amount_total,executed_at&execution_stage=eq.minute_1_email&order=executed_at.asc&limit=7`,
+        { headers }
+      );
+      if (resSparkline.ok) {
+        const sparkData: Array<{ amount_total: number }> = await resSparkline.json();
+        setRevenueSparkline(sparkData.map(e => Math.round(e.amount_total / 100)));
+      }
+
+      // 5. ARR: sum of all payments
+      const resPayments = await fetch(
+        `${supabaseUrl}/rest/v1/payments?select=amount_total`,
+        { headers }
+      );
+      if (resPayments.ok) {
+        const paymentsData: Array<{ amount_total: number }> = await resPayments.json();
+        setArrTotal(paymentsData.reduce((sum, p) => sum + (p.amount_total || 0), 0));
+      }
+
+      // 6. Leads for Conversion Queue
+      const resLeads = await fetch(
+        `${supabaseUrl}/rest/v1/leads?select=*&order=created_at.desc&limit=20`,
+        { headers }
+      );
+      if (resLeads.ok) {
+        const leadsData = await resLeads.json();
+        setLeads(Array.isArray(leadsData) ? leadsData : []);
+      }
+
+      // 7. Stripe sparklines (non-fatal if Pages Function not deployed)
+      try {
+        const resSpark = await fetch('/api/stripe/sparklines');
+        if (resSpark.ok) {
+          const sparkData = await resSpark.json();
+          if (Array.isArray(sparkData.sparkline)) setStripeSparklines(sparkData.sparkline);
+        }
+      } catch { /* non-fatal */ }
 
       // Compute metrics
       const total = data.length;
@@ -780,17 +893,17 @@ export default function AdminDashboard() {
         {/* Navigation & Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#D4A853]/10 pb-8">
           <div>
-            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853]/60 block mb-2">Internal OS</span>
-            <h1 className="text-4xl font-serif text-white tracking-tight">Signal &amp; Friction Pipeline</h1>
+            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853]/60 block mb-2">OS Interno</span>
+            <h1 className="text-4xl font-serif text-white tracking-tight">Flujo de Ventas · Signal &amp; Friction</h1>
           </div>
           <div className="flex items-center gap-4 mt-4 md:mt-0">
             <span className="font-mono text-xs uppercase tracking-wider text-[#D4A853] border border-[#D4A853]/25 px-3 py-1 rounded bg-[#D4A853]/5">
-              Authenticated Admin Workspace
+              Área Admin Autenticada
             </span>
           </div>
         </header>
 
-        {/* Dual View Tabs Navigation */}
+        {/* Pestañas de navegación */}
         <div className="flex border-b border-[#D4A853]/8 gap-8">
           <button
             onClick={() => setActiveView('pipeline')}
@@ -798,7 +911,7 @@ export default function AdminDashboard() {
               activeView === 'pipeline' ? "border-[#D4A853] text-[#D4A853]" : "border-transparent text-[#7A6F65] hover:text-[#9A8F82]"
             }`}
           >
-            Pipeline &amp; Conversions
+            Pipeline y Conversiones
           </button>
           <button
             onClick={() => setActiveView('learning')}
@@ -806,7 +919,7 @@ export default function AdminDashboard() {
               activeView === 'learning' ? "border-[#D4A853] text-[#D4A853]" : "border-transparent text-[#7A6F65] hover:text-[#9A8F82]"
             }`}
           >
-            Continuous Learning OS
+            OS de Aprendizaje Continuo
             {criticalAlerts.length > 0 && (
               <span className="absolute top-0 right-[-14px] w-2 h-2 bg-[#C85C5C] rounded-full animate-pulse" />
             )}
@@ -823,14 +936,61 @@ export default function AdminDashboard() {
               transition={springConfig}
               className="space-y-12"
             >
-              {/* $1M Revenue Mission Progress */}
-              <RevenueProgressBar current={(m.dealsClosed || 0) * 350} target={1000000} />
+              {/* Dynamic ARR Trajectory Tracker — Feature 1 */}
+              {(() => {
+                const ARR_TARGET = 1_000_000;
+                const arrUsd = Math.round(arrTotal / 100);
+                const pct = Math.min((arrUsd / ARR_TARGET) * 100, 100);
+                const remaining = ARR_TARGET - arrUsd;
+                return (
+                  <div className="border border-[#D4A853]/20 bg-[#110F0D] p-6 rounded-2xl space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="font-mono text-xs uppercase tracking-[0.25em] text-[#D4A853]/60 block mb-1">Trayectoria ARR</span>
+                        <div className="flex items-baseline gap-3">
+                          <span className="font-serif text-3xl font-bold text-white">${arrUsd.toLocaleString()}</span>
+                          <span className="font-mono text-xs text-[#7A6F65]">/ objetivo $1.000.000</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-mono text-2xl font-bold text-[#D4A853]">{pct.toFixed(2)}%</span>
+                        <span className="font-mono text-xs text-[#7A6F65] block mt-0.5">${remaining.toLocaleString()} restantes</span>
+                      </div>
+                    </div>
+                    <div className="relative h-3 bg-black/60 border border-[#D4A853]/10 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full"
+                        style={{
+                          background: "linear-gradient(90deg, #7A5C1E 0%, #D4A853 60%, #F0CF7A 100%)",
+                          filter: "drop-shadow(0 0 6px rgba(212,168,83,0.5))",
+                        }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.max(pct, 0.5)}%` }}
+                        transition={{ type: "spring", stiffness: 60, damping: 20 }}
+                      />
+                    </div>
+                    {stripeSparklines.length > 0 && (
+                      <div className="flex items-end gap-1 h-8 pt-1">
+                        <span className="font-mono text-[9px] text-[#7A6F65] mr-1 self-end">7d</span>
+                        {stripeSparklines.map((v, i) => {
+                          const max = Math.max(...stripeSparklines, 1);
+                          const h = Math.max((v / max) * 100, 4);
+                          return (
+                            <div key={i} className="flex-1 rounded-sm bg-[#D4A853]/30 transition-all" style={{ height: `${h}%` }} title={`$${v}`} />
+                          );
+                        })}
+                        <span className="font-mono text-[9px] text-[#D4A853]/60 ml-1 self-end">today</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* 30-Day Sprint Tracker */}
               <section>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-mono text-xs text-[#D4A853]/60 tracking-[0.3em] uppercase">30-Day Sprint Tracker</span>
-                  <span className="font-mono text-xs text-[#7A6F65] border border-[#D4A853]/10 px-2 py-0.5 rounded-full">Phase 2 · $1M Path</span>
+                  <span className="font-mono text-xs text-[#D4A853]/60 tracking-[0.3em] uppercase">Sprint 30 Días</span>
+                  <span className="font-mono text-xs text-[#7A6F65] border border-[#D4A853]/10 px-2 py-0.5 rounded-full">Fase 2 · Ruta $1M</span>
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {(() => {
@@ -840,10 +1000,10 @@ export default function AdminDashboard() {
                     const mrr = htMrr + dwyMrr || clients * 350;
                     const pctToMillion = +((mrr * 12) / 10000).toFixed(1);
                     return [
-                      { label: "Clients Acquired", display: String(clients), accent: "text-[#5C9A6B]" },
+                      { label: "Clientes", display: String(clients), accent: "text-[#5C9A6B]" },
                       { label: "MRR", display: `$${mrr.toLocaleString()}`, accent: "text-[#D4A853]" },
-                      { label: "Cash Collected", display: `$${mrr.toLocaleString()}`, accent: "text-[#D4A853]" },
-                      { label: "% to $1M ARR", display: `${pctToMillion}%`, accent: "text-[#F5F0EB]" },
+                      { label: "Liquidez", display: `$${mrr.toLocaleString()}`, accent: "text-[#D4A853]" },
+                      { label: "% ARR $1M", display: `${pctToMillion}%`, accent: "text-[#F5F0EB]" },
                     ].map((card) => (
                       <div key={card.label} className="border border-[#D4A853]/15 bg-[#110F0D] p-4">
                         <div className="font-mono text-xs text-[#7A6F65] tracking-widest uppercase mb-2">{card.label}</div>
@@ -857,12 +1017,12 @@ export default function AdminDashboard() {
               {/* Analytics Scorecard Row */}
               <section className="grid grid-cols-2 lg:grid-cols-6 gap-4">
                 {[
-                  { label: "Total Leads", value: m.totalLeads, detail: "All profiles", color: "text-[#F5F0EB]" },
-                  { label: "High-Ticket", value: m.highTicketCount || 0, detail: "Concierge track", color: "text-[#D4A853]" },
-                  { label: "Microdosing", value: m.microdosingCount || 0, detail: "Autonomy track", color: "text-[#9A8F82]" },
-                  { label: "Outreach Sent", value: m.outreachSent, detail: "Beta DMs active", color: "text-[#D4A853]" },
-                  { label: "Diagnostics", value: m.diagnosticsDelivered, detail: "Loom briefs sent", color: "text-[#D4A853]" },
-                  { label: "Deals Closed", value: m.dealsClosed, detail: "Testimonial & paid", color: "text-[#5C9A6B]" },
+                  { label: "Leads Totales", value: m.totalLeads, detail: "Todos los perfiles", color: "text-[#F5F0EB]" },
+                  { label: "High-Ticket", value: m.highTicketCount || 0, detail: "Vía Concierge", color: "text-[#D4A853]" },
+                  { label: "Microdosing", value: m.microdosingCount || 0, detail: "Vía Autonomía", color: "text-[#9A8F82]" },
+                  { label: "Outreach Enviado", value: m.outreachSent, detail: "DMs Beta activos", color: "text-[#D4A853]" },
+                  { label: "Diagnósticos", value: m.diagnosticsDelivered, detail: "Briefs Loom entregados", color: "text-[#D4A853]" },
+                  { label: "Deals Cerrados", value: m.dealsClosed, detail: "Testimonio y pago", color: "text-[#5C9A6B]" },
                 ].map((item, idx) => (
                   <AdminStatCard
                     key={idx}
@@ -870,6 +1030,7 @@ export default function AdminDashboard() {
                     value={item.value}
                     detail={item.detail}
                     accentColor={item.color}
+                    sparklineData={item.label === "Deals Closed" && revenueSparkline.length > 0 ? revenueSparkline : undefined}
                   />
                 ))}
               </section>
@@ -878,13 +1039,13 @@ export default function AdminDashboard() {
               <section className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Conversion Funnel */}
                 <div className="lg:col-span-7 border border-[#D4A853]/15 p-8 bg-[#0A0908]/60 rounded space-y-6">
-                  <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">Campaign Funnel</h3>
+                  <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">Embudo de Captación</h3>
                   <div className="space-y-4">
                     {[
-                      { step: "Identified Leads", count: m.totalLeads, pct: 100 },
-                      { step: "Outreach Cycles", count: m.outreachSent + m.diagnosticsDelivered, pct: m.totalLeads > 0 ? ((m.outreachSent + m.diagnosticsDelivered) / m.totalLeads) * 100 : 0 },
-                      { step: "Diagnostics Delivered", count: m.diagnosticsDelivered, pct: m.totalLeads > 0 ? (m.diagnosticsDelivered / m.totalLeads) * 100 : 0 },
-                      { step: "Closed Beta Success", count: m.dealsClosed, pct: m.totalLeads > 0 ? (m.dealsClosed / m.totalLeads) * 100 : 0 },
+                      { step: "Leads Identificados", count: m.totalLeads, pct: 100 },
+                      { step: "Ciclos de Outreach", count: m.outreachSent + m.diagnosticsDelivered, pct: m.totalLeads > 0 ? ((m.outreachSent + m.diagnosticsDelivered) / m.totalLeads) * 100 : 0 },
+                      { step: "Diagnósticos Entregados", count: m.diagnosticsDelivered, pct: m.totalLeads > 0 ? (m.diagnosticsDelivered / m.totalLeads) * 100 : 0 },
+                      { step: "Cierre Beta Exitoso", count: m.dealsClosed, pct: m.totalLeads > 0 ? (m.dealsClosed / m.totalLeads) * 100 : 0 },
                     ].map((item, idx) => (
                       <div key={idx} className="space-y-1.5">
                         <div className="flex justify-between text-xs font-mono">
@@ -907,13 +1068,13 @@ export default function AdminDashboard() {
 
                 {/* Cognitive Friction Breakdown */}
                 <div className="lg:col-span-5 border border-[#D4A853]/15 p-8 bg-[#0A0908]/60 rounded space-y-6">
-                  <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">Friction Mechanisms Detected</h3>
+                  <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">Mecanismos de Fricción</h3>
                   <div className="space-y-3">
                     {[
-                      { key: "Cognitive Load", count: m.frictionCounts.cognitive_load, color: "bg-[#D4A853]" },
-                      { key: "Trust Deficit", count: m.frictionCounts.trust_deficit, color: "bg-[#22C55E]" },
-                      { key: "Value Deficit", count: m.frictionCounts.value_deficit, color: "bg-[#3B82F6]" },
-                      { key: "Sequence Order", count: m.frictionCounts.sequence_order, color: "bg-[#A855F7]" },
+                      { key: "Carga Cognitiva", count: m.frictionCounts.cognitive_load, color: "bg-[#D4A853]" },
+                      { key: "Déficit de Confianza", count: m.frictionCounts.trust_deficit, color: "bg-[#22C55E]" },
+                      { key: "Déficit de Valor", count: m.frictionCounts.value_deficit, color: "bg-[#3B82F6]" },
+                      { key: "Orden de Secuencia", count: m.frictionCounts.sequence_order, color: "bg-[#A855F7]" },
                     ].map((item, idx) => (
                       <div key={idx} className="flex items-center justify-between text-xs font-mono">
                         <div className="flex items-center gap-2">
@@ -933,20 +1094,20 @@ export default function AdminDashboard() {
                 <div className="lg:col-span-6 border border-[#D4A853]/15 p-6 bg-[#110F0D] rounded-2xl space-y-5">
                   <div className="flex justify-between items-center border-b border-[#D4A853]/10 pb-4">
                     <h3 className="font-serif text-lg text-white flex items-center gap-2">
-                      <span className="text-[#D4A853]">⚡</span> Outcomes Guarantees
+                      <span className="text-[#D4A853]">⚡</span> Garantías de Resultados
                     </h3>
                     <span className="font-mono text-xs uppercase bg-[#D4A853]/10 text-[#D4A853] px-3 py-1 rounded-full border border-[#D4A853]/20">
-                      {m.activeGuaranteesCount || 0} Active
+                      {m.activeGuaranteesCount || 0} Activas
                     </span>
                   </div>
 
                   <p className="text-sm text-[#9A8F82] font-mono leading-relaxed">
-                    Concierge clients on the results-based guarantee protocol. +20% conversion in 30 days or invoice voided.
+                    Clientes Concierge bajo el protocolo de garantía por resultados. +20% conversión en 30 días o factura anulada.
                   </p>
 
                   <div className="space-y-4">
                     {m.pipeline.filter(p => p.guarantee_active).length === 0 ? (
-                      <div className="text-sm text-[#9A8F82] font-mono text-center py-6">No active guaranteed campaigns.</div>
+                      <div className="text-sm text-[#9A8F82] font-mono text-center py-6">Sin campañas garantizadas activas.</div>
                     ) : (
                       m.pipeline.filter(p => p.guarantee_active).map((item) => (
                         <div key={item.id} className="border border-[#D4A853]/8 bg-black/30 p-4 rounded-xl space-y-3">
@@ -1001,20 +1162,20 @@ export default function AdminDashboard() {
                 <div className="lg:col-span-6 border border-[#D4A853]/15 p-6 bg-[#110F0D] rounded-2xl space-y-5">
                   <div className="flex justify-between items-center border-b border-[#D4A853]/10 pb-4">
                     <h3 className="font-serif text-lg text-white flex items-center gap-2">
-                      <span className="text-[#D4A853]">🏆</span> Certified™ Partners
+                      <span className="text-[#D4A853]">🏆</span> Partners Certificados™
                     </h3>
                     <span className="font-mono text-xs uppercase bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full border border-amber-500/20">
-                      {m.certifiedCount || 0} Licensed
+                      {m.certifiedCount || 0} Licenciados
                     </span>
                   </div>
 
                   <p className="text-sm text-[#9A8F82] font-mono leading-relaxed">
-                    Methodology licensed to external agencies ($1,500/yr). Audited annually for min 80% satisfaction score.
+                    Metodología licenciada a agencias externas ($1.500/año). Auditoría anual con mínimo 80% de satisfacción.
                   </p>
 
                   <div className="space-y-3">
                     {m.pipeline.filter(p => p.is_certified).length === 0 ? (
-                      <div className="text-sm text-[#9A8F82] font-mono text-center py-6">No certified partners found.</div>
+                      <div className="text-sm text-[#9A8F82] font-mono text-center py-6">Sin partners certificados registrados.</div>
                     ) : (
                       m.pipeline.filter(p => p.is_certified).map((partner) => (
                         <div key={partner.id} className="flex justify-between items-center p-4 border border-[#D4A853]/15 bg-black/20 rounded-xl hover:border-[#D4A853]/35 transition-all duration-300">
@@ -1027,7 +1188,7 @@ export default function AdminDashboard() {
                               SLA: {partner.expansion_score ? partner.expansion_score : 85}%
                             </span>
                             <span className="text-xs text-[#7A6F65] font-mono block">
-                              Next Audit: Dec 2026
+                              Próx. Auditoría: Dic 2026
                             </span>
                           </div>
                         </div>
@@ -1037,22 +1198,89 @@ export default function AdminDashboard() {
                 </div>
               </section>
 
+              {/* Strategic Conversion Queue — Feature 3 */}
+              <section className="border border-[#D4A853]/15 p-6 bg-[#110F0D] rounded-2xl space-y-5">
+                <div className="flex items-center justify-between border-b border-[#D4A853]/10 pb-4">
+                  <h3 className="font-serif text-lg text-white">Cola de Conversión</h3>
+                  <span className="font-mono text-xs uppercase text-[#7A6F65] border border-[#D4A853]/15 px-3 py-1 rounded-full">
+                    {leads.length} leads entrantes
+                  </span>
+                </div>
+                {leads.length === 0 ? (
+                  <p className="font-mono text-xs text-[#7A6F65] text-center py-8">Sin leads en cola. Conecta el formulario Tally para empezar.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {leads.map((lead) => {
+                      const hoursAgo = Math.floor((Date.now() - new Date(lead.created_at).getTime()) / 3600000);
+                      const isDFY = lead.segment === 'DFY';
+                      const estimatedValue = isDFY ? 2000 : 350;
+                      const urgency = hoursAgo < 2 ? 'hot' : hoursAgo < 24 ? 'warm' : 'cold';
+                      return (
+                        <button
+                          key={lead.id}
+                          onClick={() => { setSelectedLead(lead); setShowLeadDrawer(true); }}
+                          className="text-left border border-[#D4A853]/10 bg-[#0A0908] p-4 rounded-xl hover:border-[#D4A853]/35 transition-all duration-300 cursor-pointer space-y-3 group"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="font-serif text-sm text-white font-bold leading-tight truncate max-w-[160px]">
+                                {lead.company || lead.email.split('@')[1]}
+                              </p>
+                              <p className="font-mono text-[10px] text-[#7A6F65] mt-0.5 truncate max-w-[180px]">{lead.email}</p>
+                            </div>
+                            <span className={`font-mono text-[10px] uppercase px-2 py-0.5 rounded-full border shrink-0 ${
+                              isDFY
+                                ? 'text-[#D4A853] border-[#D4A853]/30 bg-[#D4A853]/8'
+                                : 'text-[#9A8F82] border-white/10 bg-white/[0.03]'
+                            }`}>
+                              {lead.segment}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 text-center">
+                            <div className="bg-black/40 rounded p-1.5">
+                              <span className="font-mono text-[9px] text-[#7A6F65] uppercase block">Valor Est.</span>
+                              <span className="font-mono text-xs font-bold text-[#D4A853]">${estimatedValue.toLocaleString()}</span>
+                            </div>
+                            <div className="bg-black/40 rounded p-1.5">
+                              <span className="font-mono text-[9px] text-[#7A6F65] uppercase block">Latencia</span>
+                              <span className={`font-mono text-xs font-bold ${urgency === 'hot' ? 'text-[#C85C5C]' : urgency === 'warm' ? 'text-amber-400' : 'text-[#9A8F82]'}`}>
+                                {hoursAgo}h
+                              </span>
+                            </div>
+                            <div className="bg-black/40 rounded p-1.5">
+                              <span className="font-mono text-[9px] text-[#7A6F65] uppercase block">Fuente</span>
+                              <span className="font-mono text-xs text-[#9A8F82]">{lead.source}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between pt-1 border-t border-[#D4A853]/8">
+                            <span className={`font-mono text-[9px] uppercase ${urgency === 'hot' ? 'text-[#C85C5C]' : urgency === 'warm' ? 'text-amber-400' : 'text-[#7A6F65]'}`}>
+                              {urgency === 'hot' ? '🔴 Responde ya' : urgency === 'warm' ? '🟡 Responde hoy' : '⚪ En cola'}
+                            </span>
+                            <span className="font-mono text-[9px] text-[#D4A853]/50 group-hover:text-[#D4A853] transition-colors">Ver →</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+
               {/* Pipeline Kanban View */}
               <section className="border border-[#D4A853]/10 p-8 bg-[#110F0D]/60 rounded-2xl space-y-6">
                 <div className="flex justify-between items-center border-b border-[#D4A853]/10 pb-4">
-                  <h3 className="font-serif text-xl text-white">Active Board</h3>
+                  <h3 className="font-serif text-xl text-white">Tablero Activo</h3>
                   <span className="text-xs font-mono text-[#7A6F65] uppercase tracking-wider">
-                    Click a card to edit parameters
+                    Haz clic en una tarjeta para editar
                   </span>
                 </div>
 
                 {/* Next Actions summary bar */}
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 p-5 border border-[#D4A853]/15 bg-black/40 rounded-xl">
                   {[
-                    { status: "prospecting", title: "Needs Outreach", count: m.pipeline.filter(p => p.status === "prospecting").length, color: "text-[#D4A853]", action: "Send outreach pitch" },
-                    { status: "outreach_sent", title: "Follow-up Needed", count: m.pipeline.filter(p => p.status === "outreach_sent").length, color: "text-amber-400", action: "Follow-up or progress" },
-                    { status: "diagnostic_in_progress", title: "Needs Diagnostic", count: m.pipeline.filter(p => p.status === "diagnostic_in_progress").length, color: "text-purple-400", action: "Upload Loom & Figma" },
-                    { status: "delivered", title: "Needs Close", count: m.pipeline.filter(p => p.status === "delivered" || p.status === "awaiting_testimonial").length, color: "text-[#5C9A6B]", action: "Request testimonial" },
+                    { status: "prospecting", title: "Outreach Pendiente", count: m.pipeline.filter(p => p.status === "prospecting").length, color: "text-[#D4A853]", action: "Enviar pitch de outreach" },
+                    { status: "outreach_sent", title: "Seguimiento Necesario", count: m.pipeline.filter(p => p.status === "outreach_sent").length, color: "text-amber-400", action: "Seguimiento o avanzar" },
+                    { status: "diagnostic_in_progress", title: "Diagnóstico Pendiente", count: m.pipeline.filter(p => p.status === "diagnostic_in_progress").length, color: "text-purple-400", action: "Subir Loom y Figma" },
+                    { status: "delivered", title: "Pendiente de Cierre", count: m.pipeline.filter(p => p.status === "delivered" || p.status === "awaiting_testimonial").length, color: "text-[#5C9A6B]", action: "Solicitar testimonio" },
                   ].map(card => (
                     <button
                       key={card.status}
@@ -1081,7 +1309,7 @@ export default function AdminDashboard() {
                     return (
                       <div key={col} className="bg-black/40 border border-[#D4A853]/8 rounded-xl p-4 flex flex-col gap-3 min-h-[300px]">
                         <span className="font-mono text-xs uppercase tracking-wider text-[#D4A853] border-b border-[#D4A853]/15 pb-3">
-                          {col.replace(/_/g, " ")} ({items.length})
+                          {({ prospecting: "Prospección", outreach_sent: "Outreach Enviado", diagnostic_in_progress: "Diagnóstico en Curso", delivered: "Entregado" } as Record<string, string>)[col] || col.replace(/_/g, " ")} ({items.length})
                         </span>
                         <div className="flex flex-col gap-3 grow">
                           {items.map((item) => (
@@ -1103,6 +1331,48 @@ export default function AdminDashboard() {
                               </div>
                               <p className="text-xs text-[#9A8F82]">{item.contact_name}</p>
 
+                              {/* SLA 72h Page URL — copyable chip when diagnostic is in progress */}
+                              {item.status === "diagnostic_in_progress" && (() => {
+                                const clientKey = (item.company_name || "client")
+                                  .toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+                                const slaUrl = `https://signal-and-friction.com/sla/${clientKey}`;
+                                return (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigator.clipboard.writeText(slaUrl).catch(() => {});
+                                    }}
+                                    title="Copiar enlace SLA del cliente"
+                                    className="mt-1.5 flex items-center gap-1 font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border text-[#D4A853] border-[#D4A853]/30 bg-[#D4A853]/5 hover:bg-[#D4A853]/12 transition-colors cursor-pointer w-full truncate"
+                                  >
+                                    <span className="shrink-0">⧉</span>
+                                    <span className="truncate">/sla/{clientKey}</span>
+                                  </button>
+                                );
+                              })()}
+
+                              {/* SLA 72h Protocol Timer */}
+                              {item.created_at && item.status !== "delivered" && item.status !== "closed_completed" && (() => {
+                                const hoursElapsed = (Date.now() - new Date(item.created_at).getTime()) / 3600000;
+                                const hoursLeft = 72 - hoursElapsed;
+                                const color = hoursLeft < 0 ? "text-[#C85C5C] border-[#C85C5C]/30 bg-[#C85C5C]/5"
+                                  : hoursLeft < 12 ? "text-amber-400 border-amber-400/30 bg-amber-400/5"
+                                  : "text-[#5C9A6B] border-[#5C9A6B]/20 bg-[#5C9A6B]/5";
+                                const label = hoursLeft < 0
+                                  ? `⚠ SLA excedido ${Math.abs(Math.round(hoursLeft))}h`
+                                  : `⏱ ${Math.round(hoursLeft)}h restantes`;
+                                return (
+                                  <span className={`mt-1.5 inline-block font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${color}`}>
+                                    {label}
+                                  </span>
+                                );
+                              })()}
+                              {item.status === "delivered" && (
+                                <span className="mt-1.5 inline-block font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border text-[#5C9A6B] border-[#5C9A6B]/20 bg-[#5C9A6B]/5">
+                                  ✓ SLA cumplido
+                                </span>
+                              )}
+
                               {/* Cognitive Fatigue Indicator */}
                               {item.cognitive_fatigue_score !== undefined && (
                                 <div className="flex items-center gap-2 mt-2.5">
@@ -1123,7 +1393,7 @@ export default function AdminDashboard() {
 
                               <div className="flex items-center justify-between mt-3 pt-2 border-t border-[#D4A853]/8 text-xs font-mono">
                                 <span className={item.payment_status === "paid" ? "text-[#5C9A6B] font-medium" : "text-[#7A6F65]"}>
-                                  {item.payment_status}
+                                  {({ paid: "Pagado", uninvoiced: "Sin Facturar", invoiced_unpaid: "Facturado" } as Record<string, string>)[item.payment_status] || item.payment_status}
                                 </span>
                                 <span className="text-[#5C5550]">#{item.id.slice(0, 4)}</span>
                               </div>
@@ -1150,9 +1420,9 @@ export default function AdminDashboard() {
                 <div className="border border-[#C85C5C]/20 bg-[#C85C5C]/5 p-6 rounded-2xl flex items-start gap-4 animate-pulse">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#C85C5C] mt-2 shrink-0 animate-ping" />
                   <div className="space-y-1.5">
-                    <h4 className="font-mono text-xs uppercase tracking-widest text-[#C85C5C] font-bold">CRITICAL SYSTEM ALERT</h4>
+                    <h4 className="font-mono text-xs uppercase tracking-widest text-[#C85C5C] font-bold">ALERTA CRÍTICA DEL SISTEMA</h4>
                     <p className="text-xs text-white leading-relaxed">
-                      Found {criticalAlerts.length} unresolved high or critical severity incident(s). System execution safety boundaries are degraded. Run the MCP command <code className="font-mono text-amber-500 bg-black/40 px-2 py-0.5 rounded border border-[#D4A853]/8 select-all">/beta:iterate-from-incidents</code> immediately to inject repairs.
+                      Se encontraron {criticalAlerts.length} incidencia(s) de severidad alta o crítica sin resolver. Los límites de seguridad de ejecución del sistema están degradados. Ejecuta el comando MCP <code className="font-mono text-amber-500 bg-black/40 px-2 py-0.5 rounded border border-[#D4A853]/8 select-all">/beta:iterate-from-incidents</code> de inmediato para inyectar las correcciones.
                     </p>
                     <div className="flex flex-col gap-2 mt-3">
                       {criticalAlerts.map(inc => (
@@ -1168,10 +1438,10 @@ export default function AdminDashboard() {
               {/* Continuous Learning Scorecard Row */}
               <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: "Active Version", value: currentVersion, detail: "Global prompt iteration" },
-                  { label: "Unresolved", value: unresolvedIncidents.length, detail: "Pending analysis" },
-                  { label: "Mitigated", value: resolvedIncidents.length, detail: "Lessons learned" },
-                  { label: "Avg Resolution", value: resolvedIncidents.length > 0 ? "1.0 hr" : "N/A", detail: "Mitigation speed" },
+                  { label: "Versión Activa", value: currentVersion, detail: "Iteración global del prompt" },
+                  { label: "Sin Resolver", value: unresolvedIncidents.length, detail: "Análisis pendiente" },
+                  { label: "Mitigadas", value: resolvedIncidents.length, detail: "Lecciones aprendidas" },
+                  { label: "Resolución Media", value: resolvedIncidents.length > 0 ? "1,0 h" : "N/A", detail: "Velocidad de mitigación" },
                 ].map((item, idx) => (
                   <div key={idx} className="border border-[#D4A853]/15 p-5 bg-[#110F0D] rounded-2xl relative overflow-hidden">
                     <span className="font-mono text-xs text-[#D4A853]/60 uppercase tracking-wider block mb-2">{item.label}</span>
@@ -1186,10 +1456,10 @@ export default function AdminDashboard() {
                 
                 {/* Timeline Panel */}
                 <div className="lg:col-span-7 border border-[#D4A853]/15 p-8 bg-[#0A0908]/60 rounded space-y-6">
-                  <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">Incident Timeline</h3>
+                  <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">Cronología de Incidencias</h3>
                   <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin">
                     {incidents.length === 0 ? (
-                      <div className="text-sm text-[#9A8F82] font-mono py-12 text-center">No AI or process incidents recorded.</div>
+                      <div className="text-sm text-[#9A8F82] font-mono py-12 text-center">Sin incidencias de IA o proceso registradas.</div>
                     ) : (
                       incidents.map(inc => (
                         <div key={inc.id} className={`border border-[#D4A853]/8 bg-black/40 rounded p-5 space-y-4 relative ${inc.resolved_at ? 'opacity-70' : ''}`}>
@@ -1209,7 +1479,7 @@ export default function AdminDashboard() {
 
                           <div className="space-y-1">
                             <span className="font-mono text-xs text-[#9A8F82] uppercase block">
-                              Phase: <strong className="text-[#D4A853]">{inc.phase}</strong>
+                              Fase: <strong className="text-[#D4A853]">{inc.phase}</strong>
                             </span>
                             <p className="text-sm text-[#9A8F82] leading-relaxed font-mono">
                               {inc.description}
@@ -1218,7 +1488,7 @@ export default function AdminDashboard() {
 
                           {!inc.resolved_at && inc.root_cause && (
                             <div className="border-t border-[#D4A853]/8 pt-3">
-                              <span className="font-mono text-xs text-[#D4A853] uppercase block mb-1">Root Cause Analysis</span>
+                              <span className="font-mono text-xs text-[#D4A853] uppercase block mb-1">Análisis de Causa Raíz</span>
                               <p className="text-sm text-[#9A8F82] leading-relaxed font-mono">
                                 {inc.root_cause}
                               </p>
@@ -1228,15 +1498,15 @@ export default function AdminDashboard() {
                           {inc.resolved_at && (
                             <div className="border-t border-[#5C9A6B]/10 bg-[#5C9A6B]/[0.03] p-3 rounded-xl space-y-2">
                               <div className="flex justify-between items-center text-xs font-mono">
-                                <span className="text-[#5C9A6B] uppercase">✓ Resolved &amp; Mitigated</span>
+                                <span className="text-[#5C9A6B] uppercase">✓ Resuelta y Mitigada</span>
                                 <span className="text-[#9A8F82]">{inc.iteration_version}</span>
                               </div>
                               <p className="text-sm text-[#9A8F82] leading-relaxed font-mono">
-                                <strong className="text-[#9A8F82]">Resolution: </strong>{inc.resolution}
+                                <strong className="text-[#9A8F82]">Resolución: </strong>{inc.resolution}
                               </p>
                               {inc.lesson_learned && (
                                 <p className="text-sm text-[#9A8F82] leading-relaxed font-mono italic">
-                                  <strong className="text-[#9A8F82]">Lesson: </strong>&quot;{inc.lesson_learned}&quot;
+                                  <strong className="text-[#9A8F82]">Lección: </strong>&quot;{inc.lesson_learned}&quot;
                                 </p>
                               )}
                             </div>
@@ -1251,7 +1521,7 @@ export default function AdminDashboard() {
                 <div className="lg:col-span-5 space-y-8">
                   {/* AI Advancement Tracker */}
                   <div className="border border-[#D4A853]/15 p-8 bg-[#0A0908]/60 rounded space-y-6">
-                    <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">Weekly AI Advancement Tracker</h3>
+                    <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">Radar de Avance IA Semanal</h3>
                     <div className="space-y-4">
                       {[
                         { title: "OpenAI GPT-4o fine-tuning updates", desc: "Fine-tuning models on UX heuristics reduces conversion copywriting errors by 18%.", date: "June 19, 2026", type: "OpenAI" },
@@ -1272,10 +1542,10 @@ export default function AdminDashboard() {
 
                   {/* Top Error Patterns */}
                   <div className="border border-[#D4A853]/15 p-8 bg-[#0A0908]/60 rounded space-y-6">
-                    <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">Error Patterns Detected</h3>
+                    <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">Patrones de Error Detectados</h3>
                     <div className="space-y-4">
                       {sortedPatterns.length === 0 ? (
-                        <div className="text-xs text-[#9A8F82] font-mono text-center py-6">No patterns recorded.</div>
+                        <div className="text-xs text-[#9A8F82] font-mono text-center py-6">Sin patrones registrados.</div>
                       ) : (
                         sortedPatterns.map(([type, count]) => {
                           const percentage = incidents.length > 0 ? (count / incidents.length) * 100 : 0;
@@ -1301,6 +1571,98 @@ export default function AdminDashboard() {
         </AnimatePresence>
       </div>
 
+      {/* Lead Contextual Drawer — Feature 4 */}
+      <AnimatePresence>
+        {showLeadDrawer && selectedLead && (
+          <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setShowLeadDrawer(false)}>
+            <motion.aside
+              initial={{ x: '100%', opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: '100%', opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 120, damping: 22 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative h-full w-full max-w-[420px] bg-[#0D0B09] border-l border-[#D4A853]/20 shadow-2xl flex flex-col overflow-y-auto"
+            >
+              <div className="p-6 border-b border-[#D4A853]/10 flex items-start justify-between">
+                <div>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#D4A853]/50 block mb-1">Lead Entrante</span>
+                  <h3 className="font-serif text-xl text-white">{selectedLead.company || selectedLead.email.split('@')[1]}</h3>
+                  <p className="font-mono text-xs text-[#7A6F65] mt-0.5">{selectedLead.email}</p>
+                </div>
+                <button
+                  onClick={() => setShowLeadDrawer(false)}
+                  className="text-[#9A8F82] hover:text-white font-mono text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                >×</button>
+              </div>
+
+              <div className="p-6 space-y-6 flex-1">
+                {/* Lead meta */}
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: 'Segmento', value: selectedLead.segment, accent: selectedLead.segment === 'DFY' ? 'text-[#D4A853]' : 'text-[#9A8F82]' },
+                    { label: 'Valor Est.', value: selectedLead.segment === 'DFY' ? '$2.000' : '$350', accent: 'text-[#5C9A6B]' },
+                    { label: 'Fuente', value: selectedLead.source, accent: 'text-[#9A8F82]' },
+                    { label: 'Recibido', value: `Hace ${Math.floor((Date.now() - new Date(selectedLead.created_at).getTime()) / 3600000)}h`, accent: 'text-[#9A8F82]' },
+                  ].map(item => (
+                    <div key={item.label} className="bg-black/40 border border-[#D4A853]/8 p-3 rounded-xl">
+                      <span className="font-mono text-[9px] text-[#7A6F65] uppercase block mb-1">{item.label}</span>
+                      <span className={`font-mono text-xs font-bold ${item.accent}`}>{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Answers from form */}
+                {Object.keys(selectedLead.answers || {}).length > 0 && (
+                  <div className="space-y-3">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-[#D4A853]/60 block">Respuestas del Formulario</span>
+                    <div className="space-y-2">
+                      {Object.entries(selectedLead.answers).map(([k, v]) => (
+                        <div key={k} className="bg-black/30 border border-[#D4A853]/8 p-3 rounded-xl">
+                          <span className="font-mono text-[9px] text-[#7A6F65] uppercase block mb-1">{k.replace(/_/g, ' ')}</span>
+                          <p className="font-mono text-xs text-[#F5F0EB] leading-relaxed">{String(v)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Pre-drafted next action */}
+                <div className="border border-[#D4A853]/20 bg-[#D4A853]/[0.03] p-4 rounded-2xl space-y-3">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#D4A853] block">Próxima Acción — Piloto Automático</span>
+                  <p className="font-mono text-xs text-[#9A8F82] leading-relaxed">
+                    {selectedLead.segment === 'DFY'
+                      ? `Lead High-Ticket DFY vía ${selectedLead.source}. Prioridad: enviar diagnóstico de señal personalizado en menos de 2 horas. Adjuntar plantilla de auditoría de fricción. Asunto: "Detecté una brecha de conversión en tu funnel."`
+                      : `Lead DWY vía ${selectedLead.source}. Prioridad: enviar intro de la vía de autonomía + enlace Tally en menos de 24h. Asunto: "Tu configuración de señal — 3 cosas que revisar primero."`}
+                  </p>
+                  <button
+                    onClick={() => {
+                      const action = selectedLead.segment === 'DFY'
+                        ? `Enviar diagnóstico de señal a ${selectedLead.email} — outreach DFY high-ticket`
+                        : `Enviar intro vía autonomía a ${selectedLead.email} — outreach DWY`;
+                      navigator.clipboard.writeText(action).catch(() => {});
+                    }}
+                    className="w-full font-mono text-xs uppercase border border-[#D4A853]/30 text-[#D4A853] hover:bg-[#D4A853]/8 py-2 rounded-lg transition-all cursor-pointer"
+                  >
+                    Copiar Borrador de Acción
+                  </button>
+                </div>
+
+                {selectedLead.website && (
+                  <a
+                    href={selectedLead.website}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2 font-mono text-xs text-[#D4A853] hover:underline"
+                  >
+                    🌐 {selectedLead.website}
+                  </a>
+                )}
+              </div>
+            </motion.aside>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Edit Client Parameters Modal */}
       <AnimatePresence>
         {showModal && selectedClient && (
@@ -1313,7 +1675,7 @@ export default function AdminDashboard() {
             >
               <div className="flex justify-between items-start border-b border-[#D4A853]/10 pb-4">
                 <div>
-                  <span className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-wider">Client Control Panel</span>
+                  <span className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-wider">Panel de Control del Cliente</span>
                   <h3 className="text-xl font-serif font-bold text-white mt-1">{selectedClient.company_name}</h3>
                 </div>
                 <button
@@ -1330,7 +1692,7 @@ export default function AdminDashboard() {
                   {/* Main parameters inputs */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
                     <div className="space-y-1.5">
-                      <label className="text-[#9A8F82] uppercase">Contact Name</label>
+                      <label className="text-[#9A8F82] uppercase">Nombre de Contacto</label>
                       <p className="p-3 bg-black/40 border border-[#D4A853]/8 rounded text-white">{selectedClient.contact_name}</p>
                     </div>
                     <div className="space-y-1.5">
@@ -1341,11 +1703,11 @@ export default function AdminDashboard() {
 
                   {/* Founder psychology notes */}
                   <div className="space-y-1.5 font-mono text-xs">
-                    <label className="text-[#9A8F82] uppercase tracking-wider block">Founder Psychology / Private Notes</label>
+                    <label className="text-[#9A8F82] uppercase tracking-wider block">Psicología del Fundador / Notas Privadas</label>
                     <textarea
                       value={modalPrivateNotes}
                       onChange={e => setModalPrivateNotes(e.target.value)}
-                      placeholder="Record cognitive constraints, runway bottlenecks, and founder psychology alignment here..."
+                      placeholder="Registra restricciones cognitivas, cuellos de botella de runway y alineación con la psicología del fundador..."
                       className="w-full bg-black/40 border border-[#D4A853]/8 focus:border-[#D4A853] focus:outline-none p-3 rounded text-white h-16 font-sans text-xs"
                     />
                   </div>
@@ -1354,9 +1716,9 @@ export default function AdminDashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
                     {/* Certified toggle */}
                     <div className="border border-[#D4A853]/8 p-3 rounded space-y-1 bg-black/20">
-                      <span className="text-[#9A8F82] uppercase block">Certified License</span>
+                      <span className="text-[#9A8F82] uppercase block">Licencia Certificada</span>
                       <div className="flex items-center justify-between pt-1">
-                        <span className="text-white font-serif">{modalIsCertified ? "S&F Licensed" : "Unlicensed"}</span>
+                        <span className="text-white font-serif">{modalIsCertified ? "S&F Licenciado" : "Sin Licencia"}</span>
                         <button
                           type="button"
                           onClick={() => setModalIsCertified(!modalIsCertified)}
@@ -1371,7 +1733,7 @@ export default function AdminDashboard() {
 
                     {/* Segment selector */}
                     <div className="border border-[#D4A853]/8 p-3 rounded space-y-1 bg-black/20">
-                      <span className="text-[#9A8F82] uppercase block">Assigned Segment</span>
+                      <span className="text-[#9A8F82] uppercase block">Segmento Asignado</span>
                       <div className="flex items-center justify-between pt-1">
                         <span className="text-white font-serif">{modalSegment === "high_ticket" ? "High-Ticket" : "Microdosing"}</span>
                         <button
@@ -1387,7 +1749,7 @@ export default function AdminDashboard() {
                     {/* Cognitive fatigue slider */}
                     <div className="border border-[#D4A853]/8 p-3 rounded space-y-1 bg-black/20 flex flex-col justify-between">
                       <div className="flex justify-between">
-                        <span className="text-[#9A8F82] uppercase">Cognitive Fatigue</span>
+                        <span className="text-[#9A8F82] uppercase">Fatiga Cognitiva</span>
                         <span className="text-[#D4A853] font-bold">{modalCognitiveFatigue}</span>
                       </div>
                       <input
@@ -1404,7 +1766,7 @@ export default function AdminDashboard() {
                   {/* Pipeline Action Protocol */}
                   <div className="border border-[#D4A853]/15 p-4 rounded bg-black/30 space-y-4">
                     <span className="font-mono text-xs text-[#D4A853] uppercase tracking-wider block border-b border-[#D4A853]/8 pb-2">
-                      Pipeline Action Protocol
+                      Protocolo de Acción Pipeline
                     </span>
                     <div className="flex flex-wrap gap-2">
                       {selectedClient.status === "prospecting" && (
@@ -1414,7 +1776,7 @@ export default function AdminDashboard() {
                           onClick={() => handlePipelineAction("outreach_sent", `/beta:send-outreach --client=${selectedClient.id}`)}
                           className="px-3 py-1.5 bg-[#D4A853]/10 border border-[#D4A853]/30 text-[#D4A853] rounded-md text-xs font-mono hover:bg-[#D4A853]/25 cursor-pointer uppercase disabled:opacity-50"
                         >
-                          {actionLoading === "outreach_sent" ? "Sending..." : "⚡ Send Outreach (MCP)"}
+                          {actionLoading === "outreach_sent" ? "Enviando..." : "⚡ Enviar Outreach (MCP)"}
                         </button>
                       )}
                       
@@ -1426,7 +1788,7 @@ export default function AdminDashboard() {
                             onClick={() => handlePipelineAction("diagnostic_in_progress")}
                             className="px-3 py-1.5 bg-[#D4A853]/10 border border-[#D4A853]/30 text-[#D4A853] rounded-md text-xs font-mono hover:bg-[#D4A853]/25 cursor-pointer uppercase disabled:opacity-50"
                           >
-                            {actionLoading === "diagnostic_in_progress" ? "Processing..." : "✓ Mark Responded"}
+                            {actionLoading === "diagnostic_in_progress" ? "Procesando..." : "✓ Respondió"}
                           </button>
                           <button
                             type="button"
@@ -1434,7 +1796,7 @@ export default function AdminDashboard() {
                             onClick={() => handleSendFollowup()}
                             className="px-3 py-1.5 bg-white/5 border border-white/10 text-white rounded text-xs font-mono hover:bg-white/10 cursor-pointer uppercase disabled:opacity-50"
                           >
-                            {actionLoading === "followup" ? "Logging..." : "📋 Send Follow-up"}
+                            {actionLoading === "followup" ? "Registrando..." : "📋 Enviar Seguimiento"}
                           </button>
                         </>
                       )}
@@ -1446,7 +1808,7 @@ export default function AdminDashboard() {
                           onClick={() => setShowDiagnosticForm(true)}
                           className="px-3 py-1.5 bg-[#D4A853]/10 border border-[#D4A853]/30 text-[#D4A853] rounded-md text-xs font-mono hover:bg-[#D4A853]/25 cursor-pointer uppercase disabled:opacity-50"
                         >
-                          📬 Deliver Diagnostic
+                          📬 Entregar Diagnóstico
                         </button>
                       )}
 
@@ -1457,7 +1819,7 @@ export default function AdminDashboard() {
                           onClick={() => handlePipelineAction("closed_completed", `/beta:request-testimonial --client=${selectedClient.id}`)}
                           className="px-3 py-1.5 bg-[#D4A853]/10 border border-[#D4A853]/30 text-[#D4A853] rounded-md text-xs font-mono hover:bg-[#D4A853]/25 cursor-pointer uppercase disabled:opacity-50"
                         >
-                          {actionLoading === "closed_completed" ? "Completing..." : "🏆 Request Testimonial (MCP)"}
+                          {actionLoading === "closed_completed" ? "Completando..." : "🏆 Solicitar Testimonio (MCP)"}
                         </button>
                       )}
                     </div>
@@ -1470,10 +1832,10 @@ export default function AdminDashboard() {
                     {/* Diagnostic Form */}
                     {showDiagnosticForm && (
                       <div className="border border-[#D4A853]/20 p-4 rounded bg-black/40 space-y-3 mt-3">
-                        <span className="font-mono text-xs text-[#D4A853] uppercase block">Diagnostic Deliverables Form</span>
+                        <span className="font-mono text-xs text-[#D4A853] uppercase block">Formulario de Entregables del Diagnóstico</span>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono">
                           <div className="space-y-1">
-                            <label className="text-[#9A8F82] uppercase">Loom URL (Required)</label>
+                            <label className="text-[#9A8F82] uppercase">URL de Loom (Requerido)</label>
                             <input
                               type="text"
                               value={loomUrl}
@@ -1483,7 +1845,7 @@ export default function AdminDashboard() {
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[#9A8F82] uppercase">Figma URL (Optional)</label>
+                            <label className="text-[#9A8F82] uppercase">URL de Figma (Opcional)</label>
                             <input
                               type="text"
                               value={figmaUrl}
@@ -1492,7 +1854,67 @@ export default function AdminDashboard() {
                               className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none"
                             />
                           </div>
+                          <div className="space-y-1 md:col-span-2">
+                            <label className="text-[#9A8F82] uppercase">Signal del Funnel</label>
+                            <textarea
+                              value={diagSignal}
+                              onChange={(e) => setDiagSignal(e.target.value)}
+                              rows={2}
+                              placeholder="Ej: 85% de trials de alto intento llegan al pricing selector. Solo el 12% procede al checkout..."
+                              className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none resize-none"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[#9A8F82] uppercase">Mecanismo de Fricción</label>
+                            <select
+                              value={diagMechanism}
+                              onChange={(e) => setDiagMechanism(e.target.value)}
+                              className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none"
+                            >
+                              {["Cognitive Load", "Trust Deficit", "Technical Friction", "Ordering Error", "Value Ambiguity", "Motivation Gap"].map(m => (
+                                <option key={m} value={m}>{m}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[#9A8F82] uppercase">Causa Raíz</label>
+                            <textarea
+                              value={diagRootCause}
+                              onChange={(e) => setDiagRootCause(e.target.value)}
+                              rows={2}
+                              placeholder="Describe la causa raíz identificada..."
+                              className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none resize-none"
+                            />
+                          </div>
                         </div>
+                        {(() => {
+                          const ck = (selectedClient?.company_name || selectedClient?.company || "client")
+                            .toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+                          return (
+                            <div className="space-y-1.5 text-[10px] font-mono">
+                              <div className="text-[#5C9A6B] bg-[#5C9A6B]/5 border border-[#5C9A6B]/15 px-3 py-1.5 rounded flex items-center justify-between gap-2">
+                                <span>✓ Entregable activo inmediatamente — sin rebuild</span>
+                                <button
+                                  type="button"
+                                  onClick={() => navigator.clipboard.writeText(`https://signal-and-friction.com/deliverable/${ck}`).catch(() => {})}
+                                  className="shrink-0 text-[#5C9A6B] hover:text-white border border-[#5C9A6B]/30 px-2 py-0.5 rounded cursor-pointer"
+                                >
+                                  ⧉ /deliverable/{ck}
+                                </button>
+                              </div>
+                              <div className="text-[#D4A853] bg-[#D4A853]/5 border border-[#D4A853]/15 px-3 py-1.5 rounded flex items-center justify-between gap-2">
+                                <span>⏱ SLA activo — comparte con el cliente ahora</span>
+                                <button
+                                  type="button"
+                                  onClick={() => navigator.clipboard.writeText(`https://signal-and-friction.com/sla/${ck}`).catch(() => {})}
+                                  className="shrink-0 text-[#D4A853] hover:text-white border border-[#D4A853]/30 px-2 py-0.5 rounded cursor-pointer"
+                                >
+                                  ⧉ /sla/{ck}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })()}
                         {diagnosticError && <p className="text-[#C85C5C] text-xs font-mono">{diagnosticError}</p>}
                         <div className="flex justify-end gap-2 pt-2">
                           <button
@@ -1503,14 +1925,14 @@ export default function AdminDashboard() {
                             }}
                             className="px-3 py-1 bg-white/5 text-white border border-white/10 hover:bg-white/10 rounded font-mono text-xs"
                           >
-                            Cancel
+                            Cancelar
                           </button>
                           <button
                             type="button"
                             onClick={handleConfirmDelivery}
                             className="px-3 py-1 bg-[#D4A853] text-[#0A0908] hover:bg-[#E8C97A] rounded font-mono font-bold text-xs"
                           >
-                            Confirm Delivery
+                            Confirmar Entrega
                           </button>
                         </div>
                       </div>
@@ -1521,7 +1943,7 @@ export default function AdminDashboard() {
                   <div className="border border-[#D4A853]/15 p-4 rounded bg-black/30 space-y-4">
                     <div className="flex justify-between items-center border-b border-[#D4A853]/8 pb-2">
                       <span className="font-mono text-xs text-white uppercase tracking-wider block">
-                        Performance Guarantee (Moat Protocol)
+                        Garantía de Rendimiento (Protocolo Moat)
                       </span>
                       <button
                         type="button"
@@ -1530,7 +1952,7 @@ export default function AdminDashboard() {
                           modalGuaranteeActive ? "border-[#D4A853] bg-[#D4A853]/10 text-[#D4A853]" : "border-white/10 text-[#7A6F65]"
                         }`}
                       >
-                        {modalGuaranteeActive ? "ACTIVE" : "DISABLED"}
+                        {modalGuaranteeActive ? "ACTIVA" : "DESACTIVADA"}
                       </button>
                     </div>
 
@@ -1538,7 +1960,7 @@ export default function AdminDashboard() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-[0.62rem]">
                         {/* Gate checklist */}
                         <div className="space-y-2 border-r border-[#D4A853]/8 pr-4">
-                          <span className="text-[#9A8F82] uppercase block mb-1">Checklist Gates:</span>
+                          <span className="text-[#9A8F82] uppercase block mb-1">Checklist de Gates:</span>
                           <div className="space-y-1.5">
                             <label className="flex items-center gap-2 cursor-pointer text-white">
                               <input
@@ -1547,7 +1969,7 @@ export default function AdminDashboard() {
                                 onChange={e => setModalTrafficGate(e.target.checked)}
                                 className="accent-[#D4A853]"
                               />
-                              Traffic Gate (&gt;15k visitors/mo)
+                              Gate de Tráfico (&gt;15k visitas/mes)
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer text-white">
                               <input
@@ -1556,7 +1978,7 @@ export default function AdminDashboard() {
                                 onChange={e => setModalSlaGate(e.target.checked)}
                                 className="accent-[#D4A853]"
                               />
-                              72h SLA Turnaround Gate
+                              Gate SLA 72h
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer text-white">
                               <input
@@ -1565,7 +1987,7 @@ export default function AdminDashboard() {
                                 onChange={e => setModalIsolationGate(e.target.checked)}
                                 className="accent-[#D4A853]"
                               />
-                              A/B Isolation Lock Gate
+                              Gate de Aislamiento A/B
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer text-white">
                               <input
@@ -1574,7 +1996,7 @@ export default function AdminDashboard() {
                                 onChange={e => setModalTelemetryGate(e.target.checked)}
                                 className="accent-[#D4A853]"
                               />
-                              PostHog Telemetry Gate
+                              Gate de Telemetría PostHog
                             </label>
                           </div>
                         </div>
@@ -1583,7 +2005,7 @@ export default function AdminDashboard() {
                         <div className="space-y-2">
                           <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-1">
-                              <label className="text-[#9A8F82] uppercase">Target Bump %</label>
+                              <label className="text-[#9A8F82] uppercase">Mejora Objetivo %</label>
                               <input
                                 type="number"
                                 value={modalTargetImprovement}
@@ -1592,7 +2014,7 @@ export default function AdminDashboard() {
                               />
                             </div>
                             <div className="space-y-1">
-                              <label className="text-[#9A8F82] uppercase">Window (Days)</label>
+                              <label className="text-[#9A8F82] uppercase">Ventana (Días)</label>
                               <input
                                 type="number"
                                 value={modalTimeframeDays}
@@ -1604,7 +2026,7 @@ export default function AdminDashboard() {
 
                           <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-1">
-                              <label className="text-[#9A8F82] uppercase">Baseline Conv%</label>
+                              <label className="text-[#9A8F82] uppercase">Conv% Base</label>
                               <input
                                 type="number"
                                 step="0.01"
@@ -1614,7 +2036,7 @@ export default function AdminDashboard() {
                               />
                             </div>
                             <div className="space-y-1">
-                              <label className="text-[#9A8F82] uppercase">Current Conv%</label>
+                              <label className="text-[#9A8F82] uppercase">Conv% Actual</label>
                               <input
                                 type="number"
                                 step="0.01"
@@ -1626,16 +2048,16 @@ export default function AdminDashboard() {
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-[#9A8F82] uppercase">Guarantee Status</label>
+                            <label className="text-[#9A8F82] uppercase">Estado de Garantía</label>
                             <select
                               value={modalGuaranteeStatus}
                               onChange={e => setModalGuaranteeStatus(e.target.value as any)}
                               className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white"
                             >
-                              <option value="active">Active Monitoring</option>
-                              <option value="met">Target Met</option>
-                              <option value="failed_refunded">Failed (Stripe Refunded)</option>
-                              <option value="voided">Voided (Gate Breached)</option>
+                              <option value="active">Monitoreo Activo</option>
+                              <option value="met">Objetivo Alcanzado</option>
+                              <option value="failed_refunded">Fallida (Reembolso Stripe)</option>
+                              <option value="voided">Anulada (Gate Incumplido)</option>
                             </select>
                           </div>
                         </div>
@@ -1648,10 +2070,10 @@ export default function AdminDashboard() {
                 <div className="lg:col-span-5 border-t lg:border-t-0 lg:border-l border-white/10 pt-6 lg:pt-0 lg:pl-6 space-y-6 flex flex-col max-h-[60vh] overflow-y-auto">
                   <div className="space-y-3">
                     <span className="font-mono text-xs text-[#9A8F82] uppercase tracking-wider block border-b border-[#D4A853]/8 pb-1">
-                      Friction Diagnostics
+                      Diagnósticos de Fricción
                     </span>
                     {selectedClientInteractions.length === 0 ? (
-                      <p className="text-xs text-[#9A8F82] font-mono italic">No diagnostics recorded.</p>
+                      <p className="text-xs text-[#9A8F82] font-mono italic">Sin diagnósticos registrados.</p>
                     ) : (
                       selectedClientInteractions.map((inter, i) => (
                         <div key={inter.id || i} className="bg-black/30 p-3 border border-[#D4A853]/8 rounded space-y-1.5">
@@ -1667,7 +2089,7 @@ export default function AdminDashboard() {
                               rel="noreferrer"
                               className="text-xs text-[#D4A853] hover:underline block font-mono"
                             >
-                              🎬 Watch Loom Video
+                              🎬 Ver Vídeo Loom
                             </a>
                           )}
                         </div>
@@ -1677,13 +2099,13 @@ export default function AdminDashboard() {
 
                   <div className="space-y-3 grow flex flex-col min-h-0">
                     <span className="font-mono text-xs text-[#9A8F82] uppercase tracking-wider block border-b border-[#D4A853]/8 pb-1">
-                      Activity Log / Event Timeline
+                      Historial de Actividad
                     </span>
                     <div className="overflow-y-auto space-y-2 grow pr-1 scrollbar-thin max-h-[300px]">
                       {loadingLogs ? (
-                        <p className="text-xs text-[#9A8F82] font-mono animate-pulse">Fetching history...</p>
+                        <p className="text-xs text-[#9A8F82] font-mono animate-pulse">Cargando historial...</p>
                       ) : selectedClientLogs.length === 0 ? (
-                        <p className="text-xs text-[#9A8F82] font-mono italic">No events recorded.</p>
+                        <p className="text-xs text-[#9A8F82] font-mono italic">Sin eventos registrados.</p>
                       ) : (
                         selectedClientLogs.map((log) => (
                           <div key={log.id} className="text-xs font-mono border-b border-[#D4A853]/8 pb-2 last:border-b-0">
@@ -1707,14 +2129,14 @@ export default function AdminDashboard() {
                   onClick={() => setShowModal(false)}
                   className="px-4 py-2 border border-white/10 hover:text-white uppercase tracking-wider rounded cursor-pointer text-xs font-mono"
                 >
-                  Cancel
+                  Cancelar
                 </button>
                 <button
                   type="button"
                   onClick={handleSaveClientDetails}
                   className="px-5 py-2 bg-[#D4A853] text-[#0A0908] font-bold uppercase tracking-wider hover:bg-[#E8C97A] transition-all rounded cursor-pointer text-xs font-mono"
                 >
-                  Save Parameters
+                  Guardar Parámetros
                 </button>
               </div>
             </motion.div>

@@ -84,9 +84,6 @@ export default function AdminLogin() {
       <div className="absolute top-4 right-5 font-mono text-xs text-[#2A2520] tracking-[0.2em] select-none">
         S&amp;F · OPS
       </div>
-      <div className="absolute bottom-4 left-5 font-mono text-xs text-[#2A2520] tracking-[0.15em] select-none">
-        Montevideo, Uruguay
-      </div>
       <div className="absolute bottom-4 right-5 font-mono text-xs text-[#D4A853]/20 tracking-[0.15em] select-none">
         PHASE 2
       </div>
@@ -345,7 +342,7 @@ export default function AdminLogin() {
           {/* Footer */}
           <div className="border-t border-[#D4A853]/6 px-5 py-3 text-center">
             <span className="font-mono text-xs text-[#3A3530] tracking-[0.2em] uppercase">
-              Signal &amp; Friction · Classified Systems · Phase 2 · Uruguay 🇺🇾
+              Signal &amp; Friction · Classified Systems · Phase 2
             </span>
           </div>
         </div>
