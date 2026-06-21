@@ -39,6 +39,9 @@ yarn-error.log*
 # cloudflare
 .wrangler/
 
+# claude code internals
+.claude/
+
 # qa artifacts
 screenshots/
 
