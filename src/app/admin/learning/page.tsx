@@ -1001,13 +1001,13 @@ export default function LearningDashboard() {
                 </div>
 
                 {/* 3 Drafts — lg:grid-cols-3 (safe: only activates at 1024px+ where sidebar+col is wide enough) */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 flex-1 content-start">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 flex-1">
                   {activeDrafts.length > 0 ? (
                     activeDrafts.map((draft) => (
                       <div
                         key={draft.id}
                         onClick={() => handleSelectDraft(draft.draft_number)}
-                        className={`p-4 border rounded-xl transition-all cursor-pointer flex flex-col justify-between min-h-[180px] overflow-hidden ${
+                        className={`p-4 border rounded-xl transition-all cursor-pointer flex flex-col justify-between h-full overflow-hidden ${
                           selectedDraftId === draft.draft_number
                             ? "bg-[#D4A853]/5 border-[#D4A853]/40"
                             : "bg-[#110F0D]/20 border-[#2A2218] hover:border-[#D4A853]/25"
@@ -1047,7 +1047,7 @@ export default function LearningDashboard() {
                       <div
                         key={num}
                         onClick={() => handleSelectDraft(num)}
-                        className={`p-4 border rounded-xl transition-all cursor-pointer flex flex-col justify-between min-h-[180px] overflow-hidden ${
+                        className={`p-4 border rounded-xl transition-all cursor-pointer flex flex-col justify-between h-full overflow-hidden ${
                           selectedDraftId === num
                             ? "bg-[#D4A853]/5 border-[#D4A853]/40"
                             : "bg-[#110F0D]/20 border-[#2A2218] hover:border-[#D4A853]/25"
