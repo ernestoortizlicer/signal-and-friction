@@ -114,6 +114,52 @@ const CASE_STUDIES: CaseStudy[] = [
     quizExplanation: "Reciprocal Value Offset. The user receives a direct performance benefit in exchange for consenting to share usage data."
   },
   {
+    id: "churn_loop",
+    title: "SaaS Churn Loop: The Silent Revenue Drain",
+    metrics: "Monthly churn rate climbs from 2.1% to 6.8% in 90 days post-launch. Revenue churned: $340K ARR. No spike in support tickets — churn happens silently.",
+    context: "B2B workflow SaaS. Users activate, complete onboarding, then disappear by day 21. No cancellation reasons collected. NPS surveys unsent.",
+    frictionOptions: [
+      "Value Deficit: Users never reach the 'aha moment'",
+      "Cognitive: Feature complexity overwhelms solo operators",
+      "Signal Failure: No behavioral telemetry to detect at-risk users"
+    ],
+    concepts: [
+      { title: "Concept 1: Time-to-Value Compression (Behavioral Science)", description: "The 'aha moment' must occur within the first session. If users don't experience core value in under 7 minutes, churn probability increases by 60%. Onboarding flows must be ruthlessly compressed to the primary use case." },
+      { title: "Concept 2: Silent Churn Detection via Behavioral Signals (Data Science)", description: "Users who churn silently show predictable patterns: login frequency drops below 2x/week in week 2, feature breadth narrows to 1–2 actions, and last-session duration shrinks. Real-time behavioral scoring flags these users before they cancel." },
+      { title: "Concept 3: Proactive Intervention Sequences (CRM Science)", description: "Automated retention sequences triggered by behavioral signals — not time — intercept churn. A personalized outreach at day 14 (when login frequency drops) converts 22% of at-risk users to champions." }
+    ],
+    quizQuestion: "A PLG SaaS shows 78% week-1 retention but 31% week-4 retention. Support tickets are flat. Users complete onboarding but stop logging in by day 18. Isolate the primary friction.",
+    quizAnswers: [
+      "Value Deficit: Users never discovered the core use case that justifies continued use",
+      "Cognitive Load: Too many features overwhelm daily operators",
+      "Trust Deficit: Users distrust automated notifications"
+    ],
+    quizExplanation: "Value Deficit. Completed onboarding but low engagement by day 18 is the classic sign of surface-level activation without value internalization. The product solved a pain once, not habitually."
+  },
+  {
+    id: "async_close",
+    title: "Async B2B Close: The No-Call Pipeline",
+    metrics: "Pipeline of 14 qualified leads stalls for 6 weeks. Discovery calls scheduled, 60% no-show. Deals go cold after 2 follow-up emails. Zero closed.",
+    context: "High-ticket B2B consulting offer ($2,000–$5,000). Founder-led sales. Prospects are senior operators (CMOs, founders) with zero calendar availability.",
+    frictionOptions: [
+      "Trust Deficit: Lack of social proof and outcome specificity",
+      "Cognitive: Multi-step friction before experiencing value",
+      "Sequence Friction: Discovery call creates calendar barrier for busy executives"
+    ],
+    concepts: [
+      { title: "Concept 1: Value-Before-Call Architecture (Async Sales Design)", description: "Senior operators do not schedule calls to evaluate — they schedule calls to confirm. Sending a personalized 3-minute Loom video diagnostic before any calendar link increases call show rates by 65% and eliminates 80% of unqualified leads." },
+      { title: "Concept 2: Evidence-First Positioning (Trust Science)", description: "The Signal & Friction Zero-Call model front-loads specificity: a named friction point, a quantified outcome projection, and a comparison to a named comparable client. This collapses the trust timeline from weeks to hours." },
+      { title: "Concept 3: Async Deliverable as Sales Tool (Conversion Architecture)", description: "A public-facing async deliverable — a 1-page teardown of the prospect's specific funnel — serves simultaneously as a trust signal, a capability demonstration, and a natural call to action with zero cognitive friction." }
+    ],
+    quizQuestion: "A high-ticket consultant sends 12 cold LinkedIn messages. 9 respond. 6 agree to a discovery call. 4 ghost before the call. 0 close. What is the primary friction mechanism?",
+    quizAnswers: [
+      "Sequence Friction: The call creates a calendar commitment before trust is established",
+      "Value Deficit: The offer is not compelling enough",
+      "Trust Deficit: The consultant lacks credibility"
+    ],
+    quizExplanation: "Sequence Friction. The calendar commitment comes before the prospect has experienced any value. Inserting an async value artifact (Loom teardown, 1-page diagnostic) before the call request removes the barrier and front-loads proof."
+  },
+  {
     id: "saas_asia",
     title: "$50M SaaS Asian Expansion Collapse",
     metrics: "Conversion drops by 60% on Singapore/Japan local checkouts. User dropoff occurs at pricing plan confirmation (4.2 minutes average latency).",
@@ -189,6 +235,38 @@ const CHALLENGE_ELEVATIONS: Record<string, {
       { num: 1, category: "Value Deficit", categoryColor: "text-[#C85C5C]", title: "Reciprocity Principle & Value Offsets in Opt-in Flows", summary: "Designing mutual-benefit exchanges to bypass user data privacy walls.", body: "Asking for user telemetry without an immediate reciprocal benefit leads to automatic opt-out. Offering clear advantages (such as performance upgrades or localized caching) increases consent rates by up to 35%." },
       { num: 2, category: "Trust Deficit", categoryColor: "text-[#D4A853]", title: "Privacy-First Analytics Telemetry & Data Sovereignty", summary: "Gaining technical developer trust through cryptographic transparency.", body: "Developers are highly suspicious of telemetry trackers. Demonstrating that all ingested data points are salted and hashed client-side, with full adherence to GDPR, removes corporate liability fears." },
       { num: 3, category: "Copywriting", categoryColor: "text-[#D4A853]", title: "Micro-Copy Teardown: Designing Frictionless Consent Elements", summary: "How micro-copy adjustments change user perception from 'spying' to 'optimizing'.", body: "Words matter. Shifting consent banner text from passive telemetry-oriented tracking jargon to active user-performance enhancements alters the cognitive frame from defense to cooperation." }
+    ]
+  },
+  churn_loop: {
+    gaps: [
+      { label: "Retention Signal Gap", current: 25, target: 90, colorClass: "text-[#C85C5C]", barColor: "from-[#C85C5C] to-[#D4A853]" },
+      { label: "Behavioral Telemetry Gap", current: 35, target: 88, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" }
+    ],
+    studyPlan: [
+      { step: "01", title: "Time-to-Value Audit", desc: "Map every step from signup to first value event. Remove every step not directly required to reach the core 'aha moment'. Target: under 7 minutes." },
+      { step: "02", title: "Behavioral Churn Scoring Model", desc: "Instrument login frequency, feature breadth, and session duration. Flag users with a churn score above 70 by day 10. Trigger automated intervention." },
+      { step: "03", title: "Day-14 Retention Sequence Design", desc: "Build a 3-message behavioral sequence triggered by drop in engagement — not by calendar date. Personalize with the specific use case the user activated with." }
+    ],
+    articles: [
+      { num: 1, category: "Retention", categoryColor: "text-[#C85C5C]", title: "The Churn Signal Stack: Detecting Silent Exit Before It Happens", summary: "Using behavioral telemetry to intercept at-risk users before they cancel.", body: "Silent churn occurs when users stop logging in without cancelling — a signal failure, not a product failure. By tracking login frequency, feature engagement breadth, and session duration as a composite churn score, SaaS operators can identify at-risk users by day 10 — 11 days before the typical silent exit at day 21." },
+      { num: 2, category: "Onboarding", categoryColor: "text-[#D4A853]", title: "Time-to-Value: The 7-Minute Activation Rule", summary: "Why every minute past 7 in onboarding reduces 30-day retention by measurable degrees.", body: "The 7-minute rule emerges from activation data across 200+ SaaS products: users who experience the primary value event (the 'aha moment') within the first session retain at 4.2x the rate of those who don't. Ruthless onboarding compression — removing educational detours and feature showcases — is the single highest-leverage retention lever." },
+      { num: 3, category: "CRM", categoryColor: "text-[#5C9A6B]", title: "Proactive Retention: Behavioral Triggers vs. Calendar Sequences", summary: "Why time-based email sequences fail and behavioral triggers convert.", body: "Standard 'day 7, day 14, day 30' retention emails ignore individual behavioral signals and produce 2–4% re-engagement rates. Behavioral trigger sequences — fired when login frequency drops below threshold — produce 18–24% re-engagement because they reach users at the exact moment of disengagement, with personalized context." }
+    ]
+  },
+  async_close: {
+    gaps: [
+      { label: "Async Sales Design Gap", current: 20, target: 92, colorClass: "text-[#C85C5C]", barColor: "from-[#C85C5C] to-[#D4A853]" },
+      { label: "Evidence Architecture Gap", current: 30, target: 88, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" }
+    ],
+    studyPlan: [
+      { step: "01", title: "Value-Before-Call Artifact Design", desc: "Build a 3-minute Loom video template for each ICP segment. The Loom must contain: one named friction point, one quantified projection, and one comparable client outcome. Send before any calendar link." },
+      { step: "02", title: "Async Deliverable as Sales Tool", desc: "Convert the standard proposal deck into a 1-page public-facing teardown. The teardown is the sales tool — it demonstrates capability before a call is ever scheduled." },
+      { step: "03", title: "Zero-Call Close Protocol", desc: "Design a proposal that closes without a call: Problem → Signal Evidence → Quantified Projection → Investment → One clear CTA (payment link). Eliminate all decision friction." }
+    ],
+    articles: [
+      { num: 1, category: "Async Sales", categoryColor: "text-[#C85C5C]", title: "The Loom Diagnostic: How to Close Before the Discovery Call", summary: "Using personalized video teardowns to front-load trust and eliminate no-shows.", body: "Senior operators — CMOs, founders, VPs — do not schedule calls to evaluate. They schedule calls to confirm a decision they've already made. The Loom diagnostic inverts the sequence: you demonstrate specific insight about their exact problem before requesting calendar time. Show rate increases by 65%. Close rate increases by 40%. Unqualified leads self-select out." },
+      { num: 2, category: "Pipeline", categoryColor: "text-[#D4A853]", title: "Sequence Friction in High-Ticket B2B Sales", summary: "Why calendar-first pipelines kill warm leads and how to fix the sequence.", body: "Every step added before a prospect experiences value is a compounding drop-off point. The standard sequence (cold outreach → calendar link → discovery call → proposal → close) has 5 friction gates. The Signal & Friction zero-call protocol collapses this to 3: outreach → async artifact → close. Response-to-close time drops from 6 weeks to 8 days." },
+      { num: 3, category: "Positioning", categoryColor: "text-[#5C9A6B]", title: "Evidence-First Positioning: The Specificity Advantage", summary: "How named client outcomes and quantified projections collapse the trust timeline.", body: "Generic positioning ('I help companies grow') forces prospects to do mental work to connect your service to their problem. Evidence-first positioning does that work for them: 'I identified the checkout sequence friction that was losing Formbricks 23% of enterprise trials, and rebuilt the flow. They recovered $18K MRR in 6 weeks.' Specificity collapses the trust timeline from weeks to hours." }
     ]
   },
   saas_asia: {
@@ -879,11 +957,11 @@ export default function LearningDashboard() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className="grid grid-cols-1 xl:grid-cols-12 gap-5 relative z-10"
+            className="grid grid-cols-1 xl:grid-cols-12 gap-5 relative z-10 min-h-[75vh] items-stretch"
           >
             {/* LEFT: Draft Engine */}
-            <div className="xl:col-span-8 space-y-4">
-              <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl">
+            <div className="xl:col-span-8 flex flex-col">
+              <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl flex flex-col flex-1">
                 <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase block mb-4">
                   01 — Socratic Draft Engine
                 </span>
@@ -923,7 +1001,7 @@ export default function LearningDashboard() {
                 </div>
 
                 {/* 3 Drafts — lg:grid-cols-3 (safe: only activates at 1024px+ where sidebar+col is wide enough) */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 flex-1 content-start">
                   {activeDrafts.length > 0 ? (
                     activeDrafts.map((draft) => (
                       <div
@@ -1040,7 +1118,7 @@ export default function LearningDashboard() {
             </div>
 
             {/* RIGHT: Debate Flow + Engine Config */}
-            <div className="xl:col-span-4 space-y-4">
+            <div className="xl:col-span-4 flex flex-col gap-4">
 
               {/* Dialectic Chain — spine-based, zero flex-row */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl overflow-hidden">
@@ -1116,7 +1194,7 @@ export default function LearningDashboard() {
               </div>
 
               {/* Mastery Index */}
-              <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-3">
+              <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-3 flex-1">
                 <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase block">Mastery Index</span>
                 {DOMAINS.map((d) => (
                   <div key={d.name}>

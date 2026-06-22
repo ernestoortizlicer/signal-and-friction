@@ -1455,9 +1455,9 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 
                 {/* Timeline Panel */}
-                <div className="lg:col-span-7 border border-[#D4A853]/15 p-8 bg-[#0A0908]/60 rounded space-y-6">
-                  <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">Cronología de Incidencias</h3>
-                  <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin">
+                <div className="lg:col-span-7 border border-[#D4A853]/15 p-8 bg-[#0A0908]/60 rounded flex flex-col">
+                  <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3 flex-shrink-0">Cronología de Incidencias</h3>
+                  <div className="flex-1 min-h-0 mt-6 space-y-6 overflow-y-auto pr-2 scrollbar-thin">
                     {incidents.length === 0 ? (
                       <div className="text-sm text-[#B0A89E] font-mono py-12 text-center">Sin incidencias de IA o proceso registradas.</div>
                     ) : (
