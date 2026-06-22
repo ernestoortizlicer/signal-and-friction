@@ -4,26 +4,22 @@ import { ACME_FALLBACK, DeliverableData } from "../fallback";
 import DeliverableClientView from "./DeliverableClientView";
 
 export async function generateStaticParams() {
-  const paramsList = [{ clientKey: "acme-corp" }];
+  // Hardcoded baseline — guaranteed regardless of filesystem availability during build.
+  // Add new clientKeys here when creating new deliverable JSON files.
+  const known = new Set(["acme-corp", "command-center-guide"]);
 
   try {
     const DELIVERABLES_DIR = path.join(process.cwd(), 'public', 'deliverables');
     if (fs.existsSync(DELIVERABLES_DIR)) {
-      const files = fs.readdirSync(DELIVERABLES_DIR);
-      for (const file of files) {
-        if (file.endsWith('.json')) {
-          const clientKey = file.replace('.json', '');
-          if (!paramsList.some(p => p.clientKey === clientKey)) {
-            paramsList.push({ clientKey });
-          }
-        }
+      for (const file of fs.readdirSync(DELIVERABLES_DIR)) {
+        if (file.endsWith('.json')) known.add(file.replace('.json', ''));
       }
     }
   } catch (e) {
-    console.error("Error reading DELIVERABLES_DIR in generateStaticParams", e);
+    console.error("generateStaticParams: filesystem scan failed, using hardcoded list", e);
   }
 
-  return paramsList;
+  return Array.from(known).map((clientKey) => ({ clientKey }));
 }
 
 export default async function Page({ params }: { params: Promise<{ clientKey: string }> }) {
