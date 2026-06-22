@@ -158,6 +158,16 @@ export default function AdminDashboard() {
   const [diagnosticError, setDiagnosticError] = useState("");
   const [mcpToast, setMcpToast] = useState("");
 
+  // AI Diagnose engine state
+  const [diagnoseLoading, setDiagnoseLoading] = useState(false);
+  const [diagnoseResult, setDiagnoseResult] = useState<{
+    signal: string;
+    friction: string;
+    hypothesis: string;
+    decision: { type: string; label: string; action: string; reasoning: string; tradeoff: string };
+    confidence: number;
+  } | null>(null);
+
   // Parameter modal states
   const [selectedClient, setSelectedClient] = useState<any | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -175,6 +185,49 @@ export default function AdminDashboard() {
   const [modalBaselineRate, setModalBaselineRate] = useState(0);
   const [modalCurrentRate, setModalCurrentRate] = useState(0);
   const [modalGuaranteeStatus, setModalGuaranteeStatus] = useState<'active' | 'met' | 'failed_refunded' | 'voided'>('active');
+
+  const handleDiagnose = async () => {
+    if (!selectedClient) return;
+    setDiagnoseLoading(true);
+    setDiagnoseResult(null);
+    try {
+      // Build site matrix from available client data
+      const payload = {
+        company: selectedClient.company_name,
+        domain: selectedClient.contact_email?.split('@')[1] ?? selectedClient.company_name,
+        context: selectedClient.private_notes || undefined,
+        // Hydrate from lead answers if available
+        frictionScore: selectedClient.cognitive_fatigue_score ?? undefined,
+      };
+      const res = await fetch('/api/diagnose', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      setDiagnoseResult(data);
+    } catch (e: any) {
+      setDiagnoseResult({
+        signal: 'Vault not initialized — Anthropic key pending',
+        friction: e.message || 'Endpoint unreachable in local dev environment',
+        hypothesis: 'Deploy to Cloudflare Pages and run vault.create_secret() in Supabase to activate live diagnostics.',
+        decision: {
+          type: 'A',
+          label: 'Initialize Vault',
+          action: 'Run: SELECT vault.create_secret(\'sk-ant-…\', \'ANTHROPIC_API_KEY\', \'S&F production\') in Supabase SQL editor.',
+          reasoning: 'The /api/diagnose endpoint retrieves the key from Supabase Vault at runtime. Key is absent in current environment.',
+          tradeoff: 'One-time setup cost. Zero key leakage after initialization.',
+        },
+        confidence: 0,
+      });
+    } finally {
+      setDiagnoseLoading(false);
+    }
+  };
 
   const openClientModal = async (client: any) => {
     setSelectedClient(client);
@@ -1934,6 +1987,84 @@ export default function AdminDashboard() {
                           >
                             Confirmar Entrega
                           </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ── AI Diagnostic Engine ── */}
+                  <div className="border border-[#D4A853]/20 p-4 rounded bg-black/30 space-y-4">
+                    <div className="flex items-center justify-between border-b border-[#D4A853]/8 pb-2">
+                      <span className="font-mono text-xs text-[#D4A853] uppercase tracking-wider">Motor de Diagnóstico IA</span>
+                      <span className="font-mono text-[9px] text-[#7A6F65] uppercase border border-[#D4A853]/10 px-2 py-0.5 rounded">
+                        Claude · Vault Secured
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={diagnoseLoading}
+                      onClick={() => { setDiagnoseResult(null); handleDiagnose(); }}
+                      className="w-full py-2.5 bg-[#D4A853]/10 border border-[#D4A853]/30 text-[#D4A853] rounded font-mono text-xs uppercase tracking-wider hover:bg-[#D4A853]/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {diagnoseLoading ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <span className="w-3 h-3 border border-[#D4A853] border-t-transparent rounded-full animate-spin inline-block" />
+                          Procesando telemetría...
+                        </span>
+                      ) : 'Generar diagnóstico →'}
+                    </button>
+
+                    {diagnoseResult && (
+                      <div className="space-y-3 pt-1">
+                        {/* Confidence bar */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between font-mono text-[10px]">
+                            <span className="text-[#7A6F65] uppercase">Confidence Index</span>
+                            <span className={`font-bold ${diagnoseResult.confidence >= 65 ? 'text-[#5C9A6B]' : diagnoseResult.confidence >= 40 ? 'text-[#D4A853]' : 'text-[#C85C5C]'}`}>
+                              {diagnoseResult.confidence}/100
+                            </span>
+                          </div>
+                          <div className="h-1 bg-black/60 rounded-full overflow-hidden border border-[#D4A853]/8">
+                            <div
+                              className={`h-full rounded-full transition-all ${diagnoseResult.confidence >= 65 ? 'bg-[#5C9A6B]' : diagnoseResult.confidence >= 40 ? 'bg-[#D4A853]' : 'bg-[#C85C5C]'}`}
+                              style={{ width: `${diagnoseResult.confidence}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Signal */}
+                        <div className="bg-black/40 border border-[#D4A853]/8 p-3 rounded space-y-1">
+                          <span className="font-mono text-[9px] text-[#D4A853] uppercase tracking-widest block">Signal</span>
+                          <p className="font-mono text-xs text-[#F5F0EB] leading-relaxed">{diagnoseResult.signal}</p>
+                        </div>
+
+                        {/* Friction */}
+                        <div className="bg-black/40 border border-[#C85C5C]/15 p-3 rounded space-y-1">
+                          <span className="font-mono text-[9px] text-[#C85C5C] uppercase tracking-widest block">Friction Mechanism</span>
+                          <p className="font-mono text-xs text-[#F5F0EB] leading-relaxed">{diagnoseResult.friction}</p>
+                        </div>
+
+                        {/* Hypothesis */}
+                        <div className="bg-black/40 border border-white/5 p-3 rounded space-y-1">
+                          <span className="font-mono text-[9px] text-[#B0A89E] uppercase tracking-widest block">Causal Hypothesis</span>
+                          <p className="font-mono text-xs text-[#B0A89E] leading-relaxed italic">{diagnoseResult.hypothesis}</p>
+                        </div>
+
+                        {/* Decision card */}
+                        <div className="bg-[#D4A853]/[0.04] border border-[#D4A853]/20 p-3 rounded space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-[9px] font-bold bg-[#D4A853] text-[#0A0908] px-1.5 py-0.5 rounded">
+                              {diagnoseResult.decision.type}
+                            </span>
+                            <span className="font-mono text-xs font-bold text-[#F5F0EB]">{diagnoseResult.decision.label}</span>
+                          </div>
+                          <p className="font-mono text-xs text-[#F5F0EB] leading-relaxed">
+                            <span className="text-[#D4A853]">→ </span>{diagnoseResult.decision.action}
+                          </p>
+                          <p className="font-mono text-xs text-[#7A6F65] leading-relaxed">{diagnoseResult.decision.reasoning}</p>
+                          <p className="font-mono text-[10px] text-[#7A6F65]/70 border-t border-[#D4A853]/8 pt-2 mt-1">
+                            Tradeoff: {diagnoseResult.decision.tradeoff}
+                          </p>
                         </div>
                       </div>
                     )}
