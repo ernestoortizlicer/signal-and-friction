@@ -128,9 +128,7 @@ export default function CertifiedClient() {
 
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setFormData({ name, email, agency, website });
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setTier(selectedTier);
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSubmitted(true);
 
         const activate = async () => {

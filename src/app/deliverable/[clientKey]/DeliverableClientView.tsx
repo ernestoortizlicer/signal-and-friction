@@ -1,3 +1,18 @@
+/**
+ * AIR-GAPPED CLIENT DELIVERABLE — LOCALE: en (American Business English)
+ *
+ * ARCHITECTURAL CONTRACT:
+ *   - This component is intentionally isolated from the admin LanguageContext.
+ *   - It MUST NOT import useLanguage(), LanguageProvider, or any admin-layer
+ *     i18n mechanism. Locale is hardcoded to "en" at the data-model level.
+ *   - All copy is sourced from the client's DeliverableData JSON (English-only
+ *     schema) or the fallback constants in fallback.ts (English-only).
+ *   - Future changes to the admin ES/EN toggle will have zero effect here by
+ *     structural design: LanguageProvider is mounted only inside AdminLayout,
+ *     which governs /admin/** and no other route tree.
+ *
+ * DO NOT add any admin context imports to this file.
+ */
 "use client";
 
 import { motion } from "framer-motion";
@@ -70,7 +85,6 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (d.checklist) setChecklist(d.checklist);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (d.learningModules?.[0]) setSelectedModuleId(d.learningModules[0].id);
   }, [d]);
 
@@ -87,7 +101,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
   if (fetching && !d.clientName) {
     return (
       <div className="min-h-screen bg-[#0A0908] flex items-center justify-center font-mono text-xs text-[#B0A89E] animate-pulse">
-        Loading diagnostic portal...
+        Initializing diagnostic runtime...
       </div>
     );
   }
@@ -164,7 +178,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                   <div className="bg-[#5C9A6B] h-full rounded-full" style={{ width: `${founderFocusScore}%` }} />
                 </div>
                 <div className="font-mono text-xs text-[#7A6F65] leading-relaxed">
-                  Status: Healthy runway. Cognitive fatigue: {100 - founderFocusScore}/100. Adherence probability high.
+                  Cognitive load index: {100 - founderFocusScore}/100 — Execution adherence: high-confidence threshold.
                 </div>
               </div>
             </div>
@@ -194,7 +208,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                       </svg>
                     </div>
                     <p className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-widest">
-                      Loom Video Briefing Active
+                      Briefing Runtime Pending
                     </p>
                   </div>
                 </div>
@@ -262,7 +276,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
             {activeModule && (
               <div className="border border-[#D4A853]/15 bg-[#110F0D]/60 p-5 rounded-lg space-y-3 mt-4">
                 <span className="font-mono text-xs text-[#D4A853]/70 tracking-wider uppercase block">
-                  Module Summary &amp; Insight
+                  Diagnostic Module — Intervention Brief
                 </span>
                 <h4 className="text-xs font-bold font-mono text-[#F5F0EB]">{activeModule.title}</h4>
                 <p className="text-xs text-[#B0A89E] leading-relaxed font-mono">{activeModule.content}</p>
@@ -372,7 +386,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                     </svg>
                   </div>
                   <p className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider">
-                    Loom video briefing loading...
+                    Async briefing stream pending...
                   </p>
                 </div>
               </div>

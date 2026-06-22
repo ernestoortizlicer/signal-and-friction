@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { getAuthHeaders, supabase } from "@/lib/supabase";
+import { LanguageProvider, useLanguage } from "@/contexts/LanguageContext";
 
 interface ProjectStatus {
   status: string;
@@ -24,7 +25,8 @@ interface TransactionEntry {
   account_id: string;
 }
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+function AdminShell({ children }: { children: React.ReactNode }) {
+  const { lang, toggle } = useLanguage();
   const pathname = usePathname();
   const router = useRouter();
   const [stats, setStats] = useState({ activeLeads: 0, netWorth: 0, tasksToday: 0 });
@@ -204,8 +206,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ))}
         </div>
 
-        {/* Right: status + logout */}
+        {/* Right: lang toggle + status + logout */}
         <div className="flex items-center gap-4">
+          {/* ES / EN language toggle — admin-only, air-gapped from client deliverables */}
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={`Switch interface language — currently ${lang.toUpperCase()}`}
+            title="Toggle admin interface language (ES/EN)"
+            className="font-mono text-xs tracking-[0.12em] uppercase border border-[#D4A853]/20 bg-[#D4A853]/5 px-2.5 py-1 rounded hover:border-[#D4A853]/50 hover:bg-[#D4A853]/10 transition-all cursor-pointer text-[#D4A853] hidden sm:block"
+          >
+            {lang.toUpperCase()}
+          </button>
+          <div className="w-px h-4 bg-[#D4A853]/8" />
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-[#5C9A6B] status-dot-live" />
             <span className="font-mono text-xs text-[#7A6F65] tracking-[0.1em] uppercase hidden sm:block">
@@ -294,5 +307,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </main>
       </div>
     </div>
+  );
+}
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <LanguageProvider>
+      <AdminShell>{children}</AdminShell>
+    </LanguageProvider>
   );
 }
