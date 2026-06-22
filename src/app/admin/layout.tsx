@@ -212,11 +212,12 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           <button
             type="button"
             onClick={toggle}
-            aria-label={`Switch interface language — currently ${lang.toUpperCase()}`}
+            aria-label={`Switch interface language — currently ${lang ? lang.toUpperCase() : "··"}`}
             title="Toggle admin interface language (ES/EN)"
+            suppressHydrationWarning
             className="font-mono text-xs tracking-[0.12em] uppercase border border-[#D4A853]/20 bg-[#D4A853]/5 px-2.5 py-1 rounded hover:border-[#D4A853]/50 hover:bg-[#D4A853]/10 transition-all cursor-pointer text-[#D4A853] hidden sm:block"
           >
-            {lang.toUpperCase()}
+            {lang ? lang.toUpperCase() : "··"}
           </button>
           <div className="w-px h-4 bg-[#D4A853]/8" />
           <div className="flex items-center gap-2">

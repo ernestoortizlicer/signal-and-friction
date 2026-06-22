@@ -1,5 +1,36 @@
 import { createClient } from '@supabase/supabase-js';
-import { LINGUISTIC_SANDBOX } from '../../src/lib/linguistic-sandbox';
+
+// Inlined from src/lib/linguistic-sandbox.ts — cross-directory relative imports
+// are not resolvable by Cloudflare esbuild at function compile time.
+const LINGUISTIC_SANDBOX = `TONE: Absolute high-status, clinical, precision-focused, asymmetrical. Write as a senior venture-backed infrastructure engineer diagnosing a critical system crash — not as a marketer.
+
+ANTI-PATTERNS — terminate on detection:
+- revolutionize, revolutionizing, revolutionary
+- delve, delving, delved
+- testament, testaments
+- seamless, seamlessly
+- passionate, passionately
+- moreover
+- unlock, unlocking, unlocks
+- comprehensive, comprehensively
+- game-changing, game-changer
+- empower, empowering, empowers
+- leverage (as a verb)
+- cutting-edge, bleeding-edge
+- robust (when used as filler)
+- utilize (use "use")
+- ensure (use "enforce" or "verify")
+- in order to (use "to")
+- it's important to note
+
+STRUCTURE:
+- High bullet-density for diagnostic sections.
+- Technical metrics and dry data telemetry analysis preferred over prose narrative.
+- Paragraphs: maximum 2 sentences.
+- Never open with "I" or a subject-less participle ("Looking at…", "Analyzing…").
+- Numbers anchor every claim. If no number exists, say "data pending" — do not approximate.
+
+REGISTER: American Business English. No idioms, no cultural shorthand, no humor.` as const;
 
 interface Env {
   SUPABASE_URL: string;

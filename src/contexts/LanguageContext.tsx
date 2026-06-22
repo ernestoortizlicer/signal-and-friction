@@ -10,6 +10,10 @@
  *
  * Persistence: localStorage key "sf-admin-lang" (client-side only, never
  * sent to Supabase or any external system).
+ *
+ * Hydration contract: lang starts as null so both SSR and the initial
+ * client render produce an identical placeholder. useEffect resolves it
+ * to the stored value after hydration — no mismatch, no flash.
  */
 
 import {
@@ -23,27 +27,28 @@ import {
 export type Lang = "es" | "en";
 
 interface LanguageContextValue {
-  lang: Lang;
+  lang: Lang | null;
   toggle: () => void;
 }
 
 const LanguageContext = createContext<LanguageContextValue>({
-  lang: "es",
+  lang: null,
   toggle: () => {},
 });
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Lang>("es");
+  const [lang, setLang] = useState<Lang | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("sf-admin-lang") as Lang | null;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (stored === "es" || stored === "en") setLang(stored);
+    setLang(stored === "es" || stored === "en" ? stored : "es");
   }, []);
 
   const toggle = () => {
     setLang((prev) => {
-      const next: Lang = prev === "es" ? "en" : "es";
+      const current = prev ?? "es";
+      const next: Lang = current === "es" ? "en" : "es";
       localStorage.setItem("sf-admin-lang", next);
       return next;
     });
