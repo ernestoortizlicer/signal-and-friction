@@ -471,6 +471,52 @@ export default function PersonalFinanceCenter() {
                 ))}
               </section>
 
+              {/* ── ARR & Liquid Buffer Widget ── */}
+              {(() => {
+                const activeMRR = stripeMRR > 0 ? stripeMRR : 12500;
+                const arr = activeMRR * 12;
+                const liquidBuffer = totalAssets;
+                const arrToBuffer = liquidBuffer > 0 ? (arr / liquidBuffer) * 100 : 0;
+                const monthsOfBuffer = activeMRR > 0 ? liquidBuffer / activeMRR : 0;
+                const burnMultiple = averageBurnRate > 0 ? activeMRR / averageBurnRate : 0;
+                return (
+                  <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[
+                      {
+                        label: "ARR",
+                        value: `$${arr.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+                        detail: "MRR × 12",
+                        color: "#D4A853",
+                      },
+                      {
+                        label: "Liquid Buffer",
+                        value: `$${liquidBuffer.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                        detail: "Activos líquidos totales",
+                        color: "#5C9A6B",
+                      },
+                      {
+                        label: "Buffer / ARR",
+                        value: `${arrToBuffer.toFixed(1)}%`,
+                        detail: "Cobertura ARR en caja",
+                        color: arrToBuffer >= 50 ? "#5C9A6B" : "#C85C5C",
+                      },
+                      {
+                        label: "Runway",
+                        value: `${monthsOfBuffer.toFixed(1)} mo`,
+                        detail: `Burn multiple: ${burnMultiple.toFixed(2)}×`,
+                        color: monthsOfBuffer >= 6 ? "#5C9A6B" : "#C85C5C",
+                      },
+                    ].map((item, idx) => (
+                      <div key={idx} className="border border-[#D4A853]/10 p-5 bg-[#110F0D]/80 rounded-2xl space-y-1">
+                        <span className="font-mono text-[10px] text-[#7A6F65] uppercase tracking-widest block">{item.label}</span>
+                        <span className="font-serif text-2xl font-bold block" style={{ color: item.color }}>{item.value}</span>
+                        <span className="font-mono text-[10px] text-[#7A6F65]">{item.detail}</span>
+                      </div>
+                    ))}
+                  </section>
+                );
+              })()}
+
               {/* Stripe Revenue Dashboard */}
               <section className="border border-[#D4A853]/15 bg-[#110F0D] p-8 rounded-2xl space-y-6 relative overflow-hidden text-left">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4A853]/5 rounded-full filter blur-2xl pointer-events-none" />
