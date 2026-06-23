@@ -121,6 +121,27 @@ async function callAnthropic(
   return (data.content?.[0]?.text as string) ?? "";
 }
 
+// ── PostHog capture (fire-and-forget) ────────────────────────────────────────
+async function captureEvent(
+  apiKey: string,
+  event: string,
+  properties: Record<string, unknown>,
+): Promise<void> {
+  try {
+    await fetch("https://app.posthog.com/capture/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        api_key: apiKey,
+        event,
+        distinct_id: "ernesto-sf-admin",
+        properties,
+        timestamp: new Date().toISOString(),
+      }),
+    });
+  } catch { /* silent */ }
+}
+
 // ── Public router ─────────────────────────────────────────────────────────────
 export async function route(opts: RouteOptions): Promise<RouteResult> {
   const {
@@ -134,6 +155,7 @@ export async function route(opts: RouteOptions): Promise<RouteResult> {
   const openrouterKey = Deno.env.get("OPENROUTER_API_KEY") ?? "";
   const deepseekKey   = Deno.env.get("DEEPSEEK_API_KEY")   ?? "";
   const anthropicKey  = Deno.env.get("ANTHROPIC_API_KEY")  ?? "";
+  const posthogKey    = Deno.env.get("POSTHOG_API_KEY")    ?? "";
 
   let text: string;
   let model: string;
@@ -187,6 +209,16 @@ export async function route(opts: RouteOptions): Promise<RouteResult> {
   }
 
   const estimatedCostUSD = estimateCost(tier, system.length + user.length, text.length);
+
+  if (posthogKey) {
+    await captureEvent(posthogKey, "ai_router_call", {
+      tier,
+      model,
+      estimated_cost_usd: estimatedCostUSD,
+      input_chars: system.length + user.length,
+      output_chars: text.length,
+    });
+  }
 
   return { text, model, tier, estimatedCostUSD };
 }

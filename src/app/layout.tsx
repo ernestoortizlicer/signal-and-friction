@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Newsreader, JetBrains_Mono } from "next/font/google";
+import { PHProvider } from "@/components/PostHogProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -82,7 +83,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col font-sans text-text-body bg-bg">
-        {children}
+        <PHProvider>{children}</PHProvider>
       </body>
     </html>
   );

@@ -33,6 +33,7 @@ const BOT_UA = /bot|crawl|spider|slurp|preview|facebookexternalhit|twitterbot|li
 interface Env {
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
+  POSTHOG_API_KEY: string;
 }
 
 interface ExecutionContext {
@@ -45,23 +46,37 @@ async function logView(
   userAgent: string,
   country: string,
 ): Promise<void> {
-  try {
-    await fetch(
-      `${env.SUPABASE_URL}/rest/v1/deliverable_view_events`,
-      {
-        method: "POST",
-        headers: {
-          "apikey": env.SUPABASE_SERVICE_ROLE_KEY,
-          "Authorization": `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-          "Content-Type": "application/json",
-          "Prefer": "return=minimal",
-        },
-        body: JSON.stringify({ client_key: clientKey, user_agent: userAgent, country }),
+  await Promise.allSettled([
+    // Supabase event log
+    fetch(`${env.SUPABASE_URL}/rest/v1/deliverable_view_events`, {
+      method: "POST",
+      headers: {
+        "apikey": env.SUPABASE_SERVICE_ROLE_KEY,
+        "Authorization": `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal",
       },
-    );
-  } catch {
-    // silent — pixel must never error
-  }
+      body: JSON.stringify({ client_key: clientKey, user_agent: userAgent, country }),
+    }),
+    // PostHog — prospect engagement event
+    env.POSTHOG_API_KEY
+      ? fetch("https://app.posthog.com/capture/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            api_key: env.POSTHOG_API_KEY,
+            event: "deliverable_viewed",
+            distinct_id: `prospect-${clientKey}`,
+            properties: {
+              client_key: clientKey,
+              country,
+              user_agent_snippet: userAgent.slice(0, 120),
+            },
+            timestamp: new Date().toISOString(),
+          }),
+        })
+      : Promise.resolve(),
+  ]);
 }
 
 export const onRequestGet = async ({
