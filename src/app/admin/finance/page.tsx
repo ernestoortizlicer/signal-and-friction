@@ -38,6 +38,17 @@ function renderMarkdownBlock(text: string): React.ReactNode {
   });
 }
 
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
 interface Account {
   id: string;
   name: string;
@@ -131,6 +142,10 @@ export default function PersonalFinanceCenter() {
   const [monthlyContrib, setMonthlyContrib] = useState(1000);
   const [returnRate, setReturnRate] = useState(8);
   const [yearsProject, setYearsProject] = useState(25);
+
+  // Deliverable Intelligence
+  const [viewStats, setViewStats] = useState<Record<string, { count: number; lastViewed: string | null }>>({});
+  const [viewStatsLoading, setViewStatsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchFinanceData() {
@@ -274,6 +289,14 @@ export default function PersonalFinanceCenter() {
     }
 
     fetchFinanceData();
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/views")
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((data: Record<string, { count: number; lastViewed: string | null }>) => setViewStats(data))
+      .catch(() => setViewStats({}))
+      .finally(() => setViewStatsLoading(false));
   }, []);
 
   // Compute Balances
@@ -455,6 +478,65 @@ export default function PersonalFinanceCenter() {
               transition={springConfig}
               className="space-y-12"
             >
+              {/* Deliverable Intelligence */}
+              <section className="border border-[#D4A853]/12 rounded-2xl bg-[#110F0D] p-6 space-y-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853] block mb-0.5">Deliverable Intelligence</span>
+                    <p className="text-xs text-[#7A6F65]">Real-time prospect engagement — tracks when a client opens their teardown</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setViewStatsLoading(true);
+                      fetch("/api/views")
+                        .then((r) => (r.ok ? r.json() : {}))
+                        .then((data: Record<string, { count: number; lastViewed: string | null }>) => setViewStats(data))
+                        .catch(() => setViewStats({}))
+                        .finally(() => setViewStatsLoading(false));
+                    }}
+                    className="font-mono text-xs text-[#B0A89E] hover:text-[#D4A853] border border-[#D4A853]/10 hover:border-[#D4A853]/30 px-3 py-1.5 rounded-full transition-all cursor-pointer"
+                  >
+                    Refresh
+                  </button>
+                </div>
+
+                {viewStatsLoading ? (
+                  <div className="font-mono text-xs text-[#7A6F65] animate-pulse">Loading engagement data...</div>
+                ) : Object.keys(viewStats).length === 0 ? (
+                  <div className="text-xs text-[#7A6F65] italic">No deliverable views recorded yet. Send a client link to start tracking.</div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {Object.entries(viewStats)
+                      .sort((a, b) => (b[1].lastViewed ?? "").localeCompare(a[1].lastViewed ?? ""))
+                      .map(([clientKey, stat]) => {
+                        const isHot = stat.lastViewed && (Date.now() - new Date(stat.lastViewed).getTime()) < 3600000 * 24;
+                        return (
+                          <div
+                            key={clientKey}
+                            className={`rounded-xl p-4 border ${isHot ? "border-[#22c55e]/20 bg-[#22c55e]/4" : "border-[#D4A853]/8 bg-[#0A0908]"}`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-mono text-xs text-[#B0A89E] truncate max-w-[70%]">{clientKey}</span>
+                              {isHot && (
+                                <span className="font-mono text-[9px] uppercase tracking-wider text-[#22c55e] bg-[#22c55e]/10 px-1.5 py-0.5 rounded-full">Hot</span>
+                              )}
+                            </div>
+                            <div className="flex items-end justify-between">
+                              <span className="font-serif text-2xl font-bold text-[#D4A853]">{stat.count}</span>
+                              <span className="font-mono text-[10px] text-[#7A6F65]">
+                                {stat.lastViewed ? timeAgo(stat.lastViewed) : "—"}
+                              </span>
+                            </div>
+                            <span className="font-mono text-[9px] text-[#7A6F65] uppercase tracking-wider">
+                              {stat.count === 1 ? "view" : "views"}
+                            </span>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+              </section>
+
               {/* Scorecard */}
               <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[

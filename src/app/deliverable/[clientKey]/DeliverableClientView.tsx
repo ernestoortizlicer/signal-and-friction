@@ -53,6 +53,11 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
       .finally(() => setFetching(false));
   }, [urlClientKey]);
 
+  // Tracking pixel — fire-and-forget, non-blocking
+  useEffect(() => {
+    fetch(`/api/pixel?client=${encodeURIComponent(urlClientKey)}`, { keepalive: true }).catch(() => {});
+  }, [urlClientKey]);
+
   const isMicrodosing = d.segment === "microdosing";
 
   // Dynamic values (previously hardcoded)
