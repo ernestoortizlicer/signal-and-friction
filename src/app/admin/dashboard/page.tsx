@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAuthHeaders } from "@/lib/supabase";
 import { AdminStatCard, RevenueProgressBar } from "@/components/admin/AdminComponents";
-import { useT } from "@/contexts/LanguageContext";
 
 interface DashboardMetrics {
   totalLeads: number;
@@ -153,7 +152,6 @@ interface LeadRecord {
 const springConfig = { type: "spring" as const, stiffness: 100, damping: 18 };
 
 export default function AdminDashboard() {
-  const t = useT();
   const [activeView, setActiveView] = useState<'pipeline' | 'learning'>('pipeline');
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [incidents, setIncidents] = useState<AIIncident[]>([]);
@@ -924,7 +922,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0A0908] flex items-center justify-center font-mono text-xs text-[#D4A853] animate-pulse">
-        {t("Cargando analíticas del pipeline...", "Loading pipeline analytics...")}
+        {"Loading pipeline analytics..."}
       </div>
     );
   }
@@ -969,17 +967,17 @@ export default function AdminDashboard() {
         {/* Navigation & Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#D4A853]/10 pb-8">
           <div>
-            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853]/70 block mb-2">{t("OS Interno", "Internal OS")}</span>
-            <h1 className="text-4xl font-serif text-white tracking-tight">{t("Flujo de Ventas · Signal & Friction", "Sales Pipeline · Signal & Friction")}</h1>
+            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853]/70 block mb-2">{"Internal OS"}</span>
+            <h1 className="text-4xl font-serif text-white tracking-tight">{"Sales Pipeline · Signal & Friction"}</h1>
           </div>
           <div className="flex items-center gap-4 mt-4 md:mt-0">
             <span className="font-mono text-xs uppercase tracking-wider text-[#D4A853] border border-[#D4A853]/25 px-3 py-1 rounded bg-[#D4A853]/5">
-              {t("Área Admin Autenticada", "Authenticated Admin Area")}
+              {"Authenticated Admin Area"}
             </span>
           </div>
         </header>
 
-        {/* Pestañas de navegación */}
+        {/* Navigation tabs */}
         <div className="flex border-b border-[#D4A853]/8 gap-8">
           <button
             onClick={() => setActiveView('pipeline')}
@@ -987,7 +985,7 @@ export default function AdminDashboard() {
               activeView === 'pipeline' ? "border-[#D4A853] text-[#D4A853]" : "border-transparent text-[#7A6F65] hover:text-[#B0A89E]"
             }`}
           >
-            {t("Pipeline y Conversiones", "Pipeline & Conversions")}
+            {"Pipeline & Conversions"}
           </button>
           <button
             onClick={() => setActiveView('learning')}
@@ -995,7 +993,7 @@ export default function AdminDashboard() {
               activeView === 'learning' ? "border-[#D4A853] text-[#D4A853]" : "border-transparent text-[#7A6F65] hover:text-[#B0A89E]"
             }`}
           >
-            {t("OS de Aprendizaje Continuo", "Continuous Learning OS")}
+            {"Continuous Learning OS"}
             {criticalAlerts.length > 0 && (
               <span className="absolute top-0 right-[-14px] w-2 h-2 bg-[#C85C5C] rounded-full animate-pulse" />
             )}
@@ -1022,15 +1020,15 @@ export default function AdminDashboard() {
                   <div className="border border-[#D4A853]/20 bg-[#110F0D] p-6 rounded-2xl space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="font-mono text-xs uppercase tracking-[0.25em] text-[#D4A853]/70 block mb-1">{t("Trayectoria ARR", "ARR Trajectory")}</span>
+                        <span className="font-mono text-xs uppercase tracking-[0.25em] text-[#D4A853]/70 block mb-1">{"ARR Trajectory"}</span>
                         <div className="flex items-baseline gap-3">
                           <span className="font-serif text-3xl font-bold text-white">${arrUsd.toLocaleString()}</span>
-                          <span className="font-mono text-xs text-[#7A6F65]">{t("/ objetivo $1.000.000", "/ target $1,000,000")}</span>
+                          <span className="font-mono text-xs text-[#7A6F65]">{"/ target $1,000,000"}</span>
                         </div>
                       </div>
                       <div className="text-right">
                         <span className="font-mono text-2xl font-bold text-[#D4A853]">{pct.toFixed(2)}%</span>
-                        <span className="font-mono text-xs text-[#7A6F65] block mt-0.5">${remaining.toLocaleString()} {t("restantes", "remaining")}</span>
+                        <span className="font-mono text-xs text-[#7A6F65] block mt-0.5">${remaining.toLocaleString()} {"remaining"}</span>
                       </div>
                     </div>
                     <div className="relative h-3 bg-black/60 border border-[#D4A853]/10 rounded-full overflow-hidden">
@@ -1055,7 +1053,7 @@ export default function AdminDashboard() {
                             <div key={i} className="flex-1 rounded-sm bg-[#D4A853]/30 transition-all" style={{ height: `${h}%` }} title={`$${v}`} />
                           );
                         })}
-                        <span className="font-mono text-[9px] text-[#D4A853]/70 ml-1 self-end">{t("hoy", "today")}</span>
+                        <span className="font-mono text-[9px] text-[#D4A853]/70 ml-1 self-end">{"today"}</span>
                       </div>
                     )}
                   </div>
@@ -1065,8 +1063,8 @@ export default function AdminDashboard() {
               {/* 30-Day Sprint Tracker */}
               <section>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.3em] uppercase">{t("Sprint 30 Días", "30-Day Sprint")}</span>
-                  <span className="font-mono text-xs text-[#7A6F65] border border-[#D4A853]/10 px-2 py-0.5 rounded-full">{t("Fase 2 · Ruta $1M", "Phase 2 · $1M Path")}</span>
+                  <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.3em] uppercase">{"30-Day Sprint"}</span>
+                  <span className="font-mono text-xs text-[#7A6F65] border border-[#D4A853]/10 px-2 py-0.5 rounded-full">{"Phase 2 · $1M Path"}</span>
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {(() => {
@@ -1076,9 +1074,9 @@ export default function AdminDashboard() {
                     const mrr = htMrr + dwyMrr || clients * 350;
                     const pctToMillion = +((mrr * 12) / 10000).toFixed(1);
                     return [
-                      { label: t("Clientes", "Clients"), display: String(clients), accent: "text-[#5C9A6B]" },
+                      { label: "Clients", display: String(clients), accent: "text-[#5C9A6B]" },
                       { label: "MRR", display: `$${mrr.toLocaleString()}`, accent: "text-[#D4A853]" },
-                      { label: t("Liquidez", "Liquidity"), display: `$${mrr.toLocaleString()}`, accent: "text-[#D4A853]" },
+                      { label: "Liquidity", display: `$${mrr.toLocaleString()}`, accent: "text-[#D4A853]" },
                       { label: "% ARR $1M", display: `${pctToMillion}%`, accent: "text-[#F5F0EB]" },
                     ].map((card) => (
                       <div key={card.label} className="border border-[#D4A853]/15 bg-[#110F0D] p-4">
@@ -1093,12 +1091,12 @@ export default function AdminDashboard() {
               {/* Analytics Scorecard Row */}
               <section className="grid grid-cols-2 lg:grid-cols-6 gap-4">
                 {[
-                  { label: t("Leads Totales", "Total Leads"), value: m.totalLeads, detail: t("Todos los perfiles", "All profiles"), color: "text-[#F5F0EB]" },
-                  { label: "High-Ticket", value: m.highTicketCount || 0, detail: t("Vía Concierge", "Via Concierge"), color: "text-[#D4A853]" },
-                  { label: "Microdosing", value: m.microdosingCount || 0, detail: t("Vía Autonomía", "Via Autonomy"), color: "text-[#B0A89E]" },
-                  { label: t("Outreach Enviado", "Outreach Sent"), value: m.outreachSent, detail: t("DMs Beta activos", "Active Beta DMs"), color: "text-[#D4A853]" },
-                  { label: t("Diagnósticos", "Diagnostics"), value: m.diagnosticsDelivered, detail: t("Briefs Loom entregados", "Loom briefs delivered"), color: "text-[#D4A853]" },
-                  { label: t("Deals Cerrados", "Closed Deals"), value: m.dealsClosed, detail: t("Testimonio y pago", "Testimonial & payment"), color: "text-[#5C9A6B]" },
+                  { label: "Total Leads", value: m.totalLeads, detail: "All profiles", color: "text-[#F5F0EB]" },
+                  { label: "High-Ticket", value: m.highTicketCount || 0, detail: "Via Concierge", color: "text-[#D4A853]" },
+                  { label: "Microdosing", value: m.microdosingCount || 0, detail: "Via Autonomy", color: "text-[#B0A89E]" },
+                  { label: "Outreach Sent", value: m.outreachSent, detail: "Active Beta DMs", color: "text-[#D4A853]" },
+                  { label: "Diagnostics", value: m.diagnosticsDelivered, detail: "Loom briefs delivered", color: "text-[#D4A853]" },
+                  { label: "Closed Deals", value: m.dealsClosed, detail: "Testimonial & payment", color: "text-[#5C9A6B]" },
                 ].map((item, idx) => (
                   <AdminStatCard
                     key={idx}
@@ -1115,13 +1113,13 @@ export default function AdminDashboard() {
               <section className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Conversion Funnel */}
                 <div className="lg:col-span-7 border border-[#D4A853]/15 p-8 bg-[#0A0908]/60 rounded space-y-6">
-                  <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">{t("Embudo de Captación", "Acquisition Funnel")}</h3>
+                  <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">{"Acquisition Funnel"}</h3>
                   <div className="space-y-4">
                     {[
-                      { step: t("Leads Identificados", "Identified Leads"), count: m.totalLeads, pct: 100 },
-                      { step: t("Ciclos de Outreach", "Outreach Cycles"), count: m.outreachSent + m.diagnosticsDelivered, pct: m.totalLeads > 0 ? ((m.outreachSent + m.diagnosticsDelivered) / m.totalLeads) * 100 : 0 },
-                      { step: t("Diagnósticos Entregados", "Diagnostics Delivered"), count: m.diagnosticsDelivered, pct: m.totalLeads > 0 ? (m.diagnosticsDelivered / m.totalLeads) * 100 : 0 },
-                      { step: t("Cierre Beta Exitoso", "Successful Beta Close"), count: m.dealsClosed, pct: m.totalLeads > 0 ? (m.dealsClosed / m.totalLeads) * 100 : 0 },
+                      { step: "Identified Leads", count: m.totalLeads, pct: 100 },
+                      { step: "Outreach Cycles", count: m.outreachSent + m.diagnosticsDelivered, pct: m.totalLeads > 0 ? ((m.outreachSent + m.diagnosticsDelivered) / m.totalLeads) * 100 : 0 },
+                      { step: "Diagnostics Delivered", count: m.diagnosticsDelivered, pct: m.totalLeads > 0 ? (m.diagnosticsDelivered / m.totalLeads) * 100 : 0 },
+                      { step: "Successful Beta Close", count: m.dealsClosed, pct: m.totalLeads > 0 ? (m.dealsClosed / m.totalLeads) * 100 : 0 },
                     ].map((item, idx) => (
                       <div key={idx} className="space-y-1.5">
                         <div className="flex justify-between text-xs font-mono">
@@ -1144,13 +1142,13 @@ export default function AdminDashboard() {
 
                 {/* Cognitive Friction Breakdown */}
                 <div className="lg:col-span-5 border border-[#D4A853]/15 p-8 bg-[#0A0908]/60 rounded space-y-6">
-                  <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">{t("Mecanismos de Fricción", "Friction Mechanisms")}</h3>
+                  <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">{"Friction Mechanisms"}</h3>
                   <div className="space-y-3">
                     {[
-                      { key: t("Carga Cognitiva", "Cognitive Load"), count: m.frictionCounts.cognitive_load, color: "bg-[#D4A853]" },
-                      { key: t("Déficit de Confianza", "Trust Deficit"), count: m.frictionCounts.trust_deficit, color: "bg-[#22C55E]" },
-                      { key: t("Déficit de Valor", "Value Deficit"), count: m.frictionCounts.value_deficit, color: "bg-[#3B82F6]" },
-                      { key: t("Orden de Secuencia", "Sequence Order"), count: m.frictionCounts.sequence_order, color: "bg-[#A855F7]" },
+                      { key: "Cognitive Load", count: m.frictionCounts.cognitive_load, color: "bg-[#D4A853]" },
+                      { key: "Trust Deficit", count: m.frictionCounts.trust_deficit, color: "bg-[#22C55E]" },
+                      { key: "Value Deficit", count: m.frictionCounts.value_deficit, color: "bg-[#3B82F6]" },
+                      { key: "Sequence Order", count: m.frictionCounts.sequence_order, color: "bg-[#A855F7]" },
                     ].map((item, idx) => (
                       <div key={idx} className="flex items-center justify-between text-xs font-mono">
                         <div className="flex items-center gap-2">
@@ -1170,20 +1168,20 @@ export default function AdminDashboard() {
                 <div className="lg:col-span-6 border border-[#D4A853]/15 p-6 bg-[#110F0D] rounded-2xl space-y-5">
                   <div className="flex justify-between items-center border-b border-[#D4A853]/10 pb-4">
                     <h3 className="font-serif text-lg text-white flex items-center gap-2">
-                      <span className="text-[#D4A853]">⚡</span> {t("Garantías de Resultados", "Performance Guarantees")}
+                      <span className="text-[#D4A853]">⚡</span> {"Performance Guarantees"}
                     </h3>
                     <span className="font-mono text-xs uppercase bg-[#D4A853]/10 text-[#D4A853] px-3 py-1 rounded-full border border-[#D4A853]/20">
-                      {m.activeGuaranteesCount || 0} {t("Activas", "Active")}
+                      {m.activeGuaranteesCount || 0} {"Active"}
                     </span>
                   </div>
 
                   <p className="text-sm text-[#B0A89E] font-mono leading-relaxed">
-                    {t("Clientes Concierge bajo el protocolo de garantía por resultados. +20% conversión en 30 días o factura anulada.", "Concierge clients under the performance guarantee protocol. +20% conversion in 30 days or invoice voided.")}
+                    {"Concierge clients under the performance guarantee protocol. +20% conversion in 30 days or invoice voided."}
                   </p>
 
                   <div className="space-y-4">
                     {m.pipeline.filter(p => p.guarantee_active).length === 0 ? (
-                      <div className="text-sm text-[#B0A89E] font-mono text-center py-6">{t("Sin campañas garantizadas activas.", "No active guaranteed campaigns.")}</div>
+                      <div className="text-sm text-[#B0A89E] font-mono text-center py-6">{"No active guaranteed campaigns."}</div>
                     ) : (
                       m.pipeline.filter(p => p.guarantee_active).map((item) => (
                         <div key={item.id} className="border border-[#D4A853]/8 bg-black/30 p-4 rounded-xl space-y-3">
@@ -1221,8 +1219,8 @@ export default function AdminDashboard() {
                           {/* Progress bar */}
                           <div className="space-y-1.5">
                             <div className="flex justify-between text-xs font-mono">
-                              <span className="text-[#7A6F65]">{t("Ventana 30 días", "30-Day Window")}</span>
-                              <span className="text-[#D4A853]">{t("Meta: +", "Target: +")}{item.guarantee?.target_improvement_pct || 20}%</span>
+                              <span className="text-[#7A6F65]">{"30-Day Window"}</span>
+                              <span className="text-[#D4A853]">{"Target: +"}{item.guarantee?.target_improvement_pct || 20}%</span>
                             </div>
                             <div className="h-1.5 bg-black border border-[#D4A853]/8 rounded-full overflow-hidden">
                               <div className="h-full bg-[#D4A853]" style={{ width: '40%' }} />
@@ -1238,20 +1236,20 @@ export default function AdminDashboard() {
                 <div className="lg:col-span-6 border border-[#D4A853]/15 p-6 bg-[#110F0D] rounded-2xl space-y-5">
                   <div className="flex justify-between items-center border-b border-[#D4A853]/10 pb-4">
                     <h3 className="font-serif text-lg text-white flex items-center gap-2">
-                      <span className="text-[#D4A853]">🏆</span> {t("Partners Certificados™", "Certified Partners™")}
+                      <span className="text-[#D4A853]">🏆</span> {"Certified Partners™"}
                     </h3>
                     <span className="font-mono text-xs uppercase bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full border border-amber-500/20">
-                      {m.certifiedCount || 0} {t("Licenciados", "Licensed")}
+                      {m.certifiedCount || 0} {"Licensed"}
                     </span>
                   </div>
 
                   <p className="text-sm text-[#B0A89E] font-mono leading-relaxed">
-                    {t("Metodología licenciada a agencias externas ($1.500/año). Auditoría anual con mínimo 80% de satisfacción.", "Methodology licensed to external agencies ($1,500/yr). Annual audit with minimum 80% satisfaction.")}
+                    {"Methodology licensed to external agencies ($1,500/yr). Annual audit with minimum 80% satisfaction."}
                   </p>
 
                   <div className="space-y-3">
                     {m.pipeline.filter(p => p.is_certified).length === 0 ? (
-                      <div className="text-sm text-[#B0A89E] font-mono text-center py-6">{t("Sin partners certificados registrados.", "No certified partners registered.")}</div>
+                      <div className="text-sm text-[#B0A89E] font-mono text-center py-6">{"No certified partners registered."}</div>
                     ) : (
                       m.pipeline.filter(p => p.is_certified).map((partner) => (
                         <div key={partner.id} className="flex justify-between items-center p-4 border border-[#D4A853]/15 bg-black/20 rounded-xl hover:border-[#D4A853]/35 transition-all duration-300">
@@ -1264,7 +1262,7 @@ export default function AdminDashboard() {
                               SLA: {partner.expansion_score ? partner.expansion_score : 85}%
                             </span>
                             <span className="text-xs text-[#7A6F65] font-mono block">
-                              {t("Próx. Auditoría: Dic 2026", "Next Audit: Dec 2026")}
+                              {"Next Audit: Dec 2026"}
                             </span>
                           </div>
                         </div>
@@ -1277,13 +1275,13 @@ export default function AdminDashboard() {
               {/* Strategic Conversion Queue — Feature 3 */}
               <section className="border border-[#D4A853]/15 p-6 bg-[#110F0D] rounded-2xl space-y-5">
                 <div className="flex items-center justify-between border-b border-[#D4A853]/10 pb-4">
-                  <h3 className="font-serif text-lg text-white">{t("Cola de Conversión", "Conversion Queue")}</h3>
+                  <h3 className="font-serif text-lg text-white">{"Conversion Queue"}</h3>
                   <span className="font-mono text-xs uppercase text-[#7A6F65] border border-[#D4A853]/15 px-3 py-1 rounded-full">
-                    {leads.length} {t("leads entrantes", "incoming leads")}
+                    {leads.length} {"incoming leads"}
                   </span>
                 </div>
                 {leads.length === 0 ? (
-                  <p className="font-mono text-xs text-[#7A6F65] text-center py-8">{t("Sin leads en cola. Conecta el formulario Tally para empezar.", "No leads in queue. Connect the Tally form to get started.")}</p>
+                  <p className="font-mono text-xs text-[#7A6F65] text-center py-8">{"No leads in queue. Connect the Tally form to get started."}</p>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {leads.map((lead) => {
@@ -1314,23 +1312,23 @@ export default function AdminDashboard() {
                           </div>
                           <div className="grid grid-cols-3 gap-2 text-center">
                             <div className="bg-black/40 rounded p-1.5">
-                              <span className="font-mono text-[9px] text-[#7A6F65] uppercase block">{t("Valor Est.", "Est. Value")}</span>
+                              <span className="font-mono text-[9px] text-[#7A6F65] uppercase block">{"Est. Value"}</span>
                               <span className="font-mono text-xs font-bold text-[#D4A853]">${estimatedValue.toLocaleString()}</span>
                             </div>
                             <div className="bg-black/40 rounded p-1.5">
-                              <span className="font-mono text-[9px] text-[#7A6F65] uppercase block">{t("Latencia", "Latency")}</span>
+                              <span className="font-mono text-[9px] text-[#7A6F65] uppercase block">{"Latency"}</span>
                               <span className={`font-mono text-xs font-bold ${urgency === 'hot' ? 'text-[#C85C5C]' : urgency === 'warm' ? 'text-amber-400' : 'text-[#B0A89E]'}`}>
                                 {hoursAgo}h
                               </span>
                             </div>
                             <div className="bg-black/40 rounded p-1.5">
-                              <span className="font-mono text-[9px] text-[#7A6F65] uppercase block">{t("Fuente", "Source")}</span>
+                              <span className="font-mono text-[9px] text-[#7A6F65] uppercase block">{"Source"}</span>
                               <span className="font-mono text-xs text-[#B0A89E]">{lead.source}</span>
                             </div>
                           </div>
                           <div className="flex items-center justify-between pt-1 border-t border-[#D4A853]/8">
                             <span className={`font-mono text-[9px] uppercase ${urgency === 'hot' ? 'text-[#C85C5C]' : urgency === 'warm' ? 'text-amber-400' : 'text-[#7A6F65]'}`}>
-                              {urgency === 'hot' ? t('🔴 Responde ya', '🔴 Respond now') : urgency === 'warm' ? t('🟡 Responde hoy', '🟡 Respond today') : t('⚪ En cola', '⚪ In queue')}
+                              {urgency === 'hot' ? '🔴 Respond now' : urgency === 'warm' ? '🟡 Respond today' : '⚪ In queue'}
                             </span>
                             <span className="font-mono text-[9px] text-[#D4A853]/70 group-hover:text-[#D4A853] transition-colors">Ver →</span>
                           </div>
@@ -1344,19 +1342,19 @@ export default function AdminDashboard() {
               {/* Pipeline Kanban View */}
               <section className="border border-[#D4A853]/10 p-8 bg-[#110F0D]/60 rounded-2xl space-y-6">
                 <div className="flex justify-between items-center border-b border-[#D4A853]/10 pb-4">
-                  <h3 className="font-serif text-xl text-white">{t("Tablero Activo", "Active Board")}</h3>
+                  <h3 className="font-serif text-xl text-white">{"Active Board"}</h3>
                   <span className="text-xs font-mono text-[#7A6F65] uppercase tracking-wider">
-                    {t("Haz clic en una tarjeta para editar", "Click a card to edit")}
+                    {"Click a card to edit"}
                   </span>
                 </div>
 
                 {/* Next Actions summary bar */}
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 p-5 border border-[#D4A853]/15 bg-black/40 rounded-xl">
                   {[
-                    { status: "prospecting", title: t("Outreach Pendiente", "Pending Outreach"), count: m.pipeline.filter(p => p.status === "prospecting").length, color: "text-[#D4A853]", action: t("Enviar pitch de outreach", "Send outreach pitch") },
-                    { status: "outreach_sent", title: t("Seguimiento Necesario", "Follow-up Needed"), count: m.pipeline.filter(p => p.status === "outreach_sent").length, color: "text-amber-400", action: t("Seguimiento o avanzar", "Follow up or advance") },
-                    { status: "diagnostic_in_progress", title: t("Diagnóstico Pendiente", "Pending Diagnostic"), count: m.pipeline.filter(p => p.status === "diagnostic_in_progress").length, color: "text-purple-400", action: t("Subir Loom y Figma", "Upload Loom and Figma") },
-                    { status: "delivered", title: t("Pendiente de Cierre", "Pending Close"), count: m.pipeline.filter(p => p.status === "delivered" || p.status === "awaiting_testimonial").length, color: "text-[#5C9A6B]", action: t("Solicitar testimonio", "Request testimonial") },
+                    { status: "prospecting", title: "Pending Outreach", count: m.pipeline.filter(p => p.status === "prospecting").length, color: "text-[#D4A853]", action: "Send outreach pitch" },
+                    { status: "outreach_sent", title: "Follow-up Needed", count: m.pipeline.filter(p => p.status === "outreach_sent").length, color: "text-amber-400", action: "Follow up or advance" },
+                    { status: "diagnostic_in_progress", title: "Pending Diagnostic", count: m.pipeline.filter(p => p.status === "diagnostic_in_progress").length, color: "text-purple-400", action: "Upload Loom and Figma" },
+                    { status: "delivered", title: "Pending Close", count: m.pipeline.filter(p => p.status === "delivered" || p.status === "awaiting_testimonial").length, color: "text-[#5C9A6B]", action: "Request testimonial" },
                   ].map(card => (
                     <button
                       key={card.status}
@@ -1385,7 +1383,7 @@ export default function AdminDashboard() {
                     return (
                       <div key={col} className="bg-black/40 border border-[#D4A853]/8 rounded-xl p-4 flex flex-col gap-3 min-h-[300px]">
                         <span className="font-mono text-xs uppercase tracking-wider text-[#D4A853] border-b border-[#D4A853]/15 pb-3">
-                          {({ prospecting: t("Prospección", "Prospecting"), outreach_sent: t("Outreach Enviado", "Outreach Sent"), diagnostic_in_progress: t("Diagnóstico en Curso", "Diagnosis In Progress"), delivered: t("Entregado", "Delivered") } as Record<string, string>)[col] || col.replace(/_/g, " ")} ({items.length})
+                          {({ prospecting: "Prospecting", outreach_sent: "Outreach Sent", diagnostic_in_progress: "Diagnosis In Progress", delivered: "Delivered" } as Record<string, string>)[col] || col.replace(/_/g, " ")} ({items.length})
                         </span>
                         <div className="flex flex-col gap-3 grow">
                           {items.map((item) => (
@@ -1435,8 +1433,8 @@ export default function AdminDashboard() {
                                   : hoursLeft < 12 ? "text-amber-400 border-amber-400/30 bg-amber-400/5"
                                   : "text-[#5C9A6B] border-[#5C9A6B]/20 bg-[#5C9A6B]/5";
                                 const label = hoursLeft < 0
-                                  ? `⚠ ${t("SLA excedido", "SLA exceeded")} ${Math.abs(Math.round(hoursLeft))}h`
-                                  : `⏱ ${Math.round(hoursLeft)}h ${t("restantes", "remaining")}`;
+                                  ? `⚠ ${"SLA exceeded"} ${Math.abs(Math.round(hoursLeft))}h`
+                                  : `⏱ ${Math.round(hoursLeft)}h ${"remaining"}`;
                                 return (
                                   <span className={`mt-1.5 inline-block font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${color}`}>
                                     {label}
@@ -1445,7 +1443,7 @@ export default function AdminDashboard() {
                               })()}
                               {item.status === "delivered" && (
                                 <span className="mt-1.5 inline-block font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border text-[#5C9A6B] border-[#5C9A6B]/20 bg-[#5C9A6B]/5">
-                                  {t("✓ SLA cumplido", "✓ SLA met")}
+                                  {"✓ SLA met"}
                                 </span>
                               )}
 
@@ -1469,7 +1467,7 @@ export default function AdminDashboard() {
 
                               <div className="flex items-center justify-between mt-3 pt-2 border-t border-[#D4A853]/8 text-xs font-mono">
                                 <span className={item.payment_status === "paid" ? "text-[#5C9A6B] font-medium" : "text-[#7A6F65]"}>
-                                  {({ paid: t("Pagado", "Paid"), uninvoiced: t("Sin Facturar", "Uninvoiced"), invoiced_unpaid: t("Facturado", "Invoiced") } as Record<string, string>)[item.payment_status] || item.payment_status}
+                                  {({ paid: "Paid", uninvoiced: "Uninvoiced", invoiced_unpaid: "Invoiced" } as Record<string, string>)[item.payment_status] || item.payment_status}
                                 </span>
                                 <span className="text-[#7A6F65]">#{item.id.slice(0, 4)}</span>
                               </div>
@@ -1496,12 +1494,9 @@ export default function AdminDashboard() {
                 <div className="border border-[#C85C5C]/20 bg-[#C85C5C]/5 p-6 rounded-2xl flex items-start gap-4 animate-pulse">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#C85C5C] mt-2 shrink-0 animate-ping" />
                   <div className="space-y-1.5">
-                    <h4 className="font-mono text-xs uppercase tracking-widest text-[#C85C5C] font-bold">{t("ALERTA CRÍTICA DEL SISTEMA", "CRITICAL SYSTEM ALERT")}</h4>
+                    <h4 className="font-mono text-xs uppercase tracking-widest text-[#C85C5C] font-bold">{"CRITICAL SYSTEM ALERT"}</h4>
                     <p className="text-xs text-white leading-relaxed">
-                      {t(
-                        `Se encontraron ${criticalAlerts.length} incidencia(s) de severidad alta o crítica sin resolver. Los límites de seguridad de ejecución del sistema están degradados. Ejecuta el comando MCP`,
-                        `Found ${criticalAlerts.length} unresolved high or critical severity incident(s). System execution safety limits are degraded. Run the MCP command`
-                      )} <code className="font-mono text-amber-500 bg-black/40 px-2 py-0.5 rounded border border-[#D4A853]/8 select-all">/beta:iterate-from-incidents</code> {t("de inmediato para inyectar las correcciones.", "immediately to inject the fixes.")}
+                      {`Found ${criticalAlerts.length} unresolved high or critical severity incident(s). System execution safety limits are degraded. Run the MCP command`} <code className="font-mono text-amber-500 bg-black/40 px-2 py-0.5 rounded border border-[#D4A853]/8 select-all">/beta:iterate-from-incidents</code> {"immediately to inject the fixes."}
                     </p>
                     <div className="flex flex-col gap-2 mt-3">
                       {criticalAlerts.map(inc => (
@@ -1517,10 +1512,10 @@ export default function AdminDashboard() {
               {/* Continuous Learning Scorecard Row */}
               <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: t("Versión Activa", "Active Version"), value: currentVersion, detail: t("Iteración global del prompt", "Global prompt iteration") },
-                  { label: t("Sin Resolver", "Unresolved"), value: unresolvedIncidents.length, detail: t("Análisis pendiente", "Pending analysis") },
-                  { label: t("Mitigadas", "Mitigated"), value: resolvedIncidents.length, detail: t("Lecciones aprendidas", "Lessons learned") },
-                  { label: t("Resolución Media", "Avg. Resolution"), value: resolvedIncidents.length > 0 ? "1.0 h" : "N/A", detail: t("Velocidad de mitigación", "Mitigation speed") },
+                  { label: "Active Version", value: currentVersion, detail: "Global prompt iteration" },
+                  { label: "Unresolved", value: unresolvedIncidents.length, detail: "Pending analysis" },
+                  { label: "Mitigated", value: resolvedIncidents.length, detail: "Lessons learned" },
+                  { label: "Avg. Resolution", value: resolvedIncidents.length > 0 ? "1.0 h" : "N/A", detail: "Mitigation speed" },
                 ].map((item, idx) => (
                   <div key={idx} className="border border-[#D4A853]/15 p-5 bg-[#110F0D] rounded-2xl relative overflow-hidden">
                     <span className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-wider block mb-2">{item.label}</span>
@@ -1535,10 +1530,10 @@ export default function AdminDashboard() {
                 
                 {/* Timeline Panel */}
                 <div className="lg:col-span-7 border border-[#D4A853]/15 p-8 bg-[#0A0908]/60 rounded flex flex-col">
-                  <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3 flex-shrink-0">{t("Cronología de Incidencias", "Incident Timeline")}</h3>
+                  <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3 flex-shrink-0">{"Incident Timeline"}</h3>
                   <div className="flex-1 min-h-0 mt-6 space-y-6 overflow-y-auto pr-2 scrollbar-thin">
                     {incidents.length === 0 ? (
-                      <div className="text-sm text-[#B0A89E] font-mono py-12 text-center">{t("Sin incidencias de IA o proceso registradas.", "No AI or process incidents recorded.")}</div>
+                      <div className="text-sm text-[#B0A89E] font-mono py-12 text-center">{"No AI or process incidents recorded."}</div>
                     ) : (
                       incidents.map(inc => (
                         <div key={inc.id} className={`border border-[#D4A853]/8 bg-black/40 rounded p-5 space-y-4 relative ${inc.resolved_at ? 'opacity-70' : ''}`}>
@@ -1558,7 +1553,7 @@ export default function AdminDashboard() {
 
                           <div className="space-y-1">
                             <span className="font-mono text-xs text-[#B0A89E] uppercase block">
-                              {t("Fase:", "Phase:")} <strong className="text-[#D4A853]">{inc.phase}</strong>
+                              {"Phase:"} <strong className="text-[#D4A853]">{inc.phase}</strong>
                             </span>
                             <p className="text-sm text-[#B0A89E] leading-relaxed font-mono">
                               {inc.description}
@@ -1567,7 +1562,7 @@ export default function AdminDashboard() {
 
                           {!inc.resolved_at && inc.root_cause && (
                             <div className="border-t border-[#D4A853]/8 pt-3">
-                              <span className="font-mono text-xs text-[#D4A853] uppercase block mb-1">{t("Análisis de Causa Raíz", "Root Cause Analysis")}</span>
+                              <span className="font-mono text-xs text-[#D4A853] uppercase block mb-1">{"Root Cause Analysis"}</span>
                               <p className="text-sm text-[#B0A89E] leading-relaxed font-mono">
                                 {inc.root_cause}
                               </p>
@@ -1577,15 +1572,15 @@ export default function AdminDashboard() {
                           {inc.resolved_at && (
                             <div className="border-t border-[#5C9A6B]/10 bg-[#5C9A6B]/[0.03] p-3 rounded-xl space-y-2">
                               <div className="flex justify-between items-center text-xs font-mono">
-                                <span className="text-[#5C9A6B] uppercase">{t("✓ Resuelta y Mitigada", "✓ Resolved & Mitigated")}</span>
+                                <span className="text-[#5C9A6B] uppercase">{"✓ Resolved & Mitigated"}</span>
                                 <span className="text-[#B0A89E]">{inc.iteration_version}</span>
                               </div>
                               <p className="text-sm text-[#B0A89E] leading-relaxed font-mono">
-                                <strong className="text-[#B0A89E]">{t("Resolución: ", "Resolution: ")}</strong>{inc.resolution}
+                                <strong className="text-[#B0A89E]">{"Resolution: "}</strong>{inc.resolution}
                               </p>
                               {inc.lesson_learned && (
                                 <p className="text-sm text-[#B0A89E] leading-relaxed font-mono italic">
-                                  <strong className="text-[#B0A89E]">{t("Lección: ", "Lesson: ")}</strong>&quot;{inc.lesson_learned}&quot;
+                                  <strong className="text-[#B0A89E]">{"Lesson: "}</strong>&quot;{inc.lesson_learned}&quot;
                                 </p>
                               )}
                             </div>
@@ -1600,7 +1595,7 @@ export default function AdminDashboard() {
                 <div className="lg:col-span-5 space-y-8">
                   {/* AI Advancement Tracker */}
                   <div className="border border-[#D4A853]/15 p-8 bg-[#0A0908]/60 rounded space-y-6">
-                    <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">{t("Radar de Avance IA Semanal", "Weekly AI Progress Radar")}</h3>
+                    <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">{"Weekly AI Progress Radar"}</h3>
                     <div className="space-y-4">
                       {[
                         { title: "OpenAI GPT-4o fine-tuning updates", desc: "Fine-tuning models on UX heuristics reduces conversion copywriting errors by 18%.", date: "June 19, 2026", type: "OpenAI" },
@@ -1621,10 +1616,10 @@ export default function AdminDashboard() {
 
                   {/* Top Error Patterns */}
                   <div className="border border-[#D4A853]/15 p-8 bg-[#0A0908]/60 rounded space-y-6">
-                    <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">{t("Patrones de Error Detectados", "Detected Error Patterns")}</h3>
+                    <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/10 pb-3">{"Detected Error Patterns"}</h3>
                     <div className="space-y-4">
                       {sortedPatterns.length === 0 ? (
-                        <div className="text-xs text-[#B0A89E] font-mono text-center py-6">{t("Sin patrones registrados.", "No patterns recorded.")}</div>
+                        <div className="text-xs text-[#B0A89E] font-mono text-center py-6">{"No patterns recorded."}</div>
                       ) : (
                         sortedPatterns.map(([type, count]) => {
                           const percentage = incidents.length > 0 ? (count / incidents.length) * 100 : 0;
@@ -1664,7 +1659,7 @@ export default function AdminDashboard() {
             >
               <div className="p-6 border-b border-[#D4A853]/10 flex items-start justify-between">
                 <div>
-                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#D4A853]/70 block mb-1">{t("Lead Entrante", "Incoming Lead")}</span>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#D4A853]/70 block mb-1">{"Incoming Lead"}</span>
                   <h3 className="font-serif text-xl text-white">{selectedLead.company || selectedLead.email.split('@')[1]}</h3>
                   <p className="font-mono text-xs text-[#7A6F65] mt-0.5">{selectedLead.email}</p>
                 </div>
@@ -1678,10 +1673,10 @@ export default function AdminDashboard() {
                 {/* Lead meta */}
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { label: t('Segmento', 'Segment'), value: selectedLead.segment, accent: selectedLead.segment === 'DFY' ? 'text-[#D4A853]' : 'text-[#B0A89E]' },
-                    { label: t('Valor Est.', 'Est. Value'), value: selectedLead.segment === 'DFY' ? '$2,000' : '$350', accent: 'text-[#5C9A6B]' },
-                    { label: t('Fuente', 'Source'), value: selectedLead.source, accent: 'text-[#B0A89E]' },
-                    { label: t('Recibido', 'Received'), value: `${Math.floor((Date.now() - new Date(selectedLead.created_at).getTime()) / 3600000)}h ${t("atrás", "ago")}`, accent: 'text-[#B0A89E]' },
+                    { label: 'Segment', value: selectedLead.segment, accent: selectedLead.segment === 'DFY' ? 'text-[#D4A853]' : 'text-[#B0A89E]' },
+                    { label: 'Est. Value', value: selectedLead.segment === 'DFY' ? '$2,000' : '$350', accent: 'text-[#5C9A6B]' },
+                    { label: 'Source', value: selectedLead.source, accent: 'text-[#B0A89E]' },
+                    { label: 'Received', value: `${Math.floor((Date.now() - new Date(selectedLead.created_at).getTime()) / 3600000)}h ${"ago"}`, accent: 'text-[#B0A89E]' },
                   ].map(item => (
                     <div key={item.label} className="bg-black/40 border border-[#D4A853]/8 p-3 rounded-xl">
                       <span className="font-mono text-[9px] text-[#7A6F65] uppercase block mb-1">{item.label}</span>
@@ -1693,7 +1688,7 @@ export default function AdminDashboard() {
                 {/* Answers from form */}
                 {Object.keys(selectedLead.answers || {}).length > 0 && (
                   <div className="space-y-3">
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-[#D4A853]/70 block">{t("Respuestas del Formulario", "Form Answers")}</span>
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-[#D4A853]/70 block">{"Form Answers"}</span>
                     <div className="space-y-2">
                       {Object.entries(selectedLead.answers).map(([k, v]) => (
                         <div key={k} className="bg-black/30 border border-[#D4A853]/8 p-3 rounded-xl">
@@ -1707,28 +1702,22 @@ export default function AdminDashboard() {
 
                 {/* Pre-drafted next action */}
                 <div className="border border-[#D4A853]/20 bg-[#D4A853]/[0.03] p-4 rounded-2xl space-y-3">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#D4A853] block">{t("Próxima Acción — Piloto Automático", "Next Action — Autopilot")}</span>
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#D4A853] block">{"Next Action — Autopilot"}</span>
                   <p className="font-mono text-xs text-[#B0A89E] leading-relaxed">
                     {selectedLead.segment === 'DFY'
-                      ? t(
-                          `Lead High-Ticket DFY vía ${selectedLead.source}. Prioridad: enviar diagnóstico de señal personalizado en menos de 2 horas. Adjuntar plantilla de auditoría de fricción. Asunto: "Detecté una brecha de conversión en tu funnel."`,
-                          `High-Ticket DFY lead via ${selectedLead.source}. Priority: send custom signal diagnosis within 2 hours. Attach friction audit template. Subject: "I spotted a conversion gap in your funnel."`
-                        )
-                      : t(
-                          `Lead DWY vía ${selectedLead.source}. Prioridad: enviar intro de la vía de autonomía + enlace Tally en menos de 24h. Asunto: "Tu configuración de señal — 3 cosas que revisar primero."`,
-                          `DWY lead via ${selectedLead.source}. Priority: send autonomy path intro + Tally link within 24h. Subject: "Your signal setup — 3 things to check first."`
-                        )}
+                      ? `High-Ticket DFY lead via ${selectedLead.source}. Priority: send custom signal diagnosis within 2 hours. Attach friction audit template. Subject: "I spotted a conversion gap in your funnel."`
+                      : `DWY lead via ${selectedLead.source}. Priority: send autonomy path intro + Tally link within 24h. Subject: "Your signal setup — 3 things to check first."`}
                   </p>
                   <button
                     onClick={() => {
                       const action = selectedLead.segment === 'DFY'
-                        ? `Enviar diagnóstico de señal a ${selectedLead.email} — outreach DFY high-ticket`
-                        : `Enviar intro vía autonomía a ${selectedLead.email} — outreach DWY`;
+                        ? `Send signal diagnosis to ${selectedLead.email} — DFY high-ticket outreach`
+                        : `Send autonomy path intro to ${selectedLead.email} — DWY outreach`;
                       navigator.clipboard.writeText(action).catch(() => {});
                     }}
                     className="w-full font-mono text-xs uppercase border border-[#D4A853]/30 text-[#D4A853] hover:bg-[#D4A853]/8 py-2 rounded-lg transition-all cursor-pointer"
                   >
-                    {t("Copiar Borrador de Acción", "Copy Action Draft")}
+                    {"Copy Action Draft"}
                   </button>
                 </div>
 
@@ -1749,10 +1738,10 @@ export default function AdminDashboard() {
                   if (!ad) {
                     return (
                       <div className="border border-[#D4A853]/10 bg-[#110F0D]/60 p-4 rounded-xl space-y-2">
-                        <span className="font-mono text-[10px] uppercase tracking-wider text-[#D4A853]/60 block">{t("Motor de Diagnóstico IA", "AI Diagnostic Engine")}</span>
+                        <span className="font-mono text-[10px] uppercase tracking-wider text-[#D4A853]/60 block">{"AI Diagnostic Engine"}</span>
                         <div className="flex items-center gap-2">
                           <div className="w-1.5 h-1.5 rounded-full bg-[#D4A853]/40 animate-pulse" />
-                          <p className="font-mono text-xs text-[#7A6F65]">{t("Diagnóstico en proceso — disponible en ~30s", "Diagnosis in progress — available in ~30s")}</p>
+                          <p className="font-mono text-xs text-[#7A6F65]">{"Diagnosis in progress — available in ~30s"}</p>
                         </div>
                       </div>
                     );
@@ -1760,7 +1749,7 @@ export default function AdminDashboard() {
                   if (ad.error && !ad.diagnosis) {
                     return (
                       <div className="border border-[#C85C5C]/20 bg-[#C85C5C]/5 p-4 rounded-xl">
-                        <span className="font-mono text-[10px] uppercase tracking-wider text-[#C85C5C]/70 block mb-1">{t("Motor de Diagnóstico IA — Error", "AI Diagnostic Engine — Error")}</span>
+                        <span className="font-mono text-[10px] uppercase tracking-wider text-[#C85C5C]/70 block mb-1">{"AI Diagnostic Engine — Error"}</span>
                         <p className="font-mono text-xs text-[#C85C5C]/80">{ad.error}</p>
                       </div>
                     );
@@ -1772,7 +1761,7 @@ export default function AdminDashboard() {
                   return (
                     <div className="border border-[#D4A853]/20 bg-[#110F0D]/80 p-4 rounded-xl space-y-4">
                       <div className="flex items-center justify-between">
-                        <span className="font-mono text-[10px] uppercase tracking-wider text-[#D4A853] block">{t("Motor de Diagnóstico IA — Auto", "AI Diagnostic Engine — Auto")}</span>
+                        <span className="font-mono text-[10px] uppercase tracking-wider text-[#D4A853] block">{"AI Diagnostic Engine — Auto"}</span>
                         {ad.generated_at && (
                           <span className="font-mono text-[9px] text-[#7A6F65]">
                             {new Date(ad.generated_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
@@ -1783,7 +1772,7 @@ export default function AdminDashboard() {
                       {/* Confidence bar */}
                       <div className="space-y-1.5">
                         <div className="flex justify-between font-mono text-[9px]">
-                          <span className="text-[#7A6F65] uppercase tracking-wider">{t("Índice de Confianza", "Confidence Index")}</span>
+                          <span className="text-[#7A6F65] uppercase tracking-wider">{"Confidence Index"}</span>
                           <span style={{ color: confColor }} className="font-bold">{conf}/100</span>
                         </div>
                         <div className="w-full h-1 bg-[#2A2218] rounded-full overflow-hidden">
@@ -1810,7 +1799,7 @@ export default function AdminDashboard() {
                           )}
                           {ad.scan.abandonmentDelta !== undefined && ad.scan.abandonmentDelta > 0 && (
                             <div className="bg-black/40 border border-[#C85C5C]/10 p-2 rounded-lg text-center">
-                              <span className="font-mono text-[9px] text-[#7A6F65] block">{t("Abandono", "Abandonment")}</span>
+                              <span className="font-mono text-[9px] text-[#7A6F65] block">{"Abandonment"}</span>
                               <span className="font-mono text-xs font-bold text-[#C85C5C]">+{ad.scan.abandonmentDelta}%</span>
                             </div>
                           )}
@@ -1819,19 +1808,19 @@ export default function AdminDashboard() {
 
                       {/* Signal */}
                       <div className="space-y-1">
-                        <span className="font-mono text-[9px] uppercase tracking-wider text-[#5C9A6B]">{t("Señal", "Signal")}</span>
+                        <span className="font-mono text-[9px] uppercase tracking-wider text-[#5C9A6B]">{"Signal"}</span>
                         <p className="font-mono text-xs text-[#F5F0EB] leading-relaxed">{diag.signal}</p>
                       </div>
 
                       {/* Friction */}
                       <div className="space-y-1">
-                        <span className="font-mono text-[9px] uppercase tracking-wider text-[#C85C5C]">{t("Fricción", "Friction")}</span>
+                        <span className="font-mono text-[9px] uppercase tracking-wider text-[#C85C5C]">{"Friction"}</span>
                         <p className="font-mono text-xs text-[#B0A89E] leading-relaxed">{diag.friction}</p>
                       </div>
 
                       {/* Hypothesis */}
                       <div className="space-y-1">
-                        <span className="font-mono text-[9px] uppercase tracking-wider text-[#D4A853]">{t("Hipótesis", "Hypothesis")}</span>
+                        <span className="font-mono text-[9px] uppercase tracking-wider text-[#D4A853]">{"Hypothesis"}</span>
                         <p className="font-mono text-xs text-[#B0A89E] leading-relaxed italic">{diag.hypothesis}</p>
                       </div>
 
@@ -1851,11 +1840,11 @@ export default function AdminDashboard() {
                       {/* Copy signal for outreach */}
                       <button
                         onClick={() => navigator.clipboard.writeText(
-                          `Señal: ${diag.signal}\n\nFricción: ${diag.friction}\n\nHipótesis: ${diag.hypothesis}\n\nIntervención: ${diag.decision?.action ?? ''}`
+                          `Signal: ${diag.signal}\n\nFriction: ${diag.friction}\n\nHypothesis: ${diag.hypothesis}\n\nIntervention: ${diag.decision?.action ?? ''}`
                         ).catch(() => {})}
                         className="w-full font-mono text-xs uppercase border border-[#D4A853]/30 text-[#D4A853] hover:bg-[#D4A853]/8 py-2 rounded-lg transition-all cursor-pointer"
                       >
-                        {t("Copiar Diagnóstico para Outreach", "Copy Diagnosis for Outreach")}
+                        {"Copy Diagnosis for Outreach"}
                       </button>
                     </div>
                   );
@@ -1878,7 +1867,7 @@ export default function AdminDashboard() {
             >
               <div className="flex justify-between items-start border-b border-[#D4A853]/10 pb-4">
                 <div>
-                  <span className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-wider">{t("Panel de Control del Cliente", "Client Control Panel")}</span>
+                  <span className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-wider">{"Client Control Panel"}</span>
                   <h3 className="text-xl font-serif font-bold text-white mt-1">{selectedClient.company_name}</h3>
                 </div>
                 <button
@@ -1895,7 +1884,7 @@ export default function AdminDashboard() {
                   {/* Main parameters inputs */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
                     <div className="space-y-1.5">
-                      <label className="text-[#B0A89E] uppercase">{t("Nombre de Contacto", "Contact Name")}</label>
+                      <label className="text-[#B0A89E] uppercase">{"Contact Name"}</label>
                       <p className="p-3 bg-black/40 border border-[#D4A853]/8 rounded text-white">{selectedClient.contact_name}</p>
                     </div>
                     <div className="space-y-1.5">
@@ -1906,11 +1895,11 @@ export default function AdminDashboard() {
 
                   {/* Founder psychology notes */}
                   <div className="space-y-1.5 font-mono text-xs">
-                    <label className="text-[#B0A89E] uppercase tracking-wider block">{t("Psicología del Fundador / Notas Privadas", "Founder Psychology / Private Notes")}</label>
+                    <label className="text-[#B0A89E] uppercase tracking-wider block">{"Founder Psychology / Private Notes"}</label>
                     <textarea
                       value={modalPrivateNotes}
                       onChange={e => setModalPrivateNotes(e.target.value)}
-                      placeholder="Registra restricciones cognitivas, cuellos de botella de runway y alineación con la psicología del fundador..."
+                      placeholder="Log cognitive constraints, runway bottlenecks, and founder psychology alignment..."
                       className="w-full bg-black/40 border border-[#D4A853]/8 focus:border-[#D4A853] focus:outline-none p-3 rounded text-white h-16 font-sans text-xs"
                     />
                   </div>
@@ -1919,9 +1908,9 @@ export default function AdminDashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
                     {/* Certified toggle */}
                     <div className="border border-[#D4A853]/8 p-3 rounded space-y-1 bg-black/20">
-                      <span className="text-[#B0A89E] uppercase block">{t("Licencia Certificada", "Certified License")}</span>
+                      <span className="text-[#B0A89E] uppercase block">{"Certified License"}</span>
                       <div className="flex items-center justify-between pt-1">
-                        <span className="text-white font-serif">{modalIsCertified ? t("S&F Licenciado", "S&F Licensed") : t("Sin Licencia", "No License")}</span>
+                        <span className="text-white font-serif">{modalIsCertified ? "S&F Licensed" : "No License"}</span>
                         <button
                           type="button"
                           onClick={() => setModalIsCertified(!modalIsCertified)}
@@ -1936,7 +1925,7 @@ export default function AdminDashboard() {
 
                     {/* Segment selector */}
                     <div className="border border-[#D4A853]/8 p-3 rounded space-y-1 bg-black/20">
-                      <span className="text-[#B0A89E] uppercase block">{t("Segmento Asignado", "Assigned Segment")}</span>
+                      <span className="text-[#B0A89E] uppercase block">{"Assigned Segment"}</span>
                       <div className="flex items-center justify-between pt-1">
                         <span className="text-white font-serif">{modalSegment === "high_ticket" ? "High-Ticket" : "Microdosing"}</span>
                         <button
@@ -1952,7 +1941,7 @@ export default function AdminDashboard() {
                     {/* Cognitive fatigue slider */}
                     <div className="border border-[#D4A853]/8 p-3 rounded space-y-1 bg-black/20 flex flex-col justify-between">
                       <div className="flex justify-between">
-                        <span className="text-[#B0A89E] uppercase">{t("Fatiga Cognitiva", "Cognitive Fatigue")}</span>
+                        <span className="text-[#B0A89E] uppercase">{"Cognitive Fatigue"}</span>
                         <span className="text-[#D4A853] font-bold">{modalCognitiveFatigue}</span>
                       </div>
                       <input
@@ -1969,7 +1958,7 @@ export default function AdminDashboard() {
                   {/* Pipeline Action Protocol */}
                   <div className="border border-[#D4A853]/15 p-4 rounded bg-black/30 space-y-4">
                     <span className="font-mono text-xs text-[#D4A853] uppercase tracking-wider block border-b border-[#D4A853]/8 pb-2">
-                      {t("Protocolo de Acción Pipeline", "Pipeline Action Protocol")}
+                      {"Pipeline Action Protocol"}
                     </span>
                     <div className="flex flex-wrap gap-2">
                       {selectedClient.status === "prospecting" && (
@@ -1979,7 +1968,7 @@ export default function AdminDashboard() {
                           onClick={() => handlePipelineAction("outreach_sent", `/beta:send-outreach --client=${selectedClient.id}`)}
                           className="px-3 py-1.5 bg-[#D4A853]/10 border border-[#D4A853]/30 text-[#D4A853] rounded-md text-xs font-mono hover:bg-[#D4A853]/25 cursor-pointer uppercase disabled:opacity-50"
                         >
-                          {actionLoading === "outreach_sent" ? t("Enviando...", "Sending...") : t("⚡ Enviar Outreach (MCP)", "⚡ Send Outreach (MCP)")}
+                          {actionLoading === "outreach_sent" ? "Sending..." : "⚡ Send Outreach (MCP)"}
                         </button>
                       )}
                       
@@ -1991,7 +1980,7 @@ export default function AdminDashboard() {
                             onClick={() => handlePipelineAction("diagnostic_in_progress")}
                             className="px-3 py-1.5 bg-[#D4A853]/10 border border-[#D4A853]/30 text-[#D4A853] rounded-md text-xs font-mono hover:bg-[#D4A853]/25 cursor-pointer uppercase disabled:opacity-50"
                           >
-                            {actionLoading === "diagnostic_in_progress" ? t("Procesando...", "Processing...") : t("✓ Respondió", "✓ Responded")}
+                            {actionLoading === "diagnostic_in_progress" ? "Processing..." : "✓ Responded"}
                           </button>
                           <button
                             type="button"
@@ -1999,7 +1988,7 @@ export default function AdminDashboard() {
                             onClick={() => handleSendFollowup()}
                             className="px-3 py-1.5 bg-white/5 border border-white/10 text-white rounded text-xs font-mono hover:bg-white/10 cursor-pointer uppercase disabled:opacity-50"
                           >
-                            {actionLoading === "followup" ? t("Registrando...", "Registering...") : t("📋 Enviar Seguimiento", "📋 Send Follow-up")}
+                            {actionLoading === "followup" ? "Registering..." : "📋 Send Follow-up"}
                           </button>
                         </>
                       )}
@@ -2011,7 +2000,7 @@ export default function AdminDashboard() {
                           onClick={() => setShowDiagnosticForm(true)}
                           className="px-3 py-1.5 bg-[#D4A853]/10 border border-[#D4A853]/30 text-[#D4A853] rounded-md text-xs font-mono hover:bg-[#D4A853]/25 cursor-pointer uppercase disabled:opacity-50"
                         >
-                          {t("📬 Entregar Diagnóstico", "📬 Deliver Diagnostic")}
+                          {"📬 Deliver Diagnostic"}
                         </button>
                       )}
 
@@ -2022,7 +2011,7 @@ export default function AdminDashboard() {
                           onClick={() => handlePipelineAction("closed_completed", `/beta:request-testimonial --client=${selectedClient.id}`)}
                           className="px-3 py-1.5 bg-[#D4A853]/10 border border-[#D4A853]/30 text-[#D4A853] rounded-md text-xs font-mono hover:bg-[#D4A853]/25 cursor-pointer uppercase disabled:opacity-50"
                         >
-                          {actionLoading === "closed_completed" ? t("Completando...", "Completing...") : t("🏆 Solicitar Testimonio (MCP)", "🏆 Request Testimonial (MCP)")}
+                          {actionLoading === "closed_completed" ? "Completing..." : "🏆 Request Testimonial (MCP)"}
                         </button>
                       )}
                     </div>
@@ -2035,10 +2024,10 @@ export default function AdminDashboard() {
                     {/* Diagnostic Form */}
                     {showDiagnosticForm && (
                       <div className="border border-[#D4A853]/20 p-4 rounded bg-black/40 space-y-3 mt-3">
-                        <span className="font-mono text-xs text-[#D4A853] uppercase block">{t("Formulario de Entregables del Diagnóstico", "Diagnostic Deliverable Form")}</span>
+                        <span className="font-mono text-xs text-[#D4A853] uppercase block">{"Diagnostic Deliverable Form"}</span>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono">
                           <div className="space-y-1">
-                            <label className="text-[#B0A89E] uppercase">{t("URL de Loom (Requerido)", "Loom URL (Required)")}</label>
+                            <label className="text-[#B0A89E] uppercase">{"Loom URL (Required)"}</label>
                             <input
                               type="text"
                               value={loomUrl}
@@ -2048,7 +2037,7 @@ export default function AdminDashboard() {
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[#B0A89E] uppercase">{t("URL de Figma (Opcional)", "Figma URL (Optional)")}</label>
+                            <label className="text-[#B0A89E] uppercase">{"Figma URL (Optional)"}</label>
                             <input
                               type="text"
                               value={figmaUrl}
@@ -2058,7 +2047,7 @@ export default function AdminDashboard() {
                             />
                           </div>
                           <div className="space-y-1 md:col-span-2">
-                            <label className="text-[#B0A89E] uppercase">{t("Signal del Funnel", "Funnel Signal")}</label>
+                            <label className="text-[#B0A89E] uppercase">{"Funnel Signal"}</label>
                             <textarea
                               value={diagSignal}
                               onChange={(e) => setDiagSignal(e.target.value)}
@@ -2068,7 +2057,7 @@ export default function AdminDashboard() {
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[#B0A89E] uppercase">{t("Mecanismo de Fricción", "Friction Mechanism")}</label>
+                            <label className="text-[#B0A89E] uppercase">{"Friction Mechanism"}</label>
                             <select
                               value={diagMechanism}
                               onChange={(e) => setDiagMechanism(e.target.value)}
@@ -2080,12 +2069,12 @@ export default function AdminDashboard() {
                             </select>
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[#B0A89E] uppercase">{t("Causa Raíz", "Root Cause")}</label>
+                            <label className="text-[#B0A89E] uppercase">{"Root Cause"}</label>
                             <textarea
                               value={diagRootCause}
                               onChange={(e) => setDiagRootCause(e.target.value)}
                               rows={2}
-                              placeholder="Describe la causa raíz identificada..."
+                              placeholder="Describe the identified root cause..."
                               className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none resize-none"
                             />
                           </div>
@@ -2096,7 +2085,7 @@ export default function AdminDashboard() {
                           return (
                             <div className="space-y-1.5 text-[10px] font-mono">
                               <div className="text-[#5C9A6B] bg-[#5C9A6B]/5 border border-[#5C9A6B]/15 px-3 py-1.5 rounded flex items-center justify-between gap-2">
-                                <span>{t("✓ Entregable activo inmediatamente — sin rebuild", "✓ Deliverable active immediately — no rebuild")}</span>
+                                <span>{"✓ Deliverable active immediately — no rebuild"}</span>
                                 <button
                                   type="button"
                                   onClick={() => navigator.clipboard.writeText(`https://signal-and-friction.com/deliverable/${ck}`).catch(() => {})}
@@ -2106,7 +2095,7 @@ export default function AdminDashboard() {
                                 </button>
                               </div>
                               <div className="text-[#D4A853] bg-[#D4A853]/5 border border-[#D4A853]/15 px-3 py-1.5 rounded flex items-center justify-between gap-2">
-                                <span>{t("⏱ SLA activo — comparte con el cliente ahora", "⏱ SLA active — share with client now")}</span>
+                                <span>{"⏱ SLA active — share with client now"}</span>
                                 <button
                                   type="button"
                                   onClick={() => navigator.clipboard.writeText(`https://signal-and-friction.com/sla/${ck}`).catch(() => {})}
@@ -2128,14 +2117,14 @@ export default function AdminDashboard() {
                             }}
                             className="px-3 py-1 bg-white/5 text-white border border-white/10 hover:bg-white/10 rounded font-mono text-xs"
                           >
-                            {t("Cancelar", "Cancel")}
+                            {"Cancel"}
                           </button>
                           <button
                             type="button"
                             onClick={handleConfirmDelivery}
                             className="px-3 py-1 bg-[#D4A853] text-[#0A0908] hover:bg-[#E8C97A] rounded font-mono font-bold text-xs"
                           >
-                            {t("Confirmar Entrega", "Confirm Delivery")}
+                            {"Confirm Delivery"}
                           </button>
                         </div>
                       </div>
@@ -2145,7 +2134,7 @@ export default function AdminDashboard() {
                   {/* ── AI Diagnostic Engine ── */}
                   <div className="border border-[#D4A853]/20 p-4 rounded bg-black/30 space-y-4">
                     <div className="flex items-center justify-between border-b border-[#D4A853]/8 pb-2">
-                      <span className="font-mono text-xs text-[#D4A853] uppercase tracking-wider">{t("Motor de Diagnóstico IA", "AI Diagnostic Engine")}</span>
+                      <span className="font-mono text-xs text-[#D4A853] uppercase tracking-wider">{"AI Diagnostic Engine"}</span>
                       <span className="font-mono text-[9px] text-[#7A6F65] uppercase border border-[#D4A853]/10 px-2 py-0.5 rounded">
                         Claude · Vault Secured
                       </span>
@@ -2159,9 +2148,9 @@ export default function AdminDashboard() {
                       {diagnoseLoading ? (
                         <span className="flex items-center justify-center gap-2">
                           <span className="w-3 h-3 border border-[#D4A853] border-t-transparent rounded-full animate-spin inline-block" />
-                          {t("Procesando telemetría...", "Processing telemetry...")}
+                          {"Processing telemetry..."}
                         </span>
-                      ) : t('Generar diagnóstico →', 'Generate diagnosis →')}
+                      ) : 'Generate diagnosis →'}
                     </button>
 
                     {diagnoseResult && (
@@ -2169,7 +2158,7 @@ export default function AdminDashboard() {
                         {/* Confidence bar */}
                         <div className="space-y-1">
                           <div className="flex justify-between font-mono text-[10px]">
-                            <span className="text-[#7A6F65] uppercase">{t("Índice de Confianza", "Confidence Index")}</span>
+                            <span className="text-[#7A6F65] uppercase">{"Confidence Index"}</span>
                             <span className={`font-bold ${diagnoseResult.confidence >= 65 ? 'text-[#5C9A6B]' : diagnoseResult.confidence >= 40 ? 'text-[#D4A853]' : 'text-[#C85C5C]'}`}>
                               {diagnoseResult.confidence}/100
                             </span>
@@ -2184,19 +2173,19 @@ export default function AdminDashboard() {
 
                         {/* Signal */}
                         <div className="bg-black/40 border border-[#D4A853]/8 p-3 rounded space-y-1">
-                          <span className="font-mono text-[9px] text-[#D4A853] uppercase tracking-widest block">{t("Señal", "Signal")}</span>
+                          <span className="font-mono text-[9px] text-[#D4A853] uppercase tracking-widest block">{"Signal"}</span>
                           <p className="font-mono text-xs text-[#F5F0EB] leading-relaxed">{diagnoseResult.signal}</p>
                         </div>
 
                         {/* Friction */}
                         <div className="bg-black/40 border border-[#C85C5C]/15 p-3 rounded space-y-1">
-                          <span className="font-mono text-[9px] text-[#C85C5C] uppercase tracking-widest block">{t("Mecanismo de Fricción", "Friction Mechanism")}</span>
+                          <span className="font-mono text-[9px] text-[#C85C5C] uppercase tracking-widest block">{"Friction Mechanism"}</span>
                           <p className="font-mono text-xs text-[#F5F0EB] leading-relaxed">{diagnoseResult.friction}</p>
                         </div>
 
                         {/* Hypothesis */}
                         <div className="bg-black/40 border border-white/5 p-3 rounded space-y-1">
-                          <span className="font-mono text-[9px] text-[#B0A89E] uppercase tracking-widest block">{t("Hipótesis Causal", "Causal Hypothesis")}</span>
+                          <span className="font-mono text-[9px] text-[#B0A89E] uppercase tracking-widest block">{"Causal Hypothesis"}</span>
                           <p className="font-mono text-xs text-[#B0A89E] leading-relaxed italic">{diagnoseResult.hypothesis}</p>
                         </div>
 
@@ -2213,7 +2202,7 @@ export default function AdminDashboard() {
                           </p>
                           <p className="font-mono text-xs text-[#7A6F65] leading-relaxed">{diagnoseResult.decision.reasoning}</p>
                           <p className="font-mono text-[10px] text-[#7A6F65]/70 border-t border-[#D4A853]/8 pt-2 mt-1">
-                            {t("Tradeoff: ", "Tradeoff: ")}{diagnoseResult.decision.tradeoff}
+                            {"Tradeoff: "}{diagnoseResult.decision.tradeoff}
                           </p>
                         </div>
                       </div>
@@ -2224,7 +2213,7 @@ export default function AdminDashboard() {
                   <div className="border border-[#D4A853]/15 p-4 rounded bg-black/30 space-y-4">
                     <div className="flex justify-between items-center border-b border-[#D4A853]/8 pb-2">
                       <span className="font-mono text-xs text-white uppercase tracking-wider block">
-                        {t("Garantía de Rendimiento (Protocolo Moat)", "Performance Guarantee (Moat Protocol)")}
+                        {"Performance Guarantee (Moat Protocol)"}
                       </span>
                       <button
                         type="button"
@@ -2233,7 +2222,7 @@ export default function AdminDashboard() {
                           modalGuaranteeActive ? "border-[#D4A853] bg-[#D4A853]/10 text-[#D4A853]" : "border-white/10 text-[#7A6F65]"
                         }`}
                       >
-                        {modalGuaranteeActive ? t("ACTIVA", "ACTIVE") : t("DESACTIVADA", "DISABLED")}
+                        {modalGuaranteeActive ? "ACTIVE" : "DISABLED"}
                       </button>
                     </div>
 
@@ -2241,7 +2230,7 @@ export default function AdminDashboard() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
                         {/* Gate checklist */}
                         <div className="space-y-2 border-r border-[#D4A853]/8 pr-4">
-                          <span className="text-[#B0A89E] uppercase block mb-1">{t("Checklist de Gates:", "Gate Checklist:")}</span>
+                          <span className="text-[#B0A89E] uppercase block mb-1">{"Gate Checklist:"}</span>
                           <div className="space-y-1.5">
                             <label className="flex items-center gap-2 cursor-pointer text-white">
                               <input
@@ -2250,7 +2239,7 @@ export default function AdminDashboard() {
                                 onChange={e => setModalTrafficGate(e.target.checked)}
                                 className="accent-[#D4A853]"
                               />
-                              {t("Gate de Tráfico (>15k visitas/mes)", "Traffic Gate (>15k visits/mo)")}
+                              {"Traffic Gate (>15k visits/mo)"}
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer text-white">
                               <input
@@ -2268,7 +2257,7 @@ export default function AdminDashboard() {
                                 onChange={e => setModalIsolationGate(e.target.checked)}
                                 className="accent-[#D4A853]"
                               />
-                              {t("Gate de Aislamiento A/B", "A/B Isolation Gate")}
+                              {"A/B Isolation Gate"}
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer text-white">
                               <input
@@ -2277,7 +2266,7 @@ export default function AdminDashboard() {
                                 onChange={e => setModalTelemetryGate(e.target.checked)}
                                 className="accent-[#D4A853]"
                               />
-                              {t("Gate de Telemetría PostHog", "PostHog Telemetry Gate")}
+                              {"PostHog Telemetry Gate"}
                             </label>
                           </div>
                         </div>
@@ -2286,7 +2275,7 @@ export default function AdminDashboard() {
                         <div className="space-y-2">
                           <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-1">
-                              <label className="text-[#B0A89E] uppercase">{t("Mejora Objetivo %", "Target Improvement %")}</label>
+                              <label className="text-[#B0A89E] uppercase">{"Target Improvement %"}</label>
                               <input
                                 type="number"
                                 value={modalTargetImprovement}
@@ -2295,7 +2284,7 @@ export default function AdminDashboard() {
                               />
                             </div>
                             <div className="space-y-1">
-                              <label className="text-[#B0A89E] uppercase">{t("Ventana (Días)", "Window (Days)")}</label>
+                              <label className="text-[#B0A89E] uppercase">{"Window (Days)"}</label>
                               <input
                                 type="number"
                                 value={modalTimeframeDays}
@@ -2307,7 +2296,7 @@ export default function AdminDashboard() {
 
                           <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-1">
-                              <label className="text-[#B0A89E] uppercase">{t("Conv% Base", "Baseline Conv%")}</label>
+                              <label className="text-[#B0A89E] uppercase">{"Baseline Conv%"}</label>
                               <input
                                 type="number"
                                 step="0.01"
@@ -2317,7 +2306,7 @@ export default function AdminDashboard() {
                               />
                             </div>
                             <div className="space-y-1">
-                              <label className="text-[#B0A89E] uppercase">{t("Conv% Actual", "Current Conv%")}</label>
+                              <label className="text-[#B0A89E] uppercase">{"Current Conv%"}</label>
                               <input
                                 type="number"
                                 step="0.01"
@@ -2329,16 +2318,16 @@ export default function AdminDashboard() {
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-[#B0A89E] uppercase">{t("Estado de Garantía", "Guarantee Status")}</label>
+                            <label className="text-[#B0A89E] uppercase">{"Guarantee Status"}</label>
                             <select
                               value={modalGuaranteeStatus}
                               onChange={e => setModalGuaranteeStatus(e.target.value as any)}
                               className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white"
                             >
-                              <option value="active">{t("Monitoreo Activo", "Active Monitoring")}</option>
-                              <option value="met">{t("Objetivo Alcanzado", "Target Met")}</option>
-                              <option value="failed_refunded">{t("Fallida (Reembolso Stripe)", "Failed (Stripe Refund)")}</option>
-                              <option value="voided">{t("Anulada (Gate Incumplido)", "Voided (Gate Unmet)")}</option>
+                              <option value="active">{"Active Monitoring"}</option>
+                              <option value="met">{"Target Met"}</option>
+                              <option value="failed_refunded">{"Failed (Stripe Refund)"}</option>
+                              <option value="voided">{"Voided (Gate Unmet)"}</option>
                             </select>
                           </div>
                         </div>
@@ -2351,10 +2340,10 @@ export default function AdminDashboard() {
                 <div className="lg:col-span-5 border-t lg:border-t-0 lg:border-l border-white/10 pt-6 lg:pt-0 lg:pl-6 space-y-6 flex flex-col max-h-[60vh] overflow-y-auto">
                   <div className="space-y-3">
                     <span className="font-mono text-xs text-[#B0A89E] uppercase tracking-wider block border-b border-[#D4A853]/8 pb-1">
-                      {t("Diagnósticos de Fricción", "Friction Diagnostics")}
+                      {"Friction Diagnostics"}
                     </span>
                     {selectedClientInteractions.length === 0 ? (
-                      <p className="text-xs text-[#B0A89E] font-mono italic">{t("Sin diagnósticos registrados.", "No diagnostics recorded.")}</p>
+                      <p className="text-xs text-[#B0A89E] font-mono italic">{"No diagnostics recorded."}</p>
                     ) : (
                       selectedClientInteractions.map((inter, i) => (
                         <div key={inter.id || i} className="bg-black/30 p-3 border border-[#D4A853]/8 rounded space-y-1.5">
@@ -2370,7 +2359,7 @@ export default function AdminDashboard() {
                               rel="noreferrer"
                               className="text-xs text-[#D4A853] hover:underline block font-mono"
                             >
-                              🎬 {t("Ver Vídeo Loom", "Watch Loom Video")}
+                              🎬 {"Watch Loom Video"}
                             </a>
                           )}
                         </div>
@@ -2380,13 +2369,13 @@ export default function AdminDashboard() {
 
                   <div className="space-y-3 grow flex flex-col min-h-0">
                     <span className="font-mono text-xs text-[#B0A89E] uppercase tracking-wider block border-b border-[#D4A853]/8 pb-1">
-                      {t("Historial de Actividad", "Activity History")}
+                      {"Activity History"}
                     </span>
                     <div className="overflow-y-auto space-y-2 grow pr-1 scrollbar-thin max-h-[300px]">
                       {loadingLogs ? (
-                        <p className="text-xs text-[#B0A89E] font-mono animate-pulse">{t("Cargando historial...", "Loading history...")}</p>
+                        <p className="text-xs text-[#B0A89E] font-mono animate-pulse">{"Loading history..."}</p>
                       ) : selectedClientLogs.length === 0 ? (
-                        <p className="text-xs text-[#B0A89E] font-mono italic">{t("Sin eventos registrados.", "No events recorded.")}</p>
+                        <p className="text-xs text-[#B0A89E] font-mono italic">{"No events recorded."}</p>
                       ) : (
                         selectedClientLogs.map((log) => (
                           <div key={log.id} className="text-xs font-mono border-b border-[#D4A853]/8 pb-2 last:border-b-0">
@@ -2410,14 +2399,14 @@ export default function AdminDashboard() {
                   onClick={() => setShowModal(false)}
                   className="px-4 py-2 border border-white/10 hover:text-white uppercase tracking-wider rounded cursor-pointer text-xs font-mono"
                 >
-                  {t("Cancelar", "Cancel")}
+                  {"Cancel"}
                 </button>
                 <button
                   type="button"
                   onClick={handleSaveClientDetails}
                   className="px-5 py-2 bg-[#D4A853] text-[#0A0908] font-bold uppercase tracking-wider hover:bg-[#E8C97A] transition-all rounded cursor-pointer text-xs font-mono"
                 >
-                  {t("Guardar Parámetros", "Save Parameters")}
+                  {"Save Parameters"}
                 </button>
               </div>
             </motion.div>

@@ -159,6 +159,18 @@ export default function Home() {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.message || "Protocol failure.");
+      // Fire auto-diagnosis in background — non-blocking, does not affect user flow
+      fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          website: url,
+          segment: segmentSelection === 'concierge' ? 'DFY' : 'DWY',
+          source: 'landing',
+          answers: { funnelPain, segmentSelection, customAnswer },
+        }),
+      }).catch(() => {});
       router.push(`/confirmed?email=${encodeURIComponent(email)}&segment=${encodeURIComponent(result.segment || "high_ticket")}`);
     } catch (err: any) {
       setErrorMsg(err.message || "Network error.");

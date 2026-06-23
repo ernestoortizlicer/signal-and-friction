@@ -128,7 +128,8 @@ export default function ScanPage() {
     setEmailError("");
     setEmailSubmitting(true);
     try {
-      await fetch('/api/leads', {
+      // Pass the already-computed scan report so leads.ts skips the re-scan
+      fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -137,13 +138,8 @@ export default function ScanPage() {
           company: report?.domain,
           segment: (report?.frictionScore ?? 0) >= 60 ? 'DFY' : 'DWY',
           source: 'scan_tool',
+          scan_data: report ?? undefined,
         }),
-      });
-      // Also re-run scan with email to persist friction data
-      fetch('/api/scan-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: report?.url, email, company: report?.domain }),
       }).catch(() => {});
     } catch { /* non-fatal */ }
     setEmailSubmitting(false);

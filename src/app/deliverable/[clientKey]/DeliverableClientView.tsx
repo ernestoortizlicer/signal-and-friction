@@ -1,17 +1,9 @@
 /**
  * AIR-GAPPED CLIENT DELIVERABLE — LOCALE: en (American Business English)
  *
- * ARCHITECTURAL CONTRACT:
- *   - This component is intentionally isolated from the admin LanguageContext.
- *   - It MUST NOT import useLanguage(), LanguageProvider, or any admin-layer
- *     i18n mechanism. Locale is hardcoded to "en" at the data-model level.
- *   - All copy is sourced from the client's DeliverableData JSON (English-only
- *     schema) or the fallback constants in fallback.ts (English-only).
- *   - Future changes to the admin ES/EN toggle will have zero effect here by
- *     structural design: LanguageProvider is mounted only inside AdminLayout,
- *     which governs /admin/** and no other route tree.
- *
- * DO NOT add any admin context imports to this file.
+ * All copy is sourced from the client's DeliverableData JSON (English-only schema)
+ * or the fallback constants in fallback.ts. This component has no dependency on
+ * the admin layer and no i18n mechanism of any kind.
  */
 "use client";
 
@@ -116,10 +108,10 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
               <span className="font-serif text-[#D4A853] text-lg tracking-tight font-bold glow-text">
                 Signal &amp; Friction
               </span>
-              <span className="text-xs text-[#7A6F65] font-mono">/ Client Portal</span>
+              <span className="text-xs text-[#7A6F65] font-mono">/ Portal Privado</span>
             </div>
             <span className="font-mono text-xs uppercase tracking-[0.15em] text-[#D4A853]/70 border border-[#D4A853]/25 px-3 py-1 rounded bg-[#D4A853]/5">
-              Autonomy Track
+              Autonomía Operativa
             </span>
           </div>
         </nav>
@@ -135,16 +127,16 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
             <div className="md:col-span-2 space-y-4">
               <div className="flex items-center gap-3">
                 <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853]">
-                  Methodology &amp; Handover
+                  Metodología y Operación
                 </span>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#D4A853]/30" />
                 <span className="font-mono text-xs text-[#7A6F65]">{d.date}</span>
               </div>
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-[#F5F0EB] font-serif">
-                {d.clientName} Optimization Console
+                {d.clientName}
               </h1>
               <p className="text-sm text-[#B0A89E] leading-relaxed max-w-[60ch]">
-                Welcome to your self-serve optimization workspace. Analyze your custom diagnostic Loom, master the learning modules, and complete the checklist to resolve your conversion friction.
+                Tu espacio de operación autónoma. Completa el checklist diario, domina los módulos de formación y graba el Loom de referencia cuando estés listo.
               </p>
             </div>
 
@@ -152,7 +144,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
               {/* Autonomy Progress */}
               <div className="bg-[#110F0D] border border-[#D4A853]/15 p-5 rounded-lg space-y-4 glow-border">
                 <div className="flex justify-between items-center font-mono text-xs">
-                  <span className="text-[#B0A89E]">Autonomy Progress</span>
+                  <span className="text-[#B0A89E]">Progreso de Autonomía</span>
                   <span className="text-[#D4A853] font-bold">{dynamicProgress}%</span>
                 </div>
                 <div className="w-full bg-[#2A2218] h-2 rounded-full overflow-hidden">
@@ -163,65 +155,52 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                   />
                 </div>
                 <div className="flex justify-between font-mono text-xs text-[#7A6F65]">
-                  <span>{doneCount} of {totalCount} completed</span>
-                  <span>{dynamicProgress === 100 ? "Ready for Handover" : "In Progress"}</span>
+                  <span>{doneCount} de {totalCount} completadas</span>
+                  <span>{dynamicProgress === 100 ? "Sistema Entregado" : "En Curso"}</span>
                 </div>
               </div>
 
               {/* Founder Focus Tracker — dynamic */}
               <div className="bg-[#110F0D] border border-[#C85C5C]/15 p-5 rounded-lg space-y-3 glow-border-red">
                 <div className="flex justify-between items-center font-mono text-xs">
-                  <span className="text-[#B0A89E]">Founder Focus Score</span>
+                  <span className="text-[#B0A89E]">Índice de Enfoque</span>
                   <span className="text-[#5C9A6B] font-bold">{founderFocusScore} / 100</span>
                 </div>
                 <div className="w-full bg-[#2A2218] h-1.5 rounded-full overflow-hidden">
                   <div className="bg-[#5C9A6B] h-full rounded-full" style={{ width: `${founderFocusScore}%` }} />
                 </div>
                 <div className="font-mono text-xs text-[#7A6F65] leading-relaxed">
-                  Cognitive load index: {100 - founderFocusScore}/100 — Execution adherence: high-confidence threshold.
+                  Índice de carga cognitiva: {100 - founderFocusScore}/100 — Adherencia de ejecución: umbral de alta confianza.
                 </div>
               </div>
             </div>
           </div>
         </motion.section>
 
-        {/* Diagnostic Loom */}
-        <section className="py-12 px-6 border-b border-[#D4A853]/5">
-          <div className="max-w-[1000px] mx-auto">
-            <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853] mb-5">
-              01 — Playbook Video Walkthrough
-            </h2>
-            <div className="aspect-video bg-[#110F0D] border border-[#D4A853]/10 rounded-lg overflow-hidden relative glow-border">
-              {d.loomUrl && !d.loomUrl.includes("placeholder") ? (
+        {/* Diagnostic Loom — only renders when a real URL is provided */}
+        {d.loomUrl && !d.loomUrl.includes("placeholder") && (
+          <section className="py-12 px-6 border-b border-[#D4A853]/5">
+            <div className="max-w-[1000px] mx-auto">
+              <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853] mb-5">
+                01 — Vídeo Guía del Sistema
+              </h2>
+              <div className="aspect-video bg-[#110F0D] border border-[#D4A853]/10 rounded-lg overflow-hidden relative glow-border">
                 <iframe
                   src={d.loomUrl.includes("embed") ? d.loomUrl : d.loomUrl.replace("/share/", "/embed/")}
                   frameBorder="0"
                   allowFullScreen
                   className="absolute inset-0 w-full h-full"
                 />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="text-center space-y-3">
-                    <div className="w-14 h-14 rounded-full bg-[#D4A853]/10 flex items-center justify-center mx-auto border border-[#D4A853]/20 animate-pulse">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                        <polygon points="5 3 19 12 5 21 5 3" fill="#D4A853" />
-                      </svg>
-                    </div>
-                    <p className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-widest">
-                      Briefing Runtime Pending
-                    </p>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Modules & Checklist */}
         <section className="py-12 px-6 max-w-[1000px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-7 space-y-6">
             <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853]">
-              02 — Implementation Checklist
+              02 — Checklist de Implementación
             </h2>
             <div className="space-y-3 bg-[#110F0D]/40 border border-[#D4A853]/5 p-5 rounded-lg">
               {checklist.map((item) => (
@@ -250,7 +229,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
 
           <div className="lg:col-span-5 space-y-6">
             <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853]">
-              03 — Learning Curriculum
+              03 — Currículo de Formación
             </h2>
             <div className="space-y-2">
               {d.learningModules?.map((mod) => (
@@ -265,7 +244,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                     <span className="font-mono text-xs text-[#D4A853]/80 uppercase tracking-widest">{mod.title}</span>
                     {mod.completed && (
                       <span className="font-mono text-xs uppercase tracking-wider text-[#5C9A6B] bg-[#5C9A6B]/10 px-1.5 py-0.5 rounded border border-[#5C9A6B]/20">
-                        Done
+                        Hecho
                       </span>
                     )}
                   </div>
@@ -276,7 +255,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
             {activeModule && (
               <div className="border border-[#D4A853]/15 bg-[#110F0D]/60 p-5 rounded-lg space-y-3 mt-4">
                 <span className="font-mono text-xs text-[#D4A853]/70 tracking-wider uppercase block">
-                  Diagnostic Module — Intervention Brief
+                  Módulo Activo — Contenido
                 </span>
                 <h4 className="text-xs font-bold font-mono text-[#F5F0EB]">{activeModule.title}</h4>
                 <p className="text-xs text-[#B0A89E] leading-relaxed font-mono">{activeModule.content}</p>
@@ -287,7 +266,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
 
         <footer className="py-12 border-t border-[#D4A853]/10 text-center bg-[#0A0908] mt-16">
           <p className="font-mono text-xs tracking-[0.15em] text-[#7A6F65]">
-            {d.consultant} · CONFIDENTIAL CLIENT HUB · ALL RIGHTS RESERVED
+            {d.consultant} · PORTAL PRIVADO DE CLIENTE · TODOS LOS DERECHOS RESERVADOS
           </p>
         </footer>
       </main>

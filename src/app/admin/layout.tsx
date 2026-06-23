@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { getAuthHeaders, supabase } from "@/lib/supabase";
-import { LanguageProvider, useLanguage, useT } from "@/contexts/LanguageContext";
 
 interface ProjectStatus {
   status: string;
@@ -26,8 +25,6 @@ interface TransactionEntry {
 }
 
 function AdminShell({ children }: { children: React.ReactNode }) {
-  const { lang, toggle } = useLanguage();
-  const t = useT();
   const pathname = usePathname();
   const router = useRouter();
   const [stats, setStats] = useState({ activeLeads: 0, netWorth: 0, tasksToday: 0 });
@@ -142,11 +139,11 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   };
 
   const navLinks = [
-    { href: "/admin/dashboard", label: t("Pipeline", "Pipeline"), code: "PL" },
-    { href: "/admin/finance", label: t("Finanzas", "Finance"), code: "FN" },
-    { href: "/admin/priorities", label: t("Prioridades", "Priorities"), code: "PR" },
-    { href: "/admin/learning", label: t("Formación", "Learning"), code: "LE" },
-    { href: "/admin/certified", label: t("Certificados", "Certified"), code: "CE" },
+    { href: "/admin/dashboard", label: "Pipeline", code: "PL" },
+    { href: "/admin/finance", label: "Finance", code: "FN" },
+    { href: "/admin/priorities", label: "Priorities", code: "PR" },
+    { href: "/admin/learning", label: "Learning", code: "LE" },
+    { href: "/admin/certified", label: "Certified", code: "CE" },
   ];
 
   if (pathname === "/admin/login") {
@@ -159,7 +156,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         <div className="flex items-center gap-3">
           <span className="w-1.5 h-1.5 rounded-full bg-[#D4A853] animate-ping" />
           <span className="font-mono text-xs text-[#7A6F65] tracking-[0.2em] uppercase">
-            {t("Verificando acceso...", "Verifying Clearance...")}
+            Verifying Clearance...
           </span>
         </div>
       </div>
@@ -189,9 +186,9 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         {/* Center: live telemetry chips */}
         <div className="flex-1 flex items-center justify-center gap-1">
           {[
-            { label: t("Leads Activos", "Active Leads"), value: String(stats.activeLeads), color: "text-[#5C9A6B]" },
-            { label: t("Patrimonio", "Net Worth"), value: `$${stats.netWorth.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, color: "text-[#D4A853]" },
-            { label: t("Pendientes", "Pending"), value: String(stats.tasksToday), color: "text-amber-400" },
+            { label: "Active Leads", value: String(stats.activeLeads), color: "text-[#5C9A6B]" },
+            { label: "Net Worth", value: `$${stats.netWorth.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, color: "text-[#D4A853]" },
+            { label: "Pending", value: String(stats.tasksToday), color: "text-amber-400" },
           ].map((stat, i) => (
             <div key={stat.label} className="flex items-center">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded border border-[#D4A853]/10 bg-[#D4A853]/[0.03]">
@@ -207,24 +204,12 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           ))}
         </div>
 
-        {/* Right: lang toggle + status + logout */}
+        {/* Right: status + logout */}
         <div className="flex items-center gap-4">
-          {/* ES / EN language toggle — admin-only, air-gapped from client deliverables */}
-          <button
-            type="button"
-            onClick={toggle}
-            aria-label={`Switch interface language — currently ${lang ? lang.toUpperCase() : "··"}`}
-            title="Toggle admin interface language (ES/EN)"
-            suppressHydrationWarning
-            className="font-mono text-xs tracking-[0.12em] uppercase border border-[#D4A853]/20 bg-[#D4A853]/5 px-2.5 py-1 rounded hover:border-[#D4A853]/50 hover:bg-[#D4A853]/10 transition-all cursor-pointer text-[#D4A853] hidden sm:block"
-          >
-            {lang ? lang.toUpperCase() : "··"}
-          </button>
-          <div className="w-px h-4 bg-[#D4A853]/8" />
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-[#5C9A6B] status-dot-live" />
             <span className="font-mono text-xs text-[#7A6F65] tracking-[0.1em] uppercase hidden sm:block">
-              {t("En Línea", "Online")}
+              Online
             </span>
           </div>
           <div className="w-px h-4 bg-[#D4A853]/8" />
@@ -234,7 +219,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
             aria-label="Logout from admin panel"
             className="font-mono text-xs text-[#7A6F65] hover:text-[#F5F0EB] transition-colors cursor-pointer tracking-[0.08em] uppercase"
           >
-            {t("Salir ×", "Exit ×")}
+            Exit ×
           </button>
         </div>
       </header>
@@ -245,7 +230,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         <aside className="w-16 md:w-60 border-r border-[#D4A853]/8 bg-[#0A0908] flex flex-col py-4 flex-shrink-0">
 
           <div className="hidden md:block font-mono text-xs text-[#7A6F65] tracking-[0.2em] uppercase px-5 pb-3 border-b border-[#D4A853]/6 mb-2">
-            {t("Módulos", "Modules")}
+            Modules
           </div>
 
           <nav className="flex flex-col gap-0.5 px-2 md:px-3 mt-1">
@@ -313,9 +298,5 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <LanguageProvider>
-      <AdminShell>{children}</AdminShell>
-    </LanguageProvider>
-  );
+  return <AdminShell>{children}</AdminShell>;
 }

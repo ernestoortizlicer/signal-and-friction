@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAuthHeaders } from "@/lib/supabase";
-import { useT } from "@/contexts/LanguageContext";
 
 interface Draft {
   id: string;
@@ -323,7 +322,6 @@ function InlineMarkdown({ text, className }: { text: string; className?: string 
 }
 
 export default function LearningDashboard() {
-  const t = useT();
   const [activeTab, setActiveTab] = useState<'socratic' | 'hyper_leap'>('hyper_leap');
   const [articles, setArticles] = useState<Article[]>([]);
   const [selectedArticleSlug, setSelectedArticleSlug] = useState<string>("socratic-funnel-diagnostics");
@@ -474,10 +472,10 @@ export default function LearningDashboard() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-mono text-xs text-[#5C9A6B] border border-[#5C9A6B]/25 px-3 py-1 rounded-full bg-[#5C9A6B]/5">
-            {conceptsMastered} {t("Conceptos Dominados", "Concepts Mastered")}
+            {conceptsMastered} {"Concepts Mastered"}
           </span>
           <span className="font-mono text-xs text-[#D4A853] border border-[#D4A853]/25 px-3 py-1 rounded-full bg-[#D4A853]/5">
-            {t("IP Factory Activo", "IP Factory Active")}
+            {"IP Factory Active"}
           </span>
         </div>
       </div>
@@ -485,8 +483,8 @@ export default function LearningDashboard() {
       {/* Tabs */}
       <div className="flex border-b border-[#D4A853]/10 gap-6 relative z-10">
         {([
-          { key: 'hyper_leap', label: t('Modo Combate', 'Combat Mode') },
-          { key: 'socratic',   label: t('IP Lab', 'IP Lab') },
+          { key: 'hyper_leap', label: 'Combat Mode' },
+          { key: 'socratic',   label: 'IP Lab' },
         ] as const).map(tab => (
           <button
             key={tab.key}
@@ -521,10 +519,10 @@ export default function LearningDashboard() {
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl">
                 <div className="flex items-center justify-between mb-4">
                   <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase">
-                    {t("01 — Selección de Escenario", "01 — Scenario Selection")}
+                    {"01 — Scenario Selection"}
                   </span>
                   <span className="font-mono text-[10px] uppercase tracking-wider text-[#C85C5C] border border-[#C85C5C]/20 px-2 py-0.5 rounded-full bg-[#C85C5C]/5">
-                    Divergent Mode
+                    {"Divergent Mode"}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -546,7 +544,7 @@ export default function LearningDashboard() {
                     >
                       <div className="text-xs font-bold leading-snug line-clamp-2">{cs.title}</div>
                       {selectedChallengeId === cs.id && (
-                        <span className="text-[10px] text-[#D4A853] block mt-1 uppercase tracking-wider">Active</span>
+                        <span className="text-[10px] text-[#D4A853] block mt-1 uppercase tracking-wider">{"Active"}</span>
                       )}
                     </button>
                   ))}
@@ -556,17 +554,17 @@ export default function LearningDashboard() {
               {/* Main Challenge Card */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-4">
                 <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase">
-                  {t("02 — Escenario de Crisis", "02 — Crisis Scenario")}
+                  {"02 — Crisis Scenario"}
                 </span>
                 <h3 className="text-base font-bold text-white font-serif leading-snug">{activeChallenge.title}</h3>
 
                 <div className="border border-[#D4A853]/10 bg-[#0A0908] p-4 rounded-xl text-xs space-y-3">
                   <div>
-                    <span className="text-[#D4A853] font-semibold block uppercase text-[10px] tracking-wider mb-1">Metrics Bottleneck</span>
+                    <span className="text-[#D4A853] font-semibold block uppercase text-[10px] tracking-wider mb-1">{"Metrics Bottleneck"}</span>
                     <p className="text-[#B0A89E] leading-relaxed">{activeChallenge.metrics}</p>
                   </div>
                   <div className="border-t border-[#D4A853]/8 pt-3">
-                    <span className="text-[#D4A853] font-semibold block uppercase text-[10px] tracking-wider mb-1">Environmental Context</span>
+                    <span className="text-[#D4A853] font-semibold block uppercase text-[10px] tracking-wider mb-1">{"Environmental Context"}</span>
                     <p className="text-[#B0A89E] leading-relaxed">{activeChallenge.context}</p>
                   </div>
                 </div>
@@ -576,7 +574,7 @@ export default function LearningDashboard() {
                     {/* Friction options — 2 cols max */}
                     <div>
                       <label className="text-xs text-[#B0A89E] uppercase tracking-wider block mb-2">
-                        {t("Aisla los mecanismos de fricción (selecciona todos los que apliquen):", "Isolate friction mechanisms (select all that apply):")}
+                        {"Isolate friction mechanisms (select all that apply):"}
                       </label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {activeChallenge.frictionOptions.map((option, idx) => {
@@ -608,7 +606,7 @@ export default function LearningDashboard() {
                     {/* Hypothesis */}
                     <div>
                       <label className="text-xs text-[#B0A89E] uppercase tracking-wider block mb-2">
-                        {t("Hipótesis diagnóstica clínica:", "Clinical diagnostic hypothesis:")}
+                        {"Clinical diagnostic hypothesis:"}
                       </label>
                       <textarea
                         value={hlInput}
@@ -618,7 +616,7 @@ export default function LearningDashboard() {
                             setTypingStartedAt(Date.now());
                           }
                         }}
-                        placeholder="Write your diagnostic strategy. Focus on how technical constraints interact with behavioral friction..."
+                        placeholder={"Write your diagnostic strategy. Focus on how technical constraints interact with behavioral friction..."}
                         className="w-full bg-[#0A0908] border border-[#D4A853]/8 focus:border-[#D4A853] focus:outline-none p-3 text-xs rounded-xl h-24 text-[#F5F0EB] font-mono resize-none"
                       />
                     </div>
@@ -640,7 +638,7 @@ export default function LearningDashboard() {
                         disabled={!hlInput.trim() || hlSelectedOptions.length === 0}
                         className="px-5 py-2.5 bg-[#D4A853] text-[#0A0908] text-xs font-mono font-bold uppercase tracking-wider transition-all hover:bg-[#E8C97A] active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-xl"
                       >
-                        {t("Ejecutar Revelación Socrática →", "Execute Socratic Reverse-Reveal →")}
+                        {"Execute Socratic Reverse-Reveal →"}
                       </button>
                     </div>
                   </div>
@@ -653,10 +651,10 @@ export default function LearningDashboard() {
                     {/* Hypothesis recap */}
                     <div>
                       <h4 className="text-xs text-[#5C9A6B] uppercase tracking-widest font-semibold mb-1">
-                        ✓ Socratic Reverse-Reveal Complete
+                        {"✓ Socratic Reverse-Reveal Complete"}
                       </h4>
                       <p className="text-xs text-[#B0A89E] leading-relaxed">
-                        Hypothesis: <span className="text-white italic">&ldquo;{hlInput}&rdquo;</span>
+                        {"Hypothesis: "}<span className="text-white italic">&ldquo;{hlInput}&rdquo;</span>
                       </p>
                     </div>
 
@@ -664,27 +662,27 @@ export default function LearningDashboard() {
                     {coverageScore !== null && (
                       <div className="border border-[#D4A853]/15 bg-[#0A0908]/60 p-4 rounded-xl">
                         <span className="font-mono text-[10px] text-[#D4A853]/70 uppercase tracking-widest block mb-3">
-                          Cognitive Telemetry
+                          {"Cognitive Telemetry"}
                         </span>
                         <div className="grid grid-cols-3 gap-3 text-center">
                           <div>
-                            <span className="font-mono text-[10px] text-[#B0A89E] uppercase block mb-1">Velocity</span>
+                            <span className="font-mono text-[10px] text-[#B0A89E] uppercase block mb-1">{"Velocity"}</span>
                             <span className="font-serif text-xl font-bold text-[#D4A853]">{diagnosticVelocity ?? "—"}</span>
                             <span className="font-mono text-[10px] text-[#7A6F65] block">WPM</span>
                           </div>
                           <div>
-                            <span className="font-mono text-[10px] text-[#B0A89E] uppercase block mb-1">Coverage</span>
+                            <span className="font-mono text-[10px] text-[#B0A89E] uppercase block mb-1">{"Coverage"}</span>
                             <span className={`font-serif text-xl font-bold ${
                               coverageScore === 100 ? "text-[#5C9A6B]" :
                               coverageScore >= 67 ? "text-[#D4A853]" :
                               "text-[#C85C5C]"
                             }`}>{coverageScore}%</span>
-                            <span className="font-mono text-[10px] text-[#7A6F65] block">Mechanisms</span>
+                            <span className="font-mono text-[10px] text-[#7A6F65] block">{"Mechanisms"}</span>
                           </div>
                           <div>
-                            <span className="font-mono text-[10px] text-[#B0A89E] uppercase block mb-1">Session</span>
+                            <span className="font-mono text-[10px] text-[#B0A89E] uppercase block mb-1">{"Session"}</span>
                             <span className="font-serif text-xl font-bold text-[#F5F0EB]">{sessionElapsed ?? "—"}s</span>
-                            <span className="font-mono text-[10px] text-[#7A6F65] block">Elapsed</span>
+                            <span className="font-mono text-[10px] text-[#7A6F65] block">{"Elapsed"}</span>
                           </div>
                         </div>
                       </div>
@@ -706,7 +704,7 @@ export default function LearningDashboard() {
 
                       <div>
                         <span className="font-mono text-[10px] text-[#D4A853] tracking-widest uppercase block mb-1">
-                          Elevation Report — Cognitive Gap Map
+                          {"Elevation Report — Cognitive Gap Map"}
                         </span>
                         <div className="space-y-3">
                           {elev.gaps.map((g, idx) => (
@@ -725,7 +723,7 @@ export default function LearningDashboard() {
 
                       <div className="border-t border-[#D4A853]/15 pt-4">
                         <span className="font-mono text-[10px] text-[#D4A853] tracking-widest uppercase block mb-3">
-                          Hyper-Leap Study Plan
+                          {"Hyper-Leap Study Plan"}
                         </span>
                         <div className="space-y-2">
                           {elev.studyPlan.map((s, idx) => (
@@ -742,7 +740,7 @@ export default function LearningDashboard() {
 
                       <div className="border-t border-[#D4A853]/15 pt-4">
                         <span className="font-mono text-[10px] text-[#D4A853] tracking-widest uppercase block mb-3">
-                          Priority Articles (Gap Closure)
+                          {"Priority Articles (Gap Closure)"}
                         </span>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                           {elev.articles.map((art) => (
@@ -782,7 +780,7 @@ export default function LearningDashboard() {
                         onClick={resetChallenge}
                         className="px-4 py-2 border border-white/10 text-xs text-[#B0A89E] hover:text-white cursor-pointer uppercase font-mono rounded-xl transition-colors"
                       >
-                        {t("Reiniciar", "Reset")}
+                        {"Reset"}
                       </button>
                       <button
                         type="button"
@@ -821,7 +819,7 @@ export default function LearningDashboard() {
                         }}
                         className="px-4 py-2 border border-[#D4A853]/25 text-xs text-[#D4A853] hover:bg-[#D4A853]/5 cursor-pointer uppercase font-mono rounded-xl transition-colors"
                       >
-                        {t("Exportar Nodo IP ↓", "Export IP Node ↓")}
+                        {"Export IP Node ↓"}
                       </button>
                       <button
                         type="button"
@@ -839,7 +837,7 @@ export default function LearningDashboard() {
                         }}
                         className="px-4 py-2 bg-[#5C9A6B]/10 border border-[#5C9A6B]/30 text-[#5C9A6B] text-xs font-bold uppercase tracking-wider cursor-pointer font-mono rounded-xl transition-colors hover:bg-[#5C9A6B]/20 ml-auto"
                       >
-                        {t("Absorber Conceptos", "Absorb Concepts")}
+                        {"Absorb Concepts"}
                       </button>
                     </div>
                   </motion.div>
@@ -853,7 +851,7 @@ export default function LearningDashboard() {
               {/* Cognitive Radar */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl">
                 <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase block mb-4">
-                  {t("03 — Radar Cognitivo", "03 — Cognitive Radar")}
+                  {"03 — Cognitive Radar"}
                 </span>
                 <div className="flex justify-center">
                   <svg width={radarW} height={radarH} className="overflow-visible">
@@ -897,7 +895,7 @@ export default function LearningDashboard() {
                 </div>
                 <div className="mt-4 space-y-1.5 border-t border-[#D4A853]/8 pt-3">
                   <div className="flex justify-between items-center text-xs mb-2">
-                    <span className="text-[#D4A853] uppercase tracking-wider font-bold text-[10px]">Concepts Mastered</span>
+                    <span className="text-[#D4A853] uppercase tracking-wider font-bold text-[10px]">{"Concepts Mastered"}</span>
                     <span className="text-white font-bold bg-[#D4A853]/10 px-2 py-0.5 rounded-full border border-[#D4A853]/20 text-[10px]">{conceptsMastered}</span>
                   </div>
                   {radarDomains.map(d => (
@@ -912,10 +910,10 @@ export default function LearningDashboard() {
               {/* Quick Diagnostic Quiz */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-3">
                 <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase">
-                  {t("04 — Diagnóstico Rápido", "04 — Quick Diagnostic")}
+                  {"04 — Quick Diagnostic"}
                 </span>
                 <div className="border border-[#D4A853]/8 bg-[#0A0908] p-3 rounded-xl">
-                  <span className="text-[10px] text-[#D4A853] uppercase block mb-1">Active Scenario</span>
+                  <span className="text-[10px] text-[#D4A853] uppercase block mb-1">{"Active Scenario"}</span>
                   <p className="text-xs text-[#B0A89E] leading-relaxed">{activeChallenge.quizQuestion}</p>
                 </div>
                 <div className="space-y-1.5">
@@ -965,7 +963,7 @@ export default function LearningDashboard() {
             <div className="xl:col-span-8 flex flex-col">
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl flex flex-col flex-1">
                 <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase block mb-4">
-                  {t("01 — Motor de Borradores Socrático", "01 — Socratic Draft Engine")}
+                  {"01 — Socratic Draft Engine"}
                 </span>
 
                 {/* Article selector chips — always scrollable, never grid */}
@@ -1018,7 +1016,7 @@ export default function LearningDashboard() {
                         <div className="min-w-0">
                           <div className="flex justify-between items-center mb-2">
                             <span className="font-mono text-xs text-[#D4A853] tracking-wider uppercase">
-                              Draft 0{draft.draft_number}
+                              {"Draft"} 0{draft.draft_number}
                             </span>
                             <div className="flex gap-0.5">
                               {[1, 2, 3, 4, 5].map(star => (
@@ -1056,7 +1054,7 @@ export default function LearningDashboard() {
                         }`}
                       >
                         <div className="min-w-0">
-                          <span className="font-mono text-xs text-[#D4A853] tracking-wider uppercase block mb-2">Draft 0{num}</span>
+                          <span className="font-mono text-xs text-[#D4A853] tracking-wider uppercase block mb-2">{"Draft"} 0{num}</span>
                           <p className="text-xs text-[#B0A89E] leading-relaxed font-mono">
                             {num === 1
                               ? "Focus on high-ticket conversion friction. Highlight visual deficits adjacent to key click triggers."
@@ -1089,12 +1087,12 @@ export default function LearningDashboard() {
                       className="space-y-3 border-t border-[#D4A853]/15 pt-4 mt-4"
                     >
                       <label className="font-mono text-xs text-[#D4A853]/70 tracking-wider uppercase block">
-                        Socratic Refinement Notes
+                        {"Socratic Refinement Notes"}
                       </label>
                       <textarea
                         value={feedbackText}
                         onChange={(e) => setFeedbackText(e.target.value)}
-                        placeholder="Specify why these arguments align with your divergence model..."
+                        placeholder={"Specify why these arguments align with your divergence model..."}
                         className="w-full bg-[#0A0908] border border-[#2A2218] focus:border-[#D4A853] focus:outline-none p-3 text-xs font-mono rounded-xl h-20 text-[#F5F0EB] resize-none"
                       />
                       <div className="flex justify-end gap-2">
@@ -1103,14 +1101,14 @@ export default function LearningDashboard() {
                           onClick={() => setSelectedDraftId(null)}
                           className="px-4 py-2 border border-[#2A2218] text-xs font-mono text-[#7A6F65] hover:text-[#B0A89E] cursor-pointer rounded-xl"
                         >
-                          Clear
+                          {"Clear"}
                         </button>
                         <button
                           type="button"
                           onClick={submitSocraticPreference}
                           className="px-4 py-2 bg-[#D4A853] text-[#0A0908] text-xs font-mono font-bold uppercase tracking-wider cursor-pointer rounded-xl"
                         >
-                          {t("Reforzar Pesos", "Reinforce Weights")}
+                          {"Reinforce Weights"}
                         </button>
                       </div>
                     </motion.div>
@@ -1125,7 +1123,7 @@ export default function LearningDashboard() {
               {/* Dialectic Chain — spine-based, zero flex-row */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl overflow-hidden">
                 <span className="font-mono text-[10px] text-[#D4A853]/70 tracking-[0.3em] uppercase block mb-5">
-                  {t("02 — Cadena Dialéctica", "02 — Dialectic Chain")}
+                  {"02 — Dialectic Chain"}
                 </span>
                 <div className="relative">
                   {/* Spine */}
@@ -1134,7 +1132,7 @@ export default function LearningDashboard() {
                   {/* Node: Thesis */}
                   <div className="relative pl-7 mb-2">
                     <div className="absolute left-0 top-1 w-[13px] h-[13px] rounded-full border-2 border-[#D4A853] bg-[#110F0D]" />
-                    <div className="font-mono text-[10px] text-[#D4A853] uppercase mb-0.5">Product Strategist</div>
+                    <div className="font-mono text-[10px] text-[#D4A853] uppercase mb-0.5">{"Product Strategist"}</div>
                     <div className="font-mono text-[10px] text-[#D4A853]/70 mb-1.5">Arg 01</div>
                     <p className="text-xs text-[#B0A89E] leading-relaxed">
                       Funnel requires card reduction to minimize decision fatigue on checkout.
@@ -1144,13 +1142,13 @@ export default function LearningDashboard() {
                   {/* Relation label */}
                   <div className="relative pl-7 mb-2">
                     <div className="absolute left-[2px] top-0.5 font-mono text-[9px] text-[#7A6F65]">↓</div>
-                    <span className="font-mono text-[9px] text-[#7A6F65] uppercase">contradicts</span>
+                    <span className="font-mono text-[9px] text-[#7A6F65] uppercase">{"contradicts"}</span>
                   </div>
 
                   {/* Node: Anti-thesis */}
                   <div className="relative pl-7 mb-2">
                     <div className="absolute left-0 top-1 w-[13px] h-[13px] rounded-full border-2 border-[#C85C5C] bg-[#110F0D]" />
-                    <div className="font-mono text-[10px] text-[#C85C5C] uppercase mb-0.5">Behavioral Scientist</div>
+                    <div className="font-mono text-[10px] text-[#C85C5C] uppercase mb-0.5">{"Behavioral Scientist"}</div>
                     <div className="font-mono text-[10px] text-[#C85C5C]/40 mb-1.5">Pivot 02</div>
                     <p className="text-xs text-[#B0A89E] leading-relaxed">
                       Card reduction fails if value is undefined. Calculator slider builds habit loop first.
@@ -1160,13 +1158,13 @@ export default function LearningDashboard() {
                   {/* Relation label */}
                   <div className="relative pl-7 mb-2">
                     <div className="absolute left-[2px] top-0.5 font-mono text-[9px] text-[#5C9A6B]">↓</div>
-                    <span className="font-mono text-[9px] text-[#5C9A6B] uppercase">synthesizes</span>
+                    <span className="font-mono text-[9px] text-[#5C9A6B] uppercase">{"synthesizes"}</span>
                   </div>
 
                   {/* Node: Synthesis */}
                   <div className="relative pl-7">
                     <div className="absolute left-0 top-1 w-[13px] h-[13px] rounded-full border-2 border-[#5C9A6B] bg-[#110F0D]" />
-                    <div className="font-mono text-[10px] text-[#5C9A6B] uppercase mb-0.5">Linguistic Architect</div>
+                    <div className="font-mono text-[10px] text-[#5C9A6B] uppercase mb-0.5">{"Linguistic Architect"}</div>
                     <div className="font-mono text-[10px] text-[#5C9A6B]/40 mb-1.5">Synthesis 03</div>
                     <p className="text-xs text-[#B0A89E] leading-relaxed">
                       Frame calculator as interactive tool: user isolates value, removing billing anxiety.
@@ -1177,7 +1175,7 @@ export default function LearningDashboard() {
 
               {/* Engine Config */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-4">
-                <h3 className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase">{t("Config. Motor Socrático", "Socratic Engine Config")}</h3>
+                <h3 className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase">{"Socratic Engine Config"}</h3>
                 <div className="space-y-2 text-xs">
                   {[
                     { label: "Active Agents", value: "3 (Strategist, Scientist, Architect)" },
@@ -1191,13 +1189,13 @@ export default function LearningDashboard() {
                   ))}
                 </div>
                 <p className="text-xs text-[#B0A89E] leading-relaxed pt-2 border-t border-[#D4A853]/8">
-                  The Socratic Draft Engine synthesizes multiple expert viewpoints to construct high-status conversion analysis documents.
+                  {"The Socratic Draft Engine synthesizes multiple expert viewpoints to construct high-status conversion analysis documents."}
                 </p>
               </div>
 
               {/* Mastery Index */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-3 flex-1">
-                <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase block">{t("Índice de Maestría", "Mastery Index")}</span>
+                <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase block">{"Mastery Index"}</span>
                 {DOMAINS.map((d) => (
                   <div key={d.name}>
                     <div className="flex justify-between text-xs mb-1">
