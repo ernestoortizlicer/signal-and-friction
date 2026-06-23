@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAuthHeaders } from "@/lib/supabase";
 import Link from "next/link";
+import { useT } from "@/contexts/LanguageContext";
 
 interface CertifiedPractitioner {
   id: string;
@@ -116,6 +117,7 @@ The exam brief pool has 12 cases across 4 verticals. No two practitioners get th
 ];
 
 export default function AdminCertifiedManager() {
+  const t = useT();
   const [practitioners, setPractitioners] = useState<CertifiedPractitioner[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -177,7 +179,7 @@ export default function AdminCertifiedManager() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0A0908] flex items-center justify-center font-mono text-xs text-[#B0A89E] animate-pulse">
-        Loading certified practitioners database...
+        {t("Cargando directorio de practitioners...", "Loading certified practitioners database...")}
       </div>
     );
   }
@@ -189,7 +191,7 @@ export default function AdminCertifiedManager() {
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#D4A853]/8 pb-8">
           <div>
-            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#B0A89E] block mb-2">Licensed Partners Directory</span>
+            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#B0A89E] block mb-2">{t("Directorio de Partners Licenciados", "Licensed Partners Directory")}</span>
             <h1 className="text-4xl font-serif text-[#F5F0EB] tracking-tight">S&amp;F Certified™ Administration</h1>
           </div>
           <div className="flex items-center gap-4 mt-4 md:mt-0">
@@ -198,7 +200,7 @@ export default function AdminCertifiedManager() {
               target="_blank"
               className="font-mono text-xs uppercase tracking-wider text-[#5C9A6B] border border-[#5C9A6B]/25 px-4 py-1.5 rounded-full bg-[#5C9A6B]/5 hover:bg-[#5C9A6B]/15 transition-all"
             >
-              View Public Page ↗
+              {t("Ver Página Pública ↗", "View Public Page ↗")}
             </Link>
             <Link
               href="/admin/dashboard"
@@ -211,14 +213,14 @@ export default function AdminCertifiedManager() {
 
         {/* Program Telemetry */}
         <section className="space-y-4">
-          <div className="font-mono text-xs uppercase tracking-widest text-[#D4A853]">Program Telemetry</div>
+          <div className="font-mono text-xs uppercase tracking-widest text-[#D4A853]">{t("Telemetría del Programa", "Program Telemetry")}</div>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {[
-              { label: "Total Practitioners", value: practitioners.length, desc: "Active + Suspended" },
-              { label: "Active Licenses", value: activePractitioners.length, desc: "Operational under SLA" },
-              { label: "Monthly Revenue", value: `$${totalMRR.toLocaleString()}`, desc: "Est. @ $375/active/mo" },
-              { label: "Avg Exam Score", value: avgExamScore ? `${avgExamScore}/100` : "—", desc: "Pass threshold: 75" },
-              { label: "Avg CSAT", value: `${avgCSAT}%`, desc: "Minimum compliance: 80%" },
+              { label: t("Total Practitioners", "Total Practitioners"), value: practitioners.length, desc: t("Activos + Suspendidos", "Active + Suspended") },
+              { label: t("Licencias Activas", "Active Licenses"), value: activePractitioners.length, desc: t("Operativos bajo SLA", "Operational under SLA") },
+              { label: t("Ingresos Mensuales", "Monthly Revenue"), value: `$${totalMRR.toLocaleString()}`, desc: "Est. @ $375/active/mo" },
+              { label: t("Puntuación Media Examen", "Avg Exam Score"), value: avgExamScore ? `${avgExamScore}/100` : "—", desc: t("Umbral aprobado: 75", "Pass threshold: 75") },
+              { label: "Avg CSAT", value: `${avgCSAT}%`, desc: t("Mínimo de cumplimiento: 80%", "Minimum compliance: 80%") },
             ].map((stat, i) => (
               <div key={i} className="border border-[#D4A853]/10 p-4 bg-[#110F0D] rounded-2xl">
                 <span className="font-mono text-[10px] text-[#B0A89E] uppercase tracking-wider block mb-2">{stat.label}</span>
@@ -239,7 +241,7 @@ export default function AdminCertifiedManager() {
                 activeTab === tab ? "border-[#D4A853] text-[#D4A853]" : "border-transparent text-[#B0A89E] hover:text-[#B0A89E]"
               }`}
             >
-              {tab === "roster" ? "Practitioners Roster" : "Marketing & Sales Kits"}
+              {tab === "roster" ? t("Directorio de Practitioners", "Practitioners Roster") : t("Marketing y Ventas", "Marketing & Sales Kits")}
             </button>
           ))}
         </div>
@@ -249,22 +251,22 @@ export default function AdminCertifiedManager() {
           <>
             <section className="border border-[#D4A853]/8 p-8 bg-[#110F0D]/60 rounded-2xl space-y-6">
               <div className="flex justify-between items-center border-b border-[#D4A853]/8 pb-4">
-                <h3 className="font-serif text-xl text-[#F5F0EB]">Licensed Agencies &amp; Consultants</h3>
-                <span className="font-mono text-xs text-[#7A6F65]">Authorized under Signal &amp; Friction Method™</span>
+                <h3 className="font-serif text-xl text-[#F5F0EB]">{t("Agencias & Consultores Licenciados", "Licensed Agencies & Consultants")}</h3>
+                <span className="font-mono text-xs text-[#7A6F65]">{t("Autorizados bajo Signal & Friction Method™", "Authorized under Signal & Friction Method™")}</span>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left font-mono text-xs">
                   <thead>
                     <tr className="border-b border-white/10 text-[#7A6F65] text-xs uppercase tracking-wider">
-                      <th className="py-3">Agency / Contact</th>
-                      <th>Certified At</th>
-                      <th>Expires</th>
-                      <th>Modules</th>
-                      <th>Exam</th>
-                      <th>Status</th>
+                      <th className="py-3">{t("Agencia / Contacto", "Agency / Contact")}</th>
+                      <th>{t("Certificado el", "Certified At")}</th>
+                      <th>{t("Expira", "Expires")}</th>
+                      <th>{t("Módulos", "Modules")}</th>
+                      <th>{t("Examen", "Exam")}</th>
+                      <th>{t("Estado", "Status")}</th>
                       <th>CSAT</th>
-                      <th className="text-right">Action</th>
+                      <th className="text-right">{t("Acción", "Action")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -314,8 +316,8 @@ export default function AdminCertifiedManager() {
                           <td className="text-right" onClick={e => e.stopPropagation()}>
                             {editingId === p.id ? (
                               <div className="inline-flex gap-2">
-                                <button onClick={() => handleUpdate(p.id)} className="px-2 py-1 bg-[#5C9A6B] text-black font-bold uppercase tracking-wider text-xs hover:bg-[#5C9A6B]/90 rounded cursor-pointer">Save</button>
-                                <button onClick={() => setEditingId(null)} className="px-2 py-1 border border-white/10 text-[#B0A89E] hover:text-white uppercase tracking-wider text-xs rounded cursor-pointer">Cancel</button>
+                                <button onClick={() => handleUpdate(p.id)} className="px-2 py-1 bg-[#5C9A6B] text-black font-bold uppercase tracking-wider text-xs hover:bg-[#5C9A6B]/90 rounded cursor-pointer">{t("Guardar","Save")}</button>
+                                <button onClick={() => setEditingId(null)} className="px-2 py-1 border border-white/10 text-[#B0A89E] hover:text-white uppercase tracking-wider text-xs rounded cursor-pointer">{t("Cancelar","Cancel")}</button>
                               </div>
                             ) : (
                               <button
@@ -345,7 +347,7 @@ export default function AdminCertifiedManager() {
                   className="border border-[#D4A853]/25 bg-[#121110] p-8 rounded glow-border space-y-6"
                 >
                   <h3 className="font-serif text-lg text-white border-b border-[#D4A853]/8 pb-3 flex items-center gap-2">
-                    <span className="text-[#D4A853]">⚙</span> Parameter Compliance Audit Editor
+                    <span className="text-[#D4A853]">⚙</span> {t("Editor de Auditoría de Parámetros", "Parameter Compliance Audit Editor")}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 font-mono text-xs">
                     <div className="space-y-4">
@@ -355,11 +357,11 @@ export default function AdminCertifiedManager() {
                       </div>
                       <input type="range" min="0" max="100" step="1" value={editScore} onChange={e => setEditScore(Number(e.target.value))} className="w-full h-1 bg-[#2A2218] rounded-lg appearance-none cursor-pointer accent-[#D4A853]" />
                       <div className="flex justify-between text-xs text-[#7A6F65]">
-                        <span>0% (Revoke)</span><span>80% (Threshold)</span><span>100%</span>
+                        <span>0% ({t("Revocar", "Revoke")})</span><span>80% ({t("Umbral", "Threshold")})</span><span>100%</span>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[#B0A89E] uppercase tracking-wider block mb-1">License Status:</label>
+                      <label className="text-[#B0A89E] uppercase tracking-wider block mb-1">{t("Estado de Licencia:", "License Status:")}</label>
                       <div className="flex gap-2">
                         {(["active", "suspended", "expired"] as const).map(status => (
                           <button key={status} type="button" onClick={() => setEditStatus(status)}
@@ -371,8 +373,8 @@ export default function AdminCertifiedManager() {
                     </div>
                   </div>
                   <div className="flex justify-end gap-3 pt-4 border-t border-[#D4A853]/8">
-                    <button type="button" onClick={() => setEditingId(null)} className="px-4 py-2 border border-white/10 text-xs hover:text-white uppercase tracking-wider rounded cursor-pointer">Cancel</button>
-                    <button type="button" onClick={() => handleUpdate(editingId)} className="px-5 py-2 bg-[#D4A853] text-[#0A0908] font-bold text-xs uppercase tracking-wider hover:bg-[#E8C97A] transition-all rounded cursor-pointer">Apply Parameters</button>
+                    <button type="button" onClick={() => setEditingId(null)} className="px-4 py-2 border border-white/10 text-xs hover:text-white uppercase tracking-wider rounded cursor-pointer">{t("Cancelar", "Cancel")}</button>
+                    <button type="button" onClick={() => handleUpdate(editingId)} className="px-5 py-2 bg-[#D4A853] text-[#0A0908] font-bold text-xs uppercase tracking-wider hover:bg-[#E8C97A] transition-all rounded cursor-pointer">{t("Aplicar Parámetros", "Apply Parameters")}</button>
                   </div>
                 </motion.section>
               )}
@@ -389,22 +391,22 @@ export default function AdminCertifiedManager() {
                     transition={springConfig}
                     className="w-full max-w-lg border border-[#D4A853]/30 bg-[#121110] p-8 rounded relative glow-border text-left font-mono"
                   >
-                    <button onClick={() => setSelectedPractitioner(null)} className="absolute top-4 right-4 text-xs hover:text-[#D4A853] text-[#B0A89E]">[CLOSE]</button>
+                    <button onClick={() => setSelectedPractitioner(null)} className="absolute top-4 right-4 text-xs hover:text-[#D4A853] text-[#B0A89E]">{t("[CERRAR]", "[CLOSE]")}</button>
 
                     <div className="border-b border-[#D4A853]/8 pb-4 mb-6">
-                      <span className="text-xs text-[#D4A853] uppercase tracking-[0.2em] block mb-1">Certified Partner Profile</span>
+                      <span className="text-xs text-[#D4A853] uppercase tracking-[0.2em] block mb-1">{t("Perfil de Partner Certificado", "Certified Partner Profile")}</span>
                       <h3 className="font-serif text-2xl text-white font-bold">{selectedPractitioner.clients?.company_name}</h3>
                     </div>
 
                     <div className="space-y-4 text-xs">
                       <div className="grid grid-cols-2 gap-4 border-b border-[#D4A853]/8 pb-4">
                         <div>
-                          <span className="text-[#B0A89E] block uppercase">Primary Contact</span>
+                          <span className="text-[#B0A89E] block uppercase">{t("Contacto Principal", "Primary Contact")}</span>
                           <span className="text-[#F5F0EB] block font-bold mt-0.5">{selectedPractitioner.clients?.contact_name}</span>
                           <span className="text-[#B0A89E]">{selectedPractitioner.clients?.contact_email}</span>
                         </div>
                         <div>
-                          <span className="text-[#B0A89E] block uppercase">License Status</span>
+                          <span className="text-[#B0A89E] block uppercase">{t("Estado de Licencia", "License Status")}</span>
                           <span className={`inline-block text-xs uppercase px-2 py-0.5 border rounded mt-1 ${
                             selectedPractitioner.status === "active" ? "bg-[#5C9A6B]/10 border-[#5C9A6B]/20 text-[#5C9A6B]"
                               : selectedPractitioner.status === "suspended" ? "bg-orange-500/10 border-orange-500/20 text-orange-400"
@@ -415,24 +417,24 @@ export default function AdminCertifiedManager() {
 
                       <div className="grid grid-cols-2 gap-4 border-b border-[#D4A853]/8 pb-4">
                         <div>
-                          <span className="text-[#B0A89E] block uppercase">Certified At</span>
+                          <span className="text-[#B0A89E] block uppercase">{t("Fecha de Certificación", "Certified At")}</span>
                           <span className="text-[#F5F0EB] block mt-0.5">{new Date(selectedPractitioner.certified_at).toLocaleDateString()}</span>
                         </div>
                         <div>
-                          <span className="text-[#B0A89E] block uppercase">Renewal Date</span>
+                          <span className="text-[#B0A89E] block uppercase">{t("Fecha de Renovación", "Renewal Date")}</span>
                           <span className="text-[#F5F0EB] block mt-0.5">{new Date(selectedPractitioner.expires_at).toLocaleDateString()}</span>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-3 gap-4 border-b border-[#D4A853]/8 pb-4">
                         <div>
-                          <span className="text-[#B0A89E] block uppercase">Exam Score</span>
+                          <span className="text-[#B0A89E] block uppercase">{t("Nota de Examen", "Exam Score")}</span>
                           <span className={`text-sm font-bold block mt-0.5 ${(selectedPractitioner.exam_score || 0) >= 75 ? "text-[#5C9A6B]" : selectedPractitioner.exam_score ? "text-orange-400" : "text-[#7A6F65]"}`}>
-                            {selectedPractitioner.exam_score ? `${selectedPractitioner.exam_score}/100` : "Pending"}
+                            {selectedPractitioner.exam_score ? `${selectedPractitioner.exam_score}/100` : t("Pendiente", "Pending")}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[#B0A89E] block uppercase">Modules</span>
+                          <span className="text-[#B0A89E] block uppercase">{t("Módulos", "Modules")}</span>
                           <span className={`text-sm font-bold block mt-0.5 ${(selectedPractitioner.modules_completed || 0) >= 6 ? "text-[#5C9A6B]" : "text-[#D4A853]"}`}>
                             {selectedPractitioner.modules_completed || 0}/6
                           </span>
@@ -446,11 +448,11 @@ export default function AdminCertifiedManager() {
                       </div>
 
                       <div className="bg-[#110F0D]/40 border border-[#D4A853]/8 p-4 rounded space-y-1">
-                        <span className="text-[#B0A89E] block uppercase mb-1">Authorization Details</span>
+                        <span className="text-[#B0A89E] block uppercase mb-1">{t("Detalles de Autorización", "Authorization Details")}</span>
                         <div className="space-y-1">
-                          <div><span className="text-[#F5F0EB]">License ID:</span> <span className="text-[#7A6F65]">{selectedPractitioner.id}</span></div>
-                          <div><span className="text-[#F5F0EB]">Syllabus:</span> <span className="text-[#B0A89E] italic">{selectedPractitioner.certification_programs?.name}</span></div>
-                          <div><span className="text-[#F5F0EB]">SLA Active:</span> <span className={selectedPractitioner.status === "active" ? "text-[#5C9A6B]" : "text-[#C85C5C]"}>{selectedPractitioner.status === "active" ? "✓ YES" : "✗ NO"}</span></div>
+                          <div><span className="text-[#F5F0EB]">{t("ID de Licencia:", "License ID:")}</span> <span className="text-[#7A6F65]">{selectedPractitioner.id}</span></div>
+                          <div><span className="text-[#F5F0EB]">{t("Programa:", "Syllabus:")}</span> <span className="text-[#B0A89E] italic">{selectedPractitioner.certification_programs?.name}</span></div>
+                          <div><span className="text-[#F5F0EB]">SLA {t("Activo:", "Active:")}</span> <span className={selectedPractitioner.status === "active" ? "text-[#5C9A6B]" : "text-[#C85C5C]"}>{selectedPractitioner.status === "active" ? "✓ YES" : "✗ NO"}</span></div>
                         </div>
                       </div>
                     </div>
@@ -465,19 +467,19 @@ export default function AdminCertifiedManager() {
         {activeTab === "marketing" && (
           <section className="space-y-8">
             <div className="border border-[#D4A853]/8 p-6 bg-[#121110]/40 rounded">
-              <h3 className="font-serif text-lg text-white font-bold">Certified Licensing — Outbound & Sales Assets</h3>
-              <p className="text-xs text-[#B0A89E] font-mono mt-1">Updated to reflect the new 6-module, 42h curriculum. Agents #12 &amp; #13 copywriting.</p>
+              <h3 className="font-serif text-lg text-white font-bold">{t("Licencias Certificadas — Activos de Ventas y Outbound", "Certified Licensing — Outbound & Sales Assets")}</h3>
+              <p className="text-xs text-[#B0A89E] font-mono mt-1">{t("Actualizado para reflejar el nuevo currículo de 6 módulos, 42h. Copywriting Agentes #12 & #13.", "Updated to reflect the new 6-module, 42h curriculum. Agents #12 & #13 copywriting.")}</p>
             </div>
 
             {/* Email Sequence */}
             <div className="border border-[#D4A853]/8 bg-[#121110]/20 p-6 rounded space-y-4 font-mono">
               <div className="flex justify-between items-center border-b border-[#D4A853]/8 pb-3">
-                <span className="text-[#D4A853] font-bold uppercase text-xs tracking-wider">Onboarding Email Sequence — 3 Emails</span>
+                <span className="text-[#D4A853] font-bold uppercase text-xs tracking-wider">{t("Secuencia de Email de Onboarding — 3 Emails", "Onboarding Email Sequence — 3 Emails")}</span>
                 <button
                   onClick={() => { navigator.clipboard.writeText(EMAIL_SEQUENCE.map(e => `${e.day}\nSubject: ${e.subject}\n\n${e.preview}`).join("\n\n---\n\n")); alert("✓ 3-email sequence copied!"); }}
                   className="px-2.5 py-1 border border-[#D4A853]/30 text-[#D4A853] hover:bg-[#D4A853]/5 uppercase text-xs rounded cursor-pointer"
                 >
-                  Copy All
+                  {t("Copiar Todo", "Copy All")}
                 </button>
               </div>
 
@@ -503,7 +505,7 @@ export default function AdminCertifiedManager() {
                             <button
                               onClick={() => { navigator.clipboard.writeText(`Subject: ${email.subject}\n\n${email.preview}`); alert(`✓ ${email.day} copied!`); }}
                               className="mt-3 px-3 py-1 border border-[#D4A853]/20 text-[#D4A853] text-xs rounded hover:bg-[#D4A853]/5 cursor-pointer"
-                            >Copy Email</button>
+                            >{t("Copiar Email", "Copy Email")}</button>
                           </div>
                         </motion.div>
                       )}
@@ -516,26 +518,26 @@ export default function AdminCertifiedManager() {
             {/* LinkedIn Templates */}
             <div className="border border-[#D4A853]/8 bg-[#121110]/20 p-6 rounded space-y-4 font-mono">
               <div className="flex justify-between items-center border-b border-[#D4A853]/8 pb-3">
-                <span className="text-[#D4A853] font-bold uppercase text-xs tracking-wider">LinkedIn Outreach Templates — 3 Profiles</span>
+                <span className="text-[#D4A853] font-bold uppercase text-xs tracking-wider">{t("Plantillas LinkedIn Outreach — 3 Perfiles", "LinkedIn Outreach Templates — 3 Profiles")}</span>
                 <button
-                  onClick={() => { navigator.clipboard.writeText(LINKEDIN_TEMPLATES.map(t => `[${t.target}]\n${t.text}`).join("\n\n---\n\n")); alert("✓ 3 LinkedIn templates copied!"); }}
+                  onClick={() => { navigator.clipboard.writeText(LINKEDIN_TEMPLATES.map(tmpl => `[${tmpl.target}]\n${tmpl.text}`).join("\n\n---\n\n")); alert("✓ 3 LinkedIn templates copied!"); }}
                   className="px-2.5 py-1 border border-[#D4A853]/30 text-[#D4A853] hover:bg-[#D4A853]/5 uppercase text-xs rounded cursor-pointer"
                 >
-                  Copy All
+                  {t("Copiar Todo", "Copy All")}
                 </button>
               </div>
 
               <div className="space-y-4">
-                {LINKEDIN_TEMPLATES.map((t, i) => (
+                {LINKEDIN_TEMPLATES.map((tmpl, i) => (
                   <div key={i} className="border border-[#D4A853]/8 rounded p-4 space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-white font-bold text-xs">{t.target}</span>
+                      <span className="text-white font-bold text-xs">{tmpl.target}</span>
                       <button
-                        onClick={() => { navigator.clipboard.writeText(t.text); alert(`✓ "${t.target}" template copied!`); }}
+                        onClick={() => { navigator.clipboard.writeText(tmpl.text); alert(`✓ "${tmpl.target}" template copied!`); }}
                         className="px-2 py-0.5 border border-[#D4A853]/20 text-[#D4A853] text-xs rounded hover:bg-[#D4A853]/5 cursor-pointer"
-                      >Copy</button>
+                      >{t("Copiar", "Copy")}</button>
                     </div>
-                    <p className="text-[#B0A89E] text-xs leading-relaxed italic border-l border-[#D4A853]/15 pl-3">{t.text}</p>
+                    <p className="text-[#B0A89E] text-xs leading-relaxed italic border-l border-[#D4A853]/15 pl-3">{tmpl.text}</p>
                   </div>
                 ))}
               </div>
@@ -544,7 +546,7 @@ export default function AdminCertifiedManager() {
             {/* Loom Script */}
             <div className="border border-[#D4A853]/8 bg-[#121110]/20 p-6 rounded space-y-4 font-mono">
               <div className="flex justify-between items-center border-b border-[#D4A853]/8 pb-3">
-                <span className="text-[#D4A853] font-bold uppercase text-xs tracking-wider">10-Minute Loom Walkthrough Script</span>
+                <span className="text-[#D4A853] font-bold uppercase text-xs tracking-wider">{t("Script de Loom de 10 Minutos", "10-Minute Loom Walkthrough Script")}</span>
                 <button
                   onClick={() => {
                     const script = `0:00–1:30 | The CRO Crisis\n"If you run a growth agency, you know the problem: you deliver suggestions, results are murky, clients churn. The agencies charging $5–10K per diagnostic have a methodology with a name. The S&F Certified™ program is how you get one."\n\n1:30–4:00 | The S&F Protocol\n"We isolate the single friction point killing conversion in 72 hours. PostHog telemetry, strict isolation gates, results-based guarantee. If we don't hit the target, the client doesn't pay. That's the standard. The certification teaches you to operate at that standard."\n\n4:00–7:00 | The Curriculum (6 Modules)\n"42 hours over 12 weeks. The exam is a real 72-hour client brief — not multiple-choice. You produce three documents. We grade them against a 100-point rubric. Score 75+, you're certified."\n\n7:00–9:00 | The Business Layer\n"Module 5 covers how to run the practice: Wyoming LLC, Mercury banking, DWY/DFY pricing, LinkedIn outbound, AI-proofing. This isn't a skill course. It's a business architecture."\n\n9:00–10:00 | The CTA\n"$4,500/year. Annual or monthly. Your first diagnostic using the method typically covers the license cost. Apply at signal-and-friction.com/certified."`;
@@ -553,7 +555,7 @@ export default function AdminCertifiedManager() {
                   }}
                   className="px-2.5 py-1 border border-[#D4A853]/30 text-[#D4A853] hover:bg-[#D4A853]/5 uppercase text-xs rounded cursor-pointer"
                 >
-                  Copy Script
+                  {t("Copiar Script", "Copy Script")}
                 </button>
               </div>
               <div className="space-y-3 text-xs text-[#B0A89E] leading-relaxed">

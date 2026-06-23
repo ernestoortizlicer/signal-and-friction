@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAuthHeaders } from "@/lib/supabase";
+import { useT } from "@/contexts/LanguageContext";
 
 function renderInlineBold(text: string): React.ReactNode {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
@@ -103,6 +104,7 @@ interface Goal {
 const springConfig = { type: "spring" as const, stiffness: 100, damping: 18 };
 
 export default function PersonalFinanceCenter() {
+  const t = useT();
   const [activeSubView, setActiveSubView] = useState<'overview' | 'accounting' | 'investments' | 'education' | 'insights' | 'tax'>('overview');
   const [taxIncome, setTaxIncome] = useState(30000);
   const [taxPension, setTaxPension] = useState(Math.round(700.92 * 14 * 1.10)); // €700,92 × 14 pagas × EUR/USD 1.10 = $10,794
@@ -307,9 +309,9 @@ export default function PersonalFinanceCenter() {
   const p = totalAssets; // start value
   const r = returnRate / 100;
   const n = 12;
-  const t = yearsProject;
+  const yrs = yearsProject;
   const pmt = monthlyContrib;
-  const nt = n * t;
+  const nt = n * yrs;
   const rn = r / n;
   const compoundPrincipal = p * Math.pow(1 + rn, nt);
   const compoundContributions = pmt * ((Math.pow(1 + rn, nt) - 1) / rn) * (1 + rn);
@@ -401,7 +403,7 @@ export default function PersonalFinanceCenter() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0A0908] flex items-center justify-center font-mono text-xs text-[#B0A89E] animate-pulse">
-        Cargando el espacio de trabajo financiero...
+        {t("Cargando el espacio de trabajo financiero...", "Loading financial workspace...")}
       </div>
     );
   }
@@ -413,12 +415,12 @@ export default function PersonalFinanceCenter() {
         {/* Navigation & Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#D4A853]/8 pb-8">
           <div>
-            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#B0A89E] block mb-2">Libro Mayor — Ernesto Ortiz</span>
-            <h1 className="text-4xl font-serif text-[#F5F0EB] tracking-tight">Centro Financiero de Inversión</h1>
+            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#B0A89E] block mb-2">{t("Libro Mayor — Ernesto Ortiz", "General Ledger — Ernesto Ortiz")}</span>
+            <h1 className="text-4xl font-serif text-[#F5F0EB] tracking-tight">{t("Centro Financiero de Inversión", "Investment Finance Center")}</h1>
           </div>
           <div className="flex items-center gap-4 mt-4 md:mt-0">
             <span className="font-mono text-xs uppercase tracking-wider text-[#D4A853] border border-[#D4A853]/20 px-3 py-1.5 rounded-full bg-[#D4A853]/5">
-              Libro Mayor Activo
+              {t("Libro Mayor Activo", "Active Ledger")}
             </span>
           </div>
         </header>
@@ -426,12 +428,12 @@ export default function PersonalFinanceCenter() {
         {/* View Toggle Tabs */}
         <div className="flex border-b border-[#D4A853]/8 gap-6 overflow-x-auto">
           {[
-            { key: "overview", label: "Resumen" },
-            { key: "accounting", label: "Contabilidad" },
-            { key: "investments", label: "ROI y Capitalización" },
-            { key: "education", label: "Educación" },
-            { key: "insights", label: "Asesor IA" },
-            { key: "tax", label: "Optimizador Fiscal" }
+            { key: "overview", label: t("Resumen", "Overview") },
+            { key: "accounting", label: t("Contabilidad", "Accounting") },
+            { key: "investments", label: t("ROI y Capitalización", "ROI & Capitalization") },
+            { key: "education", label: t("Educación", "Education") },
+            { key: "insights", label: t("Asesor IA", "AI Advisor") },
+            { key: "tax", label: t("Optimizador Fiscal", "Tax Optimizer") }
           ].map((tab) => (
             <button
               key={tab.key}
@@ -458,10 +460,10 @@ export default function PersonalFinanceCenter() {
               {/* Scorecard */}
               <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: "Patrimonio Neto", value: `$${netWorth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, detail: "Activos − Pasivos" },
-                  { label: "Pista de Caja", value: `${runwayMonths.toFixed(1)} months`, detail: "Cuenta corriente vs. gastos" },
-                  { label: "Gasto Mensual", value: `$${averageBurnRate.toFixed(2)}`, detail: "AI API, software, hosting" },
-                  { label: "Ingresos Consultoría", value: `$${(Math.abs(accounts.find(a => a.name === "Consulting Revenue") ? (accountBalances[accounts.find(a => a.name === "Consulting Revenue")!.id] || 0) : 70000) / 100).toFixed(2)}`, detail: "Honorarios beta reconciliados" },
+                  { label: t("Patrimonio Neto", "Net Worth"), value: `$${netWorth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, detail: t("Activos − Pasivos", "Assets − Liabilities") },
+                  { label: t("Pista de Caja", "Cash Runway"), value: `${runwayMonths.toFixed(1)} ${t("meses", "months")}`, detail: t("Cuenta corriente vs. gastos", "Checking vs. expenses") },
+                  { label: t("Gasto Mensual", "Monthly Burn"), value: `$${averageBurnRate.toFixed(2)}`, detail: "AI API, software, hosting" },
+                  { label: t("Ingresos Consultoría", "Consulting Revenue"), value: `$${(Math.abs(accounts.find(a => a.name === "Consulting Revenue") ? (accountBalances[accounts.find(a => a.name === "Consulting Revenue")!.id] || 0) : 70000) / 100).toFixed(2)}`, detail: t("Honorarios beta reconciliados", "Reconciled beta fees") },
                 ].map((item, idx) => (
                   <div key={idx} className="border border-[#D4A853]/10 p-5 bg-[#110F0D] rounded-2xl relative overflow-hidden">
                     <span className="font-mono text-xs text-[#B0A89E] uppercase tracking-wider block mb-2">{item.label}</span>
@@ -491,13 +493,13 @@ export default function PersonalFinanceCenter() {
                       {
                         label: "Liquid Buffer",
                         value: `$${liquidBuffer.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                        detail: "Activos líquidos totales",
+                        detail: t("Activos líquidos totales", "Total liquid assets"),
                         color: "#5C9A6B",
                       },
                       {
                         label: "Buffer / ARR",
                         value: `${arrToBuffer.toFixed(1)}%`,
-                        detail: "Cobertura ARR en caja",
+                        detail: t("Cobertura ARR en caja", "ARR cash coverage"),
                         color: arrToBuffer >= 50 ? "#5C9A6B" : "#C85C5C",
                       },
                       {
@@ -522,47 +524,47 @@ export default function PersonalFinanceCenter() {
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4A853]/5 rounded-full filter blur-2xl pointer-events-none" />
                 <div className="flex justify-between items-center border-b border-[#D4A853]/15 pb-4">
                   <div>
-                    <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase block mb-1">Nodo Stripe</span>
-                    <h3 className="text-lg font-bold text-white font-mono uppercase">Ingresos en Directo y Telemetría</h3>
+                    <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase block mb-1">{t("Nodo Stripe", "Stripe Node")}</span>
+                    <h3 className="text-lg font-bold text-white font-mono uppercase">{t("Ingresos en Directo y Telemetría", "Live Revenue & Telemetry")}</h3>
                   </div>
                   <span className={`font-mono text-xs border px-3 py-1 rounded-full uppercase tracking-wider ${isTelemetryError ? 'text-amber-400 border-amber-500/25 bg-amber-500/5' : 'text-[#5C9A6B] border-[#5C9A6B]/25 bg-[#5C9A6B]/5'}`}>
-                    {isTelemetryError ? "Degradado (Caché)" : "Conectado (En Directo)"}
+                    {isTelemetryError ? t("Degradado (Caché)", "Degraded (Cache)") : t("Conectado (En Directo)", "Connected (Live)")}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                   <div className="p-5 border border-[#D4A853]/8 bg-black/20 rounded-xl">
-                    <span className="font-mono text-xs text-[#B0A89E] uppercase block mb-2">Volumen Bruto</span>
+                    <span className="font-mono text-xs text-[#B0A89E] uppercase block mb-2">{t("Volumen Bruto", "Gross Volume")}</span>
                     <span className="font-serif text-2xl font-bold text-white">
                       ${(stripeGrossVolume > 0 ? stripeGrossVolume : 145850.00).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
-                    <span className="text-xs text-[#5C9A6B] block mt-1.5">↑ Desde base de datos</span>
+                    <span className="text-xs text-[#5C9A6B] block mt-1.5">↑ {t("Desde base de datos", "From database")}</span>
                   </div>
                   <div className="p-5 border border-[#D4A853]/8 bg-black/20 rounded-xl">
-                    <span className="font-mono text-xs text-[#B0A89E] uppercase block mb-2">MRR Activo</span>
+                    <span className="font-mono text-xs text-[#B0A89E] uppercase block mb-2">{t("MRR Activo", "Active MRR")}</span>
                     <span className="font-serif text-2xl font-bold text-[#D4A853]">
                       ${(stripeMRR > 0 ? stripeMRR : 12500.00).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
-                    <span className="text-xs text-[#B0A89E] block mt-1.5">Base de suscripciones</span>
+                    <span className="text-xs text-[#B0A89E] block mt-1.5">{t("Base de suscripciones", "Subscription base")}</span>
                   </div>
                   <div className="p-5 border border-[#D4A853]/8 bg-black/20 rounded-xl">
-                    <span className="font-mono text-xs text-[#B0A89E] uppercase block mb-2">Reembolsos Emitidos</span>
+                    <span className="font-mono text-xs text-[#B0A89E] uppercase block mb-2">{t("Reembolsos Emitidos", "Refunds Issued")}</span>
                     <span className="font-serif text-2xl font-bold text-[#C85C5C]">
                       ${(stripeRefundsVolume > 0 ? stripeRefundsVolume : 1050.00).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
-                    <span className="text-xs text-[#B0A89E] block mt-1.5">Garantías activadas</span>
+                    <span className="text-xs text-[#B0A89E] block mt-1.5">{t("Garantías activadas", "Activated guarantees")}</span>
                   </div>
                 </div>
 
                 <div className="space-y-3 pt-2">
-                  <h4 className="font-mono text-xs text-white uppercase font-bold">Últimas Transacciones Stripe</h4>
+                  <h4 className="font-mono text-xs text-white uppercase font-bold">{t("Últimas Transacciones Stripe", "Latest Stripe Transactions")}</h4>
                   <div className="border border-[#D4A853]/8 rounded overflow-hidden font-mono text-xs">
                     <div className="grid grid-cols-12 bg-white/5 p-2 font-bold text-[#B0A89E] border-b border-[#D4A853]/8">
-                      <div className="col-span-3">Cliente</div>
-                      <div className="col-span-3">Producto / ID Precio</div>
-                      <div className="col-span-2">Importe</div>
-                      <div className="col-span-2">Estado</div>
-                      <div className="col-span-2">Fecha (UTC)</div>
+                      <div className="col-span-3">{t("Cliente", "Client")}</div>
+                      <div className="col-span-3">{t("Producto / ID Precio", "Product / Price ID")}</div>
+                      <div className="col-span-2">{t("Importe", "Amount")}</div>
+                      <div className="col-span-2">{t("Estado", "Status")}</div>
+                      <div className="col-span-2">{t("Fecha (UTC)", "Date (UTC)")}</div>
                     </div>
                     <div className="divide-y divide-white/5">
                       {[
@@ -578,7 +580,7 @@ export default function PersonalFinanceCenter() {
                           <div className="col-span-2">
                             <span className={`px-1.5 py-0.5 rounded-full text-xs uppercase font-bold ${
                               tx.status === "Paid" ? "bg-[#5C9A6B]/10 text-[#5C9A6B]" : "bg-[#C85C5C]/10 text-[#C85C5C]"
-                            }`}>{({ Paid: "Pagado", Refunded: "Reembolsado" } as Record<string, string>)[tx.status] || tx.status}</span>
+                            }`}>{({ Paid: t("Pagado", "Paid"), Refunded: t("Reembolsado", "Refunded") } as Record<string, string>)[tx.status] || tx.status}</span>
                           </div>
                           <div className="col-span-2 text-[#7A6F65]">{tx.date}</div>
                         </div>
@@ -592,10 +594,10 @@ export default function PersonalFinanceCenter() {
               <section className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Cash Flow Chart */}
                 <div className="lg:col-span-8 border border-[#D4A853]/8 p-8 bg-[#0A0908]/40 rounded space-y-6">
-                  <h3 className="font-serif text-lg text-[#F5F0EB] border-b border-[#D4A853]/8 pb-3">Tendencia de Flujo de Caja Mensual</h3>
+                  <h3 className="font-serif text-lg text-[#F5F0EB] border-b border-[#D4A853]/8 pb-3">{t("Tendencia de Flujo de Caja Mensual", "Monthly Cash Flow Trend")}</h3>
                   {/* SVG Bar Chart for Income vs Expenses */}
                   <div className="h-64 flex items-end justify-between px-4 pt-8 border-b border-[#D4A853]/8 relative">
-                    <div className="absolute top-0 left-0 text-xs font-mono text-[#7A6F65]">Ingresos (Dorado) vs Gastos (Gris)</div>
+                    <div className="absolute top-0 left-0 text-xs font-mono text-[#7A6F65]">{t("Ingresos (Dorado) vs Gastos (Gris)", "Revenue (Gold) vs Expenses (Grey)")}</div>
                     <div className="w-16 h-48 bg-[#D4A853]/80 rounded-t flex flex-col justify-end items-center relative group">
                       <span className="absolute top-[-25px] font-mono text-xs text-[#F5F0EB]">$700</span>
                       <span className="font-mono text-xs text-black font-bold mb-2">MAR</span>
@@ -624,7 +626,7 @@ export default function PersonalFinanceCenter() {
 
                 {/* Goals Tracker */}
                 <div className="lg:col-span-4 border border-[#D4A853]/8 p-8 bg-[#0A0908]/40 rounded space-y-6">
-                  <h3 className="font-serif text-lg text-[#F5F0EB] border-b border-[#D4A853]/8 pb-3">Objetivos Activos</h3>
+                  <h3 className="font-serif text-lg text-[#F5F0EB] border-b border-[#D4A853]/8 pb-3">{t("Objetivos Activos", "Active Goals")}</h3>
                   <div className="space-y-6">
                     {goals.map(goal => {
                       const pct = (goal.current_amount / goal.target_amount) * 100;
@@ -659,9 +661,9 @@ export default function PersonalFinanceCenter() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Balance Sheet */}
                 <div className="border border-[#D4A853]/8 p-8 bg-[#0A0908]/20 rounded space-y-6">
-                  <h3 className="font-serif text-lg text-[#F5F0EB] border-b border-[#D4A853]/8 pb-3">Balance de Situación</h3>
+                  <h3 className="font-serif text-lg text-[#F5F0EB] border-b border-[#D4A853]/8 pb-3">{t("Balance de Situación", "Balance Sheet")}</h3>
                   <div className="space-y-4 font-mono text-xs">
-                    <div className="text-[#D4A853] uppercase text-xs border-b border-[#D4A853]/8 pb-1">Activos</div>
+                    <div className="text-[#D4A853] uppercase text-xs border-b border-[#D4A853]/8 pb-1">{t("Activos", "Assets")}</div>
                     {accounts.filter(a => a.type === "asset").map(a => (
                       <div key={a.id} className="flex justify-between">
                         <span className="text-[#B0A89E]">{a.name}</span>
@@ -669,13 +671,13 @@ export default function PersonalFinanceCenter() {
                       </div>
                     ))}
                     <div className="border-t border-[#D4A853]/8 pt-2 flex justify-between font-bold text-sm text-[#F5F0EB]">
-                      <span>Total Activos</span>
+                      <span>{t("Total Activos", "Total Assets")}</span>
                       <span>${totalAssets.toFixed(2)}</span>
                     </div>
 
-                    <div className="text-[#D4A853] uppercase text-xs border-b border-[#D4A853]/8 pb-1 mt-6">Pasivos</div>
+                    <div className="text-[#D4A853] uppercase text-xs border-b border-[#D4A853]/8 pb-1 mt-6">{t("Pasivos", "Liabilities")}</div>
                     {accounts.filter(a => a.type === "liability").length === 0 ? (
-                      <div className="text-xs text-[#7A6F65] italic">Sin pasivos en el balance.</div>
+                      <div className="text-xs text-[#7A6F65] italic">{t("Sin pasivos en el balance.", "No liabilities on the balance sheet.")}</div>
                     ) : (
                       accounts.filter(a => a.type === "liability").map(a => (
                         <div key={a.id} className="flex justify-between">
@@ -685,7 +687,7 @@ export default function PersonalFinanceCenter() {
                       ))
                     )}
                     <div className="border-t border-[#D4A853]/8 pt-2 flex justify-between font-bold text-sm text-[#F5F0EB]">
-                      <span>Total Pasivos</span>
+                      <span>{t("Total Pasivos", "Total Liabilities")}</span>
                       <span>${totalLiabilities.toFixed(2)}</span>
                     </div>
                   </div>
@@ -693,9 +695,9 @@ export default function PersonalFinanceCenter() {
 
                 {/* Profit & Loss Statement */}
                 <div className="border border-[#D4A853]/8 p-8 bg-[#0A0908]/20 rounded space-y-6">
-                  <h3 className="font-serif text-lg text-[#F5F0EB] border-b border-[#D4A853]/8 pb-3">Cuenta de Resultados (P&amp;G)</h3>
+                  <h3 className="font-serif text-lg text-[#F5F0EB] border-b border-[#D4A853]/8 pb-3">{t("Cuenta de Resultados (P&G)", "Income Statement (P&L)")}</h3>
                   <div className="space-y-4 font-mono text-xs">
-                    <div className="text-[#D4A853] uppercase text-xs border-b border-[#D4A853]/8 pb-1">Ingresos de Consultoría</div>
+                    <div className="text-[#D4A853] uppercase text-xs border-b border-[#D4A853]/8 pb-1">{t("Ingresos de Consultoría", "Consulting Revenue")}</div>
                     {accounts.filter(a => a.type === "revenue").map(a => (
                       <div key={a.id} className="flex justify-between">
                         <span className="text-[#B0A89E]">{a.name}</span>
@@ -704,7 +706,7 @@ export default function PersonalFinanceCenter() {
                       </div>
                     ))}
 
-                    <div className="text-[#D4A853] uppercase text-xs border-b border-[#D4A853]/8 pb-1 mt-6">Gastos Operativos</div>
+                    <div className="text-[#D4A853] uppercase text-xs border-b border-[#D4A853]/8 pb-1 mt-6">{t("Gastos Operativos", "Operating Expenses")}</div>
                     {accounts.filter(a => a.type === "expense").map(a => (
                       <div key={a.id} className="flex justify-between">
                         <span className="text-[#B0A89E]">{a.name}</span>
@@ -712,7 +714,7 @@ export default function PersonalFinanceCenter() {
                       </div>
                     ))}
                     <div className="border-t border-[#D4A853]/8 pt-2 flex justify-between font-bold text-sm text-[#F5F0EB]">
-                      <span>Beneficio Operativo Neto</span>
+                      <span>{t("Beneficio Operativo Neto", "Net Operating Profit")}</span>
                       <span>
                         ${(
                           (accounts
@@ -731,16 +733,16 @@ export default function PersonalFinanceCenter() {
 
               {/* Transactions Ledger */}
               <div className="border border-[#D4A853]/8 p-8 bg-[#0A0908]/20 rounded space-y-6">
-                <h3 className="font-serif text-xl text-[#F5F0EB]">Libro Mayor por Partida Doble</h3>
+                <h3 className="font-serif text-xl text-[#F5F0EB]">{t("Libro Mayor por Partida Doble", "Double-Entry General Ledger")}</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left font-mono text-xs">
                     <thead>
                       <tr className="border-b border-white/10 pb-2 text-[#B0A89E] text-xs uppercase">
-                        <th className="py-3">Fecha</th>
-                        <th>Descripción</th>
-                        <th>Cuenta Deudora</th>
-                        <th>Cuenta Acreedora</th>
-                        <th className="text-right">Importe</th>
+                        <th className="py-3">{t("Fecha", "Date")}</th>
+                        <th>{t("Descripción", "Description")}</th>
+                        <th>{t("Cuenta Deudora", "Debit Account")}</th>
+                        <th>{t("Cuenta Acreedora", "Credit Account")}</th>
+                        <th className="text-right">{t("Importe", "Amount")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -751,8 +753,8 @@ export default function PersonalFinanceCenter() {
                           <tr key={tx.id} className="border-b border-[#D4A853]/8 hover:bg-white/[0.01]">
                             <td className="py-4 text-[#B0A89E]">{new Date(tx.date).toLocaleDateString()}</td>
                             <td className="text-[#F5F0EB]">{tx.description}</td>
-                            <td className="text-[#5C9A6B]">{debitEntry?.accounts?.name || 'Desconocido'}</td>
-                            <td className="text-[#B0A89E]">{creditEntry?.accounts?.name || 'Desconocido'}</td>
+                            <td className="text-[#5C9A6B]">{debitEntry?.accounts?.name || t('Desconocido', 'Unknown')}</td>
+                            <td className="text-[#B0A89E]">{creditEntry?.accounts?.name || t('Desconocido', 'Unknown')}</td>
                             <td className="text-right text-[#F5F0EB] font-bold">
                               ${(Math.abs(debitEntry?.amount || 0) / 100).toFixed(2)}
                             </td>
@@ -780,35 +782,35 @@ export default function PersonalFinanceCenter() {
                 
                 {/* Opportunity Cost Comparison */}
                 <div className="border border-[#D4A853]/8 p-8 bg-[#0A0908]/40 rounded space-y-6">
-                  <h3 className="font-serif text-lg text-[#F5F0EB] border-b border-[#D4A853]/8 pb-3">Upgrade MacBook vs. Coste de Oportunidad Fondo Índice</h3>
+                  <h3 className="font-serif text-lg text-[#F5F0EB] border-b border-[#D4A853]/8 pb-3">{t("Upgrade MacBook vs. Coste de Oportunidad Fondo Índice", "MacBook Upgrade vs. Index Fund Opportunity Cost")}</h3>
                   <div className="space-y-4 text-xs font-mono">
                     <div className="bg-black/40 border border-[#D4A853]/8 p-4 rounded">
-                      <div className="text-[#D4A853] uppercase text-xs mb-1 font-bold">Escenario A: Capitalización en Fondo Índice ($3,500 inversión)</div>
+                      <div className="text-[#D4A853] uppercase text-xs mb-1 font-bold">{t("Escenario A: Capitalización en Fondo Índice ($3,500 inversión)", "Scenario A: Index Fund Compounding ($3,500 investment)")}</div>
                       <p className="text-[#B0A89E] leading-relaxed">
-                        Destinar $3,500 a un ETF de índice S&amp;P 500 capitalizando a una rentabilidad media del 8% anual.
+                        {t("Destinar $3,500 a un ETF de índice S&P 500 capitalizando a una rentabilidad media del 8% anual.", "Allocate $3,500 to an S&P 500 index ETF compounding at an average 8% annual return.")}
                       </p>
                       <div className="text-right text-[#5C9A6B] font-bold mt-2">
-                        Projected 5-Year Balance: $5,142.60 (+ $1,642.60 profit)
+                        {t("Saldo proyectado a 5 años: $5,142.60 (+ $1,642.60 ganancia)", "Projected 5-Year Balance: $5,142.60 (+ $1,642.60 profit)")}
                       </div>
                     </div>
 
                     <div className="bg-black/40 border border-[#D4A853]/8 p-4 rounded">
-                      <div className="text-[#D4A853] uppercase text-xs mb-1 font-bold">Escenario B: Compra de Hardware MacBook ($3,500 inversión)</div>
+                      <div className="text-[#D4A853] uppercase text-xs mb-1 font-bold">{t("Escenario B: Compra de Hardware MacBook ($3,500 inversión)", "Scenario B: MacBook Hardware Purchase ($3,500 investment)")}</div>
                       <p className="text-[#B0A89E] leading-relaxed">
-                        Renovar el portátil. Depreciación del 25% anual. El valor residual decrece con el tiempo.
+                        {t("Renovar el portátil. Depreciación del 25% anual. El valor residual decrece con el tiempo.", "Upgrade the laptop. 25% annual depreciation. Residual value declines over time.")}
                       </p>
                       <div className="text-right text-[#C85C5C] font-bold mt-2">
-                        Projected 5-Year Asset Value: $830.27 (- $2,669.73 loss)
+                        {t("Valor del activo proyectado a 5 años: $830.27 (- $2,669.73 pérdida)", "Projected 5-Year Asset Value: $830.27 (- $2,669.73 loss)")}
                       </div>
                     </div>
 
                     <div className="bg-black/40 border border-[#D4A853]/8 p-4 rounded">
-                      <div className="text-[#D4A853] uppercase text-xs mb-1 font-bold">Escenario C: Apalancamiento en Plataformas IA ($3,500 inversión)</div>
+                      <div className="text-[#D4A853] uppercase text-xs mb-1 font-bold">{t("Escenario C: Apalancamiento en Plataformas IA ($3,500 inversión)", "Scenario C: AI Platform Leverage ($3,500 investment)")}</div>
                       <p className="text-[#B0A89E] leading-relaxed">
-                        Redirigir capital a créditos de API IA. Si el outreach automatizado capta solo 1 brief de diagnóstico extra a $350/mes.
+                        {t("Redirigir capital a créditos de API IA. Si el outreach automatizado capta solo 1 brief de diagnóstico extra a $350/mes.", "Redirect capital to AI API credits. If automated outreach captures just 1 extra diagnostic brief at $350/mo.")}
                       </p>
                       <div className="text-right text-[#D4A853] font-bold mt-2">
-                        Projected 5-Year Revenue Yield: $21,000.00 (+ $17,500.00 cash)
+                        {t("Rendimiento proyectado a 5 años: $21,000.00 (+ $17,500.00 en caja)", "Projected 5-Year Revenue Yield: $21,000.00 (+ $17,500.00 cash)")}
                       </div>
                     </div>
                   </div>
@@ -816,12 +818,12 @@ export default function PersonalFinanceCenter() {
 
                 {/* Retirement Projection Calculator */}
                 <div className="border border-[#D4A853]/8 p-8 bg-[#0A0908]/40 rounded space-y-6">
-                  <h3 className="font-serif text-lg text-[#F5F0EB] border-b border-[#D4A853]/8 pb-3">Calculadora de Retiro Compuesto</h3>
+                  <h3 className="font-serif text-lg text-[#F5F0EB] border-b border-[#D4A853]/8 pb-3">{t("Calculadora de Retiro Compuesto", "Compound Retirement Calculator")}</h3>
                   
                   {/* Inputs */}
                   <div className="grid grid-cols-3 gap-4 text-xs font-mono">
                     <div className="space-y-1">
-                      <label className="text-[#B0A89E] text-xs uppercase">Ahorro Mensual</label>
+                      <label className="text-[#B0A89E] text-xs uppercase">{t("Ahorro Mensual", "Monthly Savings")}</label>
                       <input 
                         type="number" 
                         value={monthlyContrib} 
@@ -830,7 +832,7 @@ export default function PersonalFinanceCenter() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[#B0A89E] text-xs uppercase">Rentabilidad Anual %</label>
+                      <label className="text-[#B0A89E] text-xs uppercase">{t("Rentabilidad Anual %", "Annual Return %")}</label>
                       <input 
                         type="number" 
                         value={returnRate} 
@@ -839,7 +841,7 @@ export default function PersonalFinanceCenter() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[#B0A89E] text-xs uppercase">Años a Proyectar</label>
+                      <label className="text-[#B0A89E] text-xs uppercase">{t("Años a Proyectar", "Years to Project")}</label>
                       <input 
                         type="number" 
                         value={yearsProject} 
@@ -851,7 +853,7 @@ export default function PersonalFinanceCenter() {
 
                   {/* SVG compound line chart mockup */}
                   <div className="h-32 border-b border-[#D4A853]/8 relative flex items-end pt-4">
-                    <div className="absolute top-2 left-2 text-xs font-mono text-[#7A6F65]">Proyección de Interés Compuesto</div>
+                    <div className="absolute top-2 left-2 text-xs font-mono text-[#7A6F65]">{t("Proyección de Interés Compuesto", "Compound Interest Projection")}</div>
                     <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                       <path 
                         d="M0 100 Q 50 80, 100 10" 
@@ -865,15 +867,15 @@ export default function PersonalFinanceCenter() {
                   {/* Outputs */}
                   <div className="space-y-2 text-xs font-mono">
                     <div className="flex justify-between">
-                      <span className="text-[#B0A89E]">Principal Capitalizado (Caja):</span>
+                      <span className="text-[#B0A89E]">{t("Principal Capitalizado (Caja):", "Compounded Principal (Cash):")}</span>
                       <span className="text-[#F5F0EB]">${compoundPrincipal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-[#B0A89E]">Aportaciones Añadidas:</span>
+                      <span className="text-[#B0A89E]">{t("Aportaciones Añadidas:", "Added Contributions:")}</span>
                       <span className="text-[#F5F0EB]">${(monthlyContrib * 12 * yearsProject).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                     </div>
                     <div className="flex justify-between border-t border-[#D4A853]/8 pt-2 font-bold text-sm">
-                      <span className="text-[#B0A89E]">Patrimonio Neto Proyectado:</span>
+                      <span className="text-[#B0A89E]">{t("Patrimonio Neto Proyectado:", "Projected Net Worth:")}</span>
                       <span className="text-[#5C9A6B]">${totalAccumulated.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                     </div>
                   </div>
@@ -884,14 +886,14 @@ export default function PersonalFinanceCenter() {
               {/* Investments ledger */}
               <div className="border border-[#D4A853]/8 p-8 bg-[#0A0908]/20 rounded space-y-6">
                 <div className="flex justify-between items-center border-b border-[#D4A853]/8 pb-4">
-                  <h3 className="font-serif text-xl text-[#F5F0EB]">Cartera de Activos</h3>
+                  <h3 className="font-serif text-xl text-[#F5F0EB]">{t("Cartera de Activos", "Asset Portfolio")}</h3>
                   <button className="px-3 py-1 bg-white/5 text-[#B0A89E] border border-white/10 hover:bg-white/10 rounded font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer">
-                    + Añadir Activo (Manual)
+                    {t("+ Añadir Activo (Manual)", "+ Add Asset (Manual)")}
                   </button>
                 </div>
                 {investments.length === 0 ? (
                   <div className="border border-dashed border-white/10 p-12 text-center rounded space-y-4">
-                    <p className="text-xs font-mono text-[#B0A89E]">Sin activos catalogados.</p>
+                    <p className="text-xs font-mono text-[#B0A89E]">{t("Sin activos catalogados.", "No assets catalogued.")}</p>
                     <div className="flex justify-center gap-4">
                       <a
                         href="https://dashboard.stripe.com"
@@ -908,12 +910,12 @@ export default function PersonalFinanceCenter() {
                     <table className="w-full text-left font-mono text-xs">
                       <thead>
                         <tr className="border-b border-white/10 pb-2 text-[#B0A89E] text-xs uppercase">
-                          <th className="py-3">Descripción del Activo</th>
-                          <th>Tipo</th>
-                          <th>Fecha Compra</th>
-                          <th className="text-right">Coste Base</th>
-                          <th className="text-right">Valoración Actual</th>
-                          <th className="text-right">ROI Anual / Depreciación</th>
+                          <th className="py-3">{t("Descripción del Activo", "Asset Description")}</th>
+                          <th>{t("Tipo", "Type")}</th>
+                          <th>{t("Fecha Compra", "Purchase Date")}</th>
+                          <th className="text-right">{t("Coste Base", "Cost Basis")}</th>
+                          <th className="text-right">{t("Valoración Actual", "Current Valuation")}</th>
+                          <th className="text-right">{t("ROI Anual / Depreciación", "Annual ROI / Depreciation")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -962,7 +964,7 @@ export default function PersonalFinanceCenter() {
                       <span className="font-mono text-xs uppercase tracking-wider text-[#D4A853] border border-[#D4A853]/20 px-2 py-0.5 rounded">
                         {art.category}
                       </span>
-                      <span className="font-mono text-xs text-[#B0A89E]">{art.read_time_mins} min de lectura</span>
+                      <span className="font-mono text-xs text-[#B0A89E]">{art.read_time_mins} {t("min de lectura", "min read")}</span>
                     </div>
                     <h3 className="font-serif text-xl text-[#F5F0EB] tracking-tight">{art.title}</h3>
                     <p className="text-sm text-[#B0A89E] font-mono leading-relaxed italic">{art.summary}</p>
@@ -984,7 +986,7 @@ export default function PersonalFinanceCenter() {
                     </AnimatePresence>
                     {!isExpanded && (
                       <span className="text-xs text-[#D4A853] uppercase tracking-wider font-mono hover:underline block pt-2">
-                        Leer artículo completo →
+                        {t("Leer artículo completo →", "Read full article →")}
                       </span>
                     )}
                   </div>
@@ -1004,9 +1006,9 @@ export default function PersonalFinanceCenter() {
             >
               {/* Question form */}
               <div className="border border-[#D4A853]/8 p-8 bg-[#0A0908]/20 rounded space-y-6">
-                <h3 className="font-serif text-xl text-[#F5F0EB]">Motor de Inteligencia de Inversión IA</h3>
+                <h3 className="font-serif text-xl text-[#F5F0EB]">{t("Motor de Inteligencia de Inversión IA", "AI Investment Intelligence Engine")}</h3>
                 <p className="text-xs text-[#B0A89E] font-mono">
-                  Introduce una pregunta de coste de oportunidad. Claude consultará las reservas de caja, rendimientos de capitalización y devolverá una recomendación estratégica.
+                  {t("Introduce una pregunta de coste de oportunidad. Claude consultará las reservas de caja, rendimientos de capitalización y devolverá una recomendación estratégica.", "Enter an opportunity cost question. Claude will consult cash reserves, compounding yields and return a strategic recommendation.")}
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -1022,7 +1024,7 @@ export default function PersonalFinanceCenter() {
                     disabled={adviceLoading}
                     className="font-mono text-xs uppercase bg-[#D4A853] hover:bg-[#E8C97A] text-white px-6 py-3 rounded transition-all duration-300 disabled:opacity-50"
                   >
-                    {adviceLoading ? "Calculando proyecciones..." : "Consultar Asesor"}
+                    {adviceLoading ? t("Calculando proyecciones...", "Calculating projections...") : t("Consultar Asesor", "Consult Advisor")}
                   </button>
                 </div>
               </div>
@@ -1035,7 +1037,7 @@ export default function PersonalFinanceCenter() {
                   className="border border-[#D4A853]/20 bg-[#0A0908]/40 p-8 rounded space-y-4"
                 >
                   <div className="font-mono text-xs text-[#D4A853] uppercase tracking-wider border-b border-[#D4A853]/8 pb-2">
-                    Informe del Asesor
+                    {t("Informe del Asesor", "Advisor Report")}
                   </div>
                   <div className="text-xs leading-[1.8] text-[#B0A89E] font-mono space-y-0.5">
                     {renderMarkdownBlock(adviceResponse)}
@@ -1243,11 +1245,11 @@ export default function PersonalFinanceCenter() {
                     {/* Header */}
                     <div className="flex flex-wrap justify-between items-start gap-3 border-b border-[#D4A853]/8 pb-4">
                       <div>
-                        <h3 className="font-serif text-lg text-[#F5F0EB]">Simulador Fiscal + Life Design — 7 Jurisdicciones</h3>
-                        <p className="font-mono text-xs text-[#D4A853]/70 mt-0.5 uppercase tracking-widest">v4 · Análisis Adversarial · Pensión + Consulting + Life Design</p>
+                        <h3 className="font-serif text-lg text-[#F5F0EB]">{t("Simulador Fiscal + Life Design — 7 Jurisdicciones", "Tax Simulator + Life Design — 7 Jurisdictions")}</h3>
+                        <p className="font-mono text-xs text-[#D4A853]/70 mt-0.5 uppercase tracking-widest">v4 · {t("Análisis Adversarial · Pensión + Consulting + Life Design", "Adversarial Analysis · Pension + Consulting + Life Design")}</p>
                       </div>
                       <span className="font-mono text-xs text-[#C85C5C] uppercase tracking-wider bg-[#C85C5C]/5 border border-[#C85C5C]/20 px-2.5 py-1 rounded">
-                        ⚠ Estimaciones — verificar con asesor local
+                        {t("⚠ Estimaciones — verificar con asesor local", "⚠ Estimates — verify with local advisor")}
                       </span>
                     </div>
 
@@ -1289,7 +1291,7 @@ export default function PersonalFinanceCenter() {
                           <div key={key} className={`border ${riskBorder[overallRisk]} ${riskBg[overallRisk]} p-4 rounded-xl space-y-3 relative`}>
                             {recommended && (
                               <div className="absolute top-2 right-2 font-mono text-[9px] text-[#D4A853] bg-[#D4A853]/10 border border-[#D4A853]/25 px-1.5 py-0.5 rounded uppercase tracking-widest">
-                                Recomendado
+                                {t("Recomendado", "Recommended")}
                               </div>
                             )}
                             {/* Card header */}
@@ -1300,7 +1302,7 @@ export default function PersonalFinanceCenter() {
 
                             {/* Pension row */}
                             <div className="space-y-1">
-                              <div className="font-mono text-[10px] text-[#B0A89E] uppercase tracking-wider">Pensión IPT</div>
+                              <div className="font-mono text-[10px] text-[#B0A89E] uppercase tracking-wider">{t("Pensión IPT", "IPT Pension")}</div>
                               <div className="flex justify-between text-xs font-mono">
                                 <span className="text-[#B0A89E]">Tax:</span>
                                 <span className={`font-bold ${riskColor[data.pensionRisk as RiskKey]}`}>
@@ -1312,7 +1314,7 @@ export default function PersonalFinanceCenter() {
 
                             {/* Consulting row */}
                             <div className="space-y-1 border-t border-white/5 pt-2">
-                              <div className="font-mono text-[10px] text-[#B0A89E] uppercase tracking-wider">Consulting (LLC)</div>
+                              <div className="font-mono text-[10px] text-[#B0A89E] uppercase tracking-wider">{t("Consulting (LLC)", "Consulting (LLC)")}</div>
                               <div className="flex justify-between text-xs font-mono">
                                 <span className="text-[#B0A89E]">Tax:</span>
                                 <span className={`font-bold ${riskColor[data.consultingRisk as RiskKey]}`}>
@@ -1333,18 +1335,18 @@ export default function PersonalFinanceCenter() {
                                 <span className={`font-bold ${riskColor[overallRisk]}`}>{fmt(totalTax)}</span>
                               </div>
                               <div className="flex justify-between text-xs font-mono">
-                                <span className="text-[#B0A89E]">Neto:</span>
+                                <span className="text-[#B0A89E]">{t("Neto:", "Net:")}</span>
                                 <span className="text-white font-bold">{fmt(netTotal)}</span>
                               </div>
                               <div className="flex justify-between text-xs font-mono">
-                                <span className="text-[#7A6F65]">Tipo efectivo:</span>
+                                <span className="text-[#7A6F65]">{t("Tipo efectivo:", "Effective rate:")}</span>
                                 <span className={riskColor[overallRisk]}>{pct(totalTax, totalIncome)}</span>
                               </div>
                             </div>
 
                             {/* Life Design section */}
                             <div className="border-t border-[#D4A853]/10 pt-2 space-y-1.5">
-                              <div className="font-mono text-[10px] text-[#D4A853]/70 uppercase tracking-widest mb-1">Life Design</div>
+                              <div className="font-mono text-[10px] text-[#D4A853]/70 uppercase tracking-widest mb-1">{t("Life Design", "Life Design")}</div>
                               <div className="grid grid-cols-2 gap-x-2 gap-y-1">
                                 {[
                                   { label: "Coste vida", value: data.lifeDesign.costOfLiving },
@@ -1373,7 +1375,7 @@ export default function PersonalFinanceCenter() {
                     {/* Consulting recharacterization knot */}
                     <div className="border border-[#C85C5C]/15 bg-[#C85C5C]/3 p-4 rounded-xl space-y-2">
                       <div className="font-mono text-xs text-[#C85C5C] uppercase tracking-wider font-bold">
-                        Nudo crítico: recaracterización consulting a fuente local
+                        {t("Nudo crítico: recaracterización consulting a fuente local", "Critical knot: recharacterization of consulting to local source")}
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-mono">
                         {[
@@ -1481,9 +1483,9 @@ export default function PersonalFinanceCenter() {
                       >
                         <div className="text-xs font-semibold">{region.label}</div>
                         <div className="text-xs text-[#B0A89E] mt-1 space-y-0.5">
-                          <div>Madurez: {region.maturity}</div>
-                          <div>Índice de Fricción: {region.friction}</div>
-                          <div>Tipo Fiscal: {region.tax}</div>
+                          <div>{t("Madurez:", "Maturity:")} {region.maturity}</div>
+                          <div>{t("Índice de Fricción:", "Friction Index:")} {region.friction}</div>
+                          <div>{t("Tipo Fiscal:", "Tax Rate:")} {region.tax}</div>
                         </div>
                       </button>
                     ))}
@@ -1494,23 +1496,23 @@ export default function PersonalFinanceCenter() {
                     {/* Macroeconomics Grid */}
                     <div className="border border-[#D4A853]/8 p-4 rounded bg-black/20 space-y-3">
                       <span className="text-[#D4A853] font-semibold block uppercase text-xs tracking-wider border-b border-[#D4A853]/8 pb-1">
-                        Parámetros Macroeconómicos
+                        {t("Parámetros Macroeconómicos", "Macroeconomic Parameters")}
                       </span>
                       <div className="space-y-1.5 text-[#B0A89E]">
                         <div className="flex justify-between">
-                          <span>Crecimiento PIB:</span>
+                          <span>{t("Crecimiento PIB:", "GDP Growth:")}</span>
                           <span className="text-white font-bold">{conquestRegion === "estonia" ? "+2.8%" : conquestRegion === "mexico" ? "+3.5%" : "+3.1%"}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Inflación Anual:</span>
+                          <span>{t("Inflación Anual:", "Annual Inflation:")}</span>
                           <span className="text-white font-bold">{conquestRegion === "estonia" ? "2.1%" : conquestRegion === "mexico" ? "4.2%" : "1.8%"}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Impuesto Corporativo (reinvertido):</span>
+                          <span>{t("Impuesto Corporativo (reinvertido):", "Corporate Tax (reinvested):")}</span>
                           <span className="text-[#5C9A6B] font-bold">{conquestRegion === "estonia" ? "0%" : conquestRegion === "mexico" ? "30%" : "0%"}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Tratados de Doble Imposición:</span>
+                          <span>{t("Tratados de Doble Imposición:", "Double Taxation Treaties:")}</span>
                           <span className="text-white">{conquestRegion === "estonia" ? "62 países" : conquestRegion === "mexico" ? "50 países" : "85 países"}</span>
                         </div>
                       </div>
@@ -1519,23 +1521,23 @@ export default function PersonalFinanceCenter() {
                     {/* Saturation / Competitive Indices */}
                     <div className="border border-[#D4A853]/8 p-4 rounded bg-black/20 space-y-3">
                       <span className="text-[#D4A853] font-semibold block uppercase text-xs tracking-wider border-b border-[#D4A853]/8 pb-1">
-                        Índices de Saturación Competitiva
+                        {t("Índices de Saturación Competitiva", "Competitive Saturation Indices")}
                       </span>
                       <div className="space-y-1.5 text-[#B0A89E]">
                         <div className="flex justify-between">
-                          <span>Densidad de Saturación SaaS:</span>
+                          <span>{t("Densidad de Saturación SaaS:", "SaaS Saturation Density:")}</span>
                           <span className="text-white font-bold">{conquestRegion === "estonia" ? "Alta (90%)" : conquestRegion === "mexico" ? "Baja (45%)" : "Media (75%)"}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Índice CAC (relativo):</span>
+                          <span>{t("Índice CAC (relativo):", "CAC Index (relative):")}</span>
                           <span className="text-white font-bold">{conquestRegion === "estonia" ? "1.2x" : conquestRegion === "mexico" ? "0.6x" : "1.5x"}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Múltiplo LTV/CAC:</span>
+                          <span>{t("Múltiplo LTV/CAC:", "LTV/CAC Multiple:")}</span>
                           <span className="text-[#5C9A6B] font-bold">{conquestRegion === "estonia" ? "4.1x" : conquestRegion === "mexico" ? "5.8x" : "3.5x"}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Latencia Diagnóstica Media:</span>
+                          <span>{t("Latencia Diagnóstica Media:", "Average Diagnostic Latency:")}</span>
                           <span className="text-white">{conquestRegion === "estonia" ? "Rápida (72h)" : conquestRegion === "mexico" ? "Media (96h)" : "Inmediata (24h)"}</span>
                         </div>
                       </div>
@@ -1555,7 +1557,7 @@ export default function PersonalFinanceCenter() {
                         }}
                         className="px-4 py-2 bg-[#D4A853] text-[#0A0908] text-xs font-bold uppercase tracking-wider hover:bg-[#E8C97A] active:scale-[0.98] transition-all cursor-pointer rounded"
                       >
-                        Simular Entrada al Mercado
+                        {t("Simular Entrada al Mercado", "Simulate Market Entry")}
                       </button>
                     </div>
                   )}
@@ -1563,7 +1565,7 @@ export default function PersonalFinanceCenter() {
                   {conquestSimulating && (
                     <div className="flex items-center justify-center gap-2 py-4 text-xs text-[#D4A853] font-mono">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#D4A853] animate-ping" />
-                      Calculando curvas macroeconómicas y rutas de residencia fiscal...
+                      {t("Calculando curvas macroeconómicas y rutas de residencia fiscal...", "Calculating macroeconomic curves and fiscal residency routes...")}
                     </div>
                   )}
 
@@ -1574,11 +1576,11 @@ export default function PersonalFinanceCenter() {
                       className="space-y-6 border-t border-[#D4A853]/15 pt-4"
                     >
                       <h4 className="text-xs text-[#22C55E] uppercase tracking-widest font-bold font-mono">
-                        ✓ Simulación de Expansión Completada
+                        {t("✓ Simulación de Expansión Completada", "✓ Expansion Simulation Completed")}
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs leading-relaxed text-[#B0A89E] font-mono">
                         <div className="border border-[#D4A853]/8 bg-white/[0.01] p-3 rounded space-y-1">
-                          <span className="text-[#D4A853] font-semibold block uppercase text-xs tracking-wider">Canal de Outreach Sniper</span>
+                          <span className="text-[#D4A853] font-semibold block uppercase text-xs tracking-wider">{t("Canal de Outreach Sniper", "Sniper Outreach Channel")}</span>
                           {conquestRegion === "estonia" ? (
                             <span>Desplegar LinkedIn Snipers apuntando a fundadores europeos con benchmarks de compliance báltico localizados. MRR objetivo &gt;$15k.</span>
                           ) : conquestRegion === "mexico" ? (
@@ -1588,7 +1590,7 @@ export default function PersonalFinanceCenter() {
                           )}
                         </div>
                         <div className="border border-[#D4A853]/8 bg-white/[0.01] p-3 rounded space-y-1">
-                          <span className="text-[#D4A853] font-semibold block uppercase text-xs tracking-wider">Routing Fiscal y Legal</span>
+                          <span className="text-[#D4A853] font-semibold block uppercase text-xs tracking-wider">{t("Routing Fiscal y Legal", "Tax & Legal Routing")}</span>
                           {conquestRegion === "estonia" ? (
                             <span>Canalizar honorarios de licencias bálticas a través de una OÜ Estonia. Mantener beneficios diferidos al 0% impuesto corporativo para reinversión.</span>
                           ) : conquestRegion === "mexico" ? (
@@ -1613,8 +1615,8 @@ export default function PersonalFinanceCenter() {
                               : "Singapur representa el mayor potencial de LTV. Establecer una LLC regional de paso para gestionar ingresos de clientes SaaS de SE Asia bajo parámetros de cero impuestos."}
                           </p>
                           <div className="border-t border-[#D4A853]/15 pt-2 flex justify-between text-xs text-[#D4A853]">
-                            <span>Estado: RECOMENDACIÓN_FIRMADA</span>
-                            <span>Confianza: 94.8%</span>
+                            <span>{t("Estado: RECOMENDACIÓN_FIRMADA", "Status: SIGNED_RECOMMENDATION")}</span>
+                            <span>{t("Confianza: 94.8%", "Confidence: 94.8%")}</span>
                           </div>
                         </div>
                       </div>

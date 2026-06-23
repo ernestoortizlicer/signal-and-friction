@@ -64,3 +64,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 export function useLanguage(): LanguageContextValue {
   return useContext(LanguageContext);
 }
+
+/** Inline translation helper. Returns es when lang is "es" or null (pre-hydration). */
+export function useT(): (es: string, en: string) => string {
+  const { lang } = useContext(LanguageContext);
+  return (es: string, en: string) => (lang === "en" ? en : es);
+}
