@@ -132,6 +132,7 @@ export default function PersonalFinanceCenter() {
   const [advisorQuestion, setAdvisorQuestion] = useState("Should I upgrade my MacBook or buy more AI credits?");
   const [adviceResponse, setAdviceResponse] = useState<string | null>(null);
   const [adviceLoading, setAdviceLoading] = useState(false);
+  const [advisorMeta, setAdvisorMeta] = useState<{ model: string; tier: string; estimatedCostUSD: number } | null>(null);
 
   // Simulador de Conquista Global States
   const [conquestRegion, setConquestRegion] = useState("estonia");
@@ -372,22 +373,26 @@ export default function PersonalFinanceCenter() {
   async function triggerAiAdvice() {
     try {
       setAdviceLoading(true);
+      setAdvisorMeta(null);
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://your-supabase.supabase.co";
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder";
 
-      // Query database analysis details
       const response = await fetch(`${supabaseUrl}/functions/v1/finance-advisor-prompt`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${supabaseAnonKey}`
         },
-        body: JSON.stringify({ question: advisorQuestion, totalAssets, totalExpenses })
+        body: JSON.stringify({
+          question: advisorQuestion,
+          context: { accounts, investments, goals, transactions: transactions.slice(0, 10) },
+        })
       });
-      
+
       if (response.ok) {
         const result = await response.json();
-        setAdviceResponse(result.advice);
+        setAdviceResponse(result.answer);
+        if (result.meta) setAdvisorMeta(result.meta);
       } else {
         // Mock Response offline
         setTimeout(() => {
@@ -1088,7 +1093,7 @@ export default function PersonalFinanceCenter() {
               <div className="border border-[#D4A853]/8 p-8 bg-[#0A0908]/20 rounded space-y-6">
                 <h3 className="font-serif text-xl text-[#F5F0EB]">{"AI Investment Intelligence Engine"}</h3>
                 <p className="text-xs text-[#B0A89E] font-mono">
-                  {"Enter an opportunity cost question. Claude will consult cash reserves, compounding yields and return a strategic recommendation."}
+                  {"Enter a financial or opportunity cost question. The AI router selects the optimal model and returns a quantified, bisturí-style recommendation."}
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -1116,8 +1121,13 @@ export default function PersonalFinanceCenter() {
                   animate={{ opacity: 1, y: 0 }}
                   className="border border-[#D4A853]/20 bg-[#0A0908]/40 p-8 rounded space-y-4"
                 >
-                  <div className="font-mono text-xs text-[#D4A853] uppercase tracking-wider border-b border-[#D4A853]/8 pb-2">
-                    {"Advisor Report"}
+                  <div className="flex items-center justify-between border-b border-[#D4A853]/8 pb-2">
+                    <span className="font-mono text-xs text-[#D4A853] uppercase tracking-wider">Advisor Report</span>
+                    {advisorMeta && (
+                      <span className="font-mono text-[9px] text-[#7A6F65] tracking-wide">
+                        {advisorMeta.model} · {advisorMeta.tier} · ${advisorMeta.estimatedCostUSD.toFixed(5)}
+                      </span>
+                    )}
                   </div>
                   <div className="text-xs leading-[1.8] text-[#B0A89E] font-mono space-y-0.5">
                     {renderMarkdownBlock(adviceResponse)}
