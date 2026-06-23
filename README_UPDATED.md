@@ -1,6 +1,6 @@
 # Signal & Friction — Operational Map
 
-> **Version:** 2026-06-21 | **Runtime:** Cloudflare Pages + Supabase + Stripe
+> **Version:** 2026-06-23 | **Runtime:** Cloudflare Pages + Supabase + Stripe
 
 ---
 
@@ -17,12 +17,15 @@ Cloudflare Pages (CDN)
   │     ├── /api/leads                      ← Lead capture
   │     ├── /api/ip-package                 ← IP package generator
   │     ├── /api/notify-delivery/[clientKey]← Resend email trigger
+  │     ├── /api/pixel                      ← Tracking pixel (1×1 GIF → Supabase event log)
+  │     ├── /api/views                      ← Deliverable engagement aggregates
   │     ├── /api/scan-url                   ← URL scanner
   │     ├── /api/sla/[clientKey]            ← SLA tracker
   │     └── /api/stripe/
   │           ├── webhook                   ← Stripe webhook processor
   │           └── sparklines                ← Revenue telemetry
   └── Supabase (PostgreSQL + Edge Functions)
+        ├── Tables: deliverable_view_events ← Prospect engagement log (pixel events)
         ├── Edge: certification-onboarding  ← Certified Program checkout
         ├── Edge: tally-webhook             ← Tally form → DB + Stripe link
         ├── Edge: stripe-invoice            ← Invoice drafter
@@ -118,6 +121,36 @@ SUPABASE_ACCESS_TOKEN=<token> supabase functions deploy --project-ref tsaarsuucl
 - State machine: `prospecting → active → delivered → closed`
 - SLA enforced at DB + Worker level
 
+### Deliverable Intelligence (Tracking Pixel)
+
+El sistema de seguimiento de prospectos funciona así:
+
+1. **Pixel invisible** — `DeliverableClientView.tsx` dispara `fetch('/api/pixel?client=acme-corp', { keepalive: true })` en cuanto el prospecto abre el link. No bloquea el renderizado.
+2. **Worker** (`functions/api/pixel.ts`) — Devuelve un GIF 1×1 transparente inmediatamente. En segundo plano (`ctx.waitUntil`) inserta una fila en `deliverable_view_events` con `client_key`, `viewed_at`, `user_agent` y `country` (header `CF-IPCountry`).
+3. **Filtrado de bots** — Regex sobre User-Agent descarta crawlers de Google, Slack, LinkedIn, Facebook, Telegram, WhatsApp, Discord, etc.
+4. **Endpoint de lectura** (`functions/api/views.ts`) — Agrega `COUNT(*)` y `MAX(viewed_at)` por `client_key`. Responde JSON `{ [clientKey]: { count, lastViewed } }`.
+5. **Widget en Finance → Overview** — Muestra tarjeta por cliente con número de vistas en dorado, timestamp relativo ("2h ago", "3d ago") y badge verde **Hot** si el prospecto abrió en las últimas 24h. Botón Refresh manual.
+
+**Acción única requerida — Crear la tabla en Supabase:**
+
+```sql
+-- Pegar en Supabase Dashboard → SQL Editor → Run
+-- (o ver supabase/migrations/20260623_deliverable_view_events.sql)
+CREATE TABLE IF NOT EXISTS deliverable_view_events (
+  id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  client_key  TEXT        NOT NULL,
+  viewed_at   TIMESTAMPTZ DEFAULT NOW(),
+  user_agent  TEXT,
+  country     TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_dve_client_key_viewed_at
+  ON deliverable_view_events (client_key, viewed_at DESC);
+```
+
+Las variables `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` ya están en Cloudflare Pages — no requiere configuración adicional.
+
+---
+
 ### Certified Program Flow
 - Form submission → `certification-onboarding` Edge Function
 - Creates Stripe Checkout Session (annual/monthly/renewal tier)
@@ -161,13 +194,26 @@ All 12 products are active in Stripe. URLs live in `stripe_payment_links` table.
 
 | Path | Purpose |
 |---|---|
-| `src/app/admin/` | Operator dashboard (dashboard, CRM, finance, priorities, learning, certified) |
+| `src/app/admin/` | Operator dashboard — 5 módulos, interfaz 100% en inglés americano de negocios |
 | `src/app/deliverable/[clientKey]/` | Client-facing deliverable portal |
 | `src/app/certified/` | Certified Program enrollment page |
 | `src/app/sla/[clientKey]/` | Real-time SLA countdown view |
-| `functions/api/` | Cloudflare Workers API layer |
+| `functions/api/pixel.ts` | Tracking pixel — registra apertura de entregables en Supabase |
+| `functions/api/views.ts` | Agrega métricas de engagement por cliente |
+| `functions/api/` | Resto del API layer Cloudflare Workers |
 | `supabase/functions/` | Supabase Edge Functions |
-| `supabase/migrations/` | Database schema history |
+| `supabase/migrations/` | Historial de schema — incluye `20260623_deliverable_view_events.sql` |
 | `public/product-icons/` | 12 product PNG icons (512×512) |
 | `scripts/` | One-shot operational scripts (Stripe, Supabase seeding) |
 | `wrangler.toml` | Cloudflare Pages build config |
+
+---
+
+## Changelog
+
+| Versión | Fecha | Cambios |
+|---|---|---|
+| **2026-06-23** | 23 Jun 2026 | **Deliverable Intelligence** — pixel de seguimiento + endpoint `/api/views` + widget en Finance Overview. Admin 100% en inglés americano (sistema bilingüe eliminado). |
+| **2026-06-21** | 21 Jun 2026 | Auditoría completa: limpieza de archivos basura, traducción al inglés americano de negocios de toda la interfaz admin (5 módulos), eliminación del toggle bilingüe. |
+| **2026-06-20** | 20 Jun 2026 | Curriculum certificado (`CERTIFIED_CURRICULUM.md`), 6 módulos scaffold, security air-gap en entregables de cliente. |
+| **2026-06-19** | 19 Jun 2026 | 13 iconos de producto + imágenes Stripe via CDN. Cards del IP Lab a altura completa. Debates extendidos en M05+M06. |
