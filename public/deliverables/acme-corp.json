@@ -1,0 +1,91 @@
+{
+  "clientKey": "acme-corp",
+  "clientName": "Acme Corp",
+  "date": "June 23, 2026",
+  "consultant": "Signal & Friction",
+  "loomUrl": "https://www.loom.com/embed/placeholder-acme",
+  "segment": "microdosing",
+  "currentPhase": "diagnostic",
+  "progressPercent": 25,
+  "founderFocusScore": 85,
+  "daysRemaining": 23,
+  "guaranteeStatus": "20% Conversion Growth Guarantee Active",
+  "telemetryStatus": "✓ Traffic & Pricing Page Baseline Confirmed",
+  "beforeAfter": {
+    "beforeTitle": "Pricing Page — Current State",
+    "beforeIssue": "Cognitive Overload — 4 plans × 12 features forces users to self-classify before experiencing any value",
+    "beforeFields": ["Starter Plan ($29)", "Growth Plan ($79)", "Business Plan ($149)", "Enterprise (Contact Us)", "12 feature bullet points per plan", "No usage calculator or cost estimator"],
+    "beforeBounce": "Pricing Page Conversion: 12% — Bounce at Plan Selection: 61%",
+    "afterTitle": "Streamlined Conversion Path",
+    "afterDomain": "acme.signal-and-friction.app",
+    "afterGain": "Projected Checkout Initiation: +280% within 30 days"
+  },
+  "learningModules": [
+    {
+      "id": "m-1",
+      "title": "Module 1: Friction Anatomy — Why 88% Leave",
+      "description": "Map the exact cognitive sequence a user goes through on your pricing page and identify the three decision points where momentum collapses.",
+      "completed": true,
+      "content": "Your pricing page presents 4 plans with 12 feature bullet points each — 48 discrete data points a user must process before committing. Hick's Law states decision time increases logarithmically with the number of choices. At 4 plans, your users face 4x the decision latency versus a 2-plan architecture.\n\nThe critical insight: 85% of trial signups arrive on this page with genuine purchase intent. Only 12% reach billing checkout. The 73-point gap is not price rejection — session recordings show users spending an average of 3.8 minutes on the pricing page before bouncing. That is research behavior, not sticker shock. The friction is self-classification anxiety: 'Which plan is actually right for my use case?' is a question your page forces users to answer alone, under pressure, before they have experienced the product.\n\nKey data point to monitor: time-on-page above 2 minutes with no interaction is the leading indicator of imminent exit. Set a PostHog alert for this pattern."
+    },
+    {
+      "id": "m-2",
+      "title": "Module 2: Progressive Disclosure Architecture",
+      "description": "Redesign the plan selector to expose only the minimum information required for a confident decision, and reveal complexity progressively on demand.",
+      "completed": false,
+      "content": "The fix is not simplification — it is sequencing. Users can handle complexity if it arrives after commitment, not before.\n\nPhase 1 (Days 1–7): Collapse from 4 to 2 visible plans. Show only Starter and Growth. Gate Enterprise behind a 'Talk to Sales' CTA. For each plan, display exactly 5 features — the 5 highest-value differentiators, not the full feature list. Add a 'See full comparison' expand toggle for power users who need it. This alone is projected to reduce decision latency by 60–70% based on Baymard Institute benchmarks.\n\nPhase 2 (Days 8–21): Add a usage-based cost estimator above the plan cards. A single input: 'How many active users per month?' Output: one number — your monthly cost — plus a side-by-side comparison with your main competitor. This converts value uncertainty into cost certainty in under 5 seconds.\n\nImplementation note: the estimator does not need to be a perfect pricing model. A slider with 3 breakpoints (0–1K, 1K–10K, 10K+) that maps to your existing tiers is sufficient for the conversion goal."
+    },
+    {
+      "id": "m-3",
+      "title": "Module 3: PostHog Conversion Telemetry Setup",
+      "description": "Instrument your pricing page with the exact tracking events needed to measure the impact of each change and identify residual friction points.",
+      "completed": false,
+      "content": "Deploy these 6 PostHog events in this priority order:\n\n1. posthog.capture('pricing_page_loaded') — baseline, fires on page load\n2. posthog.capture('plan_card_hovered', { plan: 'starter' | 'growth' | 'enterprise' }) — reveals which plans attract attention\n3. posthog.capture('plan_selected', { plan, price }) — critical conversion micro-step\n4. posthog.capture('checkout_initiated', { plan, price }) — the moment of financial commitment\n5. posthog.capture('estimator_interacted', { user_count }) — measures calculator engagement\n6. posthog.capture('pricing_abandoned', { time_on_page, last_plan_viewed }) — fires on exit intent\n\nBuild a PostHog funnel: pricing_page_loaded → plan_card_hovered → plan_selected → checkout_initiated. Your current conversion rate at each step tells you exactly where the drop-off is steepest. Check this funnel weekly for the first 30 days post-launch."
+    },
+    {
+      "id": "m-4",
+      "title": "Module 4: Iteration Protocol — 30-Day Conversion Sprint",
+      "description": "The structured process to test, measure, and compound pricing page improvements over the first 30 days after the initial fix ships.",
+      "completed": false,
+      "content": "Week 1 (Days 1–7): Ship the 2-plan collapse. Measure checkout initiation rate daily. Baseline comparison: your current 12% vs. new rate. Do not make additional changes during this week — you need a clean data window.\n\nWeek 2 (Days 8–14): Add the usage estimator. Measure estimator_interacted events as a percentage of pricing_page_loaded. Target: >40% of visitors interact with the estimator. If below 30%, the estimator is not prominent enough — increase its visual weight.\n\nWeek 3 (Days 15–21): Analyze plan_card_hovered data. If >70% of hover events are on Growth, your Starter plan is not differentiated enough — or Growth is priced too closely. If Enterprise gets >25% of hovers but near-zero selections, your 'Talk to Sales' gate has too much friction.\n\nWeek 4 (Days 22–28): Review the full funnel. Calculate your new pricing_page_loaded → checkout_initiated conversion rate. The 20% growth guarantee is measured against your baseline 12% rate. Target: ≥14.4% checkout initiation rate within 30 days."
+    }
+  ],
+  "checklist": [
+    { "id": "c-1", "task": "Collapse pricing display from 4 plans to 2 visible (Starter + Growth)", "done": true, "tip": "Put Enterprise behind a 'Talk to Sales' CTA. High-touch buyers self-select — do not optimize the page for them." },
+    { "id": "c-2", "task": "Reduce feature list per plan from 12 to 5 highest-value differentiators", "done": false, "tip": "Ask: which 5 features would make someone choose this plan over the next tier? Show only those. Gate the rest behind 'See full list'." },
+    { "id": "c-3", "task": "Build usage-based cost estimator (3-tier slider: 0–1K, 1K–10K, 10K+ users)", "done": false, "tip": "Default the slider to your median customer size. Most users anchor to whatever is pre-selected." },
+    { "id": "c-4", "task": "Deploy all 6 PostHog tracking events on pricing page", "done": false, "tip": "Priority order: plan_selected and checkout_initiated first — these are the conversion-critical events." },
+    { "id": "c-5", "task": "Set up PostHog funnel: page_loaded → plan_hovered → plan_selected → checkout_initiated", "done": false, "tip": "Schedule a weekly 15-minute funnel review every Monday morning for the first 30 days." },
+    { "id": "c-6", "task": "Measure baseline checkout initiation rate before shipping any changes", "done": false, "tip": "You cannot prove 20% growth without a clean before/after measurement. Record your baseline today." }
+  ],
+  "diagnosis": {
+    "signal": "85% of trial signups land on the pricing selector page. Only 12% proceed to billing checkout. Drop-off is localized at the plan selection step, where users spend an average of 3.8 minutes before exiting — indicating choice anxiety, not price rejection. At current traffic levels, this conversion gap represents approximately $31,200 in monthly unrealized revenue.",
+    "friction": {
+      "mechanism": "Cognitive Overload — Choice Paralysis",
+      "rootCause": "The pricing interface exposes 4 plans with 12 feature bullet points each. Users must self-classify into the correct tier before experiencing any product value. The cognitive overhead of evaluating 48 discrete variables under financial pressure exceeds the motivation threshold for 88% of high-intent visitors."
+    },
+    "decisions": [
+      {
+        "type": "A — Conservative",
+        "label": "Collapse pricing from 4 plans to 2 visible tiers",
+        "action": "Redesign the selector to display only Starter and Growth. Gate Enterprise behind a high-contrast 'Talk to Sales' CTA. Reduce visible features per plan from 12 to 5 key differentiators. Add a 'See full comparison' progressive toggle for power users.",
+        "reasoning": "Hick's Law: decision time increases logarithmically with options. Moving from 4 to 2 plans reduces decision complexity by 50%. Baymard Institute data shows this pattern increases checkout initiation by 35–50% in SaaS pricing contexts. Engineering cost: design + copywriting only — no backend changes.",
+        "tradeoff": "Some power users may feel the visible feature list is insufficient. The progressive disclosure toggle addresses this without cluttering the default view for the majority."
+      },
+      {
+        "type": "B — Aggressive",
+        "label": "Replace the static plan grid with a single usage-based calculator",
+        "action": "Eliminate the tier grid entirely. Replace with a single interactive calculator: 'How many active users per month?' The system outputs one number — your monthly cost — and one plan recommendation. Show the ROI delta versus manual processes or competitor pricing.",
+        "reasoning": "Removes 100% of the self-classification burden. Users never need to guess which plan fits them — the system decides instantly. Particularly effective for usage-based products where the value proposition is directly tied to scale. Average checkout completion improvement: 65–90% in analogous SaaS contexts.",
+        "tradeoff": "Requires custom engineering for the calculator. The pricing model must translate cleanly to a usage formula. Enterprise edge cases may need a separate path if custom contracts exist above a volume threshold."
+      },
+      {
+        "type": "C — Lateral",
+        "label": "Defer the pricing decision — activate a zero-friction trial gate",
+        "action": "Remove the pricing page from the primary onboarding loop entirely. Collect email only. Grant immediate dashboard access. Present the billing page on day 7 with an in-app message: 'You've created X reports this week — here's what continued access costs.' Price reveal follows demonstrated value.",
+        "reasoning": "Inverts the trust equation. Demanding financial commitment before demonstrating utility violates PLG activation logic. Founders who experience the product first convert at 3–4x the rate of those who must commit cold. This eliminates pricing page friction by removing it from the first-session flow.",
+        "tradeoff": "Delays subscription revenue by 7 days per user. Requires backend trial gating and a day-7 prompt sequence. If the core product experience requires live data (not demo data), the trial layer adds additional engineering scope."
+      }
+    ]
+  }
+}

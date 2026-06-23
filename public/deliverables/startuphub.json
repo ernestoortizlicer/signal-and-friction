@@ -1,37 +1,90 @@
 {
   "clientKey": "startuphub",
   "clientName": "StartupHub",
-  "date": "June 18, 2026",
+  "date": "June 23, 2026",
   "consultant": "Signal & Friction",
   "loomUrl": "https://www.loom.com/embed/placeholder-startuphub",
   "segment": "high_ticket",
+  "currentPhase": "diagnostic",
+  "progressPercent": 20,
+  "founderFocusScore": 65,
+  "daysRemaining": 21,
+  "guaranteeStatus": "20% Checkout Completion Guarantee Active",
+  "telemetryStatus": "✓ Session Recordings & Checkout Heatmap Confirmed",
+  "beforeAfter": {
+    "beforeTitle": "Checkout Page — Current Trust Deficit State",
+    "beforeIssue": "Security Anxiety at the Financial Gate — no credibility signals at the exact moment users must enter payment credentials",
+    "beforeFields": ["No SSL/security badge visible above fold", "No refund or guarantee language near payment button", "No social proof or testimonial at billing stage", "Generic Stripe form with no brand reinforcement", "No alternative payment methods (PayPal, Apple Pay)", "No 'why we need this' trust explainer"],
+    "beforeBounce": "Billing Page Arrival Rate: 72% — Checkout Completion Rate: 9% — Trust Gap: 63 points",
+    "afterTitle": "Trust-Anchored Checkout Experience",
+    "afterDomain": "startuphub.signal-and-friction.app",
+    "afterGain": "Projected Checkout Completion: +260% within 14 days"
+  },
+  "learningModules": [
+    {
+      "id": "m-1",
+      "title": "Module 1: The 4.1-Minute Hover — Why Users Freeze at the Card Field",
+      "description": "Understand the cognitive threat response that fires when users reach your billing page and why security signals are the highest-leverage intervention.",
+      "completed": true,
+      "content": "Your session recordings reveal a precise behavioral pattern: 72% of users reach the billing page, meaning they have cleared every prior hurdle — they want the product. Only 9% complete checkout. Session recordings show users hovering over the credit card field for an average of 4.1 minutes before exiting.\n\nThe 4.1-minute hover is not ambivalence — it is the cognitive threat response in action. When a user's cursor sits over a payment field without typing, their brain is running a risk evaluation: 'Is this company trustworthy enough to give them my financial credentials?' In the absence of strong credibility signals, the threat response wins by default.\n\nThe neuroscience: financial transactions trigger a threat-evaluation process in the amygdala before the rational prefrontal cortex can intervene. Trust signals — security badges, refund guarantees, social proof — are not nice-to-haves. They are the specific stimuli that deactivate the threat response and allow the rational 'this is a good deal' conclusion to complete.\n\nKey insight: your price is not the problem. Users who hover for 4.1 minutes are not reconsidering the value proposition. They already decided to buy. They are trying to decide if it is safe to act on that decision. This is a trust problem, not a pricing problem."
+    },
+    {
+      "id": "m-2",
+      "title": "Module 2: Trust Signal Architecture — What Goes Where",
+      "description": "The exact placement and priority of credibility signals on the billing page, based on where user attention is focused during the threat evaluation phase.",
+      "completed": false,
+      "content": "Eye-tracking studies on SaaS checkout pages show that during the 4.1-minute hover, user attention concentrates in two zones: the area immediately above the payment button and the area immediately below it.\n\nAbove the payment button (critical zone 1):\n— One-line refund guarantee: '30-day full refund if StartupHub does not deliver value. No forms, no questions.' — plain language, not legal copy\n— Stripe security seal: 'Secured by Stripe — 256-bit encryption' with the Stripe logo\n— One micro-testimonial: '[Company name], [role]: \"We recovered our subscription cost in the first week.\"' — specificity builds credibility\n\nBelow the payment button (critical zone 2):\n— Lock icon + 'Your payment data is encrypted and never stored on StartupHub servers.'\n— 'Cancel anytime — no long-term contracts' — removes future-commitment anxiety\n\nNot on the billing page:\n— Do not add feature lists or pricing comparisons at this stage — the user has already decided to buy. Adding information now re-opens the evaluation loop and increases abandonment.\n— Do not add testimonials that reference specific dollar amounts if you cannot verify them — unverifiable social proof creates skepticism, not trust.\n\nImplementation estimate: copywriting + design only, no backend changes. Can ship in 48 hours."
+    },
+    {
+      "id": "m-3",
+      "title": "Module 3: Alternative Payment Methods — The 28% Checkout Completion Lift",
+      "description": "Add wallet-based payment options as the primary billing path to eliminate card entry anxiety for users who prefer familiar, trusted payment interfaces.",
+      "completed": false,
+      "content": "Credit card entry requires users to perform a sequence of actions they associate with risk: locating the card, reading the number, entering 16 digits plus expiry and CVV. Every digit entered is a moment of exposure anxiety.\n\nWallet-based payments (Apple Pay, Stripe Link, PayPal) inherit existing trust. Users have already undergone the security evaluation for these wallets in a prior context. Authorizing a wallet payment is a single biometric or click action — the threat evaluation does not re-fire.\n\nImplementation priority:\n1. Stripe Link (highest priority — zero additional revenue share, integrates natively with your existing Stripe setup, recognizes returning users automatically by email)\n2. Apple Pay (covers iOS/Safari users — highest completion rate of any payment method in mobile contexts)\n3. PayPal (broader demographic coverage, ~2.9% additional fee — evaluate against your customer profile)\n\nDisplay hierarchy: wallet buttons appear first, above the card entry form, in a visually distinct 'Quick checkout' section. Card entry becomes the secondary path for users who prefer it.\n\nExpected outcome: checkout completion rate increase of 22–35% for mobile users, 12–18% for desktop users, when wallet methods are added as primary path. Total blended improvement: 18–28%."
+    },
+    {
+      "id": "m-4",
+      "title": "Module 4: Checkout Telemetry — Measuring the Trust Deficit in Real Time",
+      "description": "The PostHog events that reveal exactly where trust breaks down on your billing page and how to iterate toward 30%+ checkout completion.",
+      "completed": false,
+      "content": "Deploy in this order:\n\n1. posthog.capture('billing_page_loaded') — your baseline denominator\n2. posthog.capture('payment_method_selected', { method: 'card' | 'apple_pay' | 'stripe_link' | 'paypal' }) — reveals which paths users prefer\n3. posthog.capture('card_field_focused') — the moment of financial commitment intent\n4. posthog.capture('card_field_abandoned', { seconds_on_field }) — captures the hover-and-exit pattern\n5. posthog.capture('checkout_completed', { method, plan, amount }) — the conversion event\n6. posthog.capture('trust_signal_visible', { signal: 'refund_guarantee' | 'stripe_badge' | 'testimonial' }) — use IntersectionObserver to confirm signals are actually visible in the viewport, not just present in the DOM\n\nCritical insight: the card_field_abandoned event with seconds_on_field > 60 is your trust-deficit indicator. Before shipping the trust signal changes, run 7 days of baseline data collection on this event. After shipping, compare the rate. A 40%+ reduction in card_field_abandoned events confirms the trust signals are working.\n\nWeekly review: payment_method_selected distribution. If Stripe Link adoption exceeds 45% in the first 30 days, prioritize Apple Pay next. If PayPal represents <5%, deprioritize its maintenance."
+    }
+  ],
+  "checklist": [
+    { "id": "c-1", "task": "Add refund guarantee copy directly above the payment button ('30-day full refund, no questions')", "done": false, "tip": "Plain language outperforms legal language by 3:1 in trust signal tests. 'No forms, no questions' is more powerful than 'subject to terms and conditions'." },
+    { "id": "c-2", "task": "Add Stripe security badge and one micro-testimonial in the critical zone above the CTA", "done": false, "tip": "The testimonial must include a company name and role — anonymous quotes create skepticism, not trust. One specific testimonial beats five generic ones." },
+    { "id": "c-3", "task": "Implement Stripe Link as primary payment method (replaces manual card entry as default)", "done": false, "tip": "Stripe Link is already built into the Stripe SDK — enable it in your Stripe Dashboard → Payment methods. Zero additional fees. Setup time: 2 hours." },
+    { "id": "c-4", "task": "Add Apple Pay button above the card entry form for mobile/Safari users", "done": false, "tip": "Apple Pay appears automatically for eligible users when enabled in Stripe. Your mobile users are your highest-abandonment segment — this is the highest-ROI fix for that cohort." },
+    { "id": "c-5", "task": "Deploy 6 PostHog billing page events — prioritize card_field_abandoned with seconds_on_field", "done": false, "tip": "Run 7 days of baseline data before shipping the trust signals. You need a clean before/after measurement to attribute the conversion lift correctly." },
+    { "id": "c-6", "task": "Remove all feature lists and pricing comparisons from the billing page", "done": false, "tip": "Information that re-opens the evaluation loop at the billing stage increases abandonment. The user has already decided to buy — presenting more options creates doubt, not confidence." }
+  ],
   "diagnosis": {
-    "signal": "72% of high-intent visitors reach the billing page, yet only 9% complete payment. Session recordings show users hovering over the credit card field for an average of 4.1 minutes before exiting. The drop-off is not price rejection — it is security anxiety at the point of financial commitment.",
+    "signal": "72% of high-intent visitors reach the billing page — a strong signal that the product and pricing have cleared the evaluation bar. Only 9% complete payment. Session recordings show users hovering over the credit card field for an average of 4.1 minutes before exiting. The drop-off is not price rejection — it is security anxiety at the point of financial commitment.",
     "friction": {
-      "mechanism": "Trust Deficit at Billing Gate",
-      "rootCause": "The checkout page lacks credibility signals at the exact moment users must enter financial credentials. No SSL badge, no refund assurance copy, no third-party payment seal is visible above the fold. The cognitive threat response fires before the value exchange completes."
+      "mechanism": "Trust Deficit at the Financial Gate",
+      "rootCause": "The checkout page lacks credibility signals at the exact moment users must enter payment credentials. No security seal, no refund assurance, no social proof is visible above the fold at the billing stage. The cognitive threat response fires in the absence of trust signals, and the default outcome is exit — regardless of prior purchase intent."
     },
     "decisions": [
       {
         "type": "A — Conservative",
-        "label": "Add trust signals above the billing fold",
-        "action": "Insert a single-line refund guarantee, Stripe security badge, and one social proof micro-quote directly above the payment button.",
-        "reasoning": "Security assurances at the point of commitment directly counter the threat response. Users who see these signals complete checkout at 40-60% higher rates (Baymard Institute, 2025).",
-        "tradeoff": "Requires copywriting and design coordination but zero engineering. Can ship in under 48 hours."
+        "label": "Add trust signals above and below the payment button",
+        "action": "Insert three elements in the critical zone above the CTA: (1) plain-language 30-day refund guarantee, (2) Stripe 256-bit encryption badge, (3) one micro-testimonial with company name and role. Add 'Cancel anytime' and lock icon below the CTA. Zero engineering required — design and copy only.",
+        "reasoning": "Security assurances at the point of commitment directly deactivate the threat response. Baymard Institute 2025 data: checkout pages with refund guarantee + security badge in the payment zone complete at 40–60% higher rates than pages without. Can ship in 48 hours.",
+        "tradeoff": "Requires a trustworthy testimonial with a real company name. Anonymous social proof creates skepticism. If no suitable testimonial exists, prioritize the refund guarantee and security badge first, then gather testimonials."
       },
       {
         "type": "B — Aggressive",
-        "label": "Defer credit card until after value delivery",
-        "action": "Restructure the onboarding to collect email only upfront. Send a 7-day free trial link. Present billing page on day 8 after the user has experienced the product.",
-        "reasoning": "Eliminates the cold-commitment barrier entirely. Value precedes financial risk, inverting the trust equation in the user's favor.",
-        "tradeoff": "Requires backend engineering for trial gating. Revenue is delayed 7 days per user."
+        "label": "Defer credit card entry — offer a 7-day free trial with email-only signup",
+        "action": "Restructure onboarding: collect email only upfront. Grant immediate product access. Present the billing page on day 8 after the user has generated measurable value inside the product. The financial commitment arrives after the trust is established through experience.",
+        "reasoning": "Eliminates the cold-commitment barrier entirely. Value precedes financial risk. Users who have already generated value in the product complete checkout at 3.8x the rate of cold-commitment users. This inverts the trust equation at its source rather than patching it at the symptom.",
+        "tradeoff": "Requires backend trial gating and a day-8 payment prompt sequence. Revenue is delayed 7 days per user. If your core product requires payment infrastructure that cannot be safely trialed (e.g., live transaction processing), a sandboxed trial environment is required."
       },
       {
         "type": "C — Lateral",
-        "label": "Replace credit card with PayPal or Stripe Link",
-        "action": "Add one-click wallet options (PayPal, Stripe Link, Apple Pay) as the primary billing path, relegating manual card entry to secondary.",
-        "reasoning": "Wallet-based payments inherit existing trust and remove manual entry anxiety. Checkout completion rates increase 28% on average with Apple Pay/PayPal alternatives.",
-        "tradeoff": "Minor revenue share cost from PayPal. Stripe Link has no additional fee."
+        "label": "Replace credit card entry with wallet-first checkout (Stripe Link + Apple Pay)",
+        "action": "Add Stripe Link and Apple Pay as primary payment options in a 'Quick checkout' section above the card entry form. Display wallet buttons first, card entry as the secondary path. For mobile users, Apple Pay becomes the default CTA.",
+        "reasoning": "Wallet payments inherit existing trust — users have already made the security decision for Apple Pay and Stripe Link in a prior context. The threat evaluation does not re-fire. Checkout completion rates increase 22–35% for mobile users and 18–28% blended when wallet options are primary. Stripe Link has zero additional fees.",
+        "tradeoff": "Requires enabling wallet payment methods in your Stripe Dashboard and minor frontend changes to display the buttons. Apple Pay requires domain verification (one-time setup). PayPal adds ~2.9% revenue share — evaluate against your margin."
       }
     ]
   }
