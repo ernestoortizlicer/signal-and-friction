@@ -1349,15 +1349,15 @@ export default function PersonalFinanceCenter() {
                               <div className="font-mono text-[10px] text-[#D4A853]/70 uppercase tracking-widest mb-1">{t("Life Design", "Life Design")}</div>
                               <div className="grid grid-cols-2 gap-x-2 gap-y-1">
                                 {[
-                                  { label: "Coste vida", value: data.lifeDesign.costOfLiving },
+                                  { label: t("Coste vida", "Cost of Living"), value: data.lifeDesign.costOfLiving },
                                   { label: "QoL", value: data.lifeDesign.qolIndex },
-                                  { label: "Estrés", value: data.lifeDesign.stressLevel },
-                                  { label: "Fit cultural", value: data.lifeDesign.culturalFit },
-                                  { label: "Gastronomía", value: data.lifeDesign.gastronomy },
-                                  { label: "SaaS prestige", value: data.lifeDesign.saasPrestige },
+                                  { label: t("Estrés", "Stress"), value: data.lifeDesign.stressLevel },
+                                  { label: t("Fit cultural", "Cultural Fit"), value: data.lifeDesign.culturalFit },
+                                  { label: t("Gastronomía", "Gastronomy"), value: data.lifeDesign.gastronomy },
+                                  { label: "SaaS Prestige", value: data.lifeDesign.saasPrestige },
                                   { label: "Housing 1BR", value: data.lifeDesign.housing1br },
-                                  { label: "ETF/Índice", value: data.lifeDesign.etfTreatment },
-                                  { label: "Clima", value: data.lifeDesign.climate },
+                                  { label: t("ETF/Índice", "ETF/Index"), value: data.lifeDesign.etfTreatment },
+                                  { label: t("Clima", "Climate"), value: data.lifeDesign.climate },
                                   { label: "Visa", value: data.lifeDesign.visaDifficulty },
                                 ].map(item => (
                                   <div key={item.label} className="font-mono">
@@ -1379,9 +1379,9 @@ export default function PersonalFinanceCenter() {
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-mono">
                         {[
-                          { country: "Hong Kong", risk: "BAJO", detail: "Salaries Tax bien establecido · Máx 15% estándar · Autoridades receptivas", color: "text-[#5C9A6B]" },
-                          { country: "EAU Zona Franca", risk: "MEDIO", detail: "0% IRPF confirmado · Free Zone legalmente sólida · Sin DTT con España", color: "text-[#D4A853]" },
-                          { country: "Singapur", risk: "BAJO", detail: "Territorial · Solo renta local gravada · DTT España-SG 2011 · 183 días", color: "text-[#5C9A6B]" },
+                          { country: "Hong Kong", risk: t("BAJO", "LOW"), detail: t("Salaries Tax bien establecido · Máx 15% estándar · Autoridades receptivas", "Well-established Salaries Tax · Max 15% standard · Receptive authorities"), color: "text-[#5C9A6B]" },
+                          { country: "EAU Zona Franca", risk: t("MEDIO", "MEDIUM"), detail: t("0% IRPF confirmado · Free Zone legalmente sólida · Sin DTT con España", "0% personal income tax confirmed · Free Zone legally solid · No DTT with Spain"), color: "text-[#D4A853]" },
+                          { country: "Singapur", risk: t("BAJO", "LOW"), detail: t("Territorial · Solo renta local gravada · DTT España-SG 2011 · 183 días", "Territorial · Only local-source income taxed · Spain-SG DTT 2011 · 183 days"), color: "text-[#5C9A6B]" },
                         ].map(r => (
                           <div key={r.country} className="border border-white/5 bg-black/20 p-2.5 rounded-lg">
                             <div className={`${r.color} font-bold mb-0.5`}>{r.country} · {r.risk}</div>
@@ -1394,24 +1394,24 @@ export default function PersonalFinanceCenter() {
                     {/* Life Design — Recomendación Maestra */}
                     <div className="border border-[#D4A853]/25 bg-[#D4A853]/3 p-5 rounded-xl space-y-3">
                       <div className="font-mono text-xs text-[#D4A853] uppercase tracking-wider font-bold border-b border-[#D4A853]/10 pb-2">
-                        Life Design — Recomendación Maestra · Perfil Ernesto (IPT + LLC + Consultoría High-Ticket)
+                        {t("Life Design — Recomendación Maestra · Perfil Ernesto (IPT + LLC + Consultoría High-Ticket)", "Life Design — Master Recommendation · Ernesto Profile (IPT + LLC + High-Ticket Consulting)")}
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
                         <div className="space-y-2">
-                          <div className="text-white font-bold">Fase 2 — Oct/Nov 2026 → 2029: Uruguay 🇺🇾</div>
+                          <div className="text-white font-bold">{t("Fase 2 — Oct/Nov 2026 → 2029: Uruguay 🇺🇾", "Phase 2 — Oct/Nov 2026 → 2029: Uruguay 🇺🇾")}</div>
                           <div className="text-[#B0A89E] leading-relaxed">
-                            Coste de vida mínimo ($1,500/mes) · 0% renta extranjera en holiday 10 años · Fit cultural alto (español) · Bajo estrés · Visa rentista (condición: ingresos mínimos $1,500/mes demostrables) · Buffer mínimo requerido: $6,500
+                            {t("Coste de vida mínimo ($1,500/mes) · 0% renta extranjera en holiday 10 años · Fit cultural alto (español) · Bajo estrés · Visa rentista (condición: ingresos mínimos $1,500/mes demostrables) · Buffer mínimo requerido: $6,500", "Minimum cost of living ($1,500/mo) · 0% foreign income in 10-year tax holiday · High cultural fit (Spanish-speaking) · Low stress · Rentista visa (condition: min $1,500/mo demonstrable income) · Minimum buffer required: $6,500")}
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <div className="text-white font-bold">Fase 3 — 2029+: Singapur 🇸🇬 (si MRR &gt; $10K)</div>
+                          <div className="text-white font-bold">{t("Fase 3 — 2029+: Singapur 🇸🇬 (si MRR > $10K)", "Phase 3 — 2029+: Singapore 🇸🇬 (if MRR > $10K)")}</div>
                           <div className="text-[#B0A89E] leading-relaxed">
-                            Máximo prestige SaaS · DTT España-SG 2011 · 0% renta extranjera territorial · Employment Pass accesible con consulting demostrable · Referencia para clientes Asia-Pacific
+                            {t("Máximo prestige SaaS · DTT España-SG 2011 · 0% renta extranjera territorial · Employment Pass accesible con consulting demostrable · Referencia para clientes Asia-Pacific", "Maximum SaaS prestige · Spain-SG DTT 2011 · 0% territorial foreign income · Employment Pass accessible with demonstrable consulting · Reference for Asia-Pacific clients")}
                           </div>
                         </div>
                       </div>
                       <div className="text-xs text-[#7A6F65] font-mono border-t border-[#D4A853]/10 pt-2">
-                        Paraguay como opción mínima-viable si liquidez &lt; $6,500 (visa más fácil, menor coste). Filipinas SRRV disponible desde $10K como alternativa tropical de bajo estrés.
+                        {t("Paraguay como opción mínima-viable si liquidez < $6,500 (visa más fácil, menor coste). Filipinas SRRV disponible desde $10K como alternativa tropical de bajo estrés.", "Paraguay as minimum-viable option if liquidity < $6,500 (easier visa, lower cost). Philippines SRRV available from $10K as a low-stress tropical alternative.")}
                       </div>
                     </div>
 
@@ -1419,26 +1419,26 @@ export default function PersonalFinanceCenter() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="border border-[#5C9A6B]/20 bg-[#5C9A6B]/3 p-4 rounded-xl space-y-1.5">
                         <div className="font-mono text-xs text-[#5C9A6B] uppercase tracking-wider font-bold">
-                          Alternativa de Alto Prestige · Confianza 8/10
+                          {t("Alternativa de Alto Prestige · Confianza 8/10", "High-Prestige Alternative · Confidence 8/10")}
                         </div>
                         <div className="font-mono text-xs text-white font-bold">Singapur 🇸🇬 / Hong Kong 🇭🇰</div>
                         <div className="font-mono text-xs text-[#B0A89E] leading-relaxed">
-                          Territorial sólido · DTT con España · Consulting LLC exterior 0% · Economías maduras · Sin riesgo recaracterización agresivo · Ideal para perfil high-ticket consultoría escala $100K+
+                          {t("Territorial sólido · DTT con España · Consulting LLC exterior 0% · Economías maduras · Sin riesgo recaracterización agresivo · Ideal para perfil high-ticket consultoría escala $100K+", "Solid territorial system · DTT with Spain · Offshore LLC consulting 0% · Mature economies · No aggressive recharacterization risk · Ideal for high-ticket consulting profile at $100K+ scale")}
                         </div>
                       </div>
                       <div className="border border-[#C85C5C]/15 bg-[#C85C5C]/3 p-4 rounded-xl space-y-1.5">
                         <div className="font-mono text-xs text-[#C85C5C] uppercase tracking-wider font-bold">
-                          Salida España · Bloqueador real
+                          {t("Salida España · Bloqueador real", "Spain Exit · Real Blocker")}
                         </div>
-                        <div className="font-mono text-xs text-white font-bold">Concurso de acreedores</div>
+                        <div className="font-mono text-xs text-white font-bold">{t("Concurso de acreedores", "Creditor Insolvency Proceeding")}</div>
                         <div className="font-mono text-xs text-[#B0A89E] leading-relaxed">
-                          Antes del vuelo: verificar arraigo con abogado concursal. Sin certificado de residencia fiscal extranjero en 2026, España mantiene residencia. 1 enero 2027 = salida limpia. 24 junio = riesgo formal pero bajo si consulting &lt; €3K en 2026.
+                          {t("Antes del vuelo: verificar arraigo con abogado concursal. Sin certificado de residencia fiscal extranjero en 2026, España mantiene residencia. 1 enero 2027 = salida limpia. 24 junio = riesgo formal pero bajo si consulting < €3K en 2026.", "Before departure: verify ties with insolvency lawyer. Without a foreign tax residency certificate in 2026, Spain retains residency. Jan 1 2027 = clean exit. Jun 24 = formal risk but low if consulting < €3K in 2026.")}
                         </div>
                       </div>
                     </div>
 
                     <div className="font-mono text-xs text-[#7A6F65] leading-relaxed border-t border-[#D4A853]/8 pt-3">
-                      Todos los cálculos son estimaciones con datos públicos. Hong Kong: Salaries Tax calculado sobre tipo estándar 15% vs. progresivo (el menor), allowance HKD 132,000. Singapur: tipos 2024/25 en SGD (USD × 1.35 aprox). EAU Zona Franca: 0% IRPF personal confirmado. Uruguay: D.148/007 Literal A — renta extranjera exenta en holiday fiscal 10 años. Paraguay: sistema territorial puro, IRP 10% solo renta local. Filipinas: ciudadanos extranjeros tributan solo renta fuente filipina. Ninguna cifra substituye verificación con asesor fiscal habilitado en el país destino.
+                      {t("Todos los cálculos son estimaciones con datos públicos. Hong Kong: Salaries Tax calculado sobre tipo estándar 15% vs. progresivo (el menor), allowance HKD 132,000. Singapur: tipos 2024/25 en SGD (USD × 1.35 aprox). EAU Zona Franca: 0% IRPF personal confirmado. Uruguay: D.148/007 Literal A — renta extranjera exenta en holiday fiscal 10 años. Paraguay: sistema territorial puro, IRP 10% solo renta local. Filipinas: ciudadanos extranjeros tributan solo renta fuente filipina. Ninguna cifra substituye verificación con asesor fiscal habilitado en el país destino.", "All calculations are estimates based on public data. Hong Kong: Salaries Tax calculated on standard rate 15% vs. progressive (whichever is lower), allowance HKD 132,000. Singapore: 2024/25 rates in SGD (USD × 1.35 approx). UAE Free Zone: 0% personal income tax confirmed. Uruguay: D.148/007 Literal A — foreign income exempt during 10-year fiscal holiday. Paraguay: pure territorial system, IRP 10% on local-source income only. Philippines: foreign nationals taxed only on Philippine-source income. No figure substitutes verification with a licensed tax advisor in the destination country.")}
                     </div>
                   </div>
                 );
@@ -1449,9 +1449,9 @@ export default function PersonalFinanceCenter() {
                   <div className="flex justify-between items-start border-b border-[#D4A853]/8 pb-4">
                     <div>
                       <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase block mb-1">
-                        Simulador de Conquista Global
+                        {t("Simulador de Conquista Global", "Global Conquest Simulator")}
                       </span>
-                      <h3 className="text-sm font-bold font-mono text-[#f8fafc]">Modelador de Madurez SaaS Regional y Expansión</h3>
+                      <h3 className="text-sm font-bold font-mono text-[#f8fafc]">{t("Modelador de Madurez SaaS Regional y Expansión", "Regional SaaS Maturity & Expansion Modeler")}</h3>
                     </div>
                     <span className="font-mono text-xs uppercase tracking-wider text-[#D4A853] border border-[#D4A853]/25 px-2 py-0.5 rounded bg-[#D4A853]/5">
                       Global Expansion Hacker (Agent #21)
@@ -1459,14 +1459,14 @@ export default function PersonalFinanceCenter() {
                   </div>
 
                   <p className="text-sm text-[#B0A89E] leading-relaxed font-mono">
-                    Selecciona una región de expansión para inspeccionar umbrales de fricción SaaS, costes de adquisición de clientes (CAC), índices de saturación competitiva y rutas de optimización fiscal.
+                    {t("Selecciona una región de expansión para inspeccionar umbrales de fricción SaaS, costes de adquisición de clientes (CAC), índices de saturación competitiva y rutas de optimización fiscal.", "Select an expansion region to inspect SaaS friction thresholds, customer acquisition costs (CAC), competitive saturation indices, and tax optimization routes.")}
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {[
-                      { key: "estonia", label: "Estonia y Bálticos", maturity: "92%", friction: "Medium", tax: "10% Def." },
-                      { key: "mexico", label: "Latinoamérica (Mex/Col)", maturity: "68%", friction: "High", tax: "15% Local" },
-                      { key: "singapore", label: "Singapur y SE Asia", maturity: "88%", friction: "Low", tax: "8% Eff." }
+                      { key: "estonia", label: t("Estonia y Bálticos", "Estonia & Baltics"), maturity: "92%", friction: "Medium", tax: "10% Def." },
+                      { key: "mexico", label: t("Latinoamérica (Mex/Col)", "Latin America (Mex/Col)"), maturity: "68%", friction: "High", tax: "15% Local" },
+                      { key: "singapore", label: t("Singapur y SE Asia", "Singapore & SE Asia"), maturity: "88%", friction: "Low", tax: "8% Eff." }
                     ].map(region => (
                       <button
                         key={region.key}
@@ -1513,7 +1513,7 @@ export default function PersonalFinanceCenter() {
                         </div>
                         <div className="flex justify-between">
                           <span>{t("Tratados de Doble Imposición:", "Double Taxation Treaties:")}</span>
-                          <span className="text-white">{conquestRegion === "estonia" ? "62 países" : conquestRegion === "mexico" ? "50 países" : "85 países"}</span>
+                          <span className="text-white">{conquestRegion === "estonia" ? t("62 países", "62 countries") : conquestRegion === "mexico" ? t("50 países", "50 countries") : t("85 países", "85 countries")}</span>
                         </div>
                       </div>
                     </div>
@@ -1526,7 +1526,7 @@ export default function PersonalFinanceCenter() {
                       <div className="space-y-1.5 text-[#B0A89E]">
                         <div className="flex justify-between">
                           <span>{t("Densidad de Saturación SaaS:", "SaaS Saturation Density:")}</span>
-                          <span className="text-white font-bold">{conquestRegion === "estonia" ? "Alta (90%)" : conquestRegion === "mexico" ? "Baja (45%)" : "Media (75%)"}</span>
+                          <span className="text-white font-bold">{conquestRegion === "estonia" ? t("Alta (90%)", "High (90%)") : conquestRegion === "mexico" ? t("Baja (45%)", "Low (45%)") : t("Media (75%)", "Medium (75%)")}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t("Índice CAC (relativo):", "CAC Index (relative):")}</span>
@@ -1538,7 +1538,7 @@ export default function PersonalFinanceCenter() {
                         </div>
                         <div className="flex justify-between">
                           <span>{t("Latencia Diagnóstica Media:", "Average Diagnostic Latency:")}</span>
-                          <span className="text-white">{conquestRegion === "estonia" ? "Rápida (72h)" : conquestRegion === "mexico" ? "Media (96h)" : "Inmediata (24h)"}</span>
+                          <span className="text-white">{conquestRegion === "estonia" ? t("Rápida (72h)", "Fast (72h)") : conquestRegion === "mexico" ? t("Media (96h)", "Medium (96h)") : t("Inmediata (24h)", "Immediate (24h)")}</span>
                         </div>
                       </div>
                     </div>
@@ -1582,21 +1582,21 @@ export default function PersonalFinanceCenter() {
                         <div className="border border-[#D4A853]/8 bg-white/[0.01] p-3 rounded space-y-1">
                           <span className="text-[#D4A853] font-semibold block uppercase text-xs tracking-wider">{t("Canal de Outreach Sniper", "Sniper Outreach Channel")}</span>
                           {conquestRegion === "estonia" ? (
-                            <span>Desplegar LinkedIn Snipers apuntando a fundadores europeos con benchmarks de compliance báltico localizados. MRR objetivo &gt;$15k.</span>
+                            <span>{t("Desplegar LinkedIn Snipers apuntando a fundadores europeos con benchmarks de compliance báltico localizados. MRR objetivo >$15k.", "Deploy LinkedIn Snipers targeting European founders with localized Baltic compliance benchmarks. Target MRR >$15k.")}</span>
                           ) : conquestRegion === "mexico" ? (
-                            <span>Secuencia de cold-email outbound ofreciendo auditorías de fricción gratis a fintechs latinoamericanas de alto crecimiento. Foco en brechas de compliance Latam.</span>
+                            <span>{t("Secuencia de cold-email outbound ofreciendo auditorías de fricción gratis a fintechs latinoamericanas de alto crecimiento. Foco en brechas de compliance Latam.", "Cold-email outbound sequence offering free friction audits to high-growth LatAm fintechs. Focus on LatAm compliance gaps.")}</span>
                           ) : (
-                            <span>Aprovechar directorios SaaS de Singapur para apuntar a scaleups B2B respaldadas por VC con teardowns Socrático de 3 borradores.</span>
+                            <span>{t("Aprovechar directorios SaaS de Singapur para apuntar a scaleups B2B respaldadas por VC con teardowns Socrático de 3 borradores.", "Leverage Singapore SaaS directories to target VC-backed B2B scaleups with 3-draft Socratic teardowns.")}</span>
                           )}
                         </div>
                         <div className="border border-[#D4A853]/8 bg-white/[0.01] p-3 rounded space-y-1">
                           <span className="text-[#D4A853] font-semibold block uppercase text-xs tracking-wider">{t("Routing Fiscal y Legal", "Tax & Legal Routing")}</span>
                           {conquestRegion === "estonia" ? (
-                            <span>Canalizar honorarios de licencias bálticas a través de una OÜ Estonia. Mantener beneficios diferidos al 0% impuesto corporativo para reinversión.</span>
+                            <span>{t("Canalizar honorarios de licencias bálticas a través de una OÜ Estonia. Mantener beneficios diferidos al 0% impuesto corporativo para reinversión.", "Channel Baltic licensing fees through an Estonian OÜ. Retain deferred profits at 0% corporate tax for reinvestment.")}</span>
                           ) : conquestRegion === "mexico" ? (
-                            <span>Recaudar MXN/USD vía facturación local Stripe. Canalizar a entidad corporativa SL española utilizando beneficios del convenio fiscal España-México.</span>
+                            <span>{t("Recaudar MXN/USD vía facturación local Stripe. Canalizar a entidad corporativa SL española utilizando beneficios del convenio fiscal España-México.", "Collect MXN/USD via local Stripe invoicing. Channel to Spanish SL corporate entity using Spain-Mexico tax treaty benefits.")}</span>
                           ) : (
-                            <span>Canalizar ingresos de contratos en SE Asia a una sociedad holding de Singapur. Tipo corporativo local efectivo del 8.5%.</span>
+                            <span>{t("Canalizar ingresos de contratos en SE Asia a una sociedad holding de Singapur. Tipo corporativo local efectivo del 8.5%.", "Channel SE Asia contract income to a Singapore holding company. Effective local corporate rate: 8.5%.")}</span>
                           )}
                         </div>
                       </div>
@@ -1608,11 +1608,11 @@ export default function PersonalFinanceCenter() {
                         </span>
                         <div className="text-xs text-[#B0A89E] leading-relaxed space-y-2">
                           <p>
-                            <strong>Estrategia Objetivo:</strong> {conquestRegion === "estonia" 
-                              ? "Estonia es el trampolín óptimo para el programa S&F Certified en Europa. Reinvertir beneficios libres de impuesto corporativo (0%) permite escalar la infraestructura de automatización outbound ×3." 
+                            <strong>{t("Estrategia Objetivo:", "Target Strategy:")}</strong> {conquestRegion === "estonia"
+                              ? t("Estonia es el trampolín óptimo para el programa S&F Certified en Europa. Reinvertir beneficios libres de impuesto corporativo (0%) permite escalar la infraestructura de automatización outbound ×3.", "Estonia is the optimal springboard for the S&F Certified program in Europe. Reinvesting profits free of corporate tax (0%) allows scaling outbound automation infrastructure ×3.")
                               : conquestRegion === "mexico"
-                              ? "Latinoamérica tiene el índice de fricción de conversión más alto. Un modelo de precios localizado ($999/mes en lugar de $2,500 único) capta startups B2B de alto crecimiento en proceso de digitalización de pagos."
-                              : "Singapur representa el mayor potencial de LTV. Establecer una LLC regional de paso para gestionar ingresos de clientes SaaS de SE Asia bajo parámetros de cero impuestos."}
+                              ? t("Latinoamérica tiene el índice de fricción de conversión más alto. Un modelo de precios localizado ($999/mes en lugar de $2,500 único) capta startups B2B de alto crecimiento en proceso de digitalización de pagos.", "Latin America has the highest conversion friction index. A localized pricing model ($999/mo instead of $2,500 one-time) captures high-growth B2B startups in the payment digitization process.")
+                              : t("Singapur representa el mayor potencial de LTV. Establecer una LLC regional de paso para gestionar ingresos de clientes SaaS de SE Asia bajo parámetros de cero impuestos.", "Singapore represents the highest LTV potential. Establishing a regional pass-through LLC to manage SE Asia SaaS client revenue under zero-tax parameters.")}
                           </p>
                           <div className="border-t border-[#D4A853]/15 pt-2 flex justify-between text-xs text-[#D4A853]">
                             <span>{t("Estado: RECOMENDACIÓN_FIRMADA", "Status: SIGNED_RECOMMENDATION")}</span>

@@ -1810,7 +1810,7 @@ export default function AdminDashboard() {
                           )}
                           {ad.scan.abandonmentDelta !== undefined && ad.scan.abandonmentDelta > 0 && (
                             <div className="bg-black/40 border border-[#C85C5C]/10 p-2 rounded-lg text-center">
-                              <span className="font-mono text-[9px] text-[#7A6F65] block">Abandono</span>
+                              <span className="font-mono text-[9px] text-[#7A6F65] block">{t("Abandono", "Abandonment")}</span>
                               <span className="font-mono text-xs font-bold text-[#C85C5C]">+{ad.scan.abandonmentDelta}%</span>
                             </div>
                           )}
@@ -2058,7 +2058,7 @@ export default function AdminDashboard() {
                             />
                           </div>
                           <div className="space-y-1 md:col-span-2">
-                            <label className="text-[#B0A89E] uppercase">Signal del Funnel</label>
+                            <label className="text-[#B0A89E] uppercase">{t("Signal del Funnel", "Funnel Signal")}</label>
                             <textarea
                               value={diagSignal}
                               onChange={(e) => setDiagSignal(e.target.value)}
