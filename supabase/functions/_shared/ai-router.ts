@@ -12,7 +12,7 @@
  * │micro │ gemini-2.5-flash       │ 0.15 in  │ Clasificación, extracción, boilerplate │
  * │core  │ deepseek-chat (V3)     │ 0.27 in  │ Análisis, código, lógica interna       │
  * │sharp │ deepseek-reasoner (R1) │ 0.55 in  │ Razonamiento complejo multi-paso       │
- * │blade │ claude-sonnet-4-6      │ 3.00 in  │ Outputs B2B, diagnósticos, voz marca   │
+ * │blade │ claude-opus-4-8        │ 15.00 in │ Outputs B2B, diagnósticos, voz marca   │
  * └──────┴────────────────────────┴──────────┴───────────────────────────────────────┘
  *
  * Required secrets (Supabase Dashboard → Edge Functions → Secrets):
@@ -43,7 +43,7 @@ const COST: Record<Tier, { in: number; out: number }> = {
   micro: { in: 0.15,  out: 0.60  },
   core:  { in: 0.27,  out: 1.10  },
   sharp: { in: 0.55,  out: 2.19  },
-  blade: { in: 3.00,  out: 15.00 },
+  blade: { in: 15.00, out: 75.00 },
 };
 
 function roughTokens(text: string): number {
@@ -180,7 +180,7 @@ export async function route(opts: RouteOptions): Promise<RouteResult> {
       break;
     }
     case "blade": {
-      model = "claude-sonnet-4-6";
+      model = "claude-opus-4-8";
       text = await callAnthropic(anthropicKey, system, user, maxTokens);
       break;
     }
