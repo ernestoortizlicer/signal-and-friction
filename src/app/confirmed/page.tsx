@@ -32,10 +32,22 @@ function ConfirmedContent() {
   const [referralCopied, setReferralCopied] = useState(false);
   const referralLink = `https://signal-and-friction.com/?ref=${refId}`;
   const [paymentLink, setPaymentLink] = useState(
-    isMicrodosing 
-      ? "https://buy.stripe.com/mock_microdosing_beta_diagnostic" 
+    isMicrodosing
+      ? "https://buy.stripe.com/mock_microdosing_beta_diagnostic"
       : "https://buy.stripe.com/mock_high_ticket_beta_diagnostic"
   );
+
+  // Carry the inbound referral (stored as `sf_referral_ref` on landing) into Stripe.
+  // Stripe Payment Links surface `client_reference_id` on the webhook's checkout
+  // session, which is how the referral actually reaches our payment infrastructure.
+  // Resolved on the client at click time to avoid an SSR/CSR hydration mismatch.
+  const buildCheckoutHref = () => {
+    if (typeof window === "undefined") return paymentLink;
+    const inboundRef = localStorage.getItem("sf_referral_ref");
+    if (!inboundRef) return paymentLink;
+    const sep = paymentLink.includes("?") ? "&" : "?";
+    return `${paymentLink}${sep}client_reference_id=${encodeURIComponent(inboundRef)}`;
+  };
 
   useEffect(() => {
     async function fetchLink() {
@@ -201,6 +213,13 @@ function ConfirmedContent() {
             <div className="pt-2">
               <a
                 href={paymentLink}
+                onClick={(e) => {
+                  const href = buildCheckoutHref();
+                  if (href !== paymentLink) {
+                    e.preventDefault();
+                    window.location.href = href;
+                  }
+                }}
                 className="inline-block w-full py-3 bg-[#D4A853] text-[#0A0908] font-mono text-xs font-bold uppercase tracking-[0.25em] transition-all hover:bg-[#E8C97A] active:scale-[0.98] glow-accent"
               >
                 Pay Diagnostic Fee (${amount}) →
