@@ -83,7 +83,11 @@ export const onRequestPost = async ({
       contactName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
     }
 
-    // Map segment selection to enum
+    // Map segment selection to enum.
+    // elite_us/elite_sg intentionally fall through to 'high_ticket' here —
+    // Elite = Concierge pricing + manual white-glove follow-up, not a
+    // separate Stripe tier yet. Revisit when a real prospect validates
+    // demand above Concierge.
     let mappedSegment = 'high_ticket';
     if (
       body.segmentSelection.toLowerCase().includes('autonomy') ||
