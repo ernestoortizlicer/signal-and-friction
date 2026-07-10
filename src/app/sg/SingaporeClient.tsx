@@ -64,6 +64,7 @@ const FUNNEL_OPTIONS = [
 const SEGMENT_OPTIONS = [
   { key: "concierge", label: "Done-For-You Concierge", sub: "S&F executes diagnostic & implementations. Backed by the S&F SGD $2,700 Growth Guarantee™." },
   { key: "autonomy", label: "Done-With-You Autonomy", sub: "Learn the S&F methodology, build internal capacity, and earn S&F Certified™ credentials." },
+  { key: "elite_sg", label: "🏆 Elite Partnership (Singapore)", sub: "White-glove account management + priority support. Optimized for APAC market dynamics." },
 ];
 
 const MRR_OPTIONS = [
@@ -76,6 +77,13 @@ const EXPERTISE_OPTIONS = [
   { key: "beginner", label: "Beginner level", sub: "Need basic templates and structured diagnostics" },
   { key: "intermediate", label: "Intermediate optimizer", sub: "Understand basic heuristics, need clinical tools" },
   { key: "advanced", label: "Advanced team", sub: "Internal engineering/growth team ready to execute" },
+];
+
+// Behavioral prioritization: implicitly qualifies urgency / willingness to pay.
+const URGENCY_OPTIONS = [
+  { key: "now", label: "Now" },
+  { key: "quarter", label: "This quarter" },
+  { key: "exploring", label: "Exploring" },
 ];
 
 export default function SingaporeClient() {
@@ -91,6 +99,7 @@ export default function SingaporeClient() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [glitch, setGlitch] = useState(false);
   const [testimonials, setTestimonials] = useState<any[]>([]);
+  const [urgency, setUrgency] = useState("");
 
   // Risk Reversal Calculator states (SGD localizations)
   const [calcVisitors, setCalcVisitors] = useState(20000);
@@ -131,46 +140,27 @@ export default function SingaporeClient() {
     setLoading(true);
     setErrorMsg(null);
 
-    const payload = {
-      data: {
-        fields: [
-          { label: "url", value: url, key: "url" },
-          { label: "funnel", value: funnelPain, key: "funnel" },
-          { label: "segment", value: segmentSelection, key: "segment" },
-          { label: "custom_answer", value: customAnswer, key: "custom_answer" },
-          { label: "email", value: email, key: "email" },
-        ],
-      },
-    };
-
     try {
-      const supabaseUrl =
-        process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tsaarsuuclvkjsgjcmoj.supabase.co";
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-      const response = await fetch(`${supabaseUrl}/functions/v1/tally-webhook`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: supabaseAnonKey,
-          "Authorization": `Bearer ${supabaseAnonKey}`
-        },
-        body: JSON.stringify(payload),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Protocol failure.");
-      // Fire auto-diagnosis in background — non-blocking, does not affect user flow
-      fetch('/api/leads', {
+      // 🔴 CRITICAL: NEW DIRECT API ENDPOINT (no Tally) - APAC VERSION
+      const response = await fetch('/api/leads/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          url,
+          funnelPain,
+          segmentSelection,
+          customAnswer,
           email,
-          website: url,
-          segment: segmentSelection === 'concierge' ? 'DFY' : 'DWY',
-          source: 'landing-sg',
-          answers: { funnelPain, segmentSelection, customAnswer },
+          urgency: urgency || undefined,
+          region: 'APAC',
         }),
-      }).catch(() => {});
-      router.push(`/confirmed?email=${encodeURIComponent(email)}&segment=${encodeURIComponent(result.segment || "high_ticket")}&region=sg`);
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Protocol failure.");
+
+      // Redirect with confirmation parameters
+      router.push(`/confirmed?email=${encodeURIComponent(email)}&segment=${encodeURIComponent(result.segment || "high_ticket")}&region=APAC`);
     } catch (err: any) {
       setErrorMsg(err.message || "Network error.");
     } finally {
@@ -318,40 +308,37 @@ export default function SingaporeClient() {
             )}
           </motion.div>
 
-          {/* RIGHT: Diagnostic Console */}
+          {/* RIGHT: Premium Diagnostic Card - APAC Edition */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="w-full max-w-md"
           >
-            <div className="relative border border-[#D4A853]/10 bg-[#0A0908]/90 backdrop-blur-2xl glow-border">
-              {/* Console header */}
-              <div className="border-b border-[#D4A853]/8 px-5 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-[7px] h-[7px] rounded-full bg-[#5C9A6B]" />
-                    <div className="w-[7px] h-[7px] rounded-full bg-[#D4A853]/60 animate-ping" />
-                    <div className="w-[7px] h-[7px] rounded-full bg-[#7A6F65]/40" />
-                  </div>
-                  <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.25em] uppercase">
-                    {currentStep.code}
-                  </span>
+            <div className="premium-diagnostic-card">
+              {/* Premium Header */}
+              <div className="premium-card-header">
+                <div className="premium-status-indicators">
+                  <div className="premium-status-dot" />
+                  <div className="premium-status-dot" />
+                  <div className="premium-status-dot" />
                 </div>
-                <span className="font-mono text-xs text-[#7A6F65] tabular-nums">
-                  Phase {step}
-                  <span className="text-[#7A6F65]">/</span>5
+                <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.25em] uppercase ml-2">
+                  {currentStep.code}
+                </span>
+                <span className="ml-auto font-mono text-xs text-[#7A6F65] tabular-nums">
+                  Phase {step}/5
                 </span>
               </div>
 
-              {/* Console body */}
-              <div className="p-6">
+              {/* Premium Body */}
+              <div className="premium-card-body">
                 {/* Step label */}
-                <div className="mb-5">
-                  <div className="font-mono text-xs text-[#D4A853]/70 tracking-[0.3em] uppercase mb-1">
+                <div className="mb-6">
+                  <span className="premium-step-label">
                     {currentStep.label}
-                  </div>
-                  <div className="font-mono text-xs text-[#B0A89E]">
+                  </span>
+                  <div className="premium-step-desc">
                     {currentStep.desc}
                   </div>
                 </div>
@@ -375,7 +362,7 @@ export default function SingaporeClient() {
                           onChange={(e) => setUrl(e.target.value)}
                           placeholder="https://your-product.sg"
                           aria-label="APAC product URL for diagnostic scan"
-                          className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#7A6F65] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
+                          className="premium-input w-full"
                           style={{ caretColor: "#D4A853" }}
                         />
                         <div className="font-mono text-xs text-[#B0A89E] tracking-wide flex items-center gap-1.5">
@@ -385,7 +372,7 @@ export default function SingaporeClient() {
                         <button
                           type="button"
                           onClick={nextStep}
-                          className="w-full py-3 border border-[#D4A853]/20 text-[#D4A853] hover:bg-[#D4A853]/5 active:bg-[#D4A853]/10 transition-all duration-200 font-mono text-xs uppercase tracking-[0.25em] cursor-pointer"
+                          className="premium-button w-full"
                         >
                           Scan My APAC Funnel →
                         </button>
@@ -402,30 +389,23 @@ export default function SingaporeClient() {
                         transition={{ duration: 0.15 }}
                         className="space-y-4"
                       >
-                        <div className="space-y-1">
-                          {FUNNEL_OPTIONS.map((opt) => (
-                            <button
-                              key={opt.key}
-                              type="button"
-                              onClick={() => { setFunnelPain(opt.key); setErrorMsg(null); }}
-                              className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
-                                funnelPain === opt.key
-                                  ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                  : "border-l-transparent text-[#B0A89E] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
-                              }`}
-                            >
-                              <div className="text-xs tracking-wide">{opt.label}</div>
-                              <div className="text-xs text-[#B0A89E]/80 mt-0.5">{opt.sub}</div>
-                            </button>
-                          ))}
-                        </div>
-                        <div className="flex gap-px pt-1">
-                          <button type="button" onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#B0A89E] transition-all font-mono text-xs uppercase tracking-[0.15em] cursor-pointer">
+                        {FUNNEL_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.key}
+                            type="button"
+                            onClick={() => { setFunnelPain(opt.key); setErrorMsg(null); }}
+                            className={`premium-option-button ${funnelPain === opt.key ? "active" : ""}`}
+                          >
+                            <span className="premium-option-label">{opt.label}</span>
+                            <span className="premium-option-sub">{opt.sub}</span>
+                          </button>
+                        ))}
+                        <div className="premium-divider" />
+                        <div className="premium-button-group">
+                          <button type="button" onClick={prevStep} className="premium-button">
                             ← Back
                           </button>
-                          <button type="button" onClick={nextStep}
-                            className="w-2/3 py-2.5 border border-[#D4A853]/20 text-[#D4A853] hover:bg-[#D4A853]/5 transition-all font-mono text-xs uppercase tracking-[0.25em] cursor-pointer">
+                          <button type="button" onClick={nextStep} className="premium-button">
                             Proceed →
                           </button>
                         </div>
@@ -442,30 +422,23 @@ export default function SingaporeClient() {
                         transition={{ duration: 0.15 }}
                         className="space-y-4"
                       >
-                        <div className="space-y-1">
-                          {SEGMENT_OPTIONS.map((opt) => (
-                            <button
-                              key={opt.key}
-                              type="button"
-                              onClick={() => { setSegmentSelection(opt.key); setCustomAnswer(""); setErrorMsg(null); }}
-                              className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
-                                segmentSelection === opt.key
-                                  ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                  : "border-l-transparent text-[#B0A89E] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
-                              }`}
-                            >
-                              <div className="text-xs tracking-wide">{opt.label}</div>
-                              <div className="text-xs text-[#B0A89E]/80 mt-0.5">{opt.sub}</div>
-                            </button>
-                          ))}
-                        </div>
-                        <div className="flex gap-px pt-1">
-                          <button type="button" onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#B0A89E] transition-all font-mono text-xs uppercase tracking-[0.15em] cursor-pointer">
+                        {SEGMENT_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.key}
+                            type="button"
+                            onClick={() => { setSegmentSelection(opt.key); setCustomAnswer(""); setErrorMsg(null); }}
+                            className={`premium-option-button ${segmentSelection === opt.key ? "active" : ""}`}
+                          >
+                            <span className="premium-option-label">{opt.label}</span>
+                            <span className="premium-option-sub">{opt.sub}</span>
+                          </button>
+                        ))}
+                        <div className="premium-divider" />
+                        <div className="premium-button-group">
+                          <button type="button" onClick={prevStep} className="premium-button">
                             ← Back
                           </button>
-                          <button type="button" onClick={nextStep}
-                            className="w-2/3 py-2.5 border border-[#D4A853]/20 text-[#D4A853] hover:bg-[#D4A853]/5 transition-all font-mono text-xs uppercase tracking-[0.25em] cursor-pointer">
+                          <button type="button" onClick={nextStep} className="premium-button">
                             Proceed →
                           </button>
                         </div>
@@ -482,48 +455,37 @@ export default function SingaporeClient() {
                         transition={{ duration: 0.15 }}
                         className="space-y-4"
                       >
-                        <div className="space-y-1">
-                          {segmentSelection === "concierge" ? (
-                            MRR_OPTIONS.map((opt) => (
-                              <button
-                                key={opt.key}
-                                type="button"
-                                onClick={() => { setCustomAnswer(opt.label); setErrorMsg(null); }}
-                                className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
-                                  customAnswer === opt.label
-                                    ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                    : "border-l-transparent text-[#B0A89E] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
-                                }`}
-                              >
-                                <div className="text-xs tracking-wide">{opt.label}</div>
-                                <div className="text-xs text-[#B0A89E]/80 mt-0.5">{opt.sub}</div>
-                              </button>
-                            ))
-                          ) : (
-                            EXPERTISE_OPTIONS.map((opt) => (
-                              <button
-                                key={opt.key}
-                                type="button"
-                                onClick={() => { setCustomAnswer(opt.label); setErrorMsg(null); }}
-                                className={`w-full text-left py-3 px-4 font-mono transition-all duration-200 border-l-2 cursor-pointer ${
-                                  customAnswer === opt.label
-                                    ? "border-l-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                    : "border-l-transparent text-[#B0A89E] hover:text-[#F5F0EB] hover:bg-white/[0.02]"
-                                }`}
-                              >
-                                <div className="text-xs tracking-wide">{opt.label}</div>
-                                <div className="text-xs text-[#B0A89E]/80 mt-0.5">{opt.sub}</div>
-                              </button>
-                            ))
-                          )}
-                        </div>
-                        <div className="flex gap-px pt-1">
-                          <button type="button" onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#B0A89E] transition-all font-mono text-xs uppercase tracking-[0.15em] cursor-pointer">
+                        {segmentSelection === "concierge" ? (
+                          MRR_OPTIONS.map((opt) => (
+                            <button
+                              key={opt.key}
+                              type="button"
+                              onClick={() => { setCustomAnswer(opt.label); setErrorMsg(null); }}
+                              className={`premium-option-button ${customAnswer === opt.label ? "active" : ""}`}
+                            >
+                              <span className="premium-option-label">{opt.label}</span>
+                              <span className="premium-option-sub">{opt.sub}</span>
+                            </button>
+                          ))
+                        ) : (
+                          EXPERTISE_OPTIONS.map((opt) => (
+                            <button
+                              key={opt.key}
+                              type="button"
+                              onClick={() => { setCustomAnswer(opt.label); setErrorMsg(null); }}
+                              className={`premium-option-button ${customAnswer === opt.label ? "active" : ""}`}
+                            >
+                              <span className="premium-option-label">{opt.label}</span>
+                              <span className="premium-option-sub">{opt.sub}</span>
+                            </button>
+                          ))
+                        )}
+                        <div className="premium-divider" />
+                        <div className="premium-button-group">
+                          <button type="button" onClick={prevStep} className="premium-button">
                             ← Back
                           </button>
-                          <button type="button" onClick={nextStep}
-                            className="w-2/3 py-2.5 border border-[#D4A853]/20 text-[#D4A853] hover:bg-[#D4A853]/5 transition-all font-mono text-xs uppercase tracking-[0.25em] cursor-pointer">
+                          <button type="button" onClick={nextStep} className="premium-button">
                             Proceed →
                           </button>
                         </div>
@@ -540,34 +502,32 @@ export default function SingaporeClient() {
                         transition={{ duration: 0.15 }}
                         className="space-y-5"
                       >
-                        <div>
-                          <input
-                            type="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="you@company.sg"
-                            aria-label="Email address for APAC diagnostic report delivery"
-                            className="w-full bg-transparent border-b-2 border-[#2A2218] focus:border-[#D4A853] px-0 py-3 text-sm text-[#F5F0EB] placeholder-[#7A6F65] focus:outline-none transition-colors duration-500 font-mono tracking-wide"
-                            style={{ caretColor: "#D4A853" }}
-                          />
-                          <div className="mt-2 font-mono text-xs text-[#B0A89E] tracking-wide">
-                            APAC results in 72h. PDPA compliant. No sales calls.
-                          </div>
+                        <input
+                          type="email"
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="you@company.sg"
+                          aria-label="Email address for APAC diagnostic report delivery"
+                          className="premium-input w-full"
+                          style={{ caretColor: "#D4A853" }}
+                        />
+                        <div className="font-mono text-xs text-[#B0A89E] tracking-wide">
+                          APAC results in 72h. PDPA compliant. No sales calls.
                         </div>
                         <div className="border border-[#D4A853]/10 bg-[#D4A853]/[0.03] px-3 py-2 font-mono text-xs text-[#B0A89E] leading-relaxed flex items-center gap-2">
                           <span className="text-[#D4A853]">⚑</span>
                           SGD $2,700 guarantee or full Stripe refund. 72h async. Zero sales calls.
                         </div>
-                        <div className="flex gap-px">
-                          <button type="button" disabled={loading} onClick={prevStep}
-                            className="w-1/3 py-2.5 border border-[#2A2218] text-[#7A6F65] hover:text-[#B0A89E] transition-all font-mono text-xs uppercase tracking-[0.15em] cursor-pointer disabled:opacity-30">
+                        <div className="premium-divider" />
+                        <div className="premium-button-group">
+                          <button type="button" disabled={loading} onClick={prevStep} className="premium-button disabled:opacity-50">
                             ← Back
                           </button>
                           <button
                             type="submit"
                             disabled={loading}
-                            className="relative w-2/3 py-3 bg-[#D4A853] text-[#0A0908] font-mono text-xs uppercase tracking-[0.25em] cursor-pointer disabled:opacity-50 transition-all hover:bg-[#E8C97A] active:scale-[0.99] overflow-hidden font-bold"
+                            className="premium-button w-auto flex-1 bg-[#D4A853] text-[#0A0908] hover:bg-[#E8C97A] disabled:opacity-50 font-bold"
                           >
                             {loading ? (
                               <span className="flex items-center justify-center gap-2">
@@ -577,7 +537,6 @@ export default function SingaporeClient() {
                             ) : (
                               "Find My APAC Friction →"
                             )}
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 hover:opacity-100" style={{ animation: "scan-sweep 2s linear infinite" }} />
                           </button>
                         </div>
                       </motion.div>
@@ -585,28 +544,28 @@ export default function SingaporeClient() {
                   </AnimatePresence>
                 </form>
 
-                {/* Error */}
+                {/* Error display */}
                 <AnimatePresence>
                   {errorMsg && (
                     <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="mt-4 py-2 px-3 border-l-2 border-[#C85C5C]/50 bg-[#C85C5C]/5 font-mono text-xs text-[#C85C5C]/80 tracking-wide"
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      className="mt-4 py-2 px-3 border-l-2 border-[#C85C5C]/50 bg-[#C85C5C]/5 font-mono text-xs text-[#C85C5C]/80 tracking-wide rounded-sm"
                     >
-                      ERR: {errorMsg}
+                      ⚠ ERR: {errorMsg}
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
 
-              {/* Console footer */}
-              <div className="border-t border-[#D4A853]/5 px-5 py-2 flex justify-between items-center">
-                <span className="font-mono text-xs text-[#7A6F65] tracking-[0.15em] uppercase">
-                  S&amp;F Diagnostic Engine v4.5
+              {/* Premium Footer */}
+              <div className="border-t border-[#D4A853]/5 px-6 py-3 flex justify-between items-center text-xs font-mono text-[#7A6F65]">
+                <span className="tracking-[0.15em] uppercase">
+                  S&amp;F APAC Engine v4.5
                 </span>
-                <span className="font-mono text-xs text-[#7A6F65] tracking-wider">
-                  PDPA Data Secure
+                <span className="tracking-wider">
+                  PDPA Compliant
                 </span>
               </div>
             </div>
