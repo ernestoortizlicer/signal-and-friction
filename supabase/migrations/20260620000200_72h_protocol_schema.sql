@@ -90,9 +90,6 @@ CREATE POLICY "Allow all service_role" ON public.protocol_executions
 CREATE POLICY "Allow select authenticated" ON public.protocol_executions
   FOR SELECT TO authenticated USING (true);
 
-CREATE POLICY "Allow select anon" ON public.protocol_executions
-  FOR SELECT TO anon USING (true);
-
 
 -- ── 4. TRIGGER: AUTO-LOG PROTOCOL STAGE CHANGES ON clients ─
 
