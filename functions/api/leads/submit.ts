@@ -12,6 +12,7 @@ interface LeadSubmissionPayload {
   segmentSelection: string;
   customAnswer: string;
   email: string;
+  urgency?: string;
   region?: 'US' | 'APAC';
 }
 
@@ -105,8 +106,7 @@ export const onRequestPost = async ({
       mappedMechanism = 'sequence_order';
     }
 
-    // Determine region (elite option determines this)
-    const region = body.customAnswer?.includes?.('Elite SG') || body.customAnswer?.includes?.('Asia-Pacific') ? 'APAC' : 'US';
+    const region = body.region || 'US';
 
     if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
       return new Response(
@@ -140,6 +140,7 @@ export const onRequestPost = async ({
           custom_fields: {
             segment_raw: body.segmentSelection,
             custom_answer: body.customAnswer,
+            urgency: body.urgency || null,
             region,
           },
           updated_at: new Date().toISOString(),
@@ -159,6 +160,7 @@ export const onRequestPost = async ({
           custom_fields: {
             segment_raw: body.segmentSelection,
             custom_answer: body.customAnswer,
+            urgency: body.urgency || null,
             region,
           },
         })

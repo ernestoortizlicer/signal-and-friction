@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { CLAUDE_MODEL, DIAGNOSTIC_MAX_TOKENS } from './_models';
 
 // Inlined from src/lib/linguistic-sandbox.ts — cross-directory relative imports
 // are not resolvable by Cloudflare esbuild at function compile time.
@@ -213,8 +214,8 @@ export const onRequestPost = async ({
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-8',
-        max_tokens: 1024,
+        model: CLAUDE_MODEL,
+        max_tokens: DIAGNOSTIC_MAX_TOKENS,
         system: [
           {
             type: 'text',
@@ -245,7 +246,17 @@ export const onRequestPost = async ({
 
   const anthropicData = await anthropicResponse.json() as {
     content: Array<{ type: string; text: string }>;
+    stop_reason?: string;
   };
+
+  // A truncated response (hit the output ceiling) yields invalid JSON downstream.
+  // Catch it explicitly so the failure is legible instead of a generic parse error.
+  if (anthropicData.stop_reason === 'max_tokens') {
+    return Response.json(
+      { error: 'Diagnostic output was truncated at the token ceiling. Raise DIAGNOSTIC_MAX_TOKENS.' },
+      { status: 422 }
+    );
+  }
 
   const rawText = anthropicData.content?.find(b => b.type === 'text')?.text ?? '';
 

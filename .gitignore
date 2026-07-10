@@ -48,3 +48,6 @@ screenshots/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ad-hoc local test scripts
+anthropic-test.js

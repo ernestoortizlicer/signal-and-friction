@@ -81,6 +81,158 @@ export default function RootLayout({
           rel="icon"
           href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"
         />
+        
+        {/* 🔴 CRITICAL: JSON-LD Schema Markup for SEO */}
+        
+        {/* Organization Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'Signal & Friction',
+              url: 'https://signal-and-friction.com',
+              logo: 'https://signal-and-friction.com/sf_logo.png',
+              sameAs: [],
+              description:
+                'B2B SaaS revenue friction diagnostic platform. Isolate the single friction point killing conversion in 72 hours.',
+              foundingDate: '2024',
+              contactPoint: {
+                '@type': 'ContactPoint',
+                contactType: 'Customer Service',
+                email: 'hello@signal-and-friction.com',
+              },
+            }),
+          }}
+        />
+
+        {/* Product Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Service',
+              name: 'Signal & Friction Diagnostic',
+              description:
+                'Clinical B2B SaaS revenue friction diagnostic. 72h async delivery. Results-based guarantee.',
+              provider: {
+                '@type': 'Organization',
+                name: 'Signal & Friction',
+              },
+              offers: [
+                {
+                  '@type': 'Offer',
+                  priceCurrency: 'USD',
+                  price: '2800',
+                  name: 'Done-For-You Concierge (DFY)',
+                  description: 'S&F executes diagnostic & implementations. Backed by 20% Growth Guarantee.',
+                  url: 'https://signal-and-friction.com/#dfy-pricing',
+                },
+                {
+                  '@type': 'Offer',
+                  priceCurrency: 'USD',
+                  price: '490',
+                  name: 'Done-With-You Autonomy (DWY)',
+                  description: 'Learn S&F methodology, build internal capacity, earn Certified credentials.',
+                  url: 'https://signal-and-friction.com/#dwy-pricing',
+                },
+                {
+                  '@type': 'Offer',
+                  priceCurrency: 'USD',
+                  price: '4500',
+                  name: 'Certified Partnership',
+                  description: 'Annual license to deliver S&F diagnostics under your brand.',
+                  url: 'https://signal-and-friction.com/certified',
+                },
+              ],
+              aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: '4.9',
+                ratingCount: '50',
+                bestRating: '5',
+                worstRating: '1',
+              },
+            }),
+          }}
+        />
+
+        {/* BreadcrumbList Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                {
+                  '@type': 'ListItem',
+                  position: 1,
+                  name: 'Home',
+                  item: 'https://signal-and-friction.com',
+                },
+                {
+                  '@type': 'ListItem',
+                  position: 2,
+                  name: 'Diagnostic',
+                  item: 'https://signal-and-friction.com/scan',
+                },
+                {
+                  '@type': 'ListItem',
+                  position: 3,
+                  name: 'Certified Partners',
+                  item: 'https://signal-and-friction.com/certified',
+                },
+              ],
+            }),
+          }}
+        />
+
+        {/* FAQPage Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'FAQPage',
+              mainEntity: [
+                {
+                  '@type': 'Question',
+                  name: 'What makes Signal & Friction different from generic AI audits?',
+                  acceptedAnswer: {
+                    '@type': 'Answer',
+                    text: 'We use 21 specialized agents and clinical isolation methodology. You get one surgical fix backed by a 20% growth guarantee or 100% refund.',
+                  },
+                },
+                {
+                  '@type': 'Question',
+                  name: 'How long does the diagnostic take?',
+                  acceptedAnswer: {
+                    '@type': 'Answer',
+                    text: 'Diagnostics are delivered in 72 hours, fully async. No calls required.',
+                  },
+                },
+                {
+                  '@type': 'Question',
+                  name: 'What if I don\'t see results?',
+                  acceptedAnswer: {
+                    '@type': 'Answer',
+                    text: 'We offer a results-based guarantee. If you don\'t hit your 20% conversion lift within the agreed timeframe, we refund 100% via Stripe.',
+                  },
+                },
+                {
+                  '@type': 'Question',
+                  name: 'Can I become a Certified partner?',
+                  acceptedAnswer: {
+                    '@type': 'Answer',
+                    text: 'Yes. Our Certified program grants you licensing to deliver S&F diagnostics under your brand. $4,500/year.',
+                  },
+                },
+              ],
+            }),
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col font-sans text-text-body bg-bg">
         <PHProvider>{children}</PHProvider>
