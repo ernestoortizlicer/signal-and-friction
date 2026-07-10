@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import dynamic from "next/dynamic";
+import ScanFunnelCard from "@/components/ScanFunnelCard";
 
 // Lazy-load the heavy canvas — keeps SSR clean
 const WireframeCanvas = dynamic(() => import("@/components/WireframeCanvas"), {
@@ -17,19 +18,19 @@ const HexGrid = dynamic(() => import("@/components/HexGrid"), {
 });
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   UTC CLOCK — Real-time readout
+   SGT CLOCK — Real-time readout (Asia/Singapore, UTC+8)
    ═══════════════════════════════════════════════════════════════════════════════ */
 function UtcClock() {
   const [time, setTime] = useState("--:--:--");
   useEffect(() => {
     const tick = () =>
       setTime(
-        new Date().toLocaleTimeString("en-US", {
+        new Date().toLocaleTimeString("en-SG", {
           hour12: false,
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
-          timeZone: "UTC",
+          timeZone: "Asia/Singapore",
         })
       );
     tick();
@@ -38,7 +39,7 @@ function UtcClock() {
   }, []);
   return (
     <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.2em] tabular-nums glow-text">
-      UTC {time}
+      SGT {time}
     </span>
   );
 }
@@ -169,10 +170,11 @@ export default function SingaporeClient() {
   };
 
   const nextStep = () => {
+    // Steps 2–4 advance via ScanFunnelCard's auto-advance, which only ever
+    // fires after a tile click has already set the relevant value — a
+    // guard here would run inside a setTimeout closure captured before
+    // that state update lands, silently blocking every auto-advance.
     if (step === 1 && !url) { setErrorMsg("Target APAC URL required."); return; }
-    if (step === 2 && !funnelPain) { setErrorMsg("Regional friction zone required."); return; }
-    if (step === 3 && !segmentSelection) { setErrorMsg("Segment choice required."); return; }
-    if (step === 4 && !customAnswer) { setErrorMsg("Detail metric isolation required."); return; }
     setErrorMsg(null);
     triggerGlitch();
     setStep((s) => s + 1);
@@ -184,7 +186,7 @@ export default function SingaporeClient() {
     setStep((s) => s - 1);
   };
 
-  const currentStep = STEPS[step - 1];
+  const step4Options = segmentSelection === "concierge" ? MRR_OPTIONS : EXPERTISE_OPTIONS;
 
   return (
     <main className="min-h-screen w-screen bg-[#0A0908] text-[#F5F0EB] overflow-y-auto relative crt-lines flex flex-col justify-start">
@@ -315,260 +317,63 @@ export default function SingaporeClient() {
             transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="w-full max-w-md"
           >
-            <div className="premium-diagnostic-card">
-              {/* Premium Header */}
-              <div className="premium-card-header">
-                <div className="premium-status-indicators">
-                  <div className="premium-status-dot" />
-                  <div className="premium-status-dot" />
-                  <div className="premium-status-dot" />
+            <ScanFunnelCard
+              region="sg"
+              steps={STEPS}
+              step={step}
+              url={url}
+              onUrlChange={setUrl}
+              urlPlaceholder="https://your-product.sg"
+              socialProof={<>Trusted by <strong>APAC SaaS founders</strong> in SG, AU, and MY.</>}
+              scanCta="Scan My APAC Funnel"
+              onScanClick={nextStep}
+              funnelPain={funnelPain}
+              funnelOptions={FUNNEL_OPTIONS}
+              onFunnelPainChange={(key) => { setFunnelPain(key); setErrorMsg(null); }}
+              segmentSelection={segmentSelection}
+              segmentOptions={SEGMENT_OPTIONS}
+              onSegmentChange={(key) => { setSegmentSelection(key); setCustomAnswer(""); setErrorMsg(null); }}
+              customAnswer={customAnswer}
+              metricOptions={step4Options}
+              onCustomAnswerChange={(label) => { setCustomAnswer(label); setErrorMsg(null); }}
+              urgency={urgency}
+              urgencyOptions={URGENCY_OPTIONS}
+              onUrgencyChange={setUrgency}
+              email={email}
+              onEmailChange={setEmail}
+              emailPlaceholder="you@company.sg"
+              deliveryNote={<span style={{ fontSize: 13, color: "#8C8474" }}>APAC results in 72h. PDPA compliant. No sales calls.</span>}
+              guaranteeNote={
+                <div
+                  className="flex items-center gap-2"
+                  style={{
+                    border: "1px solid rgba(203,161,53,.16)",
+                    background: "rgba(203,161,53,.03)",
+                    padding: "8px 12px",
+                    fontSize: 12,
+                    color: "#8C8474",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  <span style={{ color: "#CBA135" }}>⚑</span>
+                  SGD $2,700 guarantee or full Stripe refund. 72h async. Zero sales calls.
                 </div>
-                <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.25em] uppercase ml-2">
-                  {currentStep.code}
+              }
+              submitCta="Find My APAC Friction"
+              submitLoadingLabel={
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full animate-ping" style={{ background: "#E9C766" }} />
+                  Executing...
                 </span>
-                <span className="ml-auto font-mono text-xs text-[#7A6F65] tabular-nums">
-                  Phase {step}/5
-                </span>
-              </div>
-
-              {/* Premium Body */}
-              <div className="premium-card-body">
-                {/* Step label */}
-                <div className="mb-6">
-                  <span className="premium-step-label">
-                    {currentStep.label}
-                  </span>
-                  <div className="premium-step-desc">
-                    {currentStep.desc}
-                  </div>
-                </div>
-
-                <form onSubmit={handleSubmit}>
-                  <AnimatePresence mode="wait">
-                    {/* Step 1: URL */}
-                    {step === 1 && (
-                      <motion.div
-                        key="s1"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.15 }}
-                        className="space-y-5"
-                      >
-                        <input
-                          type="url"
-                          required
-                          value={url}
-                          onChange={(e) => setUrl(e.target.value)}
-                          placeholder="https://your-product.sg"
-                          aria-label="APAC product URL for diagnostic scan"
-                          className="premium-input w-full"
-                          style={{ caretColor: "#D4A853" }}
-                        />
-                        <div className="font-mono text-xs text-[#B0A89E] tracking-wide flex items-center gap-1.5">
-                          <span className="w-1 h-1 rounded-full bg-[#5C9A6B]/50" />
-                          Trusted by APAC SaaS founders in SG, AU, and MY.
-                        </div>
-                        <button
-                          type="button"
-                          onClick={nextStep}
-                          className="premium-button w-full"
-                        >
-                          Scan My APAC Funnel →
-                        </button>
-                      </motion.div>
-                    )}
-
-                    {/* Step 2: Funnel Drop-off */}
-                    {step === 2 && (
-                      <motion.div
-                        key="s2"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.15 }}
-                        className="space-y-4"
-                      >
-                        {FUNNEL_OPTIONS.map((opt) => (
-                          <button
-                            key={opt.key}
-                            type="button"
-                            onClick={() => { setFunnelPain(opt.key); setErrorMsg(null); }}
-                            className={`premium-option-button ${funnelPain === opt.key ? "active" : ""}`}
-                          >
-                            <span className="premium-option-label">{opt.label}</span>
-                            <span className="premium-option-sub">{opt.sub}</span>
-                          </button>
-                        ))}
-                        <div className="premium-divider" />
-                        <div className="premium-button-group">
-                          <button type="button" onClick={prevStep} className="premium-button">
-                            ← Back
-                          </button>
-                          <button type="button" onClick={nextStep} className="premium-button">
-                            Proceed →
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {/* Step 3: Segment Selector */}
-                    {step === 3 && (
-                      <motion.div
-                        key="s3"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.15 }}
-                        className="space-y-4"
-                      >
-                        {SEGMENT_OPTIONS.map((opt) => (
-                          <button
-                            key={opt.key}
-                            type="button"
-                            onClick={() => { setSegmentSelection(opt.key); setCustomAnswer(""); setErrorMsg(null); }}
-                            className={`premium-option-button ${segmentSelection === opt.key ? "active" : ""}`}
-                          >
-                            <span className="premium-option-label">{opt.label}</span>
-                            <span className="premium-option-sub">{opt.sub}</span>
-                          </button>
-                        ))}
-                        <div className="premium-divider" />
-                        <div className="premium-button-group">
-                          <button type="button" onClick={prevStep} className="premium-button">
-                            ← Back
-                          </button>
-                          <button type="button" onClick={nextStep} className="premium-button">
-                            Proceed →
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {/* Step 4: Metric Isolation (MRR or Expertise) */}
-                    {step === 4 && (
-                      <motion.div
-                        key="s4"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.15 }}
-                        className="space-y-4"
-                      >
-                        {segmentSelection === "concierge" ? (
-                          MRR_OPTIONS.map((opt) => (
-                            <button
-                              key={opt.key}
-                              type="button"
-                              onClick={() => { setCustomAnswer(opt.label); setErrorMsg(null); }}
-                              className={`premium-option-button ${customAnswer === opt.label ? "active" : ""}`}
-                            >
-                              <span className="premium-option-label">{opt.label}</span>
-                              <span className="premium-option-sub">{opt.sub}</span>
-                            </button>
-                          ))
-                        ) : (
-                          EXPERTISE_OPTIONS.map((opt) => (
-                            <button
-                              key={opt.key}
-                              type="button"
-                              onClick={() => { setCustomAnswer(opt.label); setErrorMsg(null); }}
-                              className={`premium-option-button ${customAnswer === opt.label ? "active" : ""}`}
-                            >
-                              <span className="premium-option-label">{opt.label}</span>
-                              <span className="premium-option-sub">{opt.sub}</span>
-                            </button>
-                          ))
-                        )}
-                        <div className="premium-divider" />
-                        <div className="premium-button-group">
-                          <button type="button" onClick={prevStep} className="premium-button">
-                            ← Back
-                          </button>
-                          <button type="button" onClick={nextStep} className="premium-button">
-                            Proceed →
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {/* Step 5: Email + Submit */}
-                    {step === 5 && (
-                      <motion.div
-                        key="s5"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.15 }}
-                        className="space-y-5"
-                      >
-                        <input
-                          type="email"
-                          required
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="you@company.sg"
-                          aria-label="Email address for APAC diagnostic report delivery"
-                          className="premium-input w-full"
-                          style={{ caretColor: "#D4A853" }}
-                        />
-                        <div className="font-mono text-xs text-[#B0A89E] tracking-wide">
-                          APAC results in 72h. PDPA compliant. No sales calls.
-                        </div>
-                        <div className="border border-[#D4A853]/10 bg-[#D4A853]/[0.03] px-3 py-2 font-mono text-xs text-[#B0A89E] leading-relaxed flex items-center gap-2">
-                          <span className="text-[#D4A853]">⚑</span>
-                          SGD $2,700 guarantee or full Stripe refund. 72h async. Zero sales calls.
-                        </div>
-                        <div className="premium-divider" />
-                        <div className="premium-button-group">
-                          <button type="button" disabled={loading} onClick={prevStep} className="premium-button disabled:opacity-50">
-                            ← Back
-                          </button>
-                          <button
-                            type="submit"
-                            disabled={loading}
-                            className="premium-button w-auto flex-1 bg-[#D4A853] text-[#0A0908] hover:bg-[#E8C97A] disabled:opacity-50 font-bold"
-                          >
-                            {loading ? (
-                              <span className="flex items-center justify-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#0A0908] animate-ping" />
-                                Executing...
-                              </span>
-                            ) : (
-                              "Find My APAC Friction →"
-                            )}
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </form>
-
-                {/* Error display */}
-                <AnimatePresence>
-                  {errorMsg && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -5 }}
-                      className="mt-4 py-2 px-3 border-l-2 border-[#C85C5C]/50 bg-[#C85C5C]/5 font-mono text-xs text-[#C85C5C]/80 tracking-wide rounded-sm"
-                    >
-                      ⚠ ERR: {errorMsg}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Premium Footer */}
-              <div className="border-t border-[#D4A853]/5 px-6 py-3 flex justify-between items-center text-xs font-mono text-[#7A6F65]">
-                <span className="tracking-[0.15em] uppercase">
-                  S&amp;F APAC Engine v4.5
-                </span>
-                <span className="tracking-wider">
-                  PDPA Compliant
-                </span>
-              </div>
-            </div>
+              }
+              loading={loading}
+              errorMsg={errorMsg}
+              onBack={prevStep}
+              onAdvance={nextStep}
+              onSubmit={handleSubmit}
+              footerEngine="S&F APAC Engine v4.5"
+              footerTrust="PDPA Compliant"
+            />
           </motion.div>
         </div>
       </div>

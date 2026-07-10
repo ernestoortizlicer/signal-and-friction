@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  a{color:#CBA135;text-decoration:none}
+  a:hover{color:#E9C766}
+  input::placeholder{color:#6f685a;opacity:1;letter-spacing:1px}
+  @keyframes sfpulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(203,161,53,.55)}50%{opacity:.45;box-shadow:0 0 0 6px rgba(203,161,53,0)}}
+  @keyframes sfscan{0%{top:0%;opacity:0}8%{opacity:.55}92%{opacity:.55}100%{top:100%;opacity:0}}
+  @keyframes sfbreathe{0%,100%{opacity:.22;transform:scale(1)}50%{opacity:.42;transform:scale(1.04)}}
+  @keyframes sfshimmer{0%{background-position:-140% 0}100%{background-position:240% 0}}
+  @keyframes sfrise{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
+  @keyframes sfcard{0%{opacity:0;transform:translateY(16px) scale(.985);filter:blur(7px)}100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+  @keyframes sfedge{0%{transform:translateX(-120%)}100%{transform:translateX(360%)}}
+</style>
+</helmet>
+<div style="min-height:100vh;background:radial-gradient(120% 120% at 70% 0%, #100d08 0%, #0b0a07 55%, #08070500 100%),#0b0a07;display:flex;align-items:center;justify-content:center;padding:56px 32px;font-family:'JetBrains Mono',monospace">
+  <div style="position:relative;width:100%;max-width:660px">
+    <sc-if value="{{glowAura}}" hint-placeholder-val="{{true}}">
+      <div style="position:absolute;inset:-60px -30px;background:radial-gradient(60% 55% at 50% 45%, rgba(203,161,53,.16), transparent 70%);filter:blur(20px);animation:sfbreathe 6.933s ease-in-out infinite;pointer-events:none"></div>
+    </sc-if>
+
+    <div data-screen-label="Scan My Funnel Card" style="position:relative;border:1px solid rgba(203,161,53,.28);background:linear-gradient(158deg,#100e0a 0%,#0a0906 100%);overflow:hidden;box-shadow:0 40px 100px -30px rgba(0,0,0,.8), inset 0 1px 0 rgba(203,161,53,.12);animation:sfcard .9s cubic-bezier(.16,1,.3,1) both">
+      <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(203,161,53,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(203,161,53,.045) 1px,transparent 1px);background-size:30px 30px;opacity:.6;pointer-events:none"></div>
+      <div style="position:absolute;left:0;right:0;height:1px;top:0;background:linear-gradient(90deg,transparent,rgba(203,161,53,.9),transparent);animation:sfscan 6.933s cubic-bezier(.45,0,.55,1) infinite;pointer-events:none"></div>
+      <div style="position:absolute;top:0;left:0;height:1px;width:32%;background:linear-gradient(90deg,transparent,rgba(233,199,102,.85),transparent);animation:sfedge 6.933s cubic-bezier(.45,0,.55,1) infinite;animation-delay:-3.467s;pointer-events:none"></div>
+      <div style="position:absolute;top:0;left:0;width:18px;height:18px;border-top:1px solid rgba(203,161,53,.7);border-left:1px solid rgba(203,161,53,.7);pointer-events:none"></div>
+      <div style="position:absolute;top:0;right:0;width:18px;height:18px;border-top:1px solid rgba(203,161,53,.7);border-right:1px solid rgba(203,161,53,.7);pointer-events:none"></div>
+      <div style="position:absolute;bottom:0;left:0;width:18px;height:18px;border-bottom:1px solid rgba(203,161,53,.7);border-left:1px solid rgba(203,161,53,.7);pointer-events:none"></div>
+      <div style="position:absolute;bottom:0;right:0;width:18px;height:18px;border-bottom:1px solid rgba(203,161,53,.7);border-right:1px solid rgba(203,161,53,.7);pointer-events:none"></div>
+
+      <div style="position:relative;display:flex;align-items:center;justify-content:space-between;padding:20px 28px;border-bottom:1px solid rgba(203,161,53,.16)">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div style="display:flex;align-items:center;gap:7px">
+            <div style="width:9px;height:9px;border-radius:50%;background:#CBA135;animation:sfpulse 3.467s ease-in-out infinite"></div>
+            <div style="width:9px;height:9px;border-radius:50%;background:rgba(203,161,53,.25)"></div>
+            <div style="width:9px;height:9px;border-radius:50%;background:rgba(203,161,53,.25)"></div>
+          </div>
+          <span style="font-size:13px;font-weight:600;letter-spacing:4px;color:rgba(236,231,217,.7)">SYS.CAL</span>
+        </div>
+        <span style="font-size:12px;letter-spacing:2px;color:#8C8474">STEP <span style="color:#E9C766;font-weight:600">{{stepNum}}</span> / 5</span>
+      </div>
+
+      <div style="position:relative;padding:22px 28px 4px 28px">
+        <div style="position:relative;height:3px;background:rgba(203,161,53,.1);overflow:hidden">
+          <div style="position:absolute;top:0;left:0;bottom:0;width:{{progressPct}}%;background:linear-gradient(90deg,#B9902B,#E9C766);background-size:220% 100%;animation:sfshimmer 3.467s linear infinite;box-shadow:0 0 14px rgba(203,161,53,.5);transition:width .55s cubic-bezier(.2,.8,.2,1)"></div>
+          <div style="position:absolute;top:0;bottom:0;left:20%;width:1px;background:#0b0a07"></div>
+          <div style="position:absolute;top:0;bottom:0;left:40%;width:1px;background:#0b0a07"></div>
+          <div style="position:absolute;top:0;bottom:0;left:60%;width:1px;background:#0b0a07"></div>
+          <div style="position:absolute;top:0;bottom:0;left:80%;width:1px;background:#0b0a07"></div>
+        </div>
+      </div>
+
+      <div style="position:relative;padding:28px 28px 26px 28px;min-height:290px">
+
+        <sc-if value="{{s0}}" hint-placeholder-val="{{true}}">
+          <div style="animation:sfrise .4s ease both">
+            <div style="font-size:12px;letter-spacing:3px;text-transform:uppercase;color:rgba(203,161,53,.6);margin-bottom:12px">SYSTEM CALIBRATION</div>
+            <div style="font-size:20px;font-weight:500;letter-spacing:.3px;color:#ECE7D9;margin-bottom:26px">Enter target URL for diagnostic scan</div>
+            <input value="{{url}}" onChange="{{onUrl}}" placeholder="https://your-product.com" style="width:100%;background:transparent;border:none;border-bottom:1px solid rgba(203,161,53,.3);color:#ECE7D9;font-family:'JetBrains Mono',monospace;font-size:16px;letter-spacing:1px;padding:14px 2px;outline:none;caret-color:#E9C766;transition:border-color .25s,box-shadow .25s" style-focus="border-bottom:1px solid #E9C766;box-shadow:0 1px 0 rgba(203,161,53,.5)" />
+            <div style="display:flex;align-items:center;gap:10px;margin:22px 0 26px 0">
+              <div style="width:7px;height:7px;border-radius:50%;background:#57a86f;flex:none;animation:sfpulse 3.467s ease-in-out infinite"></div>
+              <span style="font-size:13px;letter-spacing:.5px;color:#8C8474;line-height:1.6">Join <span style="color:#ECE7D9">50+ B2B SaaS founders</span> who have diagnosed their funnel.</span>
+            </div>
+            <button onClick="{{onScan}}" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;padding:20px;border:1px solid #CBA135;background:transparent;color:#E9C766;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .3s" style-hover="background:#CBA135;color:#0b0a07;box-shadow:0 0 34px rgba(203,161,53,.4);letter-spacing:4px">SCAN MY FUNNEL <span>&#8594;</span></button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{s1}}" hint-placeholder-val="{{false}}">
+          <div style="animation:sfrise .4s ease both">
+            <div style="font-size:12px;letter-spacing:3px;text-transform:uppercase;color:rgba(203,161,53,.6);margin-bottom:12px">REVENUE SCALE</div>
+            <div style="font-size:20px;font-weight:500;letter-spacing:.3px;color:#ECE7D9;margin-bottom:24px">What is your current ARR range?</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <sc-for list="{{scaleOpts}}" as="opt" hint-placeholder-count="4">
+                <div onClick="{{opt.onClick}}" style="position:relative;display:flex;flex-direction:column;gap:6px;padding:18px;border:1px solid rgba(203,161,53,.16);background:rgba(203,161,53,.03);cursor:pointer;overflow:hidden;transition:all .25s" style-hover="border-color:rgba(203,161,53,.4);background:rgba(203,161,53,.06)">
+                  <sc-if value="{{opt.selected}}" hint-placeholder-val="{{false}}">
+                    <div style="position:absolute;inset:0;border:1px solid #E9C766;background:rgba(203,161,53,.09);box-shadow:inset 0 0 22px rgba(203,161,53,.16);pointer-events:none"></div>
+                    <div style="position:absolute;top:9px;right:11px;color:#E9C766;font-size:12px">&#9672;</div>
+                  </sc-if>
+                  <span style="position:relative;font-size:16px;font-weight:600;letter-spacing:1px;color:#ECE7D9">{{opt.value}}</span>
+                  <span style="position:relative;font-size:11px;letter-spacing:1px;color:#8C8474">{{opt.label}}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{s2}}" hint-placeholder-val="{{false}}">
+          <div style="animation:sfrise .4s ease both">
+            <div style="font-size:12px;letter-spacing:3px;text-transform:uppercase;color:rgba(203,161,53,.6);margin-bottom:12px">PRIMARY OBJECTIVE</div>
+            <div style="font-size:20px;font-weight:500;letter-spacing:.3px;color:#ECE7D9;margin-bottom:24px">Which conversion are we optimizing?</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <sc-for list="{{objOpts}}" as="opt" hint-placeholder-count="4">
+                <div onClick="{{opt.onClick}}" style="position:relative;display:flex;flex-direction:column;gap:6px;padding:18px;border:1px solid rgba(203,161,53,.16);background:rgba(203,161,53,.03);cursor:pointer;overflow:hidden;transition:all .25s" style-hover="border-color:rgba(203,161,53,.4);background:rgba(203,161,53,.06)">
+                  <sc-if value="{{opt.selected}}" hint-placeholder-val="{{false}}">
+                    <div style="position:absolute;inset:0;border:1px solid #E9C766;background:rgba(203,161,53,.09);box-shadow:inset 0 0 22px rgba(203,161,53,.16);pointer-events:none"></div>
+                    <div style="position:absolute;top:9px;right:11px;color:#E9C766;font-size:12px">&#9672;</div>
+                  </sc-if>
+                  <span style="position:relative;font-size:15px;font-weight:600;letter-spacing:1px;color:#ECE7D9">{{opt.value}}</span>
+                  <span style="position:relative;font-size:11px;letter-spacing:1px;color:#8C8474">{{opt.label}}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{s3}}" hint-placeholder-val="{{false}}">
+          <div style="animation:sfrise .4s ease both">
+            <div style="font-size:12px;letter-spacing:3px;text-transform:uppercase;color:rgba(203,161,53,.6);margin-bottom:12px">FRICTION HYPOTHESIS</div>
+            <div style="font-size:20px;font-weight:500;letter-spacing:.3px;color:#ECE7D9;margin-bottom:24px">Where do you suspect revenue is leaking?</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{hypOpts}}" as="opt" hint-placeholder-count="5">
+                <div onClick="{{opt.onClick}}" style="position:relative;display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border:1px solid rgba(203,161,53,.16);background:rgba(203,161,53,.03);cursor:pointer;overflow:hidden;transition:all .25s" style-hover="border-color:rgba(203,161,53,.4);background:rgba(203,161,53,.06)">
+                  <sc-if value="{{opt.selected}}" hint-placeholder-val="{{false}}">
+                    <div style="position:absolute;inset:0;border:1px solid #E9C766;background:rgba(203,161,53,.09);box-shadow:inset 0 0 22px rgba(203,161,53,.16);pointer-events:none"></div>
+                  </sc-if>
+                  <span style="position:relative;font-size:14px;font-weight:600;letter-spacing:1.5px;color:#ECE7D9">{{opt.value}}</span>
+                  <span style="position:relative;font-size:11px;letter-spacing:.5px;color:#8C8474;text-align:right">{{opt.label}}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{s4}}" hint-placeholder-val="{{false}}">
+          <div style="animation:sfrise .4s ease both">
+            <div style="font-size:12px;letter-spacing:3px;text-transform:uppercase;color:rgba(203,161,53,.6);margin-bottom:12px">REPORT DELIVERY</div>
+            <div style="font-size:20px;font-weight:500;letter-spacing:.3px;color:#ECE7D9;margin-bottom:26px">Where should we send your diagnostic?</div>
+            <input value="{{email}}" onChange="{{onEmail}}" placeholder="you@company.com" style="width:100%;background:transparent;border:none;border-bottom:1px solid rgba(203,161,53,.3);color:#ECE7D9;font-family:'JetBrains Mono',monospace;font-size:16px;letter-spacing:1px;padding:14px 2px;outline:none;caret-color:#E9C766;transition:border-color .25s,box-shadow .25s" style-focus="border-bottom:1px solid #E9C766;box-shadow:0 1px 0 rgba(203,161,53,.5)" />
+            <div style="margin:22px 0 26px 0;font-size:13px;letter-spacing:.5px;color:#8C8474;line-height:1.6">72h async delivery &#183; One finding &#183; One fix &#183; Backed by the <span style="color:#ECE7D9">S&amp;F 20% Growth Guarantee&#8482;</span></div>
+            <button onClick="{{onRun}}" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;padding:20px;border:1px solid #CBA135;background:transparent;color:#E9C766;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .3s" style-hover="background:#CBA135;color:#0b0a07;box-shadow:0 0 34px rgba(203,161,53,.4);letter-spacing:4px">RUN DIAGNOSTIC <span>&#8594;</span></button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{done}}" hint-placeholder-val="{{false}}">
+          <div style="animation:sfrise .5s ease both;text-align:center;padding:14px 0">
+            <div style="font-size:34px;color:#E9C766;margin-bottom:20px;text-shadow:0 0 24px rgba(203,161,53,.5)">&#9672;</div>
+            <div style="font-size:12px;letter-spacing:4px;text-transform:uppercase;color:rgba(203,161,53,.6);margin-bottom:14px">DIAGNOSTIC QUEUED</div>
+            <div style="font-size:19px;font-weight:500;color:#ECE7D9;line-height:1.5;margin-bottom:16px">Scan initialized for<br><span style="color:#E9C766">{{urlShown}}</span></div>
+            <div style="font-size:13px;color:#8C8474;line-height:1.7;max-width:400px;margin:0 auto">Your single highest-impact finding &mdash; plus the one fix &mdash; lands within 72h. Backed by the S&amp;F 20% Growth Guarantee&#8482;.</div>
+          </div>
+        </sc-if>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:22px;min-height:20px">
+          <sc-if value="{{canBack}}" hint-placeholder-val="{{false}}">
+            <span onClick="{{back}}" style="font-size:12px;letter-spacing:2px;color:#8C8474;cursor:pointer;transition:color .2s" style-hover="color:#E9C766">&#8592; BACK</span>
+          </sc-if>
+          <sc-if value="{{manualContinue}}" hint-placeholder-val="{{false}}">
+            <span onClick="{{onScan}}" style="font-size:12px;letter-spacing:2px;color:#E9C766;cursor:pointer;margin-left:auto;transition:letter-spacing .2s" style-hover="letter-spacing:3px">CONTINUE &#8594;</span>
+          </sc-if>
+        </div>
+      </div>
+
+      <sc-if value="{{showFooter}}" hint-placeholder-val="{{true}}">
+        <div style="position:relative;display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-top:1px solid rgba(203,161,53,.16);background:rgba(0,0,0,.2)">
+          <span style="font-size:11px;letter-spacing:1.5px;color:#6f685a">S&amp;F DIAGNOSTIC ENGINE V4.5</span>
+          <span style="font-size:11px;letter-spacing:1.5px;color:#6f685a">&#9672; E2E ENCRYPTED</span>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: { &quot;width&quot;: 720, &quot;height&quot;: 640 },
+  &quot;autoAdvance&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Behavior&quot; },
+  &quot;glowAura&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Appearance&quot; },
+  &quot;showFooter&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Appearance&quot; }
+}">
+class Component extends DCLogic {
+  state = { step: 0, url: '', email: '', scale: '', objective: '', hypothesis: '', done: false };
+
+  set = (k, v) => this.setState({ [k]: v });
+  next = () => this.setState(s => ({ step: Math.min(4, s.step + 1) }));
+  back = () => this.setState(s => ({ step: Math.max(0, s.step - 1) }));
+  run = () => this.setState({ done: true });
+
+  pick = (k, v) => {
+    this.setState({ [k]: v });
+    if (this.props.autoAdvance ?? true) {
+      clearTimeout(this._t);
+      this._t = setTimeout(() => this.next(), 360);
+    }
+  };
+
+  opts(k, defs) {
+    const cur = this.state[k];
+    return defs.map(d => ({ ...d, selected: cur === d.value, onClick: () => this.pick(k, d.value) }));
+  }
+
+  renderVals() {
+    const s = this.state;
+    const stepNum = s.step + 1;
+    const auto = this.props.autoAdvance ?? true;
+    const selNow = s.step === 1 ? !!s.scale : s.step === 2 ? !!s.objective : s.step === 3 ? !!s.hypothesis : false;
+    return {
+      stepNum,
+      done: s.done,
+      progressPct: s.done ? 100 : stepNum * 20,
+      s0: s.step === 0 && !s.done,
+      s1: s.step === 1 && !s.done,
+      s2: s.step === 2 && !s.done,
+      s3: s.step === 3 && !s.done,
+      s4: s.step === 4 && !s.done,
+      canBack: s.step > 0 && !s.done,
+      manualContinue: !auto && selNow && !s.done,
+      glowAura: this.props.glowAura ?? true,
+      showFooter: this.props.showFooter ?? true,
+      url: s.url,
+      email: s.email,
+      urlShown: s.url || 'your-product.com',
+      onUrl: e => this.set('url', e.target.value),
+      onEmail: e => this.set('email', e.target.value),
+      onScan: this.next,
+      onRun: this.run,
+      back: this.back,
+      scaleOpts: this.opts('scale', [
+        { value: 'PRE-$1M', label: 'Early / seed' },
+        { value: '$1\u20135M', label: 'Scaling' },
+        { value: '$5\u201320M', label: 'Growth' },
+        { value: '$20M+', label: 'Established' },
+      ]),
+      objOpts: this.opts('objective', [
+        { value: 'TRIAL \u2192 PAID', label: 'Free-to-paid conversion' },
+        { value: 'SIGNUP \u2192 ACTIVE', label: 'Activation rate' },
+        { value: 'DEMO \u2192 CLOSE', label: 'Sales-led win rate' },
+        { value: 'EXPANSION', label: 'Net revenue retention' },
+      ]),
+      hypOpts: this.opts('hypothesis', [
+        { value: 'LANDING', label: 'First impression & messaging' },
+        { value: 'ONBOARDING', label: 'Time to first value' },
+        { value: 'PRICING', label: 'Packaging & perceived friction' },
+        { value: 'CHECKOUT', label: 'Signup / payment flow' },
+        { value: 'NOT SURE', label: "That's what the scan is for" },
+      ]),
+    };
+  }
+}
+</script>
+</body>
+</html>

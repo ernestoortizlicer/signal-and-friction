@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import dynamic from "next/dynamic";
+import ScanFunnelCard from "@/components/ScanFunnelCard";
 
 // Lazy-load the heavy canvas — keeps SSR clean
 const WireframeCanvas = dynamic(() => import("@/components/WireframeCanvas"), {
@@ -188,10 +189,11 @@ export default function Home() {
   };
 
   const nextStep = () => {
+    // Steps 2–4 advance via ScanFunnelCard's auto-advance, which only ever
+    // fires after a tile click has already set the relevant value — a
+    // guard here would run inside a setTimeout closure captured before
+    // that state update lands, silently blocking every auto-advance.
     if (step === 1 && !url) { setErrorMsg("Target URL required."); return; }
-    if (step === 2 && !funnelPain) { setErrorMsg("Friction zone required."); return; }
-    if (step === 3 && !segmentSelection) { setErrorMsg("Segment choice required."); return; }
-    if (step === 4 && !customAnswer) { setErrorMsg("Detail metric isolation required."); return; }
     setErrorMsg(null);
     triggerGlitch();
     setStep((s) => s + 1);
@@ -203,7 +205,7 @@ export default function Home() {
     setStep((s) => s - 1);
   };
 
-  const currentStep = STEPS[step - 1];
+  const step4Options = segmentSelection === "concierge" ? MRR_OPTIONS : EXPERTISE_OPTIONS;
 
   return (
     <main className="min-h-screen w-screen bg-[#0A0908] text-[#F5F0EB] overflow-y-auto relative crt-lines flex flex-col justify-start">
@@ -322,298 +324,80 @@ export default function Home() {
             transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="w-full max-w-md"
           >
-            <div className="premium-diagnostic-card">
-              {/* Premium Header */}
-              <div className="premium-card-header">
-                <div className="premium-status-indicators">
-                  <div className="premium-status-dot" />
-                  <div className="premium-status-dot" />
-                  <div className="premium-status-dot" />
-                </div>
-                <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.25em] uppercase ml-2">
-                  {currentStep.code}
-                </span>
-                <span className="ml-auto font-mono text-xs text-[#7A6F65] tabular-nums">
-                  Step {step} of 5
-                </span>
-              </div>
-
-              {/* Premium Body */}
-              <div className="premium-card-body">
-                {/* Step label */}
-                <div className="mb-6">
-                  <span className="premium-step-label">
-                    {currentStep.label}
-                  </span>
-                  <div className="premium-step-desc">
-                    {currentStep.desc}
-                  </div>
-                </div>
-
-                {/* Persistent trust anchor — visible on every step */}
-                <div className="mb-6 flex items-center justify-center gap-2.5 border-y border-[#D4A853]/10 py-2.5">
-                  <span
-                    className="w-1 h-1 rounded-full bg-[#D4A853]"
-                    style={{ boxShadow: "0 0 6px rgba(212,168,83,0.6)" }}
-                  />
-                  <span className="font-mono text-[0.65rem] text-[#D4A853]/90 tracking-[0.25em] uppercase">
+            <ScanFunnelCard
+              region="us"
+              steps={STEPS}
+              step={step}
+              trustAnchor={
+                <div
+                  className="flex items-center justify-center gap-2.5"
+                  style={{
+                    margin: "0 0 24px 0",
+                    padding: "10px 0",
+                    borderTop: "1px solid rgba(203,161,53,.16)",
+                    borderBottom: "1px solid rgba(203,161,53,.16)",
+                  }}
+                >
+                  <span className="w-1 h-1 rounded-full" style={{ background: "#CBA135", boxShadow: "0 0 6px rgba(203,161,53,0.6)" }} />
+                  <span style={{ fontSize: "0.65rem", letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(203,161,53,.9)" }}>
                     72h Delivery · Results Guaranteed
                   </span>
-                  <span
-                    className="w-1 h-1 rounded-full bg-[#D4A853]"
-                    style={{ boxShadow: "0 0 6px rgba(212,168,83,0.6)" }}
-                  />
+                  <span className="w-1 h-1 rounded-full" style={{ background: "#CBA135", boxShadow: "0 0 6px rgba(203,161,53,0.6)" }} />
                 </div>
-
-                <form onSubmit={handleSubmit}>
-                  <AnimatePresence mode="wait">
-                    {/* Step 1: URL */}
-                    {step === 1 && (
-                      <motion.div
-                        key="s1"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.15 }}
-                        className="space-y-5"
-                      >
-                        <input
-                          type="url"
-                          required
-                          autoFocus
-                          value={url}
-                          onChange={(e) => setUrl(e.target.value)}
-                          placeholder="https://your-product.com"
-                          aria-label="Product URL for diagnostic scan"
-                          className="premium-input w-full"
-                          style={{ caretColor: "#D4A853" }}
-                        />
-                        <div className="font-mono text-xs text-[#B0A89E] tracking-wide flex items-center gap-1.5">
-                          <span className="w-1 h-1 rounded-full bg-[#5C9A6B]/50" />
-                          Join 50+ B2B SaaS founders who have diagnosed their funnel.
-                        </div>
-                        <button
-                          type="button"
-                          onClick={nextStep}
-                          className="premium-button w-full"
-                        >
-                          Scan My Funnel →
-                        </button>
-                      </motion.div>
-                    )}
-
-                    {/* Step 2: Funnel Drop-off */}
-                    {step === 2 && (
-                      <motion.div
-                        key="s2"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.15 }}
-                        className="space-y-4"
-                      >
-                        {FUNNEL_OPTIONS.map((opt) => (
-                          <button
-                            key={opt.key}
-                            type="button"
-                            onClick={() => { setFunnelPain(opt.key); setErrorMsg(null); }}
-                            className={`premium-option-button ${funnelPain === opt.key ? "active" : ""}`}
-                          >
-                            <span className="premium-option-label">{opt.label}</span>
-                            <span className="premium-option-sub">{opt.sub}</span>
-                          </button>
-                        ))}
-                        <div className="premium-divider" />
-                        <div className="premium-button-group">
-                          <button type="button" onClick={prevStep} className="premium-button">
-                            ← Back
-                          </button>
-                          <button type="button" onClick={nextStep} className="premium-button">
-                            Proceed →
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {/* Step 3: Segment Selector */}
-                    {step === 3 && (
-                      <motion.div
-                        key="s3"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.15 }}
-                        className="space-y-4"
-                      >
-                        {segmentOptions.map((opt) => (
-                          <button
-                            key={opt.key}
-                            type="button"
-                            onClick={() => { setSegmentSelection(opt.key); setCustomAnswer(""); setErrorMsg(null); }}
-                            className={`premium-option-button ${segmentSelection === opt.key ? "active" : ""}`}
-                          >
-                            <span className="premium-option-label">{opt.label}</span>
-                            <span className="premium-option-sub">{opt.sub}</span>
-                          </button>
-                        ))}
-                        <div className="premium-divider" />
-                        <div className="premium-button-group">
-                          <button type="button" onClick={prevStep} className="premium-button">
-                            ← Back
-                          </button>
-                          <button type="button" onClick={nextStep} className="premium-button">
-                            Proceed →
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {/* Step 4: Metric Isolation */}
-                    {step === 4 && (
-                      <motion.div
-                        key="s4"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.15 }}
-                        className="space-y-4"
-                      >
-                        {segmentSelection === "concierge" ? (
-                          MRR_OPTIONS.map((opt) => (
-                            <button
-                              key={opt.key}
-                              type="button"
-                              onClick={() => { setCustomAnswer(opt.label); setErrorMsg(null); }}
-                              className={`premium-option-button ${customAnswer === opt.label ? "active" : ""}`}
-                            >
-                              <span className="premium-option-label">{opt.label}</span>
-                              <span className="premium-option-sub">{opt.sub}</span>
-                            </button>
-                          ))
-                        ) : (
-                          EXPERTISE_OPTIONS.map((opt) => (
-                            <button
-                              key={opt.key}
-                              type="button"
-                              onClick={() => { setCustomAnswer(opt.label); setErrorMsg(null); }}
-                              className={`premium-option-button ${customAnswer === opt.label ? "active" : ""}`}
-                            >
-                              <span className="premium-option-label">{opt.label}</span>
-                              <span className="premium-option-sub">{opt.sub}</span>
-                            </button>
-                          ))
-                        )}
-                        <div className="premium-divider" />
-                        <div className="premium-button-group">
-                          <button type="button" onClick={prevStep} className="premium-button">
-                            ← Back
-                          </button>
-                          <button type="button" onClick={nextStep} className="premium-button">
-                            Proceed →
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {/* Step 5: Email + Submit */}
-                    {step === 5 && (
-                      <motion.div
-                        key="s5"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.15 }}
-                        className="space-y-5"
-                      >
-                        {/* Behavioral prioritization — urgency / willingness-to-pay signal */}
-                        <div className="space-y-2">
-                          <div className="font-mono text-xs text-[#7A6F65] tracking-[0.2em] uppercase">
-                            How soon must this be fixed?
-                          </div>
-                          <div className="grid grid-cols-3 gap-2">
-                            {URGENCY_OPTIONS.map((opt) => (
-                              <button
-                                key={opt.key}
-                                type="button"
-                                onClick={() => setUrgency(opt.key)}
-                                className={`px-2 py-2.5 rounded font-mono text-xs tracking-wide border transition-all ${
-                                  urgency === opt.key
-                                    ? "border-[#D4A853] bg-[#D4A853]/10 text-[#D4A853]"
-                                    : "border-[#D4A853]/10 text-[#B0A89E] hover:border-[#D4A853]/30"
-                                }`}
-                              >
-                                {opt.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                        <input
-                          type="email"
-                          required
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="you@company.com"
-                          aria-label="Email address for diagnostic report delivery"
-                          className="premium-input w-full"
-                          style={{ caretColor: "#D4A853" }}
-                        />
-                        <div className="font-mono text-xs text-[#B0A89E] tracking-wide">
-                          Results in 72h. No marketing spam. No calls required.
-                        </div>
-                        <div className="border border-[#D4A853]/10 bg-[#D4A853]/[0.03] px-3 py-2 font-mono text-xs text-[#B0A89E] leading-relaxed flex items-center gap-2">
-                          <span className="text-[#D4A853]">⚑</span>
-                          20% growth guarantee or full refund via Stripe. 72h async. Zero sales calls.
-                        </div>
-                        <div className="premium-divider" />
-                        <div className="premium-button-group">
-                          <button type="button" disabled={loading} onClick={prevStep} className="premium-button disabled:opacity-50">
-                            ← Back
-                          </button>
-                          <button
-                            type="submit"
-                            disabled={loading}
-                            className="premium-button w-auto flex-1 bg-[#D4A853] text-[#0A0908] hover:bg-[#E8C97A] disabled:opacity-50 font-bold"
-                          >
-                            {loading ? (
-                              <span className="flex items-center justify-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#0A0908] animate-ping" />
-                                Executing...
-                              </span>
-                            ) : (
-                              "Find My Friction Point →"
-                            )}
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </form>
-
-                {/* Error display */}
-                <AnimatePresence>
-                  {errorMsg && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -5 }}
-                      className="mt-4 py-2 px-3 border-l-2 border-[#C85C5C]/50 bg-[#C85C5C]/5 font-mono text-xs text-[#C85C5C]/80 tracking-wide rounded-sm"
-                    >
-                      ⚠ ERR: {errorMsg}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Premium Footer */}
-              <div className="border-t border-[#D4A853]/5 px-6 py-3 flex justify-between items-center text-xs font-mono text-[#7A6F65]">
-                <span className="tracking-[0.15em] uppercase">
-                  S&amp;F Diagnostic Engine v4.5
+              }
+              url={url}
+              onUrlChange={setUrl}
+              urlPlaceholder="https://your-product.com"
+              socialProof={<>Join <strong>50+ B2B SaaS founders</strong> who have diagnosed their funnel.</>}
+              scanCta="Scan My Funnel"
+              onScanClick={nextStep}
+              funnelPain={funnelPain}
+              funnelOptions={FUNNEL_OPTIONS}
+              onFunnelPainChange={(key) => { setFunnelPain(key); setErrorMsg(null); }}
+              segmentSelection={segmentSelection}
+              segmentOptions={segmentOptions}
+              onSegmentChange={(key) => { setSegmentSelection(key); setCustomAnswer(""); setErrorMsg(null); }}
+              customAnswer={customAnswer}
+              metricOptions={step4Options}
+              onCustomAnswerChange={(label) => { setCustomAnswer(label); setErrorMsg(null); }}
+              urgency={urgency}
+              urgencyOptions={URGENCY_OPTIONS}
+              onUrgencyChange={setUrgency}
+              email={email}
+              onEmailChange={setEmail}
+              emailPlaceholder="you@company.com"
+              deliveryNote={<span style={{ fontSize: 13, color: "#8C8474" }}>Results in 72h. No marketing spam. No calls required.</span>}
+              guaranteeNote={
+                <div
+                  className="flex items-center gap-2"
+                  style={{
+                    border: "1px solid rgba(203,161,53,.16)",
+                    background: "rgba(203,161,53,.03)",
+                    padding: "8px 12px",
+                    fontSize: 12,
+                    color: "#8C8474",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  <span style={{ color: "#CBA135" }}>⚑</span>
+                  20% growth guarantee or full refund via Stripe. 72h async. Zero sales calls.
+                </div>
+              }
+              submitCta="Find My Friction Point"
+              submitLoadingLabel={
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full animate-ping" style={{ background: "#E9C766" }} />
+                  Executing...
                 </span>
-                <span className="tracking-wider">
-                  E2E Encrypted
-                </span>
-              </div>
-            </div>
+              }
+              loading={loading}
+              errorMsg={errorMsg}
+              onBack={prevStep}
+              onAdvance={nextStep}
+              onSubmit={handleSubmit}
+              footerEngine="S&F Diagnostic Engine v4.5"
+              footerTrust="E2E Encrypted"
+            />
           </motion.div>
         </div>
       </div>
