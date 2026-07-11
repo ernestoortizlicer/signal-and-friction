@@ -36,6 +36,9 @@ VALUES
     ('DWY Autonomy Kit', 'price_dwy_autonomy', 150000, 'https://buy.stripe.com/mock_dwy_autonomy', 'microdosing'),
     ('Certified Practitioner', 'price_certified_practitioner', 250000, 'https://buy.stripe.com/mock_certified_practitioner', 'certified'),
     ('Certified Agency', 'price_certified_agency', 500000, 'https://buy.stripe.com/mock_certified_agency', 'certified')
-ON CONFLICT (price_id) DO UPDATE 
-SET amount = EXCLUDED.amount,
-    payment_link_url = EXCLUDED.payment_link_url;
+-- DO NOTHING, not DO UPDATE: the live table has real buy.stripe.com URLs
+-- for every row here (set directly, out of band, after this migration
+-- first ran). If this migration is ever replayed — a fresh environment
+-- sync, a migration-history mismatch, anything — it must not be able to
+-- stomp real links back to these mock placeholders.
+ON CONFLICT (price_id) DO NOTHING;

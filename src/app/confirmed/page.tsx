@@ -31,17 +31,19 @@ function ConfirmedContent() {
   const [refId] = useState(() => Math.random().toString(36).substring(2, 10).toUpperCase());
   const [referralCopied, setReferralCopied] = useState(false);
   const referralLink = `https://signal-and-friction.com/?ref=${refId}`;
-  const [paymentLink, setPaymentLink] = useState(
-    isMicrodosing
-      ? "https://buy.stripe.com/mock_microdosing_beta_diagnostic"
-      : "https://buy.stripe.com/mock_high_ticket_beta_diagnostic"
-  );
+  // No fallback URL — a fake one is worse than none, since it renders as a
+  // clickable button that silently fails at Stripe. null means "not ready
+  // yet" or "failed to load," both rendered as a non-broken waiting/error
+  // state instead of a dead link.
+  const [paymentLink, setPaymentLink] = useState<string | null>(null);
+  const [paymentLinkError, setPaymentLinkError] = useState(false);
 
   // Carry the inbound referral (stored as `sf_referral_ref` on landing) into Stripe.
   // Stripe Payment Links surface `client_reference_id` on the webhook's checkout
   // session, which is how the referral actually reaches our payment infrastructure.
   // Resolved on the client at click time to avoid an SSR/CSR hydration mismatch.
   const buildCheckoutHref = () => {
+    if (!paymentLink) return null;
     if (typeof window === "undefined") return paymentLink;
     const inboundRef = localStorage.getItem("sf_referral_ref");
     if (!inboundRef) return paymentLink;
@@ -55,7 +57,7 @@ function ConfirmedContent() {
         const priceId = isMicrodosing ? "price_dwy_beta_diagnostic" : "price_dfy_beta_diagnostic";
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tsaarsuuclvkjsgjcmoj.supabase.co";
         const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-        
+
         const res = await fetch(`${supabaseUrl}/rest/v1/stripe_payment_links?price_id=eq.${priceId}&select=payment_link_url`, {
           headers: {
             "apikey": supabaseAnonKey,
@@ -64,12 +66,21 @@ function ConfirmedContent() {
         });
         if (res.ok) {
           const data = await res.json();
-          if (data && data.length > 0) {
-            setPaymentLink(data[0].payment_link_url);
+          const url = data?.[0]?.payment_link_url;
+          // A link containing "mock" is a seed placeholder, not a real Stripe
+          // link — never present it as clickable. Treat it the same as "not found."
+          if (url && !url.includes("mock")) {
+            setPaymentLink(url);
+          } else {
+            console.error(`Stripe payment link for ${priceId} is missing or still a mock placeholder.`);
+            setPaymentLinkError(true);
           }
+        } else {
+          setPaymentLinkError(true);
         }
       } catch (err) {
-        console.warn("Failed to fetch Stripe payment link from database, using fallback.", err);
+        console.warn("Failed to fetch Stripe payment link from database.", err);
+        setPaymentLinkError(true);
       }
     }
     fetchLink();
@@ -211,19 +222,33 @@ function ConfirmedContent() {
               }
             </p>
             <div className="pt-2">
-              <a
-                href={paymentLink}
-                onClick={(e) => {
-                  const href = buildCheckoutHref();
-                  if (href !== paymentLink) {
-                    e.preventDefault();
-                    window.location.href = href;
-                  }
-                }}
-                className="inline-block w-full py-3 bg-[#D4A853] text-[#0A0908] font-mono text-xs font-bold uppercase tracking-[0.25em] transition-all hover:bg-[#E8C97A] active:scale-[0.98] glow-accent"
-              >
-                Pay Diagnostic Fee (${amount}) →
-              </a>
+              {paymentLink ? (
+                <a
+                  href={paymentLink}
+                  onClick={(e) => {
+                    const href = buildCheckoutHref();
+                    if (href && href !== paymentLink) {
+                      e.preventDefault();
+                      window.location.href = href;
+                    }
+                  }}
+                  className="inline-block w-full py-3 bg-[#D4A853] text-[#0A0908] font-mono text-xs font-bold uppercase tracking-[0.25em] transition-all hover:bg-[#E8C97A] active:scale-[0.98] glow-accent"
+                >
+                  Pay Diagnostic Fee (${amount}) →
+                </a>
+              ) : paymentLinkError ? (
+                <div className="w-full py-3 border border-[#C85C5C]/30 bg-[#C85C5C]/5 font-mono text-xs text-[#C85C5C] tracking-wide">
+                  Payment link unavailable right now. Email{" "}
+                  <a href="mailto:hello@signal-and-friction.com" className="underline">
+                    hello@signal-and-friction.com
+                  </a>{" "}
+                  and we'll send it directly.
+                </div>
+              ) : (
+                <div className="w-full py-3 bg-[#D4A853]/20 text-[#D4A853]/60 font-mono text-xs font-bold uppercase tracking-[0.25em] text-center">
+                  Preparing secure payment link…
+                </div>
+              )}
             </div>
           </div>
 

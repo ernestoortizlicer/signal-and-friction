@@ -230,10 +230,13 @@ export const onRequestPost = async ({
       .eq('price_id', priceId)
       .maybeSingle();
 
-    const paymentLink = linkData?.payment_link_url || null;
+    // A link containing "mock" is a seed placeholder, not a real Stripe
+    // link — never hand it back as if it were usable.
+    const rawLink = linkData?.payment_link_url || null;
+    const paymentLink = rawLink && !rawLink.includes('mock') ? rawLink : null;
 
     if (!paymentLink) {
-      console.error(`❌ Stripe link missing for ${priceId}`);
+      console.error(`❌ Stripe link missing or still a mock placeholder for ${priceId}`);
       // Still return success - lead is recorded
     }
 
