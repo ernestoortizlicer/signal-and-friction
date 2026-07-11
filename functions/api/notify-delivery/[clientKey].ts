@@ -1,3 +1,5 @@
+import { requireAdmin } from "../_admin-auth";
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Content-Type": "application/json",
@@ -12,6 +14,12 @@ export const onRequestPost = async ({
   request: Request;
   env: Record<string, string>;
 }) => {
+  const admin = await requireAdmin(request, env);
+  if (admin instanceof Response) {
+    const body = await admin.json().catch(() => ({}));
+    return Response.json(body, { status: admin.status, headers: CORS });
+  }
+
   const { clientKey } = params;
   const supabaseUrl =
     env.SUPABASE_URL || "https://tsaarsuuclvkjsgjcmoj.supabase.co";
@@ -31,14 +39,10 @@ export const onRequestPost = async ({
     "Content-Type": "application/json",
   };
 
-  let clientEmail: string;
-  let clientName: string;
   let clientId: string;
 
   try {
     const body: Record<string, string> = await request.json();
-    clientEmail = body.clientEmail;
-    clientName = body.clientName ?? "";
     clientId = body.clientId;
   } catch {
     return Response.json(
@@ -47,12 +51,40 @@ export const onRequestPost = async ({
     );
   }
 
-  if (!clientEmail || !clientId) {
+  if (!clientId) {
     return Response.json(
-      { error: "clientEmail and clientId are required" },
+      { error: "clientId is required" },
       { status: 400, headers: CORS }
     );
   }
+
+  // The recipient always comes from the DB record for clientId — never
+  // from the request body. A caller could otherwise supply any clientId
+  // (even a real one) alongside an attacker-controlled clientEmail and get
+  // this endpoint to send a legitimate-looking "diagnostic ready" email,
+  // from our domain, to an address that has nothing to do with the client.
+  const clientRes = await fetch(
+    `${supabaseUrl}/rest/v1/clients?id=eq.${encodeURIComponent(clientId)}&select=contact_email,contact_name,company_name`,
+    { headers: sbHeaders }
+  );
+  if (!clientRes.ok) {
+    return Response.json(
+      { error: "Failed to look up client" },
+      { status: 502, headers: CORS }
+    );
+  }
+  const clientRows: Array<{ contact_email: string; contact_name?: string; company_name?: string }> =
+    await clientRes.json();
+  const client = clientRows[0];
+  if (!client?.contact_email) {
+    return Response.json(
+      { error: "Client not found" },
+      { status: 404, headers: CORS }
+    );
+  }
+
+  const clientEmail = client.contact_email;
+  const clientName = client.contact_name || client.company_name || "";
 
   // Idempotency: check if notification already sent for this client
   try {
@@ -73,7 +105,7 @@ export const onRequestPost = async ({
     // non-fatal — proceed with send
   }
 
-  const deliverableUrl = `https://signal-and-friction.com/deliverable/${clientKey}`;
+  const deliverableUrl = `https://signal-and-friction.com/deliverable/${clientKey}?cid=${encodeURIComponent(clientId)}`;
 
   // Send via Resend REST API (no SDK — native fetch, CF Worker compatible)
   const resendRes = await fetch("https://api.resend.com/emails", {

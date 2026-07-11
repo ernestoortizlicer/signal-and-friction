@@ -1,14 +1,21 @@
 import Stripe from 'stripe';
+import { requireAdmin } from '../_admin-auth';
 
 interface Env {
   STRIPE_SECRET_KEY: string;
+  [key: string]: string;
 }
 
 export const onRequestGet = async ({
+  request,
   env,
 }: {
+  request: Request;
   env: Env;
 }): Promise<Response> => {
+  const admin = await requireAdmin(request, env);
+  if (admin instanceof Response) return admin;
+
   if (!env.STRIPE_SECRET_KEY) {
     return Response.json({ error: 'Missing Stripe key' }, { status: 500 });
   }

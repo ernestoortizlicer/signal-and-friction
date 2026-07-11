@@ -50,7 +50,11 @@ export default function SLAClientView({ staticClientKey }: { staticClientKey: st
   const hoursRemainingRef = useRef<number>(0);
 
   const fetchData = () => {
-    fetch(`/api/sla/${urlClientKey}`)
+    // Real (non-demo) SLA links carry ?cid=<clients.id> — the capability
+    // token the API requires for anything but the bundled demos.
+    const cid = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("cid") : null;
+    const url = cid ? `/api/sla/${urlClientKey}?cid=${encodeURIComponent(cid)}` : `/api/sla/${urlClientKey}`;
+    fetch(url)
       .then((r) => (r.ok ? r.json() : null))
       .then((live: SLAData | null) => {
         if (live) {

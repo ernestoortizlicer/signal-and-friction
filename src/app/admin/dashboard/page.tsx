@@ -729,7 +729,7 @@ export default function AdminDashboard() {
 
       // 7. Stripe sparklines (non-fatal if Pages Function not deployed)
       try {
-        const resSpark = await fetch('/api/stripe/sparklines');
+        const resSpark = await fetch('/api/stripe/sparklines', { headers: getAuthHeaders() });
         if (resSpark.ok) {
           const sparkData = await resSpark.json();
           if (Array.isArray(sparkData.sparkline)) setStripeSparklines(sparkData.sparkline);
@@ -1409,7 +1409,7 @@ export default function AdminDashboard() {
                               {item.status === "diagnostic_in_progress" && (() => {
                                 const clientKey = (item.company_name || "client")
                                   .toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-                                const slaUrl = `https://signal-and-friction.com/sla/${clientKey}`;
+                                const slaUrl = `https://signal-and-friction.com/sla/${clientKey}?cid=${encodeURIComponent(item.id)}`;
                                 return (
                                   <button
                                     onClick={(e) => {
@@ -2082,13 +2082,14 @@ export default function AdminDashboard() {
                         {(() => {
                           const ck = (selectedClient?.company_name || selectedClient?.company || "client")
                             .toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+                          const cid = selectedClient?.id ? `?cid=${encodeURIComponent(selectedClient.id)}` : "";
                           return (
                             <div className="space-y-1.5 text-[10px] font-mono">
                               <div className="text-[#5C9A6B] bg-[#5C9A6B]/5 border border-[#5C9A6B]/15 px-3 py-1.5 rounded flex items-center justify-between gap-2">
                                 <span>{"✓ Deliverable active immediately — no rebuild"}</span>
                                 <button
                                   type="button"
-                                  onClick={() => navigator.clipboard.writeText(`https://signal-and-friction.com/deliverable/${ck}`).catch(() => {})}
+                                  onClick={() => navigator.clipboard.writeText(`https://signal-and-friction.com/deliverable/${ck}${cid}`).catch(() => {})}
                                   className="shrink-0 text-[#5C9A6B] hover:text-white border border-[#5C9A6B]/30 px-2 py-0.5 rounded cursor-pointer"
                                 >
                                   ⧉ /deliverable/{ck}
@@ -2098,7 +2099,7 @@ export default function AdminDashboard() {
                                 <span>{"⏱ SLA active — share with client now"}</span>
                                 <button
                                   type="button"
-                                  onClick={() => navigator.clipboard.writeText(`https://signal-and-friction.com/sla/${ck}`).catch(() => {})}
+                                  onClick={() => navigator.clipboard.writeText(`https://signal-and-friction.com/sla/${ck}${cid}`).catch(() => {})}
                                   className="shrink-0 text-[#D4A853] hover:text-white border border-[#D4A853]/30 px-2 py-0.5 rounded cursor-pointer"
                                 >
                                   ⧉ /sla/{ck}

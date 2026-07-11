@@ -44,7 +44,11 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
   const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/deliverable/${urlClientKey}`)
+    // Real (non-demo) deliverable links carry ?cid=<clients.id> — the
+    // capability token the API requires for anything but the bundled demos.
+    const cid = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("cid") : null;
+    const url = cid ? `/api/deliverable/${urlClientKey}?cid=${encodeURIComponent(cid)}` : `/api/deliverable/${urlClientKey}`;
+    fetch(url)
       .then((r) => (r.ok ? r.json() : null))
       .then((live: DeliverableData | null) => {
         if (live) setD(live);
