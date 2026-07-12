@@ -125,15 +125,15 @@ export default function RootLayout({
                 {
                   '@type': 'Offer',
                   priceCurrency: 'USD',
-                  price: '2800',
+                  price: '2000',
                   name: 'Done-For-You Concierge (DFY)',
-                  description: 'S&F executes diagnostic & implementations. Backed by 20% Growth Guarantee.',
+                  description: 'S&F executes diagnostic & implementation. Backed by the S&F Specificity Guarantee — full refund if the finding isn\'t specific to your product.',
                   url: 'https://signal-and-friction.com/#dfy-pricing',
                 },
                 {
                   '@type': 'Offer',
                   priceCurrency: 'USD',
-                  price: '490',
+                  price: '350',
                   name: 'Done-With-You Autonomy (DWY)',
                   description: 'Learn S&F methodology, build internal capacity, earn Certified credentials.',
                   url: 'https://signal-and-friction.com/#dwy-pricing',
@@ -202,7 +202,7 @@ export default function RootLayout({
                   name: 'What makes Signal & Friction different from generic AI audits?',
                   acceptedAnswer: {
                     '@type': 'Answer',
-                    text: 'We use 21 specialized agents and clinical isolation methodology. You get one surgical fix backed by a 20% growth guarantee or 100% refund.',
+                    text: 'We don\'t promise you 20%. Anyone promising a fixed number hasn\'t looked at your funnel. Each diagnostic ships with a projected range specific to your product and a stated confidence level, backed by the S&F Specificity Guarantee: full refund if the finding isn\'t specific to your product.',
                   },
                 },
                 {
@@ -218,7 +218,7 @@ export default function RootLayout({
                   name: 'What if I don\'t see results?',
                   acceptedAnswer: {
                     '@type': 'Answer',
-                    text: 'We offer a results-based guarantee. If you don\'t hit your 20% conversion lift within the agreed timeframe, we refund 100% via Stripe.',
+                    text: 'We guarantee our work\'s specificity, not your business outcome — actual results depend on execution, market conditions, and data we don\'t have access to. If the finding we deliver isn\'t specific to your product, we refund 100% via Stripe.',
                   },
                 },
                 {

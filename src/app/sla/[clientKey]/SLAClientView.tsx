@@ -167,7 +167,7 @@ export default function SLAClientView({ staticClientKey }: { staticClientKey: st
 
             <div className="flex flex-wrap gap-3 pt-2">
               <span className="font-mono text-xs px-3 py-1.5 border border-[#D4A853]/20 rounded-full text-[#D4A853] bg-[#D4A853]/5">
-                ⚡ 20% Growth Guarantee
+                ⚡ Specificity Guarantee
               </span>
               <span className="font-mono text-xs px-3 py-1.5 border border-[#5C9A6B]/20 rounded-full text-[#5C9A6B] bg-[#5C9A6B]/5">
                 ✓ Zero-Call — Written + Loom delivery

@@ -63,13 +63,13 @@ const FUNNEL_OPTIONS = [
 ];
 
 const SEGMENT_OPTIONS = [
-  { key: "concierge", label: "Done-For-You Concierge", sub: "S&F executes diagnostic & implementations. Backed by the S&F 20% Growth Guarantee™." },
+  { key: "concierge", label: "Done-For-You Concierge", sub: "S&F executes diagnostic & implementation. Backed by the S&F Specificity Guarantee — full refund if the finding isn't specific to your product." },
   { key: "autonomy", label: "Done-With-You Autonomy", sub: "Learn the S&F methodology, build internal capacity, and earn S&F Certified™ credentials." },
   { key: "elite_us", label: "🏆 Elite Partnership (USA)", sub: "White-glove account management + priority support. For US-based SaaS only." },
 ];
 
 const SEGMENT_OPTIONS_APAC = [
-  { key: "concierge", label: "Done-For-You Concierge", sub: "S&F executes diagnostic & implementations. Backed by the S&F 20% Growth Guarantee™." },
+  { key: "concierge", label: "Done-For-You Concierge", sub: "S&F executes diagnostic & implementation. Backed by the S&F Specificity Guarantee — full refund if the finding isn't specific to your product." },
   { key: "autonomy", label: "Done-With-You Autonomy", sub: "Learn the S&F methodology, build internal capacity, and earn S&F Certified™ credentials." },
   { key: "elite_sg", label: "🏆 Elite Partnership (Singapore)", sub: "White-glove account management + priority support. Optimized for APAC market dynamics." },
 ];
@@ -92,6 +92,12 @@ const URGENCY_OPTIONS = [
   { key: "quarter", label: "This quarter" },
   { key: "exploring", label: "Exploring" },
 ];
+
+// Modeled Impact Calculator bounds — benchmarked from published single-fix
+// conversion-lift studies, not a measurement of any specific funnel. Never
+// present as a guaranteed outcome; see the disclaimer rendered alongside it.
+const LIFT_LOW = 0.08;
+const LIFT_HIGH = 0.20;
 
 export default function Home() {
   const router = useRouter();
@@ -275,7 +281,7 @@ export default function Home() {
 
             <p className="text-sm text-[#B0A89E] leading-relaxed max-w-md font-mono">
               Clinical B2B SaaS diagnostic. 72h async delivery.
-              One finding. One fix. Supported by the S&F 20% Growth Guarantee™.
+              One finding. One fix. Backed by the S&F Specificity Guarantee.
             </p>
 
             {/* Step indicators */}
@@ -340,7 +346,7 @@ export default function Home() {
                 >
                   <span className="w-1 h-1 rounded-full" style={{ background: "#CBA135", boxShadow: "0 0 6px rgba(203,161,53,0.6)" }} />
                   <span style={{ fontSize: "0.65rem", letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(203,161,53,.9)" }}>
-                    72h Delivery · Results Guaranteed
+                    72h Delivery · Specificity Guaranteed
                   </span>
                   <span className="w-1 h-1 rounded-full" style={{ background: "#CBA135", boxShadow: "0 0 6px rgba(203,161,53,0.6)" }} />
                 </div>
@@ -380,7 +386,7 @@ export default function Home() {
                   }}
                 >
                   <span style={{ color: "#CBA135" }}>⚑</span>
-                  20% growth guarantee or full refund via Stripe. 72h async. Zero sales calls.
+                  Full refund if the finding isn't specific to your product. 72h async. Zero sales calls.
                 </div>
               }
               submitCta="Find My Friction Point"
@@ -402,17 +408,17 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── Section 2: S&F Results-Based Guarantee & Calculator ── */}
+      {/* ── Section 2: Modeled Impact Calculator ── */}
       <section className="w-full max-w-6xl mx-auto px-6 py-20 relative z-10 border-t border-[#D4A853]/8 space-y-12">
         <div className="text-center space-y-3">
           <span className="font-mono text-xs text-[#D4A853] tracking-[0.4em] uppercase border border-[#D4A853]/25 px-2.5 py-1 rounded bg-[#D4A853]/5 inline-block">
-            Risk Reversal Engine
+            Modeled Impact Calculator
           </span>
           <h2 className="text-2xl lg:text-4xl font-serif text-white tracking-tight">
-            Calculate your <span className="text-[#D4A853] glow-text">conversion revenue lift</span>.
+            Model your <span className="text-[#D4A853] glow-text">conversion revenue range</span>.
           </h2>
           <p className="text-xs text-[#B0A89E] font-mono max-w-lg mx-auto leading-relaxed">
-            Adjust the metrics to visualize how our guaranteed 20% relative conversion rate lift translates directly into recurring enterprise value.
+            Adjust the metrics to see a modeled range for a single, correctly-targeted fix — benchmarked from published single-fix conversion studies, not a measurement of your funnel or a guarantee of your outcome.
           </p>
         </div>
 
@@ -488,28 +494,39 @@ export default function Home() {
 
           {/* Readout Right */}
           <div className="lg:col-span-5 border border-[#D4A853]/15 bg-[#D4A853]/5 p-6 rounded relative glow-border space-y-6 font-mono text-xs">
-            <h3 className="text-white font-serif text-sm font-bold border-b border-[#D4A853]/10 pb-2">Revenue Growth Projections</h3>
+            <div className="flex items-center justify-between border-b border-[#D4A853]/10 pb-2">
+              <h3 className="text-white font-serif text-sm font-bold">Modeled Revenue Range</h3>
+              <span className="font-mono text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border" style={{ background: "rgba(212,168,83,0.1)", borderColor: "rgba(212,168,83,0.35)", color: "#D4A853" }}>
+                Modeled
+              </span>
+            </div>
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-[#B0A89E]">Current Monthly Revenue:</span>
                 <span className="text-white font-bold">${Math.round(calcVisitors * (calcConvRate / 100) * calcLtv).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-[#5C9A6B]">
-                <span>Projected Revenue (+20%):</span>
-                <span className="font-bold">${Math.round(calcVisitors * ((calcConvRate * 1.2) / 100) * calcLtv).toLocaleString()}</span>
+                <span>Modeled Revenue (+{Math.round(LIFT_LOW * 100)}–{Math.round(LIFT_HIGH * 100)}%):</span>
+                <span className="font-bold">
+                  ${Math.round(calcVisitors * ((calcConvRate * (1 + LIFT_LOW)) / 100) * calcLtv).toLocaleString()} – ${Math.round(calcVisitors * ((calcConvRate * (1 + LIFT_HIGH)) / 100) * calcLtv).toLocaleString()}
+                </span>
               </div>
               <div className="border-t border-[#D4A853]/15 pt-3 flex justify-between text-[#D4A853] text-sm">
-                <span className="font-bold">Monthly Revenue Lift:</span>
-                <span className="font-bold glow-text">${Math.round(calcVisitors * ((calcConvRate * 0.2) / 100) * calcLtv).toLocaleString()}</span>
+                <span className="font-bold">Modeled Monthly Lift:</span>
+                <span className="font-bold glow-text">
+                  ${Math.round(calcVisitors * ((calcConvRate * LIFT_LOW) / 100) * calcLtv).toLocaleString()} – ${Math.round(calcVisitors * ((calcConvRate * LIFT_HIGH) / 100) * calcLtv).toLocaleString()}
+                </span>
               </div>
               <div className="flex justify-between text-[#D4A853] text-sm">
-                <span className="font-bold">Annual Revenue Lift:</span>
-                <span className="font-bold glow-text">${Math.round(calcVisitors * ((calcConvRate * 0.2) / 100) * calcLtv * 12).toLocaleString()}</span>
+                <span className="font-bold">Modeled Annual Lift:</span>
+                <span className="font-bold glow-text">
+                  ${Math.round(calcVisitors * ((calcConvRate * LIFT_LOW) / 100) * calcLtv * 12).toLocaleString()} – ${Math.round(calcVisitors * ((calcConvRate * LIFT_HIGH) / 100) * calcLtv * 12).toLocaleString()}
+                </span>
               </div>
             </div>
 
             <div className="border border-[#D4A853]/25 bg-[#0A0908] p-3 rounded text-xs text-[#B0A89E] leading-relaxed">
-              Calculations are based on a 20% relative increase in your current conversion rate (e.g. from {calcConvRate.toFixed(1)}% to {(calcConvRate * 1.2).toFixed(2)}%). Backed by the S&amp;F Results-Based Guarantee.
+              Modeled from published single-fix conversion-lift benchmarks applied to your inputs above — not a measurement of your funnel and not a guarantee of your outcome. What we guarantee is the specificity of the finding itself: full refund if it isn&apos;t specific to your product.
             </div>
           </div>
         </div>
@@ -534,14 +551,14 @@ export default function Home() {
             <thead>
               <tr className="border-b border-[#D4A853]/8 bg-[#D4A853]/[0.02] text-[#D4A853] uppercase tracking-wider">
                 <th className="p-4 font-semibold">Comparison Matrix</th>
-                <th className="p-4 font-semibold">S&amp;F Clinical Guarantee</th>
+                <th className="p-4 font-semibold">S&amp;F Specificity Guarantee</th>
                 <th className="p-4 font-semibold">Standard AI Audits</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-[#B0A89E]">
               <tr>
                 <td className="p-4 font-bold text-white uppercase text-xs">Risk Allocation</td>
-                <td className="p-4 text-[#5C9A6B] font-bold">100% Refundable via Stripe if metrics fail.</td>
+                <td className="p-4 text-[#5C9A6B] font-bold">100% Refundable via Stripe if the finding isn&apos;t specific to your product.</td>
                 <td className="p-4">Pay upfront with zero performance accountability.</td>
               </tr>
               <tr>

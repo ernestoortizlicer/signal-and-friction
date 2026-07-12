@@ -206,7 +206,7 @@ async function sendPaymentConfirmation(apiKey: string, params: ConfirmationParam
       </p>
       <div style="border:1px solid rgba(212,168,83,0.15);background:rgba(212,168,83,0.03);padding:20px;margin-top:24px;border-radius:8px;">
         <p style="margin:0;color:#B0A89E;font-size:13px;line-height:1.6;">
-          One Signal. One Friction. One Decision. Backed by the S&amp;F 20% Growth Guarantee.
+          One Signal. One Friction. One Decision. Backed by the S&amp;F Specificity Guarantee — full refund if the finding isn't specific to your product.
         </p>
       </div>
       <p style="color:#7A6F65;font-size:12px;margin-top:32px;">— Signal &amp; Friction</p>

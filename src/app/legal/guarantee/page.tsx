@@ -35,59 +35,59 @@ export default function GuaranteeTerms() {
       <div className="flex-1 max-w-[800px] mx-auto w-full px-6 py-16 relative z-10 space-y-8 font-mono">
         <div className="space-y-3">
           <span className="text-[#D4A853] text-xs tracking-[0.4em] uppercase border border-[#D4A853]/25 px-2.5 py-1 rounded bg-[#D4A853]/5 inline-block">
-            Outcomes-Based Guarantee Protocol
+            Specificity Guarantee Protocol
           </span>
           <h1 className="text-2xl font-bold font-serif text-white tracking-tight">
-            Signal &amp; Friction 20% Growth Guarantee™ Terms
+            Signal &amp; Friction Specificity Guarantee Terms
           </h1>
           <div className="text-[#B0A89E] text-xs uppercase tracking-wider">
-            Version 4.2 // Hardened Performance Gating
+            Version 5.0 // Evidence-Tiered Diagnostics
           </div>
         </div>
 
         <p className="text-[#B0A89E] leading-relaxed text-sm">
-          This document establishes the legally binding framework governing the results-based refund protocol offered under the Done-For-You (DFY) Concierge model. Traditional marketing agencies operate on billing retainers with zero outcome accountability. The Signal &amp; Friction Method™ distributes risk by tying the diagnostic fee to telemetry-verified performance.
+          We don&apos;t promise you a fixed conversion or revenue number. Anyone promising a fixed percentage hasn&apos;t looked at your funnel — we don&apos;t have access to your analytics, session recordings, or checkout data unless you grant it, and no diagnostic firm honestly can from a public scan alone. What we do guarantee is the specificity of the work itself. This document establishes the legally binding framework governing that guarantee.
         </p>
 
         <div className="border border-[#D4A853]/8 bg-[#D4A853]/[0.03] p-5 rounded space-y-6">
           <div className="space-y-2">
-            <h3 className="text-[#D4A853] font-bold uppercase text-xs tracking-wider">1. The Core Performance Covenant</h3>
+            <h3 className="text-[#D4A853] font-bold uppercase text-xs tracking-wider">1. The Core Specificity Covenant</h3>
             <p className="text-[#B0A89E] leading-relaxed text-sm">
-              S&amp;F covenants that executing the single, Socratic diagnostic fix will yield a minimum <strong className="text-[#F5F0EB]">20.00% relative conversion rate lift</strong> (e.g., boosting a baseline conversion rate of 2.00% to 2.40%) within a 30-day monitoring window.
+              S&amp;F covenants that the diagnostic finding delivered will be <strong className="text-[#F5F0EB]">specific to your product</strong> — grounded in your own measured page structure, performance metrics, and stated context, with every claim tagged as measured, modeled, or pending against your own data. Each diagnostic ships with a projected impact range specific to your product and a stated confidence level, not a fixed outcome promise.
             </p>
           </div>
 
           <div className="space-y-2 border-t border-[#D4A853]/8 pt-4">
-            <h3 className="text-[#D4A853] font-bold uppercase text-xs tracking-wider">2. Technical &amp; Environmental Gating Parameters</h3>
+            <h3 className="text-[#D4A853] font-bold uppercase text-xs tracking-wider">2. What Voids Specificity</h3>
             <p className="text-[#B0A89E] leading-relaxed text-sm">
-              To prevent client teams from compromising test environments, the guarantee is strictly gated by four telemetry parameters:
+              A diagnostic fails the specificity standard, and qualifies for a refund, if it exhibits any of the following:
             </p>
             <ul className="list-disc pl-4 space-y-1.5 text-[#B0A89E] text-sm">
               <li>
-                <strong className="text-white">Traffic Volume Gate:</strong> The test page/route must receive a minimum of <strong className="text-[#F5F0EB]">15,000 unique visitors</strong> during the 30-day testing window.
+                <strong className="text-white">Generic Figure Gate:</strong> The projected impact range is not derived from your own scanned page and evidence tiers — e.g. a round percentage with no stated source or benchmark.
               </li>
               <li>
-                <strong className="text-white">SLA Delivery Gate:</strong> The client developer team must implement the diagnostic fix within <strong className="text-[#F5F0EB]">72 hours</strong> of receiving S&amp;F specifications.
+                <strong className="text-white">Boilerplate Gate:</strong> The recommended decision does not name your product, domain, or the specific measured facts that led to it — i.e. it could be handed unchanged to a different company in your category.
               </li>
               <li>
-                <strong className="text-white">Isolation Gate:</strong> No parallel modifications to the layout, stylesheet, pricing, or checkout sequencing are permitted during the testing period.
+                <strong className="text-white">Untiered Claim Gate:</strong> Any factual claim in the deliverable is not tagged measured, modeled, or pending, or a modeled claim is presented as if it were measured.
               </li>
               <li>
-                <strong className="text-white">Telemetry Integrity Gate:</strong> Active, uncompromised PostHog or equivalent analytics tracking must remain active throughout the baseline and intervention periods.
+                <strong className="text-white">Fabricated Data Access Gate:</strong> The diagnostic asserts access to data we do not have — your session recordings, internal analytics, or funnel data — unless you explicitly provided it.
               </li>
             </ul>
           </div>
 
           <div className="space-y-2 border-t border-[#D4A853]/8 pt-4">
-            <h3 className="text-[#D4A853] font-bold uppercase text-xs tracking-wider">3. Automated Settlement and Stripe Refund</h3>
+            <h3 className="text-[#D4A853] font-bold uppercase text-xs tracking-wider">3. Refund Process</h3>
             <p className="text-[#B0A89E] leading-relaxed text-sm">
-              If all four gating criteria are fully met, and the verified 30-day conversion rate lift fails to exceed 20.00%, the performance guarantee is marked as failed. Upon state change, S&amp;F will automatically trigger a full refund of the diagnostic fee ($350.00 or localized equivalent) back to the client&apos;s originating Stripe card within 48 hours.
+              If, within 7 days of delivery, you believe your diagnostic fails the specificity standard above, contact <a href="mailto:hello@signal-and-friction.com" className="text-[#D4A853] hover:underline">hello@signal-and-friction.com</a> citing which gate it fails. We review against the criteria in Section 2 and, if substantiated, issue a full refund of the diagnostic fee back to your originating Stripe payment method within 5 business days. No forms, no hoops.
             </p>
           </div>
         </div>
 
         <div className="border border-[#D4A853]/15 bg-[#D4A853]/5 p-4 rounded text-xs text-[#D4A853] leading-relaxed">
-          <strong>CRITICAL ADVISORY:</strong> Startups violating the Isolation Gate by deploying unauthorized front-end tweaks automatically void their guarantee protection. Telemetry audits are continuously logged in our ledger.
+          <strong>WHAT THIS DOES NOT COVER:</strong> Business outcomes after implementation depend on execution, market conditions, and traffic — factors outside a diagnostic&apos;s control. The Specificity Guarantee covers the quality and honesty of the finding we deliver, not your resulting conversion rate or revenue.
         </div>
       </div>
 

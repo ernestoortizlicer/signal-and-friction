@@ -36,7 +36,7 @@ const MODULES = [
       "Deploy and interpret PostHog session recordings, heatmaps, and funnel analytics for causal isolation.",
       "Produce the complete 3-layer deliverable: Diagnosis + Interface Brief + Executive Cover.",
       "Write a cover email that renders a follow-up call unnecessary.",
-      "Scope and price engagements using DWY ($490) or DFY ($2,800) pricing models.",
+      "Scope and price engagements using DWY ($350) or DFY ($2,000) pricing models.",
       "Handle client pushback on a single-finding methodology without defensiveness.",
     ],
   },

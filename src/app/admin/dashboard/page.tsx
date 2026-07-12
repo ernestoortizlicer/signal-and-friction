@@ -493,7 +493,7 @@ export default function AdminDashboard() {
         segment: (selectedClient.segment === "DFY" || selectedClient.segment === "high_ticket") ? "high_ticket" : "microdosing",
         founderFocusScore: 85,
         daysRemaining: 30,
-        guaranteeStatus: "20% Growth Guarantee Active",
+        guaranteeStatus: "Specificity Guarantee Active",
         telemetryStatus: "✓ Traffic & Baseline Confirmed",
         diagnosis: {
           signal: diagSignal || "Custom diagnostic analysis delivered via Loom walkthrough. See video for complete funnel signal breakdown.",
@@ -1176,7 +1176,7 @@ export default function AdminDashboard() {
                   </div>
 
                   <p className="text-sm text-[#B0A89E] font-mono leading-relaxed">
-                    {"Concierge clients under the performance guarantee protocol. +20% conversion in 30 days or invoice voided."}
+                    {"Concierge clients under the S&F Specificity Guarantee — full refund if the finding isn't specific to their product."}
                   </p>
 
                   <div className="space-y-4">
