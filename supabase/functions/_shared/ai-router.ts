@@ -95,6 +95,7 @@ async function callOpenAI(
 // ── Anthropic native call (blade) ────────────────────────────────────────────
 async function callAnthropic(
   apiKey: string,
+  model: string,
   system: string,
   user: string,
   maxTokens: number,
@@ -107,7 +108,7 @@ async function callAnthropic(
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-6",
+      model,
       max_tokens: maxTokens,
       system,
       messages: [{ role: "user", content: user }],
@@ -203,7 +204,7 @@ export async function route(opts: RouteOptions): Promise<RouteResult> {
     }
     case "blade": {
       model = "claude-opus-4-8";
-      text = await callAnthropic(anthropicKey, system, user, maxTokens);
+      text = await callAnthropic(anthropicKey, model, system, user, maxTokens);
       break;
     }
   }

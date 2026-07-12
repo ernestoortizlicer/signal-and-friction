@@ -60,7 +60,6 @@ interface DiagnosePayload {
   };
   frictionMechanisms?: Array<{ type: string; severity: string; detail: string }>;
   abandonmentDelta?: number;
-  estimatedAbandonmentLoss?: string | null;
   // Custom / minimal
   company?: string;
   context?: string;
@@ -156,10 +155,7 @@ function buildUserContent(payload: DiagnosePayload): string {
   }
 
   if (payload.abandonmentDelta) {
-    lines.push(`Abandonment Delta: +${payload.abandonmentDelta}% vs baseline`);
-  }
-  if (payload.estimatedAbandonmentLoss) {
-    lines.push(`Estimated Monthly Loss: ${payload.estimatedAbandonmentLoss}`);
+    lines.push(`Abandonment Delta (modeled from LCP, not measured on this funnel): +${payload.abandonmentDelta}% vs baseline`);
   }
   if (payload.context) {
     lines.push(`Additional Context: ${payload.context}`);

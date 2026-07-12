@@ -35,7 +35,6 @@ interface ScanReport {
   };
   frictionMechanisms: FrictionMechanism[];
   abandonmentDelta: number;
-  estimatedAbandonmentLoss: string | null;
 }
 
 type ScanPhase = 'idle' | 'scanning' | 'done' | 'gated' | 'unlocked';
@@ -422,7 +421,7 @@ export default function ScanPage() {
                   </motion.div>
                 )}
 
-                {phase === 'unlocked' && report.estimatedAbandonmentLoss && (
+                {phase === 'unlocked' && report.abandonmentDelta > 0 && (
                   <motion.div
                     key="unlocked"
                     initial={{ opacity: 0, scale: 0.98 }}
@@ -430,14 +429,24 @@ export default function ScanPage() {
                     transition={springConfig}
                     className="border border-[#5C9A6B]/25 bg-[#5C9A6B]/[0.04] p-6 rounded-2xl space-y-3"
                   >
-                    <p className="font-mono text-[10px] text-[#5C9A6B] uppercase tracking-widest">Unlocked — Friction Cost Estimate</p>
-                    <p className="text-sm text-[#F5F0EB] leading-relaxed">{report.estimatedAbandonmentLoss}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border" style={{ background: "rgba(212,168,83,0.1)", borderColor: "rgba(212,168,83,0.35)", color: "#D4A853" }}>
+                        Modeled
+                      </span>
+                      <p className="font-mono text-[10px] text-[#5C9A6B] uppercase tracking-widest">Unlocked — Friction Signal</p>
+                    </div>
+                    <p className="text-sm text-[#F5F0EB] leading-relaxed">
+                      +{report.abandonmentDelta}% modeled cart abandonment vs. baseline, from your {report.metrics.lcp.label} mobile LCP.
+                    </p>
+                    <p className="font-mono text-[10px] text-[#7A6F65]">
+                      Modeled from a published LCP-to-abandonment coefficient — not measured against your actual funnel or traffic.
+                    </p>
                     <div className="border-t border-[#5C9A6B]/10 pt-3 space-y-1">
                       <p className="font-mono text-[10px] text-[#7A6F65]">
                         TBT: {report.metrics.tbt.label} · CLS: {report.metrics.cls.value} · Speed Index: {report.metrics.speedIndex.label}
                       </p>
                       <p className="font-mono text-[10px] text-[#D4A853]">
-                        A Signal &amp; Friction diagnostic will identify the exact fix and estimated revenue recovery.
+                        A Signal &amp; Friction diagnostic will identify the exact fix, evidence-tiered against your own funnel.
                       </p>
                     </div>
                   </motion.div>

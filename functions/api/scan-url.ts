@@ -215,11 +215,6 @@ export const onRequestPost = async ({
     frictionMechanisms.push({ type: 'Technical Friction', severity: 'low', detail: 'Image lazy loading not detected — above-the-fold images may be blocking checkout page initial render.' });
   }
 
-  // Monthly friction cost estimate (gated)
-  const estimatedAbandonmentLoss = abandonmentDelta > 0
-    ? `+${abandonmentDelta}% cart abandonment vs. baseline — at 1,000 monthly visitors and $200 avg order: $${(abandonmentDelta * 1000 * 0.03 * 200).toLocaleString()} monthly friction cost estimate`
-    : null;
-
   const report = {
     domain,
     url: normalizedUrl,
@@ -245,7 +240,6 @@ export const onRequestPost = async ({
     },
     frictionMechanisms,
     abandonmentDelta,
-    estimatedAbandonmentLoss,
   };
 
   // If email provided, persist as lead with friction data
