@@ -9,82 +9,115 @@
   "progressPercent": 40,
   "founderFocusScore": 72,
   "daysRemaining": 18,
-  "guaranteeStatus": "20% Activation Growth Guarantee Active",
-  "telemetryStatus": "✓ Session Recordings & Onboarding Funnel Confirmed",
+  "guaranteeStatus": "Specificity Guarantee Active",
+  "telemetryStatus": "✓ Public Signal Scan Confirmed (PageSpeed) — Onboarding Funnel Pending Your Data",
+  "evidence": [
+    { "tier": "measured", "label": "Public signup page — Largest Contentful Paint (mobile)", "value": "3.1s", "source": "Google PageSpeed Insights, mobile, scanned June 2026" },
+    { "tier": "measured", "label": "Public signup page — Performance score (mobile)", "value": "61 / 100", "source": "Google PageSpeed Insights, mobile, scanned June 2026" },
+    { "tier": "pending", "label": "Onboarding step completion rates (steps 1–4)", "value": "Unknown", "source": "Requires your own product analytics (e.g. PostHog, Amplitude) for the authenticated onboarding flow — not visible from a public scan" },
+    { "tier": "pending", "label": "30-day churn rate for users who skip the integration step", "value": "Unknown", "source": "Requires your own retention/cohort data" },
+    { "tier": "pending", "label": "Session recordings or hover behavior at the integration step", "value": "Unknown", "source": "Requires your own session-recording tool — Signal & Friction has no access to your logged-in product flows" },
+    { "tier": "modeled", "label": "Pattern match against your intake description", "value": "Consistent with a pre-value integration-gate pattern", "source": "Based on your stated onboarding pain point plus published SaaS activation research — not a measurement of your funnel" }
+  ],
+  "projectedImpact": {
+    "low": 15,
+    "high": 40,
+    "unit": "%",
+    "step": "30-day activation rate",
+    "modeledFrom": "published research on deferring integration requirements past a user's first value moment — this is a wide range because we have no measured baseline for your funnel",
+    "narrowsWith": "your actual step-by-step onboarding funnel data (PostHog/Amplitude), measured for at least 2 weeks before and after the change"
+  },
+  "confidenceLevel": 30,
+  "confidenceReason": "This diagnosis is built from your intake description of the onboarding pain point plus a well-documented SaaS activation pattern — we have not measured your actual funnel, because it lives behind your login wall where a public scan can't reach. Treat this as a hypothesis to test, not a confirmed finding.",
+  "avoid": [
+    { "action": "Don't treat the 15–40% range as anything but a wide, low-confidence estimate", "reason": "We have zero measured data on your actual onboarding funnel — this is pattern-matched from your intake description alone." },
+    { "action": "Don't ship the demo-data bypass without instrumenting step-level analytics first", "reason": "Without a baseline measurement, you won't be able to attribute any change in activation to this specific fix." },
+    { "action": "Don't assume your funnel matches the illustrative numbers in the modules below", "reason": "Figures like completion or churn percentages in the training content are pattern examples from published research, not measurements of your product." }
+  ],
   "beforeAfter": {
-    "beforeTitle": "Onboarding — Current Activation Wall",
-    "beforeIssue": "Context-Switch Cascade — Step 3 forces 6 sequential actions outside the product before any value is delivered",
-    "beforeFields": ["Navigate to third-party analytics platform", "Locate API credentials section", "Copy API key to clipboard", "Return to Growthly tab", "Paste key into integration form", "Wait for validation (avg 12s)"],
-    "beforeBounce": "Step 3 Completion Rate: 18% — 30-Day Churn for Step 3 Skippers: 92%",
+    "beforeTitle": "Onboarding — Current Activation Wall (as described in your intake)",
+    "beforeIssue": "Context-Switch Cascade — a described step-3 integration requiring 6 sequential actions outside the product before any value is shown",
+    "beforeFields": ["Navigate to third-party analytics platform", "Locate API credentials section", "Copy API key to clipboard", "Return to Growthly tab", "Paste key into integration form", "Wait for validation"],
+    "beforeWarning": "Step-by-step completion and churn figures below are illustrative, not measured — see Evidence section.",
+    "beforeBounce": "Actual completion/churn rate: pending your own analytics — see Evidence section",
     "afterTitle": "Progressive Activation Path",
     "afterDomain": "growthly.signal-and-friction.app",
-    "afterGain": "Projected 30-Day Activation Rate: +340%"
+    "afterConfirmation": "Value is shown before any integration is required.",
+    "afterDescription": "Adds a demo-data bypass so users reach an aha-moment before being asked to leave the product and retrieve credentials.",
+    "afterGain": "Modeled activation lift: +15–40% (wide range — see Projected Impact)"
   },
   "learningModules": [
     {
       "id": "m-1",
-      "title": "Module 1: Onboarding Drop-off Anatomy",
-      "description": "Understand the precise activation failure at step 3 and why it produces a 92% 30-day churn rate for users who skip it.",
+      "title": "Module 1: The Pre-Value Integration Gate — What It Is and How to Confirm It's Yours",
+      "description": "The activation-killing pattern you described in your intake, and the specific analytics you'd need to instrument to confirm it's actually happening in your funnel.",
       "completed": true,
-      "content": "Your onboarding has 4 steps. Steps 1 and 2 complete at 61% — reasonable for a SaaS product. Step 3 (analytics integration) drops to 18%. Of the 82% who skip or abandon step 3, 92% churn within 30 days.\n\nThe root mechanism is a context-switch cascade: step 3 requires users to leave your product, navigate to a third-party platform, locate credentials they may not know the location of, copy them, return, paste correctly, and wait for validation. This is 6 sequential actions with a mean completion time of 4.2 minutes — all before the user has seen a single data point from your product.\n\nThe critical insight: users do not abandon because the integration is hard. They abandon because they have not yet experienced the aha-moment that would justify the effort. Value must precede friction, not follow it.\n\nBenchmark: SaaS products that defer integration gates to post-aha-moment see 3.4x higher 30-day retention versus products that require integration at step 1–3."
+      "content": "You told us onboarding drops off around the analytics-integration step. We can't confirm the exact shape of that drop-off — your onboarding runs inside your authenticated product, and we only have access to what's publicly reachable (your signup page scored 61/100 on mobile PageSpeed, for context, but that's a different page than the one you're describing).\n\nThe pattern you're describing — a step that requires leaving the product, finding credentials, and returning before any value is shown — is a well-documented SaaS activation killer. Users at that point haven't yet experienced the aha-moment that would justify the effort, so the cognitive cost of integration exceeds their motivation by default.\n\nHow to confirm this is actually your problem: instrument `onboarding_step_complete` (with a step number) and `first_insight_viewed` in PostHog or your analytics tool of choice. Run it for a week before changing anything. If step 3 shows a sharp completion drop relative to steps 1–2, and churn is concentrated among users who never reach `first_insight_viewed`, that's your own measured confirmation — not a pattern applied to your funnel, but your actual behavior.\n\nUntil you have that data, treat every percentage in this document as an illustration of the pattern, not a fact about Growthly."
     },
     {
       "id": "m-2",
       "title": "Module 2: Demo Data Bypass — The Aha-Moment First Fix",
-      "description": "Implement a sample data bypass that lets users experience the core product value before requiring any integration effort.",
+      "description": "Implement a sample data bypass that lets users experience the core product value before requiring any integration effort — the fix we'd recommend testing first.",
       "completed": false,
-      "content": "The fix has two components: a bypass option and a re-engagement trigger.\n\nComponent 1 — Demo Data Bypass: Add a secondary CTA below the integration form. Label: 'Explore with benchmark data →'. This routes users into a fully functional dashboard seeded with anonymized benchmark data from your industry vertical. The data should be realistic and slightly better than average — aspirational but credible.\n\nDesign note: the bypass button must not look like an escape hatch. It should look like the smarter path. Use the same visual weight as the primary integration CTA. Never label it 'Skip' — frame it as acceleration, not avoidance.\n\nComponent 2 — Re-engagement trigger: On day 2 (after users have interacted with demo data 2+ times), trigger an in-app message: 'You've explored [X] reports in demo mode. Connect your real data to see your actual numbers — it takes 90 seconds.' Now the integration request arrives post-value, not pre-value.\n\nExpected outcome: 30-day activation rate increase from 18% to 55–70% based on comparable implementations."
+      "content": "The fix has two components: a bypass option and a re-engagement trigger.\n\nComponent 1 — Demo Data Bypass: Add a secondary CTA below the integration form. Label: 'Explore with benchmark data →'. This routes users into a fully functional dashboard seeded with anonymized benchmark data from your industry vertical. The data should be realistic and slightly better than average — aspirational but credible.\n\nDesign note: the bypass button must not look like an escape hatch. It should look like the smarter path. Use the same visual weight as the primary integration CTA. Never label it 'Skip' — frame it as acceleration, not avoidance.\n\nComponent 2 — Re-engagement trigger: On day 2 (after users have interacted with demo data 2+ times), trigger an in-app message: 'You've explored [X] reports in demo mode. Connect your real data to see your actual numbers — it takes 90 seconds.' Now the integration request arrives post-value, not pre-value.\n\nWe can't give you a specific expected activation number without your baseline — that's what Module 1's instrumentation is for. What published research on this pattern supports is directional: value-before-commitment onboarding sequences outperform integration-gated ones."
     },
     {
       "id": "m-3",
-      "title": "Module 3: Activation Telemetry — 6 Events That Reveal Everything",
-      "description": "Instrument your onboarding sequence with PostHog events to measure activation health and identify micro-friction points in real time.",
+      "title": "Module 3: Activation Telemetry — The Events That Would Actually Tell You Something",
+      "description": "Instrument your onboarding sequence with PostHog events to measure activation health and confirm (or disprove) this diagnosis with your own data.",
       "completed": false,
-      "content": "Deploy in this exact priority order:\n\n1. posthog.capture('onboarding_step_complete', { step: 1 | 2 | 3 | 4 }) — your funnel spine\n2. posthog.capture('integration_attempted') — distinguishes intent from completion\n3. posthog.capture('integration_completed') — the hard gate metric\n4. posthog.capture('demo_data_activated') — measures bypass adoption\n5. posthog.capture('first_insight_viewed') — the aha-moment indicator\n6. posthog.capture('re_engagement_prompt_clicked') — measures day-2 trigger effectiveness\n\nBuild two PostHog funnels:\n— Current path: step_1 → step_2 → integration_attempted → integration_completed → first_insight_viewed\n— New path: step_1 → step_2 → demo_data_activated → first_insight_viewed → integration_completed\n\nThe second funnel should show a dramatically higher first_insight_viewed rate — this is your leading indicator that the fix is working before 30-day retention data is available."
+      "content": "Deploy in this exact priority order:\n\n1. posthog.capture('onboarding_step_complete', { step: 1 | 2 | 3 | 4 }) — your funnel spine\n2. posthog.capture('integration_attempted') — distinguishes intent from completion\n3. posthog.capture('integration_completed') — the hard gate metric\n4. posthog.capture('demo_data_activated') — measures bypass adoption, once shipped\n5. posthog.capture('first_insight_viewed') — the aha-moment indicator\n6. posthog.capture('re_engagement_prompt_clicked') — measures day-2 trigger effectiveness, once shipped\n\nBuild two PostHog funnels once you have data: the current path (step_1 → step_2 → integration_attempted → integration_completed → first_insight_viewed) and, after shipping the bypass, the new path (step_1 → step_2 → demo_data_activated → first_insight_viewed → integration_completed). Comparing these — with your own numbers — is what would actually confirm or refute this diagnosis."
     },
     {
       "id": "m-4",
       "title": "Module 4: Weekly Activation Review Ritual",
-      "description": "The 15-minute weekly process to monitor activation health and iterate systematically without losing signal in the noise.",
+      "description": "The 15-minute weekly process to monitor activation health and iterate systematically once you have real data flowing.",
       "completed": false,
-      "content": "Every Monday, 15 minutes, in this order:\n\n1. Open your PostHog funnel dashboard. Check the step_1 → first_insight_viewed conversion rate. If it moved more than ±5 points from the prior week, investigate the cause before making any changes.\n\n2. Review demo_data_activated / total_signups ratio. Target: >60% of users who reach step 3 choose the demo path. If below 40%, the bypass button is not prominent enough.\n\n3. Check re_engagement_prompt_clicked rate (day-2 trigger). Target: >35% click-through. If below 20%, the message copy or timing needs adjustment.\n\n4. Review integration_completed rate among users who initially took the demo path. This is your proxy for long-term integration quality — users who chose demo first should convert to real integration at >50% within 14 days.\n\nRule: change one variable per week maximum. Testing two changes simultaneously makes it impossible to attribute performance delta to a specific cause. Activation optimization is a controlled experiment, not a sprint."
+      "content": "Every Monday, 15 minutes, in this order, once instrumentation from Module 3 is live:\n\n1. Open your PostHog funnel dashboard. Check the step_1 → first_insight_viewed conversion rate. If it moved more than ±5 points from the prior week, investigate the cause before making any changes.\n\n2. Review demo_data_activated / total_signups ratio, once the bypass is shipped. If it's low, the bypass button may not be prominent enough.\n\n3. Check re_engagement_prompt_clicked rate (day-2 trigger). If it's low, the message copy or timing likely needs adjustment.\n\n4. Review integration_completed rate among users who initially took the demo path — this is your proxy for whether the deferred-gate strategy is actually converting people, not just delaying the same drop-off.\n\nRule: change one variable per week maximum. Testing two changes simultaneously makes it impossible to attribute any performance delta to a specific cause."
     }
   ],
   "checklist": [
-    { "id": "c-1", "task": "Audit step 3 integration flow — count every required action and context switch", "done": true, "tip": "The current count is 6 actions. Your target post-fix is 1 action (click 'Explore with benchmark data') or 3 actions max if integration proceeds directly." },
-    { "id": "c-2", "task": "Design and ship the 'Explore with benchmark data' bypass button at step 3", "done": false, "tip": "Equal visual weight to the primary CTA. Label it as acceleration, not escape. Test 'See your benchmark performance →' as the copy." },
-    { "id": "c-3", "task": "Seed dashboard with realistic, aspirational benchmark data for your primary industry vertical", "done": false, "tip": "Data should be 15–20% better than industry average — aspirational but not unbelievable. Users who see impressive demo data are more motivated to integrate their real data." },
-    { "id": "c-4", "task": "Deploy all 6 PostHog onboarding events", "done": false, "tip": "Start with onboarding_step_complete and first_insight_viewed — these two events give you 80% of the signal you need to diagnose activation problems." },
-    { "id": "c-5", "task": "Build PostHog activation funnel and schedule Monday review", "done": false, "tip": "Set a recurring Monday calendar event: '15-min activation funnel review'. Consistency beats intensity in activation optimization." },
-    { "id": "c-6", "task": "Configure day-2 re-engagement in-app message for demo data users", "done": false, "tip": "Trigger condition: user has activated demo data AND viewed at least 2 distinct reports. Timing: 36–48 hours after demo activation, not 24h — let them settle into the product first." }
+    { "id": "c-1", "task": "Instrument onboarding_step_complete and first_insight_viewed before changing anything", "done": true, "tip": "This is the baseline measurement everything else depends on — without it, you can't attribute any future change to this fix specifically." },
+    { "id": "c-2", "task": "Design and ship the 'Explore with benchmark data' bypass button at the integration step", "done": false, "tip": "Equal visual weight to the primary CTA. Label it as acceleration, not escape. Test 'See your benchmark performance →' as the copy." },
+    { "id": "c-3", "task": "Seed dashboard with realistic, aspirational benchmark data for your primary industry vertical", "done": false, "tip": "Data should read as aspirational but credible, not a placeholder — users who see plausible demo data are more motivated to integrate their real data." },
+    { "id": "c-4", "task": "Deploy the remaining onboarding PostHog events (demo_data_activated, re_engagement_prompt_clicked)", "done": false, "tip": "These only become measurable once the bypass is shipped — sequence them after Module 2's fix, not before." },
+    { "id": "c-5", "task": "Build the PostHog activation funnel and schedule a Monday review", "done": false, "tip": "Set a recurring Monday calendar event: '15-min activation funnel review'. Consistency beats intensity here." },
+    { "id": "c-6", "task": "Configure the day-2 re-engagement in-app message for demo data users", "done": false, "tip": "Trigger condition: user has activated demo data AND viewed at least 2 distinct reports. Timing: 36–48 hours after activation." }
   ],
   "diagnosis": {
-    "signal": "61% of signups complete onboarding steps 1 and 2. Only 18% complete step 3 (analytics integration). Of users who skip step 3, 92% churn within 30 days. The activation bottleneck is precise, localized, and structurally solvable without any pricing or product changes.",
+    "signal": "You described onboarding drop-off concentrated at the analytics-integration step in your intake. We have not measured your actual step-by-step funnel — Growthly's onboarding runs inside your authenticated product, which sits outside what a public scan can reach. What we can say is that a step requiring users to leave the product, retrieve credentials, and return before seeing any value is a well-documented activation-killer in SaaS onboarding research. Whether that's costing you what it typically costs comparable products depends on data only you have.",
     "friction": {
-      "mechanism": "Context-Switch Cascade — Pre-Value Integration Gate",
-      "rootCause": "Step 3 requires 6 sequential actions across two platforms before the user has experienced any product value. The cognitive cost of the integration exceeds the user's motivation level at the point in the journey where trust has not yet been established. Value must precede friction."
+      "mechanism": "Context-Switch Cascade — Pre-Value Integration Gate (modeled from your intake description)",
+      "rootCause": "A step requiring several sequential actions across two platforms before any product value is shown is a documented churn point — the cognitive cost of the integration exceeds motivation before trust has been established. We can't confirm this is your specific failure point without your own funnel data; the fix below is cheap and reversible enough to be worth testing regardless."
+    },
+    "finalDecision": {
+      "type": "A",
+      "label": "Add a demo-data bypass at the integration step",
+      "action": "Add a secondary CTA below the integration form: 'Explore with benchmark data →', routing users into a fully functional demo environment seeded with anonymized industry benchmark data. Deploy the day-2 re-engagement trigger to convert demo users to real integrations. Instrument the funnel events in Module 3 before shipping, so you have a before/after measurement.",
+      "reasoning": "Of the three approaches, this is the lowest-risk test of the pattern we modeled — it doesn't remove the integration option, it defers it past a value moment, and you can measure the effect directly against your own baseline within a few weeks.",
+      "tradeoff": "Requires building a seeded demo state with realistic data — generic placeholder data will undercut the effect. And this entire plan is only as good as the instrumentation in Module 1; skip that and you'll ship a change you can't actually evaluate."
     },
     "decisions": [
       {
         "type": "A — Conservative",
         "label": "Add demo data bypass at the integration step",
         "action": "Add a secondary CTA below the integration form: 'Explore with benchmark data →'. This routes users into a fully functional demo environment seeded with anonymized industry benchmark data. Deploy the day-2 re-engagement trigger to convert demo users to real integrations.",
-        "reasoning": "Removes the hard gate without eliminating the integration option. Users who experience the aha-moment first return to complete integration within 48 hours at 3–4x the rate of users who were forced to integrate cold. Engineering estimate: 3–5 days.",
-        "tradeoff": "Requires building a seeded demo state. Data quality and realism matter — generic placeholder data reduces the aha-moment impact. Invest in realistic industry benchmarks."
+        "reasoning": "Removes the hard gate without eliminating the integration option. Published activation research associates value-before-commitment sequencing with meaningfully higher return-to-integrate rates than forced-cold integration — but that's a benchmark, not a measurement of Growthly specifically. Engineering estimate: 3–5 days.",
+        "tradeoff": "Requires building a seeded demo state. Data quality and realism matter — generic placeholder data reduces the aha-moment impact."
       },
       {
         "type": "B — Aggressive",
-        "label": "Remove the integration gate from onboarding — defer to day 3",
-        "action": "Eliminate step 3 from the onboarding sequence entirely. Grant immediate dashboard access with demo data on sign-up. Trigger the integration prompt on day 3 via in-app message after users have viewed 2+ insights. Make integration feel like upgrading, not a prerequisite.",
-        "reasoning": "Value precedes commitment. Users who see 2+ real insights in demo mode are 4.1x more likely to complete the integration than users asked to integrate before experiencing any value. This directly inverts the trust equation.",
-        "tradeoff": "The dashboard must function meaningfully with demo data alone. If your core value proposition requires live data to be non-trivially better than the demo, this approach requires a high-quality demo layer — not a placeholder."
+        "label": "Remove the integration gate from onboarding entirely — defer to day 3",
+        "action": "Eliminate the integration step from onboarding entirely. Grant immediate dashboard access with demo data on sign-up. Trigger the integration prompt on day 3 via in-app message after users have viewed 2+ insights.",
+        "reasoning": "Value precedes commitment more completely than option A. If your dashboard functions meaningfully with demo data alone, this is the stronger structural fix — but it's a bigger product change with more surface area to get wrong.",
+        "tradeoff": "The dashboard must function meaningfully with demo data alone. If your core value proposition requires live data to be non-trivially better than the demo, this approach needs a high-quality demo layer, not a placeholder."
       },
       {
         "type": "C — Lateral",
-        "label": "Replace API key entry with one-click OAuth for the top 3 platforms",
-        "action": "Replace the API key form with OAuth buttons for Google Analytics 4, Mixpanel, and PostHog — the platforms 80% of your users are already on. Auto-detect the most common configuration. Reduce the 6-action context switch to a single authorized click.",
-        "reasoning": "OAuth eliminates the credential-hunting friction entirely. It is a trusted, recognized pattern. Average integration completion rate for OAuth versus API key: +340%. Prioritize the platform your top 3 user cohorts use most.",
-        "tradeoff": "OAuth implementation requires engineering work per platform. Start with the single highest-frequency platform. One OAuth option that covers 60% of users is better than four partially-built integrations."
+        "label": "Replace API key entry with one-click OAuth for the top platforms",
+        "action": "Replace the API key form with OAuth buttons for the analytics platforms your users are most likely already on. Auto-detect the most common configuration. Reduce the multi-step context switch to a single authorized click.",
+        "reasoning": "OAuth eliminates the credential-hunting friction entirely and is a trusted, recognized pattern. We don't know which platforms your users are actually on — you'd need to check your own signup data before prioritizing which OAuth integration to build first.",
+        "tradeoff": "OAuth implementation requires engineering work per platform. Start with the single highest-frequency platform once you know what that is."
       }
     ]
   }

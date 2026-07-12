@@ -6,6 +6,35 @@ export interface Decision {
   tradeoff: string;
 }
 
+// ── Epistemics — the evidence-tier system ──────────────────────────────────
+// Every figure in a deliverable must be honestly tagged. We can only ever
+// observe a prospect's PUBLIC surface (PageSpeed measurements, raw HTML) —
+// never their real funnel data, unless they grant access. Presenting a
+// modeled estimate as if it were measured is the exact failure mode this
+// system exists to prevent.
+export type EvidenceTier = 'measured' | 'modeled' | 'pending';
+
+export interface EvidenceItem {
+  tier: EvidenceTier;
+  label: string;
+  value: string;
+  source: string; // "Google PageSpeed Insights, mobile, scanned {date}" / "Industry benchmark: {name}" / "Requires your funnel data"
+}
+
+export interface ImpactRange {
+  low: number;
+  high: number;
+  unit: '%' | '$';
+  step: string; // the named funnel step this range applies to
+  modeledFrom: string; // the benchmark/coefficient this range is derived from
+  narrowsWith: string; // what specific data would narrow this range
+}
+
+export interface AvoidItem {
+  action: string; // what not to do
+  reason: string; // why it backfires
+}
+
 export interface LearningModule {
   id: string;
   title: string;
@@ -25,9 +54,14 @@ export interface BeforeAfterData {
   beforeTitle: string;
   beforeIssue: string;
   beforeFields: string[];
+  // Optional so demos not yet migrated to per-client copy degrade to
+  // omitting the line rather than showing a wrong hardcoded one.
+  beforeWarning?: string; // e.g. "Credit card required for validation."
   beforeBounce: string;
   afterTitle: string;
   afterDomain: string;
+  afterConfirmation?: string; // e.g. "No credit card required."
+  afterDescription?: string; // the "what changed" paragraph
   afterGain: string;
 }
 
@@ -48,12 +82,30 @@ export interface DeliverableData {
   beforeAfter?: BeforeAfterData;
   learningModules?: LearningModule[];
   checklist?: ChecklistItem[];
+  // Evidence-tiered claims shown to the client — the honesty layer.
+  evidence?: EvidenceItem[];
+  // The single grounded, modeled projection range. Never a fixed number.
+  projectedImpact?: ImpactRange;
+  // 0–100. Rendered visibly with confidenceReason — elite consultancies
+  // state their own uncertainty. green >=65 / amber >=40 / red <40.
+  confidenceLevel?: number;
+  confidenceReason?: string;
+  // Structured "what NOT to do" — required going forward, not optional prose.
+  avoid?: AvoidItem[];
   diagnosis: {
     signal: string;
     friction: {
       mechanism: string;
       rootCause: string;
     };
+    // The ONE synthesized recommendation shown to the client. This is what
+    // renders. If absent, the view falls back to rendering `decisions`
+    // (legacy 3-option grid) for demos not yet migrated to the new format.
+    finalDecision?: Decision;
+    // Internal exploration variants (Conservative/Aggressive/Lateral) — the
+    // process Ernesto uses to arrive at finalDecision. Never rendered on
+    // the client-facing page once finalDecision is present; kept here only
+    // as the admin's own working record.
     decisions: Decision[];
   };
 }
@@ -179,15 +231,18 @@ export const ACME_FALLBACK: DeliverableData = {
   progressPercent: 25,
   founderFocusScore: 85,
   daysRemaining: 23,
-  guaranteeStatus: "20% Growth Guarantee Active",
+  guaranteeStatus: "Specificity Guarantee Active",
   telemetryStatus: "✓ Traffic & Baseline Confirmed",
   beforeAfter: {
     beforeTitle: "Verify Billing & Setup Server",
     beforeIssue: "Cognitive Load — 6 decision variables before dashboard access",
     beforeFields: ["Phone Number", "Company Size", "Industry Type", "CRM Version", "AWS Region", "Billing Email"],
+    beforeWarning: "Credit card details required for validation.",
     beforeBounce: "Bounce Probability: ~88%",
     afterTitle: "Access Your Workspace",
     afterDomain: "acme.signal-and-friction.app",
+    afterConfirmation: "No credit card required. Config deferred to dashboard.",
+    afterDescription: "Subtracted all secondary inputs. User lands on simulated workspace with dummy data immediately. Habit builds, conversion scales.",
     afterGain: "Calculated Conversion Gain: +350%",
   },
   learningModules: [

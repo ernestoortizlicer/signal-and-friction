@@ -1,16 +1,23 @@
 /**
- * AIR-GAPPED CLIENT DELIVERABLE — LOCALE: en (American Business English)
+ * CLIENT DELIVERABLE — LOCALE: en (American Business English)
  *
  * All copy is sourced from the client's DeliverableData JSON (English-only schema)
  * or the fallback constants in fallback.ts. This component has no dependency on
  * the admin layer and no i18n mechanism of any kind.
+ *
+ * EPISTEMICS: every figure a client sees here must be honestly tagged —
+ * MEASURED (directly observed), MODELED (a benchmark applied to a measured
+ * value), or PENDING (requires the client's own data). We can only ever see
+ * a prospect's public surface (PageSpeed + raw HTML) unless they grant
+ * access to their own funnel data. See EvidenceBadge / ImpactRangeBlock /
+ * ConfidenceBadge below — never let a MODELED figure render as if measured.
  */
 "use client";
 
 import { motion } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { DeliverableData, BeforeAfterData } from "../fallback";
+import { DeliverableData, BeforeAfterData, Decision, EvidenceItem, EvidenceTier, ImpactRange, AvoidItem } from "../fallback";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -29,6 +36,222 @@ const itemVariants = {
     transition: { type: "spring" as const, stiffness: 100, damping: 18 },
   },
 };
+
+// ── Epistemics primitives — shared by both segment views ───────────────────
+
+function tierColor(tier: EvidenceTier): { bg: string; border: string; text: string } {
+  if (tier === "measured") return { bg: "rgba(92,154,107,0.1)", border: "rgba(92,154,107,0.35)", text: "#5C9A6B" };
+  if (tier === "modeled") return { bg: "rgba(212,168,83,0.1)", border: "rgba(212,168,83,0.35)", text: "#D4A853" };
+  return { bg: "rgba(122,111,101,0.1)", border: "rgba(122,111,101,0.35)", text: "#B0A89E" };
+}
+
+function EvidenceBadge({ tier }: { tier: EvidenceTier }) {
+  const c = tierColor(tier);
+  return (
+    <span
+      className="font-mono text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border flex-shrink-0"
+      style={{ background: c.bg, borderColor: c.border, color: c.text }}
+    >
+      {tier}
+    </span>
+  );
+}
+
+function EvidenceSection({ items }: { items: EvidenceItem[] }) {
+  return (
+    <div className="space-y-0">
+      {items.map((item, i) => (
+        <div key={i} className="flex items-start justify-between gap-4 border-b border-[#D4A853]/5 py-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-[#F5F0EB] leading-relaxed">
+              {item.label}: <span className="text-[#D4A853] font-medium">{item.value}</span>
+            </p>
+            <p className="text-[11px] text-[#7A6F65] mt-0.5 leading-relaxed">{item.source}</p>
+          </div>
+          <EvidenceBadge tier={item.tier} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function confidenceLabel(level: number): { text: string; label: string } {
+  if (level >= 65) return { text: "#5C9A6B", label: "High" };
+  if (level >= 40) return { text: "#D4A853", label: "Moderate" };
+  return { text: "#C85C5C", label: "Low" };
+}
+
+function ConfidenceBadge({ level, reason }: { level: number; reason?: string }) {
+  const c = confidenceLabel(level);
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2.5 font-mono text-xs">
+        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: c.text }} />
+        <span className="uppercase tracking-wider font-bold" style={{ color: c.text }}>
+          {c.label} Confidence
+        </span>
+        <span className="text-[#7A6F65]">{level}/100</span>
+      </div>
+      {reason && <p className="text-xs text-[#B0A89E] leading-relaxed pl-4">{reason}</p>}
+    </div>
+  );
+}
+
+function ImpactRangeBlock({
+  range,
+  confidenceLevel,
+  confidenceReason,
+}: {
+  range: ImpactRange;
+  confidenceLevel?: number;
+  confidenceReason?: string;
+}) {
+  const prefix = range.unit === "$" ? "$" : "";
+  const suffix = range.unit === "%" ? "%" : "";
+  const conf = confidenceLevel !== undefined ? confidenceLabel(confidenceLevel) : null;
+  return (
+    <div className="border border-[#D4A853]/15 bg-[#D4A853]/[0.03] p-6 rounded space-y-3">
+      <div className="flex items-center gap-2">
+        <EvidenceBadge tier="modeled" />
+        <span className="font-mono text-xs uppercase tracking-wider text-[#7A6F65]">Projected Impact</span>
+      </div>
+      <p className="text-lg text-[#F5F0EB] leading-relaxed font-serif">
+        {prefix}{range.low}–{prefix}{range.high}{suffix} on {range.step}
+      </p>
+      <p className="text-xs text-[#B0A89E] leading-relaxed">
+        Modeled from {range.modeledFrom}. <strong className="text-[#F5F0EB] font-normal">Not measured against your funnel.</strong>
+      </p>
+      {conf && (
+        <p className="text-xs text-[#7A6F65] leading-relaxed">
+          Confidence: <span style={{ color: conf.text }}>{conf.label.toLowerCase()}</span>
+          {confidenceReason ? ` — ${confidenceReason}` : ""}.
+        </p>
+      )}
+      <p className="text-xs leading-relaxed border-t border-[#D4A853]/10 pt-3" style={{ color: "#5C9A6B" }}>
+        This range narrows once we see {range.narrowsWith}.
+      </p>
+    </div>
+  );
+}
+
+function AvoidSection({ items }: { items: AvoidItem[] }) {
+  return (
+    <div className="space-y-4">
+      {items.map((item, i) => (
+        <div key={i} className="border-l-2 border-[#C85C5C]/30 pl-4 py-0.5">
+          <p className="text-sm text-[#F5F0EB] leading-relaxed">
+            <span className="text-[#C85C5C] mr-1.5">✗</span>
+            {item.action}
+          </p>
+          <p className="text-xs text-[#7A6F65] leading-relaxed mt-1">{item.reason}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FinalDecisionCard({ decision }: { decision: Decision }) {
+  return (
+    <div className="border border-[#D4A853]/8 bg-[#110F0D]/20 p-8 md:p-10 rounded">
+      <h3 className="text-2xl font-serif text-[#F5F0EB] mb-4 font-medium">{decision.label}</h3>
+      <div className="space-y-3">
+        <p className="text-sm text-[#B0A89E] leading-relaxed">
+          <strong className="text-[#F5F0EB] font-medium font-mono text-xs uppercase tracking-wider mr-2">Action:</strong>
+          {decision.action}
+        </p>
+        <p className="text-sm text-[#B0A89E] leading-relaxed">
+          <strong className="text-[#F5F0EB] font-medium font-mono text-xs uppercase tracking-wider mr-2">Reasoning:</strong>
+          {decision.reasoning}
+        </p>
+        <p className="text-sm text-[#B0A89E] leading-relaxed border-t border-[#D4A853]/8 pt-4 mt-4">
+          <strong className="text-[#7A6F65] font-medium font-mono text-xs uppercase tracking-wider mr-2">Trade-off:</strong>
+          {decision.tradeoff}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Legacy 3-option grid — only used as a fallback for deliverables not yet
+// migrated to a single finalDecision. Never used when finalDecision exists.
+function LegacyDecisionsGrid({ decisions }: { decisions: Decision[] }) {
+  return (
+    <div className="space-y-8">
+      {decisions.map((decision, i) => (
+        <div
+          key={i}
+          className="border border-[#D4A853]/8 bg-[#110F0D]/20 p-8 md:p-10 hover:border-[#C85C5C]/20 transition-all duration-500 group rounded"
+        >
+          <div className="flex items-start justify-between mb-4">
+            <span className="font-mono text-xs uppercase tracking-[0.12em] text-[#7A6F65] border border-[#D4A853]/8 px-2.5 py-0.5 rounded-full">
+              Option {decision.type}
+            </span>
+          </div>
+          <h3 className="text-2xl font-serif text-[#F5F0EB] mb-4 group-hover:text-[#C85C5C] transition-colors font-medium">
+            {decision.label}
+          </h3>
+          <div className="space-y-3">
+            <p className="text-sm text-[#B0A89E] leading-relaxed">
+              <strong className="text-[#F5F0EB] font-medium font-mono text-xs uppercase tracking-wider mr-2">Action:</strong>
+              {decision.action}
+            </p>
+            <p className="text-sm text-[#B0A89E] leading-relaxed">
+              <strong className="text-[#F5F0EB] font-medium font-mono text-xs uppercase tracking-wider mr-2">Reasoning:</strong>
+              {decision.reasoning}
+            </p>
+            <p className="text-sm text-[#B0A89E] leading-relaxed border-t border-[#D4A853]/8 pt-4 mt-4">
+              <strong className="text-[#7A6F65] font-medium font-mono text-xs uppercase tracking-wider mr-2">Trade-off:</strong>
+              {decision.tradeoff}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// One consistent Loom state across both segment views — a numbered section
+// must never silently vanish when the URL is a placeholder. Real or
+// pending, the section always renders.
+function LoomSection({ url, label, dense }: { url?: string; label: string; dense?: boolean }) {
+  const hasReal = !!url && !url.includes("placeholder");
+  return (
+    <div>
+      <h2
+        className={
+          dense
+            ? "font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853] mb-5"
+            : "font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E] mb-6"
+        }
+      >
+        {label}
+      </h2>
+      <div className="aspect-video bg-[#110F0D] border border-[#D4A853]/10 rounded-lg overflow-hidden relative glow-border">
+        {hasReal ? (
+          <iframe
+            src={url!.includes("embed") ? url! : url!.replace("/share/", "/embed/")}
+            frameBorder="0"
+            allowFullScreen
+            className="absolute inset-0 w-full h-full"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-[#110F0D]/80 pointer-events-none">
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-[#D4A853]/10 flex items-center justify-center mx-auto mb-4 border border-[#D4A853]/20">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <polygon points="5 3 19 12 5 21 5 3" fill="#D4A853" />
+                </svg>
+              </div>
+              <p className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider">
+                Video walkthrough pending
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 interface Props {
   data: DeliverableData;
@@ -67,7 +290,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
   // Dynamic values (previously hardcoded)
   const founderFocusScore = d.founderFocusScore ?? 85;
   const daysRemaining = d.daysRemaining ?? 23;
-  const guaranteeStatus = d.guaranteeStatus ?? "20% Growth Guarantee Active";
+  const guaranteeStatus = d.guaranteeStatus ?? "Specificity Guarantee Active";
   const telemetryStatus = d.telemetryStatus ?? "✓ Traffic & Baseline Confirmed";
   const ba: BeforeAfterData = d.beforeAfter ?? {
     beforeTitle: "Verify Billing & Setup Server",
@@ -117,10 +340,10 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
               <span className="font-serif text-[#D4A853] text-lg tracking-tight font-bold glow-text">
                 Signal &amp; Friction
               </span>
-              <span className="text-xs text-[#7A6F65] font-mono">/ Portal Privado</span>
+              <span className="text-xs text-[#7A6F65] font-mono">/ Confidential Portal</span>
             </div>
             <span className="font-mono text-xs uppercase tracking-[0.15em] text-[#D4A853]/70 border border-[#D4A853]/25 px-3 py-1 rounded bg-[#D4A853]/5">
-              Autonomía Operativa
+              Operational Autonomy
             </span>
           </div>
         </nav>
@@ -136,7 +359,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
             <div className="md:col-span-2 space-y-4">
               <div className="flex items-center gap-3">
                 <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853]">
-                  Metodología y Operación
+                  Methodology &amp; Operation
                 </span>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#D4A853]/30" />
                 <span className="font-mono text-xs text-[#7A6F65]">{d.date}</span>
@@ -145,7 +368,8 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                 {d.clientName}
               </h1>
               <p className="text-sm text-[#B0A89E] leading-relaxed max-w-[60ch]">
-                Tu espacio de operación autónoma. Completa el checklist diario, domina los módulos de formación y graba el Loom de referencia cuando estés listo.
+                Your self-serve operating space. Complete the daily checklist, work through the training
+                modules, and record the reference Loom when you&apos;re ready.
               </p>
             </div>
 
@@ -153,7 +377,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
               {/* Autonomy Progress */}
               <div className="bg-[#110F0D] border border-[#D4A853]/15 p-5 rounded-lg space-y-4 glow-border">
                 <div className="flex justify-between items-center font-mono text-xs">
-                  <span className="text-[#B0A89E]">Progreso de Autonomía</span>
+                  <span className="text-[#B0A89E]">Autonomy Progress</span>
                   <span className="text-[#D4A853] font-bold">{dynamicProgress}%</span>
                 </div>
                 <div className="w-full bg-[#2A2218] h-2 rounded-full overflow-hidden">
@@ -164,52 +388,59 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                   />
                 </div>
                 <div className="flex justify-between font-mono text-xs text-[#7A6F65]">
-                  <span>{doneCount} de {totalCount} completadas</span>
-                  <span>{dynamicProgress === 100 ? "Sistema Entregado" : "En Curso"}</span>
+                  <span>{doneCount} of {totalCount} complete</span>
+                  <span>{dynamicProgress === 100 ? "System Delivered" : "In Progress"}</span>
                 </div>
               </div>
 
               {/* Founder Focus Tracker — dynamic */}
               <div className="bg-[#110F0D] border border-[#C85C5C]/15 p-5 rounded-lg space-y-3 glow-border-red">
                 <div className="flex justify-between items-center font-mono text-xs">
-                  <span className="text-[#B0A89E]">Índice de Enfoque</span>
+                  <span className="text-[#B0A89E]">Founder Focus Index</span>
                   <span className="text-[#5C9A6B] font-bold">{founderFocusScore} / 100</span>
                 </div>
                 <div className="w-full bg-[#2A2218] h-1.5 rounded-full overflow-hidden">
                   <div className="bg-[#5C9A6B] h-full rounded-full" style={{ width: `${founderFocusScore}%` }} />
                 </div>
                 <div className="font-mono text-xs text-[#7A6F65] leading-relaxed">
-                  Índice de carga cognitiva: {100 - founderFocusScore}/100 — Adherencia de ejecución: umbral de alta confianza.
+                  Cognitive load index: {100 - founderFocusScore}/100 — execution adherence at high-confidence threshold.
                 </div>
               </div>
             </div>
           </div>
         </motion.section>
 
-        {/* Diagnostic Loom — only renders when a real URL is provided */}
-        {d.loomUrl && !d.loomUrl.includes("placeholder") && (
-          <section className="py-12 px-6 border-b border-[#D4A853]/5">
-            <div className="max-w-[1000px] mx-auto">
-              <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853] mb-5">
-                01 — Vídeo Guía del Sistema
-              </h2>
-              <div className="aspect-video bg-[#110F0D] border border-[#D4A853]/10 rounded-lg overflow-hidden relative glow-border">
-                <iframe
-                  src={d.loomUrl.includes("embed") ? d.loomUrl : d.loomUrl.replace("/share/", "/embed/")}
-                  frameBorder="0"
-                  allowFullScreen
-                  className="absolute inset-0 w-full h-full"
+        {/* Confidence + Evidence — renders only when present */}
+        {(d.confidenceLevel !== undefined || d.evidence?.length || d.projectedImpact) && (
+          <section className="py-10 px-6 border-b border-[#D4A853]/5">
+            <div className="max-w-[1000px] mx-auto space-y-6">
+              {d.confidenceLevel !== undefined && (
+                <ConfidenceBadge level={d.confidenceLevel} reason={d.confidenceReason} />
+              )}
+              {d.evidence?.length ? <EvidenceSection items={d.evidence} /> : null}
+              {d.projectedImpact && (
+                <ImpactRangeBlock
+                  range={d.projectedImpact}
+                  confidenceLevel={d.confidenceLevel}
+                  confidenceReason={d.confidenceReason}
                 />
-              </div>
+              )}
             </div>
           </section>
         )}
+
+        {/* Diagnostic Loom — always renders, real embed or dignified pending state */}
+        <section className="py-12 px-6 border-b border-[#D4A853]/5">
+          <div className="max-w-[1000px] mx-auto">
+            <LoomSection url={d.loomUrl} label="01 — System Walkthrough Video" dense />
+          </div>
+        </section>
 
         {/* Modules & Checklist */}
         <section className="py-12 px-6 max-w-[1000px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-7 space-y-6">
             <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853]">
-              02 — Checklist de Implementación
+              02 — Implementation Checklist
             </h2>
             <div className="space-y-3 bg-[#110F0D]/40 border border-[#D4A853]/5 p-5 rounded-lg">
               {checklist.map((item) => (
@@ -238,7 +469,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
 
           <div className="lg:col-span-5 space-y-6">
             <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853]">
-              03 — Currículo de Formación
+              03 — Training Curriculum
             </h2>
             <div className="space-y-2">
               {d.learningModules?.map((mod) => (
@@ -253,7 +484,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                     <span className="font-mono text-xs text-[#D4A853]/80 uppercase tracking-widest">{mod.title}</span>
                     {mod.completed && (
                       <span className="font-mono text-xs uppercase tracking-wider text-[#5C9A6B] bg-[#5C9A6B]/10 px-1.5 py-0.5 rounded border border-[#5C9A6B]/20">
-                        Hecho
+                        Done
                       </span>
                     )}
                   </div>
@@ -264,7 +495,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
             {activeModule && (
               <div className="border border-[#D4A853]/15 bg-[#110F0D]/60 p-5 rounded-lg space-y-3 mt-4">
                 <span className="font-mono text-xs text-[#D4A853]/70 tracking-wider uppercase block">
-                  Módulo Activo — Contenido
+                  Active Module — Content
                 </span>
                 <h4 className="text-xs font-bold font-mono text-[#F5F0EB]">{activeModule.title}</h4>
                 <p className="text-xs text-[#B0A89E] leading-relaxed font-mono">{activeModule.content}</p>
@@ -273,9 +504,21 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
           </div>
         </section>
 
+        {/* What NOT to do — renders only when present */}
+        {d.avoid?.length ? (
+          <section className="py-12 px-6 border-t border-[#D4A853]/5">
+            <div className="max-w-[1000px] mx-auto">
+              <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853] mb-6">
+                04 — What Not To Do
+              </h2>
+              <AvoidSection items={d.avoid} />
+            </div>
+          </section>
+        ) : null}
+
         <footer className="py-12 border-t border-[#D4A853]/10 text-center bg-[#0A0908] mt-16">
           <p className="font-mono text-xs tracking-[0.15em] text-[#7A6F65]">
-            {d.consultant} · PORTAL PRIVADO DE CLIENTE · TODOS LOS DERECHOS RESERVADOS
+            {d.consultant} · CONFIDENTIAL CLIENT PORTAL · ALL RIGHTS RESERVED
           </p>
         </footer>
       </main>
@@ -322,10 +565,11 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
             variants={itemVariants}
             className="text-lg text-[#B0A89E] max-w-[55ch] leading-relaxed font-light"
           >
-            This dashboard displays your custom Signal &amp; Friction diagnostic brief. Below is the clinical breakdown of your funnel signal, the dominant cognitive friction mechanism, and three strategic decisions.
+            This dashboard displays your custom Signal &amp; Friction diagnostic brief. Below is the clinical
+            breakdown of your funnel signal, the dominant cognitive friction mechanism, and the recommended
+            intervention — with every figure tagged by how we know it.
           </motion.p>
 
-          {/* S&F Guarantee Monitor — dynamic */}
           <motion.div
             variants={itemVariants}
             className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 border border-[#D4A853]/8 bg-[#110F0D]/60 p-5 rounded select-none"
@@ -346,7 +590,27 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
         </div>
       </motion.section>
 
-      {/* Loom Video Embed */}
+      {/* Confidence + Evidence — renders only when present */}
+      {(d.confidenceLevel !== undefined || d.evidence?.length) && (
+        <motion.section
+          className="py-16 px-6 border-b border-[#D4A853]/8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <div className="max-w-[900px] mx-auto space-y-6">
+            <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E] mb-2">
+              00 — What We Know, and How
+            </h2>
+            {d.confidenceLevel !== undefined && (
+              <ConfidenceBadge level={d.confidenceLevel} reason={d.confidenceReason} />
+            )}
+            {d.evidence?.length ? <EvidenceSection items={d.evidence} /> : null}
+          </div>
+        </motion.section>
+      )}
+
+      {/* Loom Video Embed — always renders */}
       <motion.section
         className="py-16 px-6 border-b border-[#D4A853]/8 bg-[#110F0D]/40"
         initial={{ opacity: 0 }}
@@ -354,32 +618,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
         transition={{ delay: 0.4 }}
       >
         <div className="max-w-[900px] mx-auto">
-          <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E] mb-6">
-            Video Walkthrough
-          </h2>
-          <div className="aspect-video bg-[#110F0D] border border-[#D4A853]/8 rounded-lg overflow-hidden relative glow-accent">
-            {d.loomUrl && !d.loomUrl.includes("placeholder") ? (
-              <iframe
-                src={d.loomUrl.includes("embed") ? d.loomUrl : d.loomUrl.replace("/share/", "/embed/")}
-                frameBorder="0"
-                allowFullScreen
-                className="absolute inset-0 w-full h-full"
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-[#110F0D]/80 pointer-events-none">
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-[#D4A853]/10 flex items-center justify-center mx-auto mb-4 border border-[#D4A853]/20">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <polygon points="5 3 19 12 5 21 5 3" fill="#D4A853" />
-                    </svg>
-                  </div>
-                  <p className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider">
-                    Async briefing stream pending...
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+          <LoomSection url={d.loomUrl} label="Video Walkthrough" />
         </div>
       </motion.section>
 
@@ -426,7 +665,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
         </div>
       </motion.section>
 
-      {/* Before / After Slider — dynamic data */}
+      {/* Before / After Slider — fully data-driven, no hardcoded copy */}
       <motion.section
         className="py-20 px-6 border-b border-[#D4A853]/8 bg-[#0A0908]"
         initial={{ opacity: 0 }}
@@ -441,7 +680,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
         </div>
       </motion.section>
 
-      {/* 3 Decisions */}
+      {/* The Recommendation — ONE synthesized decision, not three */}
       <motion.section
         className="py-24 px-6 border-b border-[#D4A853]/8"
         variants={containerVariants}
@@ -449,47 +688,121 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
         whileInView="show"
         viewport={{ once: true, margin: "-100px" }}
       >
-        <div className="max-w-[900px] mx-auto">
+        <div className="max-w-[900px] mx-auto space-y-8">
           <motion.h2
             variants={itemVariants}
-            className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E] mb-12"
+            className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E]"
           >
-            03 — Three Strategic Growth Decisions
+            03 — The Recommendation
           </motion.h2>
-          <div className="space-y-8">
-            {d.diagnosis?.decisions?.map((decision, i) => (
-              <motion.div
-                key={i}
-                variants={itemVariants}
-                className="border border-[#D4A853]/8 bg-[#110F0D]/20 p-8 md:p-10 hover:border-[#C85C5C]/20 transition-all duration-500 group rounded"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <span className="font-mono text-xs uppercase tracking-[0.12em] text-[#7A6F65] border border-[#D4A853]/8 px-2.5 py-0.5 rounded-full">
-                    Option {decision.type}
-                  </span>
-                </div>
-                <h3 className="text-2xl font-serif text-[#F5F0EB] mb-4 group-hover:text-[#C85C5C] transition-colors font-medium">
-                  {decision.label}
-                </h3>
-                <div className="space-y-3">
-                  <p className="text-sm text-[#B0A89E] leading-relaxed">
-                    <strong className="text-[#F5F0EB] font-medium font-mono text-xs uppercase tracking-wider mr-2">Action:</strong>
-                    {decision.action}
-                  </p>
-                  <p className="text-sm text-[#B0A89E] leading-relaxed">
-                    <strong className="text-[#F5F0EB] font-medium font-mono text-xs uppercase tracking-wider mr-2">Reasoning:</strong>
-                    {decision.reasoning}
-                  </p>
-                  <p className="text-sm text-[#B0A89E] leading-relaxed border-t border-[#D4A853]/8 pt-4 mt-4">
-                    <strong className="text-[#7A6F65] font-medium font-mono text-xs uppercase tracking-wider mr-2">Trade-off:</strong>
-                    {decision.tradeoff}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          <motion.div variants={itemVariants}>
+            {d.diagnosis?.finalDecision ? (
+              <FinalDecisionCard decision={d.diagnosis.finalDecision} />
+            ) : (
+              d.diagnosis?.decisions?.length ? <LegacyDecisionsGrid decisions={d.diagnosis.decisions} /> : null
+            )}
+          </motion.div>
+          {d.projectedImpact && (
+            <motion.div variants={itemVariants}>
+              <ImpactRangeBlock
+                range={d.projectedImpact}
+                confidenceLevel={d.confidenceLevel}
+                confidenceReason={d.confidenceReason}
+              />
+            </motion.div>
+          )}
         </div>
       </motion.section>
+
+      {/* What NOT to do — renders only when present */}
+      {d.avoid?.length ? (
+        <motion.section
+          className="py-16 px-6 border-b border-[#D4A853]/8 bg-[#110F0D]/40"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+        >
+          <div className="max-w-[900px] mx-auto">
+            <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E] mb-8">
+              04 — What Not To Do
+            </h2>
+            <AvoidSection items={d.avoid} />
+          </div>
+        </motion.section>
+      ) : null}
+
+      {/* Implementation Checklist + Learning Modules — previously microdosing-only, now shown here too */}
+      {(checklist.length > 0 || d.learningModules?.length) ? (
+        <motion.section
+          className="py-16 px-6 border-b border-[#D4A853]/8"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+        >
+          <div className="max-w-[900px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
+            {checklist.length > 0 && (
+              <div className="space-y-6">
+                <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E]">
+                  05 — Implementation Checklist
+                </h2>
+                <div className="space-y-3">
+                  {checklist.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => toggleCheck(item.id)}
+                      className={`flex items-start gap-4 p-4 border rounded transition-all duration-300 cursor-pointer ${
+                        item.done ? "bg-[#5C9A6B]/5 border-[#5C9A6B]/20" : "bg-[#110F0D]/40 border-[#D4A853]/8 hover:border-[#D4A853]/25"
+                      }`}
+                    >
+                      <div className={`w-4 h-4 rounded mt-0.5 border flex items-center justify-center flex-shrink-0 transition-colors ${
+                        item.done ? "bg-[#5C9A6B] border-[#5C9A6B]" : "border-[#D4A853]/30"
+                      }`}>
+                        {item.done && <span className="text-xs text-[#0A0908] font-bold">✓</span>}
+                      </div>
+                      <div className="space-y-1 select-none">
+                        <p className={`text-xs font-mono font-medium ${item.done ? "line-through text-[#7A6F65]" : "text-[#F5F0EB]"}`}>
+                          {item.task}
+                        </p>
+                        <p className="text-xs text-[#7A6F65] leading-relaxed">{item.tip}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {d.learningModules?.length ? (
+              <div className="space-y-6">
+                <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E]">
+                  06 — Implementation Detail
+                </h2>
+                <div className="space-y-2">
+                  {d.learningModules.map((mod) => (
+                    <div
+                      key={mod.id}
+                      onClick={() => setSelectedModuleId(mod.id)}
+                      className={`p-4 border transition-all duration-300 cursor-pointer rounded text-left ${
+                        selectedModuleId === mod.id ? "bg-[#D4A853]/5 border-[#D4A853]/25" : "bg-[#110F0D]/20 border-[#D4A853]/5 hover:border-[#D4A853]/15"
+                      }`}
+                    >
+                      <span className="font-mono text-xs text-[#D4A853]/80 uppercase tracking-widest block mb-1.5">{mod.title}</span>
+                      <p className="text-xs text-[#7A6F65] leading-relaxed">{mod.description}</p>
+                    </div>
+                  ))}
+                </div>
+                {activeModule && (
+                  <div className="border border-[#D4A853]/12 bg-[#110F0D]/40 p-5 rounded-lg space-y-3">
+                    <span className="font-mono text-xs text-[#D4A853]/70 tracking-wider uppercase block">
+                      {activeModule.title}
+                    </span>
+                    <p className="text-xs text-[#B0A89E] leading-relaxed whitespace-pre-line">{activeModule.content}</p>
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </div>
+        </motion.section>
+      ) : null}
 
       <footer className="py-16 px-6 text-center border-t border-[#D4A853]/8 bg-[#0A0908]">
         <p className="font-mono text-xs uppercase tracking-[0.15em] text-[#7A6F65]">
@@ -500,7 +813,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
   );
 }
 
-// ── Before/After Slider — now receives dynamic data ──────────────────────────
+// ── Before/After Slider — fully data-driven, no hardcoded per-client copy ──
 function BeforeAfterSlider({ data: ba, clientName }: { data: BeforeAfterData; clientName: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [sliderPosition, setSliderPosition] = useState(50);
@@ -556,7 +869,7 @@ function BeforeAfterSlider({ data: ba, clientName }: { data: BeforeAfterData; cl
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center flex-1 py-4">
             <div className="space-y-2">
-              <span className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider block">Intake Form V1</span>
+              <span className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider block">Current State</span>
               <h4 className="font-serif text-lg text-[#F5F0EB]">{ba.beforeTitle}</h4>
               <div className="border border-[#C85C5C]/20 bg-[#C85C5C]/5 p-3 rounded space-y-2">
                 <div className="grid grid-cols-2 gap-2">
@@ -564,25 +877,27 @@ function BeforeAfterSlider({ data: ba, clientName }: { data: BeforeAfterData; cl
                     <div key={idx} className="space-y-1">
                       <div className="h-1 w-8 bg-[#7A6F65]" />
                       <div className="h-6 bg-[#110F0D] border border-[#C85C5C]/20 rounded flex items-center px-1.5 text-xs text-[#C85C5C]">
-                        {val} *
+                        {val}
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="border border-[#C85C5C]/30 bg-[#C85C5C]/10 p-2 rounded text-xs text-[#C85C5C] font-mono flex items-center gap-2">
-                  <span>🔒</span>
-                  <span>Credit Card details required for validation.</span>
-                </div>
+                {ba.beforeWarning && (
+                  <div className="border border-[#C85C5C]/30 bg-[#C85C5C]/10 p-2 rounded text-xs text-[#C85C5C] font-mono flex items-center gap-2">
+                    <span>⚑</span>
+                    <span>{ba.beforeWarning}</span>
+                  </div>
+                )}
               </div>
             </div>
             <div className="border border-[#D4A853]/8 p-4 rounded bg-[#110F0D]/50 space-y-2 border-l-2 border-[#C85C5C]/40">
-              <span className="font-mono text-xs text-[#C85C5C] uppercase tracking-widest block">Cognitive Load</span>
+              <span className="font-mono text-xs text-[#C85C5C] uppercase tracking-widest block">Diagnosed Friction</span>
               <p className="text-xs text-[#B0A89E] leading-relaxed">{ba.beforeIssue}</p>
               <div className="font-mono text-xs text-[#C85C5C]">{ba.beforeBounce}</div>
             </div>
           </div>
           <div className="text-xs font-mono text-[#7A6F65] text-right mt-2">
-            {clientName} · Baseline Setup Flow
+            {clientName} · Current State
           </div>
         </div>
       </div>
@@ -599,35 +914,37 @@ function BeforeAfterSlider({ data: ba, clientName }: { data: BeforeAfterData; cl
           <div className="w-full h-full flex flex-col justify-between pointer-events-none">
             <div className="flex items-center gap-1.5 border-b border-[#D4A853]/20 pb-2 mb-2 font-mono text-xs text-[#D4A853]">
               <span className="w-2.5 h-2.5 rounded-full bg-[#D4A853]/20 border border-[#D4A853]" />
-              <span>OPTIMIZED INTERFACE (MENDED FLOW)</span>
+              <span>RECOMMENDED STATE</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center flex-1 py-4">
               <div className="space-y-2">
-                <span className="font-mono text-xs text-[#B0A89E] uppercase tracking-wider block">Mended Intake</span>
+                <span className="font-mono text-xs text-[#B0A89E] uppercase tracking-wider block">After the Fix</span>
                 <h4 className="font-serif text-lg text-[#F5F0EB]">{ba.afterTitle}</h4>
                 <div className="border border-[#D4A853]/20 bg-[#D4A853]/5 p-3 rounded space-y-3">
                   <div className="space-y-1.5">
-                    <label className="text-xs text-[#B0A89E] block">Workspace Domain</label>
+                    <label className="text-xs text-[#B0A89E] block">Reference</label>
                     <div className="h-7 bg-[#0A0908] border border-[#D4A853]/20 rounded flex items-center px-2 text-xs text-[#F5F0EB]">
                       {ba.afterDomain}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs text-[#5C9A6B] bg-[#5C9A6B]/10 px-2 py-1 rounded border border-[#5C9A6B]/20">
-                    <span>✓</span>
-                    <span>No credit card required. Config deferred to dashboard.</span>
-                  </div>
+                  {ba.afterConfirmation && (
+                    <div className="flex items-center gap-1.5 text-xs text-[#5C9A6B] bg-[#5C9A6B]/10 px-2 py-1 rounded border border-[#5C9A6B]/20">
+                      <span>✓</span>
+                      <span>{ba.afterConfirmation}</span>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="border border-[#D4A853]/8 p-4 rounded bg-[#0A0908] space-y-2 border-l-2 border-[#D4A853]/40">
-                <span className="font-mono text-xs text-[#D4A853] uppercase tracking-widest block">Friction Mended</span>
-                <p className="text-xs text-[#B0A89E] leading-relaxed">
-                  Subtracted all secondary inputs. User lands on simulated workspace with dummy data immediately. Habit builds, conversion scales.
-                </p>
+                <span className="font-mono text-xs text-[#D4A853] uppercase tracking-widest block">What Changes</span>
+                {ba.afterDescription && (
+                  <p className="text-xs text-[#B0A89E] leading-relaxed">{ba.afterDescription}</p>
+                )}
                 <div className="font-mono text-xs text-[#5C9A6B]">{ba.afterGain}</div>
               </div>
             </div>
             <div className="text-xs font-mono text-[#B0A89E] text-right mt-2">
-              Signal &amp; Friction Design Recommendation
+              Signal &amp; Friction Recommendation
             </div>
           </div>
         </div>

@@ -9,82 +9,116 @@
   "progressPercent": 35,
   "founderFocusScore": 78,
   "daysRemaining": 14,
-  "guaranteeStatus": "20% Conversion Growth Guarantee Active",
-  "telemetryStatus": "✓ Pricing Page Traffic & Session Data Confirmed",
+  "guaranteeStatus": "Specificity Guarantee Active",
+  "telemetryStatus": "✓ Public Signal Scan Confirmed (PageSpeed + HTML) — Conversion Data Pending Your Analytics",
+  "evidence": [
+    { "tier": "measured", "label": "Pricing page — plan tiers displayed", "value": "5", "source": "Raw HTML scan, structural element count, scanned June 2026" },
+    { "tier": "measured", "label": "Pricing page — feature bullet points per plan (average)", "value": "~22", "source": "Raw HTML scan, list-item count per plan card, scanned June 2026" },
+    { "tier": "measured", "label": "Pricing page — Largest Contentful Paint (mobile)", "value": "3.4s", "source": "Google PageSpeed Insights, mobile, scanned June 2026" },
+    { "tier": "measured", "label": "Pricing page — usage/savings calculator", "value": "Not detected", "source": "Raw HTML scan, interactive-element and keyword pattern match, scanned June 2026" },
+    { "tier": "pending", "label": "Actual pricing-page conversion rate", "value": "Unknown", "source": "Requires your own analytics — not visible from a public scan" },
+    { "tier": "pending", "label": "Monthly visitor count and session duration on pricing page", "value": "Unknown", "source": "Requires your own analytics (e.g. PostHog, GA4)" },
+    { "tier": "modeled", "label": "Decision complexity from 5 plans × ~22 features", "value": "~110 discrete data points — elevated choice-complexity risk", "source": "Hick's Law applied to the measured plan/feature count — not a measurement of actual user decision time" }
+  ],
+  "projectedImpact": {
+    "low": 10,
+    "high": 25,
+    "unit": "%",
+    "step": "pricing-to-checkout initiation rate",
+    "modeledFrom": "published research on plan-count reduction and cognitive load (Hick's Law, checkout-usability studies) applied to your measured 5-plan/22-feature structure — not your own conversion data",
+    "narrowsWith": "your own pricing-page analytics (visitors, conversion rate) measured before and after the change"
+  },
+  "confidenceLevel": 45,
+  "confidenceReason": "The plan count and feature density are directly measured from your page — that part is fact. How much that complexity is actually costing you in conversions is modeled from published research, not your own funnel data, which we don't have access to.",
+  "avoid": [
+    { "action": "Don't treat the projected range as a specific revenue figure", "reason": "We don't have your traffic or conversion data — any dollar estimate here would be invented, not modeled." },
+    { "action": "Don't ship a savings calculator with unverified competitor fee assumptions", "reason": "Payment processor fee structures vary by account type and volume — an inaccurate calculator damages trust worse than no calculator at all." },
+    { "action": "Don't cut plan count without checking which plans your existing customers actually use", "reason": "We measured plan count on the page, not usage distribution. Archiving a plan your best customers rely on would be a regression, not a fix." }
+  ],
   "beforeAfter": {
-    "beforeTitle": "Pricing Page — 5 Plans, 22 Features Each",
-    "beforeIssue": "Feature Overload — 110 discrete data points force users to self-classify as product experts before selecting a payment plan",
-    "beforeFields": ["Micro Plan ($19)", "Starter Plan ($49)", "Growth Plan ($99)", "Scale Plan ($249)", "Enterprise (Custom)", "22 feature bullet points per plan"],
-    "beforeBounce": "Pricing-to-Checkout Rate: 4.1% — Revenue Gap at Current Traffic: $38,000/mo",
+    "beforeTitle": "Pricing Page — 5 Plans, ~22 Features Each",
+    "beforeIssue": "Feature Overload (measured) — ~110 discrete data points force users to self-classify before selecting a plan",
+    "beforeFields": ["Micro Plan ($19)", "Starter Plan ($49)", "Growth Plan ($99)", "Scale Plan ($249)", "Enterprise (Custom)", "~22 feature bullet points per plan"],
+    "beforeWarning": "Conversion rate and revenue-gap figures below are pending your own analytics — see Evidence section.",
+    "beforeBounce": "Plan/feature complexity: measured. Conversion impact: pending your analytics — see Evidence section",
     "afterTitle": "Value-Led Conversion Path",
     "afterDomain": "payflux.signal-and-friction.app",
-    "afterGain": "Projected Checkout Initiation: +180% within 21 days"
+    "afterConfirmation": "One recommended plan, presented after value is quantified — not five to compare cold.",
+    "afterDescription": "Collapses the visible plan/feature set to what's needed for a confident decision, without removing any pricing tier from the backend.",
+    "afterGain": "Modeled checkout-initiation lift: +10–25% (not measured against your funnel — see Projected Impact)"
   },
   "learningModules": [
     {
       "id": "m-1",
-      "title": "Module 1: The $38,000 Gap — Quantifying the Friction Cost",
-      "description": "Understand the exact revenue impact of pricing paralysis and why your 4.1% conversion rate is a structural problem, not a traffic problem.",
+      "title": "Module 1: What We Measured vs. What We're Modeling",
+      "description": "A direct accounting of what a public scan of your pricing page can and can't tell us, and how to close the gap with your own data.",
       "completed": true,
-      "content": "PayFlux receives 8,200 unique monthly visitors on the pricing page with an average session duration of 6.3 minutes. The 6.3-minute figure is the key diagnostic signal — it tells you users are engaged and researching, not bouncing from irrelevance. They want to buy. They cannot decide.\n\nAt 4.1% conversion with an average contract value of $99/month, you are converting 336 visitors monthly into paying customers. At a structurally healthy conversion rate of 11–15% (industry median for fintech SaaS with demonstrated intent signals), that same traffic converts 902–1,230 users — a delta of $56,000–$88,000 in additional monthly recurring revenue.\n\nThe mechanism: 5 plans × 22 features = 110 discrete data points. Users must evaluate each data point, map it to their own usage patterns, and make a self-diagnosis before they can commit. This is an expert-level cognitive task. Your pricing page is asking users to become PayFlux product experts before they have ever used PayFlux.\n\nFor a payments product, there is an additional trust layer: users are about to hand you access to their transaction infrastructure. The more uncertain they feel about which plan is correct, the higher the perceived risk of choosing wrong — and the easier it becomes to close the tab."
+      "content": "What we measured directly from your pricing page's HTML: 5 plan tiers, an average of ~22 feature bullet points per plan (~110 discrete data points total), a 3.4s mobile LCP, and no usage-based savings calculator anywhere on the page. Those are facts about the page, not about your users.\n\nWhat we don't have: your actual visitor count, session duration, or conversion rate on that page. Those live in your analytics stack, which we have no access to. Any specific dollar figure for 'lost revenue' would have to invent a traffic number and a conversion rate — we're not going to do that.\n\nWhat the measured facts support is a well-documented pattern: 5 plans × 22 features is an expert-level cognitive task for a first-time visitor, and for a payments product specifically, uncertainty about which plan is correct compounds with the perceived risk of misconfiguring live transaction infrastructure. Whether that pattern is actually suppressing your conversion rate — and by how much — is something only your own analytics can confirm.\n\nHow to check: pull your pricing_page_loaded → checkout_initiated conversion rate from your existing analytics before changing anything. That single number is worth more than anything in this document."
     },
     {
       "id": "m-2",
       "title": "Module 2: The Savings-First Page Architecture",
-      "description": "Restructure the pricing page to anchor value before revealing cost — the single highest-leverage layout change for a payments product.",
+      "description": "Restructure the pricing page to anchor value before revealing cost — the change we'd recommend testing first, grounded in what we measured.",
       "completed": false,
-      "content": "The insight: when a user sees '$2,400 in annual savings versus Stripe standard rates' before they see your subscription price, the subscription cost becomes a no-brainer. The ordering of information is the product.\n\nNew page structure (top to bottom):\n1. Headline: 'How much are you paying in payment fees right now?' — interactive input field\n2. Savings calculator: user enters monthly transaction volume. Output: their current estimated Stripe cost (2.9% + 30¢) versus PayFlux cost. Display the annual delta in large, bold typography.\n3. Plan recommendation: 'Based on your volume, the Growth plan saves you $X/month.' One plan, pre-selected. Not a grid.\n4. Plan details: the 5 key features of the recommended plan only. Progressive toggle to see full comparison.\n5. CTA: 'Start your free 14-day trial — no credit card required.'\n\nThis architecture does three things simultaneously: it quantifies the value proposition in the user's own numbers, it eliminates the self-classification burden by recommending a plan, and it positions the subscription cost as a fraction of the savings it generates.\n\nImplementation estimate: redesign + copywriting + calculator logic: 5–8 engineering days."
+      "content": "The insight: when a user sees an estimated annual savings figure before they see your subscription price, the subscription cost reads as a return, not an expense. Ordering of information matters as much as the information itself.\n\nNew page structure (top to bottom):\n1. Headline: 'How much are you paying in payment fees right now?' — interactive input field\n2. Savings calculator: user enters their own monthly transaction volume; the calculator outputs their estimated current processor cost versus PayFlux, with the annual delta in large, bold typography\n3. Plan recommendation: one plan, pre-selected based on their input — not a five-way grid\n4. Plan details: the 5 key features of the recommended plan only, with a progressive toggle to see the full comparison\n5. CTA: trial or checkout, framed against the number they just saw\n\nThis does three things at once: quantifies value in the user's own numbers, removes the self-classification burden by recommending a plan, and positions the subscription cost as a fraction of the savings it implies.\n\nImplementation estimate: redesign + copywriting + calculator logic, roughly 5–8 engineering days. We can't promise a specific conversion outcome — see Module 1 on why — but this is the highest-leverage structural change available given what we measured."
     },
     {
       "id": "m-3",
-      "title": "Module 3: Stripe Integration — Real-Time Competitive Benchmarking",
-      "description": "Build the transaction volume calculator that outputs a live cost comparison against Stripe's standard rate, anchoring your pricing as an ROI decision rather than an expense.",
+      "title": "Module 3: Building the Savings Calculator Without Overclaiming",
+      "description": "The calculator logic, and the guardrails needed so the numbers it shows are ones you can actually stand behind.",
       "completed": false,
-      "content": "The calculator is the centerpiece of the new page architecture. Here is the exact logic:\n\nInputs: monthly transaction volume ($) + average transaction value ($)\nStripe cost estimate: (volume × 0.029) + (volume/avg_transaction_value × 0.30)\nPayFlux cost: apply your actual rate card at the estimated volume tier\nSavings delta: Stripe cost − PayFlux cost\n\nDisplay format:\n— 'At $50,000/month in transactions, you pay Stripe an estimated $1,500/month in fees.'\n— 'PayFlux costs $99/month. You save $1,401/month — $16,812 annually.'\n— 'That is a 14:1 ROI on your PayFlux subscription.'\n\nDesign notes:\n— Default the calculator to $50,000 monthly volume (your median ICP transaction level based on your stated customer profile)\n— Update the recommended plan in real time as the slider moves\n— If volume exceeds your top tier threshold, display an Enterprise contact form inline — do not route to a separate page\n\nEdge case: if Stripe cost estimate is lower than PayFlux cost at low volumes (< $5,000/month), display the Growth plan's additional features (fraud protection, instant payouts, reconciliation) as the value drivers instead of cost savings."
+      "content": "Calculator logic:\n\nInputs: monthly transaction volume ($) + average transaction value ($)\nCompetitor cost estimate: use a documented, current published rate for whichever processor you're comparing against — do not use a stale or rounded figure, it will be checked by sophisticated buyers\nPayFlux cost: apply your actual rate card at the estimated volume tier\nSavings delta: competitor estimate − PayFlux cost\n\nDisplay format example: 'At $50,000/month in transactions, you'd pay an estimated $X/month with [competitor]. PayFlux costs $99/month — a modeled savings of $Y/month.' Label it modeled, not guaranteed, since actual fees depend on account-specific factors you don't control.\n\nDesign notes:\n— Default the calculator to whatever volume figure matches your actual median customer, once you know it from your own data — we don't have that number\n— Update the recommended plan in real time as the input changes\n— Route volumes above your top tier to an inline Enterprise contact form, not a separate page\n\nEdge case: at low volumes, the savings delta may be small or negative. Don't hide this — show the plan's non-cost value drivers (fraud protection, instant payouts, reconciliation) instead of forcing a savings narrative that doesn't hold."
     },
     {
       "id": "m-4",
       "title": "Module 4: Pricing Page Telemetry — What to Measure and When",
-      "description": "The 5 PostHog events that give you complete visibility into pricing page behavior and let you attribute each conversion lift to a specific change.",
+      "description": "The PostHog events that would give you complete visibility into pricing page behavior and let you attribute any conversion change to a specific cause.",
       "completed": false,
-      "content": "Deploy in priority order:\n\n1. posthog.capture('pricing_page_loaded', { referrer, utm_source }) — baseline + traffic source\n2. posthog.capture('calculator_interacted', { volume_input, avg_transaction_input, recommended_plan }) — measures savings calculator adoption\n3. posthog.capture('plan_recommended', { plan, monthly_savings, annual_roi }) — tracks which plans the calculator recommends most\n4. posthog.capture('checkout_initiated', { plan, volume_estimate, annual_savings }) — the conversion event\n5. posthog.capture('pricing_abandoned', { time_on_page, calculator_used: true | false }) — exit intent with calculator engagement flag\n\nKey metric to watch: calculator_interacted / pricing_page_loaded ratio. If below 50%, the calculator is not prominent enough above the fold. If above 70%, you have strong engagement but need to optimize the checkout_initiated conversion from there.\n\nWeekly review focus: the calculator_used flag in pricing_abandoned events. Users who interact with the calculator but still abandon are experiencing a secondary friction point (likely at the plan selection or CTA stage). That is where to focus week-3 optimization."
+      "content": "Deploy in priority order:\n\n1. posthog.capture('pricing_page_loaded', { referrer, utm_source }) — baseline + traffic source\n2. posthog.capture('calculator_interacted', { volume_input, avg_transaction_input, recommended_plan }) — measures savings calculator adoption, once shipped\n3. posthog.capture('plan_recommended', { plan, monthly_savings }) — tracks which plans the calculator recommends most\n4. posthog.capture('checkout_initiated', { plan, volume_estimate }) — the conversion event\n5. posthog.capture('pricing_abandoned', { time_on_page, calculator_used }) — exit intent with calculator engagement flag\n\nRun these for at least 2 weeks before the redesign to get a real baseline, and 2 weeks after to measure the actual delta — this is what turns the modeled 10–25% range into a number you can trust. Weekly review focus once live: the calculator_used flag on abandoned sessions — users who interact with the calculator but still leave are hitting a different friction point, worth investigating separately."
     }
   ],
   "checklist": [
-    { "id": "c-1", "task": "Implement transaction volume savings calculator above the plan grid", "done": false, "tip": "Default inputs: $50,000/month volume, $85 average transaction. These are your ICP medians — confirm with your actual customer data before publishing." },
-    { "id": "c-2", "task": "Restructure page layout: savings calculator first, plan recommendation second, CTA third", "done": false, "tip": "The plan grid should not be visible on initial load. It appears only after the calculator outputs a recommendation. Remove the cognitive burden of choosing from 5 options." },
-    { "id": "c-3", "task": "Collapse plan display from 5 to 3 (Starter, Growth, Scale) — archive Micro and Enterprise inline", "done": false, "tip": "Micro plan attracts low-LTV users who will churn on the first price increase. Enterprise users should come through your sales motion, not self-serve." },
-    { "id": "c-4", "task": "Deploy 5 PostHog pricing page events — prioritize calculator_interacted and checkout_initiated", "done": false, "tip": "These two events give you the clearest signal on whether the calculator is working. Set up a daily email digest in PostHog for the first 14 days post-launch." },
-    { "id": "c-5", "task": "Reduce feature bullet points per plan from 22 to 5 highest-value differentiators", "done": false, "tip": "For a payments product: instant payouts, fraud detection rate, reconciliation speed, support SLA, and API rate limits are the 5 that drive the decision. Everything else is a distraction." },
-    { "id": "c-6", "task": "A/B test the savings-first headline against the current feature-first headline for 14 days", "done": false, "tip": "Use PostHog feature flags for clean A/B attribution. Minimum sample size for statistical significance at your traffic level: 1,200 visitors per variant." }
+    { "id": "c-1", "task": "Pull your current pricing_page_loaded → checkout_initiated conversion rate from existing analytics", "done": true, "tip": "This is the single most valuable number you have and we don't. Do this before anything else in this document." },
+    { "id": "c-2", "task": "Implement the transaction-volume savings calculator above the plan grid", "done": false, "tip": "Use a documented, current competitor rate — not a stale or rounded one. Sophisticated buyers will check it." },
+    { "id": "c-3", "task": "Restructure page layout: savings calculator first, plan recommendation second, CTA third", "done": false, "tip": "The 5-plan grid shouldn't be visible on initial load — only after the calculator outputs a recommendation." },
+    { "id": "c-4", "task": "Collapse plan display from 5 to 3 (Starter, Growth, Scale) — but check usage data first", "done": false, "tip": "Confirm which plans your existing customers actually use before archiving Micro or gating Enterprise — see Avoid section." },
+    { "id": "c-5", "task": "Deploy the 5 PostHog pricing-page events — prioritize calculator_interacted and checkout_initiated", "done": false, "tip": "Run for 2 weeks pre-change and 2 weeks post-change to get a real before/after number instead of relying on our modeled range." },
+    { "id": "c-6", "task": "Reduce feature bullet points per plan from ~22 to 5 highest-value differentiators", "done": false, "tip": "For a payments product: instant payouts, fraud detection, reconciliation speed, support SLA, and API rate limits are common high-decision-weight features — validate against your own customer interviews if possible." }
   ],
   "diagnosis": {
-    "signal": "PayFlux's pricing page receives 8,200 unique monthly visitors with an average session duration of 6.3 minutes — a strong signal of genuine purchase intent. The free-to-paid conversion rate sits at 4.1%. The revenue gap between intent and action represents $38,000/month in unrealized MRR at current traffic levels.",
+    "signal": "PayFlux's pricing page displays 5 plan tiers with an average of ~22 feature bullet points each — ~110 discrete data points, measured directly from the page's HTML. The page also has no usage-based savings calculator and a 3.4s mobile LCP. We do not have your visitor count, session duration, or conversion rate — those require your own analytics, which we don't have access to. What we can say is that a page asking a first-time visitor to self-classify across 110 data points is a documented friction pattern; whether it's actually suppressing your conversion rate is something only your own funnel data can confirm.",
     "friction": {
-      "mechanism": "Pricing Paralysis via Feature Overload",
-      "rootCause": "5 plans × 22 feature line-items = 110 discrete data points a user must process before selecting a plan. For a payments infrastructure product, the cognitive overhead of self-classifying into the correct tier compounds with the perceived risk of choosing wrong — potentially disrupting live transaction infrastructure."
+      "mechanism": "Pricing Paralysis via Feature Overload (measured structure, modeled behavioral impact)",
+      "rootCause": "5 plans × ~22 feature line-items require a first-time visitor to process ~110 discrete data points before selecting a plan. For a payments infrastructure product specifically, the cognitive overhead of self-classifying into the correct tier compounds with the perceived risk of misconfiguring live transaction infrastructure — a documented pattern in checkout-usability research, not something we've measured on your actual users."
+    },
+    "finalDecision": {
+      "type": "A",
+      "label": "Collapse to 3 plans with 5 features each",
+      "action": "Reduce visible plans from 5 to 3 (Starter, Growth, Scale) after confirming usage distribution with your own data. Display only 5 key differentiating features per plan. Gate Enterprise behind an inline contact form. Add a progressive-disclosure toggle for the full feature list.",
+      "reasoning": "Of the three approaches, this is the one most directly grounded in what we actually measured — plan count and feature density — without requiring you to build new calculator infrastructure before you've validated the simpler fix. It's also the easiest to reverse if it underperforms.",
+      "tradeoff": "Requires you to check plan-usage data first (see Avoid section) — skipping that check risks archiving a plan your best customers rely on. Some enterprise-tier prospects may feel constrained by the reduced default feature set; the progressive-disclosure toggle mitigates this."
     },
     "decisions": [
       {
         "type": "A — Conservative",
         "label": "Collapse to 3 plans with 5 features each",
-        "action": "Reduce visible plans from 5 to 3 (Starter, Growth, Scale). Display only 5 key differentiating features per plan. Archive Micro as a legacy tier. Gate Enterprise behind an inline contact form. Add a 'See all features' progressive disclosure toggle.",
-        "reasoning": "Hick's Law: decision time increases logarithmically with options. Cutting from 5 to 3 plans reduces decision complexity by 40%. Reducing from 22 to 5 features per plan removes 85% of the comparison cognitive load. Baymard research shows this pattern increases checkout initiation by 35–50% in fintech SaaS contexts.",
+        "action": "Reduce visible plans from 5 to 3 (Starter, Growth, Scale). Display only 5 key differentiating features per plan. Archive Micro as a legacy tier only after confirming its usage. Gate Enterprise behind an inline contact form.",
+        "reasoning": "Hick's Law predicts decision time increases with option count — cutting from 5 to 3 plans and 22 to 5 features directly reduces the measured complexity. Published checkout research associates this pattern with meaningfully higher checkout initiation, though that's a benchmark, not a measurement of PayFlux specifically.",
         "tradeoff": "Some enterprise-tier prospects may feel constrained by the reduced visible feature set. The progressive disclosure toggle addresses this without cluttering the default view."
       },
       {
         "type": "B — Aggressive",
         "label": "Replace the pricing grid with a usage-based savings calculator",
-        "action": "Eliminate the plan grid from the default view. Replace with an interactive calculator: user inputs monthly transaction volume → system outputs cost comparison versus Stripe standard rates → recommends one plan → shows the annual ROI of switching. Plan grid appears only as a secondary reference.",
-        "reasoning": "Converts the pricing decision from a product-expertise task to a math problem the user cannot lose. When the calculator shows '$16,812 in annual savings versus Stripe', the $99/month subscription is not a cost — it is a 168:1 return on investment. Removes 100% of the self-classification burden.",
-        "tradeoff": "Requires calculator engineering (5–8 days). Pricing model must translate directly to a per-volume formula. If enterprise contracts involve custom rates, gate those above a volume threshold with an Enterprise CTA."
+        "action": "Eliminate the plan grid from the default view. Replace with an interactive calculator: user inputs monthly transaction volume, system outputs a cost comparison and recommends one plan. Plan grid appears only as a secondary reference.",
+        "reasoning": "Converts the pricing decision from a self-classification task into a calculation the user can't get wrong. This is a larger, riskier build than option A, but removes more of the measured complexity if it works.",
+        "tradeoff": "Requires calculator engineering (5–8 days) and a defensible, current competitor-fee comparison — an inaccurate calculator would be worse than the current page. If enterprise contracts involve custom rates, those need a separate gated path."
       },
       {
         "type": "C — Lateral",
         "label": "Restructure the page to lead with ROI, bury the price",
-        "action": "Reorder the page: savings calculator first (above the fold), plan selector second, CTA third. Default the calculator to $50,000/month (ICP median). Show the monthly and annual savings versus Stripe before revealing the subscription cost. Let the user see the value delta before the price.",
-        "reasoning": "Anchors value before cost. When a user sees '$1,401/month in savings' before seeing '$99/month', the subscription cost becomes trivially justified. This information ordering shift alone has produced 60%+ conversion rate improvements in analogous fintech contexts — with zero changes to the underlying pricing.",
-        "tradeoff": "Requires a full page restructure and copy rewrite. The calculator must be accurate enough to withstand scrutiny — a savings estimate that does not hold up in practice damages trust post-conversion."
+        "action": "Reorder the page: savings calculator first (above the fold), plan selector second, CTA third. Show the modeled savings before revealing the subscription cost.",
+        "reasoning": "Anchors value before cost, per published pricing-psychology research. Combines the risk profile of B with an additional information-ordering bet — untested on your specific audience.",
+        "tradeoff": "Requires a full page restructure and copy rewrite, plus the same calculator-accuracy requirement as option B. The largest scope of the three options for an unverified incremental gain over B alone."
       }
     ]
   }
