@@ -481,11 +481,11 @@ export default function AdminDashboard() {
       });
 
       // 4. Write deliverable to Supabase — page goes live immediately, no rebuild needed
-      const clientKey = (selectedClient.company || selectedClient.name || "client")
+      const clientKey = (selectedClient.company_name || selectedClient.company || "client")
         .toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
       const deliverableData = {
         clientKey,
-        clientName: selectedClient.company || selectedClient.name || "Client",
+        clientName: selectedClient.company_name || selectedClient.company || "Client",
         date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
         consultant: "Signal & Friction",
         loomUrl,
