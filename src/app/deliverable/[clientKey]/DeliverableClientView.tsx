@@ -11,6 +11,14 @@
  * a prospect's public surface (PageSpeed + raw HTML) unless they grant
  * access to their own funnel data. See EvidenceBadge / ImpactRangeBlock /
  * ConfidenceBadge below — never let a MODELED figure render as if measured.
+ *
+ * TYPE SCALE — shared identically by both segment branches below:
+ *   1. Hero title   — text-5xl md:text-6xl, font-serif font-semibold, leading-[1.05]
+ *   2. Hero lede     — text-lg, font-serif font-light, leading-relaxed, max-w-60ch
+ *   3. Section header — text-xs, font-mono font-semibold, uppercase, tracked (eyebrow label — small by design)
+ *   4. Card title    — text-xl, font-serif font-medium, leading-snug
+ *   5. Card body     — text-base, leading-relaxed, font-light, max-w guarded (Inter, never mono)
+ *   6. Label / meta  — text-xs, font-mono, uppercase where applicable (floor — nothing renders smaller)
  */
 "use client";
 
@@ -49,7 +57,7 @@ function EvidenceBadge({ tier }: { tier: EvidenceTier }) {
   const c = tierColor(tier);
   return (
     <span
-      className="font-mono text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border flex-shrink-0"
+      className="font-mono text-xs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border flex-shrink-0"
       style={{ background: c.bg, borderColor: c.border, color: c.text }}
     >
       {tier}
@@ -61,12 +69,12 @@ function EvidenceSection({ items }: { items: EvidenceItem[] }) {
   return (
     <div className="space-y-0">
       {items.map((item, i) => (
-        <div key={i} className="flex items-start justify-between gap-4 border-b border-[#D4A853]/5 py-3">
+        <div key={i} className="flex items-start justify-between gap-4 border-b border-[#D4A853]/5 py-3.5">
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-[#F5F0EB] leading-relaxed">
+            <p className="text-base text-[#F5F0EB] leading-relaxed max-w-[70ch]">
               {item.label}: <span className="text-[#D4A853] font-medium">{item.value}</span>
             </p>
-            <p className="text-[11px] text-[#7A6F65] mt-0.5 leading-relaxed">{item.source}</p>
+            <p className="text-xs text-[#7A6F65] mt-1 font-mono">{item.source}</p>
           </div>
           <EvidenceBadge tier={item.tier} />
         </div>
@@ -84,7 +92,7 @@ function confidenceLabel(level: number): { text: string; label: string } {
 function ConfidenceBadge({ level, reason }: { level: number; reason?: string }) {
   const c = confidenceLabel(level);
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       <div className="flex items-center gap-2.5 font-mono text-xs">
         <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: c.text }} />
         <span className="uppercase tracking-wider font-bold" style={{ color: c.text }}>
@@ -92,7 +100,7 @@ function ConfidenceBadge({ level, reason }: { level: number; reason?: string }) 
         </span>
         <span className="text-[#7A6F65]">{level}/100</span>
       </div>
-      {reason && <p className="text-xs text-[#B0A89E] leading-relaxed pl-4">{reason}</p>}
+      {reason && <p className="text-base text-[#B0A89E] leading-relaxed pl-4 max-w-[65ch]">{reason}</p>}
     </div>
   );
 }
@@ -110,24 +118,24 @@ function ImpactRangeBlock({
   const suffix = range.unit === "%" ? "%" : "";
   const conf = confidenceLevel !== undefined ? confidenceLabel(confidenceLevel) : null;
   return (
-    <div className="border border-[#D4A853]/15 bg-[#D4A853]/[0.03] p-6 rounded space-y-3">
+    <div className="border border-[#D4A853]/15 bg-[#D4A853]/[0.03] p-6 rounded space-y-3.5">
       <div className="flex items-center gap-2">
         <EvidenceBadge tier="modeled" />
         <span className="font-mono text-xs uppercase tracking-wider text-[#7A6F65]">Projected Impact</span>
       </div>
-      <p className="text-lg text-[#F5F0EB] leading-relaxed font-serif">
+      <p className="text-xl text-[#F5F0EB] leading-snug font-serif font-medium">
         {prefix}{range.low}–{prefix}{range.high}{suffix} on {range.step}
       </p>
-      <p className="text-xs text-[#B0A89E] leading-relaxed">
+      <p className="text-base text-[#B0A89E] leading-relaxed max-w-[65ch]">
         Modeled from {range.modeledFrom}. <strong className="text-[#F5F0EB] font-normal">Not measured against your funnel.</strong>
       </p>
       {conf && (
-        <p className="text-xs text-[#7A6F65] leading-relaxed">
+        <p className="text-base text-[#7A6F65] leading-relaxed max-w-[65ch]">
           Confidence: <span style={{ color: conf.text }}>{conf.label.toLowerCase()}</span>
           {confidenceReason ? ` — ${confidenceReason}` : ""}.
         </p>
       )}
-      <p className="text-xs leading-relaxed border-t border-[#D4A853]/10 pt-3" style={{ color: "#5C9A6B" }}>
+      <p className="text-base leading-relaxed max-w-[65ch] border-t border-[#D4A853]/10 pt-3.5" style={{ color: "#5C9A6B" }}>
         This range narrows once we see {range.narrowsWith}.
       </p>
     </div>
@@ -136,14 +144,14 @@ function ImpactRangeBlock({
 
 function AvoidSection({ items }: { items: AvoidItem[] }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {items.map((item, i) => (
         <div key={i} className="border-l-2 border-[#C85C5C]/30 pl-4 py-0.5">
-          <p className="text-sm text-[#F5F0EB] leading-relaxed">
+          <p className="text-base text-[#F5F0EB] leading-relaxed max-w-[65ch]">
             <span className="text-[#C85C5C] mr-1.5">✗</span>
             {item.action}
           </p>
-          <p className="text-xs text-[#7A6F65] leading-relaxed mt-1">{item.reason}</p>
+          <p className="text-base text-[#7A6F65] leading-relaxed mt-1.5 max-w-[65ch]">{item.reason}</p>
         </div>
       ))}
     </div>
@@ -153,17 +161,17 @@ function AvoidSection({ items }: { items: AvoidItem[] }) {
 function FinalDecisionCard({ decision }: { decision: Decision }) {
   return (
     <div className="border border-[#D4A853]/8 bg-[#110F0D]/20 p-8 md:p-10 rounded">
-      <h3 className="text-2xl font-serif text-[#F5F0EB] mb-4 font-medium">{decision.label}</h3>
-      <div className="space-y-3">
-        <p className="text-sm text-[#B0A89E] leading-relaxed">
+      <h3 className="text-xl font-serif text-[#F5F0EB] mb-4 font-medium leading-snug">{decision.label}</h3>
+      <div className="space-y-4">
+        <p className="text-base text-[#B0A89E] leading-relaxed max-w-[68ch]">
           <strong className="text-[#F5F0EB] font-medium font-mono text-xs uppercase tracking-wider mr-2">Action:</strong>
           {decision.action}
         </p>
-        <p className="text-sm text-[#B0A89E] leading-relaxed">
+        <p className="text-base text-[#B0A89E] leading-relaxed max-w-[68ch]">
           <strong className="text-[#F5F0EB] font-medium font-mono text-xs uppercase tracking-wider mr-2">Reasoning:</strong>
           {decision.reasoning}
         </p>
-        <p className="text-sm text-[#B0A89E] leading-relaxed border-t border-[#D4A853]/8 pt-4 mt-4">
+        <p className="text-base text-[#B0A89E] leading-relaxed max-w-[68ch] border-t border-[#D4A853]/8 pt-4 mt-4">
           <strong className="text-[#7A6F65] font-medium font-mono text-xs uppercase tracking-wider mr-2">Trade-off:</strong>
           {decision.tradeoff}
         </p>
@@ -187,19 +195,19 @@ function LegacyDecisionsGrid({ decisions }: { decisions: Decision[] }) {
               Option {decision.type}
             </span>
           </div>
-          <h3 className="text-2xl font-serif text-[#F5F0EB] mb-4 group-hover:text-[#C85C5C] transition-colors font-medium">
+          <h3 className="text-xl font-serif text-[#F5F0EB] mb-4 group-hover:text-[#C85C5C] transition-colors font-medium leading-snug">
             {decision.label}
           </h3>
-          <div className="space-y-3">
-            <p className="text-sm text-[#B0A89E] leading-relaxed">
+          <div className="space-y-4">
+            <p className="text-base text-[#B0A89E] leading-relaxed max-w-[68ch]">
               <strong className="text-[#F5F0EB] font-medium font-mono text-xs uppercase tracking-wider mr-2">Action:</strong>
               {decision.action}
             </p>
-            <p className="text-sm text-[#B0A89E] leading-relaxed">
+            <p className="text-base text-[#B0A89E] leading-relaxed max-w-[68ch]">
               <strong className="text-[#F5F0EB] font-medium font-mono text-xs uppercase tracking-wider mr-2">Reasoning:</strong>
               {decision.reasoning}
             </p>
-            <p className="text-sm text-[#B0A89E] leading-relaxed border-t border-[#D4A853]/8 pt-4 mt-4">
+            <p className="text-base text-[#B0A89E] leading-relaxed max-w-[68ch] border-t border-[#D4A853]/8 pt-4 mt-4">
               <strong className="text-[#7A6F65] font-medium font-mono text-xs uppercase tracking-wider mr-2">Trade-off:</strong>
               {decision.tradeoff}
             </p>
@@ -220,8 +228,8 @@ function LoomSection({ url, label, dense }: { url?: string; label: string; dense
       <h2
         className={
           dense
-            ? "font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853] mb-5"
-            : "font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E] mb-6"
+            ? "font-mono text-xs font-semibold uppercase tracking-[0.2em] text-[#D4A853] mb-5"
+            : "font-mono text-xs font-semibold uppercase tracking-[0.15em] text-[#B0A89E] mb-6"
         }
       >
         {label}
@@ -364,10 +372,10 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                 <span className="w-1.5 h-1.5 rounded-full bg-[#D4A853]/30" />
                 <span className="font-mono text-xs text-[#7A6F65]">{d.date}</span>
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-[#F5F0EB] font-serif">
+              <h1 className="text-5xl md:text-6xl font-semibold tracking-tight text-[#F5F0EB] font-serif leading-[1.05]">
                 {d.clientName}
               </h1>
-              <p className="text-sm text-[#B0A89E] leading-relaxed max-w-[60ch]">
+              <p className="text-lg text-[#B0A89E] leading-relaxed max-w-[60ch] font-serif font-light">
                 Your self-serve operating space. Complete the daily checklist, work through the training
                 modules, and record the reference Loom when you&apos;re ready.
               </p>
@@ -439,7 +447,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
         {/* Modules & Checklist */}
         <section className="py-12 px-6 max-w-[1000px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-7 space-y-6">
-            <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853]">
+            <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-[#D4A853]">
               02 — Implementation Checklist
             </h2>
             <div className="space-y-3 bg-[#110F0D]/40 border border-[#D4A853]/5 p-5 rounded-lg">
@@ -456,11 +464,11 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                   }`}>
                     {item.done && <span className="text-xs text-[#0A0908] font-bold">✓</span>}
                   </div>
-                  <div className="space-y-1 select-none">
+                  <div className="space-y-1.5 select-none">
                     <p className={`text-xs font-mono font-medium ${item.done ? "line-through text-[#7A6F65]" : "text-[#F5F0EB]"}`}>
                       {item.task}
                     </p>
-                    <p className="text-xs text-[#B0A89E] leading-relaxed">{item.tip}</p>
+                    <p className="text-base text-[#B0A89E] leading-relaxed max-w-[65ch]">{item.tip}</p>
                   </div>
                 </div>
               ))}
@@ -468,7 +476,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
           </div>
 
           <div className="lg:col-span-5 space-y-6">
-            <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853]">
+            <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-[#D4A853]">
               03 — Training Curriculum
             </h2>
             <div className="space-y-2">
@@ -488,7 +496,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-[#B0A89E] leading-relaxed">{mod.description}</p>
+                  <p className="text-base text-[#B0A89E] leading-relaxed max-w-[60ch]">{mod.description}</p>
                 </div>
               ))}
             </div>
@@ -497,8 +505,8 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                 <span className="font-mono text-xs text-[#D4A853]/70 tracking-wider uppercase block">
                   Active Module — Content
                 </span>
-                <h4 className="text-xs font-bold font-mono text-[#F5F0EB]">{activeModule.title}</h4>
-                <p className="text-xs text-[#B0A89E] leading-relaxed font-mono">{activeModule.content}</p>
+                <h4 className="text-xl font-serif font-medium text-[#F5F0EB] leading-snug">{activeModule.title}</h4>
+                <p className="text-base text-[#B0A89E] leading-relaxed max-w-[68ch]">{activeModule.content}</p>
               </div>
             )}
           </div>
@@ -508,7 +516,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
         {d.avoid?.length ? (
           <section className="py-12 px-6 border-t border-[#D4A853]/5">
             <div className="max-w-[1000px] mx-auto">
-              <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-[#D4A853] mb-6">
+              <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-[#D4A853] mb-6">
                 04 — What Not To Do
               </h2>
               <AvoidSection items={d.avoid} />
@@ -556,14 +564,14 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
 
           <motion.h1
             variants={itemVariants}
-            className="text-5xl md:text-6xl font-serif text-[#F5F0EB] tracking-tight leading-[1.05] mb-6"
+            className="text-5xl md:text-6xl font-serif font-semibold text-[#F5F0EB] tracking-tight leading-[1.05] mb-6"
           >
             {d.clientName}
           </motion.h1>
 
           <motion.p
             variants={itemVariants}
-            className="text-lg text-[#B0A89E] max-w-[55ch] leading-relaxed font-light"
+            className="text-lg text-[#B0A89E] max-w-[60ch] leading-relaxed font-serif font-light"
           >
             This dashboard displays your custom Signal &amp; Friction diagnostic brief. Below is the clinical
             breakdown of your funnel signal, the dominant cognitive friction mechanism, and the recommended
@@ -599,7 +607,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
           transition={{ delay: 0.3 }}
         >
           <div className="max-w-[900px] mx-auto space-y-6">
-            <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E] mb-2">
+            <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.15em] text-[#B0A89E] mb-2">
               00 — What We Know, and How
             </h2>
             {d.confidenceLevel !== undefined && (
@@ -632,10 +640,10 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
       >
         <div className="max-w-[900px] mx-auto">
           <motion.div variants={itemVariants}>
-            <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E] mb-4">
+            <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.15em] text-[#B0A89E] mb-4">
               01 — The Funnel Signal
             </h2>
-            <p className="text-lg text-[#F5F0EB] leading-relaxed max-w-[65ch] font-serif font-light">
+            <p className="text-base text-[#F5F0EB] leading-relaxed max-w-[65ch] font-light">
               {d.diagnosis?.signal}
             </p>
           </motion.div>
@@ -652,10 +660,10 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
       >
         <div className="max-w-[900px] mx-auto">
           <motion.div variants={itemVariants}>
-            <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E] mb-4">
+            <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.15em] text-[#B0A89E] mb-4">
               02 — The Friction Bottleneck
             </h2>
-            <h3 className="text-3xl font-serif text-[#C85C5C] tracking-tight mb-4 font-normal">
+            <h3 className="text-xl font-serif text-[#C85C5C] tracking-tight mb-4 font-medium leading-snug">
               {d.diagnosis?.friction?.mechanism}
             </h3>
             <p className="text-base text-[#B0A89E] leading-relaxed max-w-[60ch] font-light">
@@ -673,7 +681,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
         viewport={{ once: true, margin: "-100px" }}
       >
         <div className="max-w-[900px] mx-auto">
-          <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E] mb-8">
+          <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.15em] text-[#B0A89E] mb-8">
             Visualization — Interface Overhaul (Drag to Compare)
           </h2>
           <BeforeAfterSlider data={ba} clientName={d.clientName} />
@@ -691,7 +699,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
         <div className="max-w-[900px] mx-auto space-y-8">
           <motion.h2
             variants={itemVariants}
-            className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E]"
+            className="font-mono text-xs font-semibold uppercase tracking-[0.15em] text-[#B0A89E]"
           >
             03 — The Recommendation
           </motion.h2>
@@ -723,7 +731,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
           viewport={{ once: true, margin: "-100px" }}
         >
           <div className="max-w-[900px] mx-auto">
-            <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E] mb-8">
+            <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.15em] text-[#B0A89E] mb-8">
               04 — What Not To Do
             </h2>
             <AvoidSection items={d.avoid} />
@@ -742,7 +750,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
           <div className="max-w-[900px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
             {checklist.length > 0 && (
               <div className="space-y-6">
-                <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E]">
+                <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.15em] text-[#B0A89E]">
                   05 — Implementation Checklist
                 </h2>
                 <div className="space-y-3">
@@ -759,11 +767,11 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                       }`}>
                         {item.done && <span className="text-xs text-[#0A0908] font-bold">✓</span>}
                       </div>
-                      <div className="space-y-1 select-none">
+                      <div className="space-y-1.5 select-none">
                         <p className={`text-xs font-mono font-medium ${item.done ? "line-through text-[#7A6F65]" : "text-[#F5F0EB]"}`}>
                           {item.task}
                         </p>
-                        <p className="text-xs text-[#7A6F65] leading-relaxed">{item.tip}</p>
+                        <p className="text-base text-[#7A6F65] leading-relaxed max-w-[60ch]">{item.tip}</p>
                       </div>
                     </div>
                   ))}
@@ -773,7 +781,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
 
             {d.learningModules?.length ? (
               <div className="space-y-6">
-                <h2 className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E]">
+                <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.15em] text-[#B0A89E]">
                   06 — Implementation Detail
                 </h2>
                 <div className="space-y-2">
@@ -786,16 +794,16 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                       }`}
                     >
                       <span className="font-mono text-xs text-[#D4A853]/80 uppercase tracking-widest block mb-1.5">{mod.title}</span>
-                      <p className="text-xs text-[#7A6F65] leading-relaxed">{mod.description}</p>
+                      <p className="text-base text-[#7A6F65] leading-relaxed max-w-[60ch]">{mod.description}</p>
                     </div>
                   ))}
                 </div>
                 {activeModule && (
                   <div className="border border-[#D4A853]/12 bg-[#110F0D]/40 p-5 rounded-lg space-y-3">
-                    <span className="font-mono text-xs text-[#D4A853]/70 tracking-wider uppercase block">
+                    <h4 className="text-xl font-serif font-medium text-[#F5F0EB] leading-snug">
                       {activeModule.title}
-                    </span>
-                    <p className="text-xs text-[#B0A89E] leading-relaxed whitespace-pre-line">{activeModule.content}</p>
+                    </h4>
+                    <p className="text-base text-[#B0A89E] leading-relaxed max-w-[68ch] whitespace-pre-line">{activeModule.content}</p>
                   </div>
                 )}
               </div>
@@ -858,7 +866,7 @@ function BeforeAfterSlider({ data: ba, clientName }: { data: BeforeAfterData; cl
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-[450px] bg-[#0A0908] border border-[#D4A853]/8 rounded-lg overflow-hidden select-none"
+      className="relative w-full h-[520px] bg-[#0A0908] border border-[#D4A853]/8 rounded-lg overflow-hidden select-none"
     >
       {/* Before Panel */}
       <div className="absolute inset-0 w-full h-full p-6 flex flex-col justify-between">
@@ -870,7 +878,7 @@ function BeforeAfterSlider({ data: ba, clientName }: { data: BeforeAfterData; cl
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center flex-1 py-4">
             <div className="space-y-2">
               <span className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider block">Current State</span>
-              <h4 className="font-serif text-lg text-[#F5F0EB]">{ba.beforeTitle}</h4>
+              <h4 className="font-serif text-xl font-medium leading-snug text-[#F5F0EB]">{ba.beforeTitle}</h4>
               <div className="border border-[#C85C5C]/20 bg-[#C85C5C]/5 p-3 rounded space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   {ba.beforeFields.map((val, idx) => (
@@ -892,7 +900,7 @@ function BeforeAfterSlider({ data: ba, clientName }: { data: BeforeAfterData; cl
             </div>
             <div className="border border-[#D4A853]/8 p-4 rounded bg-[#110F0D]/50 space-y-2 border-l-2 border-[#C85C5C]/40">
               <span className="font-mono text-xs text-[#C85C5C] uppercase tracking-widest block">Diagnosed Friction</span>
-              <p className="text-xs text-[#B0A89E] leading-relaxed">{ba.beforeIssue}</p>
+              <p className="text-base text-[#B0A89E] leading-relaxed max-w-[42ch]">{ba.beforeIssue}</p>
               <div className="font-mono text-xs text-[#C85C5C]">{ba.beforeBounce}</div>
             </div>
           </div>
@@ -919,7 +927,7 @@ function BeforeAfterSlider({ data: ba, clientName }: { data: BeforeAfterData; cl
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center flex-1 py-4">
               <div className="space-y-2">
                 <span className="font-mono text-xs text-[#B0A89E] uppercase tracking-wider block">After the Fix</span>
-                <h4 className="font-serif text-lg text-[#F5F0EB]">{ba.afterTitle}</h4>
+                <h4 className="font-serif text-xl font-medium leading-snug text-[#F5F0EB]">{ba.afterTitle}</h4>
                 <div className="border border-[#D4A853]/20 bg-[#D4A853]/5 p-3 rounded space-y-3">
                   <div className="space-y-1.5">
                     <label className="text-xs text-[#B0A89E] block">Reference</label>
@@ -938,7 +946,7 @@ function BeforeAfterSlider({ data: ba, clientName }: { data: BeforeAfterData; cl
               <div className="border border-[#D4A853]/8 p-4 rounded bg-[#0A0908] space-y-2 border-l-2 border-[#D4A853]/40">
                 <span className="font-mono text-xs text-[#D4A853] uppercase tracking-widest block">What Changes</span>
                 {ba.afterDescription && (
-                  <p className="text-xs text-[#B0A89E] leading-relaxed">{ba.afterDescription}</p>
+                  <p className="text-base text-[#B0A89E] leading-relaxed max-w-[42ch]">{ba.afterDescription}</p>
                 )}
                 <div className="font-mono text-xs text-[#5C9A6B]">{ba.afterGain}</div>
               </div>
