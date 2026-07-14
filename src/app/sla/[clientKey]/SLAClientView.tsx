@@ -107,6 +107,31 @@ export default function SLAClientView({ staticClientKey }: { staticClientKey: st
     );
   }
 
+  // Explicit failure state — same reasoning as DeliverableClientView.tsx:
+  // deliberately generic, never distinguishes "no such client" from
+  // "wrong/missing cid".
+  if (!fetching && !data) {
+    return (
+      <div className="min-h-screen bg-[#0A0908] flex items-center justify-center px-6">
+        <div className="text-center space-y-3 max-w-md">
+          <p className="font-mono text-xs uppercase tracking-[0.15em] text-[#C85C5C]">
+            Access Unavailable
+          </p>
+          <p className="text-base text-[#B0A89E] leading-relaxed">
+            This link isn&apos;t active, or you don&apos;t have access to it.
+          </p>
+          <p className="text-sm text-[#7A6F65]">
+            If you believe this is a mistake, contact{" "}
+            <a href="mailto:hello@signal-and-friction.com" className="text-[#D4A853] hover:underline">
+              hello@signal-and-friction.com
+            </a>
+            .
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[#0A0908] text-[#F5F0EB] overflow-x-hidden">
 

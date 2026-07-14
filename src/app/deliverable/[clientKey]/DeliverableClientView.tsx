@@ -338,6 +338,36 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
     );
   }
 
+  // Explicit failure state — reached only when the fetch has finished and
+  // still no content exists (the live-shell seed has no clientName, and
+  // demo pages always have one from their bundled static data, so this
+  // never fires for them). A blank shell rendering with empty sections is
+  // a worse failure mode than a clear message: it looks broken rather than
+  // denied. Deliberately generic — doesn't distinguish "no such client"
+  // from "wrong/missing cid" so a guessed URL can't be used to confirm a
+  // client exists.
+  if (!fetching && !d.clientName) {
+    return (
+      <div className="min-h-screen bg-[#0A0908] flex items-center justify-center px-6">
+        <div className="text-center space-y-3 max-w-md">
+          <p className="font-mono text-xs uppercase tracking-[0.15em] text-[#C85C5C]">
+            Access Unavailable
+          </p>
+          <p className="text-base text-[#B0A89E] leading-relaxed">
+            This link isn&apos;t active, or you don&apos;t have access to it.
+          </p>
+          <p className="text-sm text-[#7A6F65]">
+            If you believe this is a mistake, contact{" "}
+            <a href="mailto:hello@signal-and-friction.com" className="text-[#D4A853] hover:underline">
+              hello@signal-and-friction.com
+            </a>
+            .
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (isMicrodosing) {
     return (
       <main className="min-h-screen bg-[#0A0908] text-[#F5F0EB] overflow-x-hidden">

@@ -1,0 +1,12 @@
+# Publish-without-rebuild routing for /deliverable/* and /sla/* is handled
+# by Pages Functions (functions/deliverable/[[path]].ts and
+# functions/sla/[[path]].ts), not by rules here. A _redirects wildcard was
+# tried first and rejected after empirical testing against a deployed
+# preview: Cloudflare applies _redirects rules unconditionally regardless
+# of whether a static file exists at the request path, and a same-path
+# "passthrough" rule (source === destination) turned out to be a silent
+# no-op rather than a working exclusion — it never took precedence over a
+# wildcard listed after it. Functions give real conditional logic instead
+# of relying on that text DSL's undocumented edge cases, and Functions
+# already take precedence over static assets by default, so no _redirects
+# entry is needed for these paths at all.
