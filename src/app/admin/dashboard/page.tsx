@@ -117,6 +117,120 @@ interface PromptVersion {
   created_at: string;
 }
 
+interface EvidenceItem {
+  tier: "measured" | "modeled" | "pending";
+  label: string;
+  value: string;
+  source: string;
+}
+
+interface ScanReport {
+  domain: string;
+  url: string;
+  scannedAt: string;
+  grade: string;
+  frictionScore: number;
+  psError: string | null;
+  metrics: {
+    lcp: { ms: number; label: string; status: string };
+    tbt: { ms: number; label: string; status: string };
+    cls: { value: number; status: string };
+    performanceScore: number;
+    speedIndex: { ms: number; label: string };
+  };
+  signals: {
+    platform: string | null;
+    hasStripe: boolean;
+    stripeAsync: boolean;
+    scriptCount: number;
+    missingOgTags: string[];
+    hasCheckoutIndicator: boolean;
+    hasLazyImages: boolean;
+  };
+  frictionMechanisms: Array<{ type: string; severity: "high" | "medium" | "low"; detail: string }>;
+  abandonmentDelta: number;
+}
+
+// Measured facts come straight from the scan report — never LLM-generated,
+// so every claim tagged "measured" is directly traceable to a specific
+// field on this object. Modeled/pending are also assembled here, not by
+// Claude, for the same reason: an LLM asked to self-report its own
+// evidence tier is exactly the kind of claim this whole system exists to
+// distrust.
+function buildEvidenceFromScan(report: ScanReport): EvidenceItem[] {
+  const scannedDate = new Date(report.scannedAt || Date.now()).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+  const src = `Google PageSpeed Insights, mobile, scanned ${scannedDate}`;
+  const htmlSrc = `Raw HTML scan, scanned ${scannedDate}`;
+  const evidence: EvidenceItem[] = [];
+  const m = report.metrics;
+
+  if (m?.lcp) evidence.push({ tier: "measured", label: "Largest Contentful Paint (mobile)", value: m.lcp.label, source: src });
+  if (m?.tbt) evidence.push({ tier: "measured", label: "Total Blocking Time (mobile)", value: m.tbt.label, source: src });
+  if (m?.cls) evidence.push({ tier: "measured", label: "Cumulative Layout Shift (mobile)", value: String(m.cls.value), source: src });
+  if (m?.performanceScore !== undefined) evidence.push({ tier: "measured", label: "Performance score (mobile)", value: `${m.performanceScore} / 100`, source: src });
+
+  const s = report.signals;
+  if (s) {
+    if (s.platform) evidence.push({ tier: "measured", label: "Platform", value: s.platform, source: htmlSrc });
+    evidence.push({ tier: "measured", label: "Payment processor", value: s.hasStripe ? "Stripe.js detected" : "Not detected", source: htmlSrc });
+    if (s.missingOgTags?.length) evidence.push({ tier: "measured", label: "Missing OG tags", value: s.missingOgTags.join(", "), source: htmlSrc });
+    evidence.push({ tier: "measured", label: "Checkout indicator in HTML", value: s.hasCheckoutIndicator ? "Detected" : "Not detected", source: htmlSrc });
+  }
+
+  (report.frictionMechanisms || []).forEach((fm) => {
+    evidence.push({ tier: "measured", label: `${fm.type} signal`, value: `${fm.severity} severity`, source: `${htmlSrc} — ${fm.detail}` });
+  });
+
+  if (report.abandonmentDelta > 0) {
+    evidence.push({
+      tier: "modeled",
+      label: "Abandonment pressure from LCP",
+      value: `+${report.abandonmentDelta}% vs. baseline`,
+      source: `Modeled from LCP-to-abandonment coefficient (industry aggregate, not ${report.domain}'s own funnel)`,
+    });
+  }
+
+  evidence.push({
+    tier: "pending",
+    label: "Actual checkout/conversion completion rate",
+    value: "Unknown",
+    source: "Requires the client's own analytics — not visible from a public scan",
+  });
+  evidence.push({
+    tier: "pending",
+    label: "Session recordings or step-level funnel data",
+    value: "Unknown",
+    source: "Requires the client's own session-recording tool — not available from a public scan",
+  });
+
+  return evidence;
+}
+
+// Confidence is a function of how much concrete public signal the scan
+// actually found — never Claude's self-reported certainty. Capped at 60
+// regardless of signal density: this is always modeled from public
+// surface signals, never the client's own funnel, so it should never read
+// as "high confidence."
+function computeConfidence(report: ScanReport): { level: number; reason: string } {
+  if (report.psError) {
+    return {
+      level: 20,
+      reason: "PageSpeed measurement failed for this URL — confidence is capped low since even the baseline performance signal is unavailable.",
+    };
+  }
+  const mechanisms = report.frictionMechanisms || [];
+  const highCount = mechanisms.filter((m) => m.severity === "high").length;
+  const level = Math.min(30 + mechanisms.length * 6 + highCount * 6, 60);
+  const reason =
+    mechanisms.length > 0
+      ? `Based on ${mechanisms.length} concrete friction signal${mechanisms.length === 1 ? "" : "s"} detected in the public scan (${highCount} high severity) — capped at moderate since this is public-signal analysis, not the client's own funnel data.`
+      : "No specific friction signals detected beyond baseline performance metrics — capped low since there's little here to anchor a specific hypothesis on.";
+  return { level, reason };
+}
+
 interface AutoDiagnosis {
   scan?: {
     domain?: string;
@@ -207,45 +321,123 @@ export default function AdminDashboard() {
   const [modalCurrentRate, setModalCurrentRate] = useState(0);
   const [modalGuaranteeStatus, setModalGuaranteeStatus] = useState<'active' | 'met' | 'failed_refunded' | 'voided'>('active');
 
-  const handleDiagnose = async () => {
+  // Scan + AI diagnostic pipeline (Part B) — the admin's own "Generate
+  // diagnosis" now runs the same real scan-url.ts + diagnose.ts pipeline
+  // the public /scan flow uses, instead of guessing from a company name.
+  const [scanUrl, setScanUrl] = useState("");
+  const [scanLoading, setScanLoading] = useState(false);
+  const [scanResult, setScanResult] = useState<ScanReport | null>(null);
+  const [scanError, setScanError] = useState("");
+  const [diagEvidence, setDiagEvidence] = useState<EvidenceItem[]>([]);
+  const [diagConfidenceLevel, setDiagConfidenceLevel] = useState<number | null>(null);
+  const [diagConfidenceReason, setDiagConfidenceReason] = useState("");
+
+  // Manual-only fields (Part C, non-negotiable) — never populated by the
+  // AI pipeline above. Required at publish time; see validateDeliveryPayload.
+  const [deliverImpactLow, setDeliverImpactLow] = useState("");
+  const [deliverImpactHigh, setDeliverImpactHigh] = useState("");
+  const [deliverImpactUnit, setDeliverImpactUnit] = useState<"%" | "$">("%");
+  const [deliverImpactStep, setDeliverImpactStep] = useState("");
+  const [deliverImpactModeledFrom, setDeliverImpactModeledFrom] = useState("");
+  const [deliverImpactNarrowsWith, setDeliverImpactNarrowsWith] = useState("");
+  const [deliverDecisionLabel, setDeliverDecisionLabel] = useState("");
+  const [deliverDecisionAction, setDeliverDecisionAction] = useState("");
+  const [deliverDecisionReasoning, setDeliverDecisionReasoning] = useState("");
+  const [deliverDecisionTradeoff, setDeliverDecisionTradeoff] = useState("");
+  const [deliverAvoid, setDeliverAvoid] = useState<{ action: string; reason: string }[]>([{ action: "", reason: "" }]);
+
+  // Full-schema optional fields (Part E) — capturable, not required; the
+  // deliverable renderer already treats these as optional.
+  const [deliverBeforeTitle, setDeliverBeforeTitle] = useState("");
+  const [deliverBeforeIssue, setDeliverBeforeIssue] = useState("");
+  const [deliverBeforeFields, setDeliverBeforeFields] = useState<string[]>([""]);
+  const [deliverBeforeWarning, setDeliverBeforeWarning] = useState("");
+  const [deliverBeforeBounce, setDeliverBeforeBounce] = useState("");
+  const [deliverAfterTitle, setDeliverAfterTitle] = useState("");
+  const [deliverAfterDomain, setDeliverAfterDomain] = useState("");
+  const [deliverAfterConfirmation, setDeliverAfterConfirmation] = useState("");
+  const [deliverAfterDescription, setDeliverAfterDescription] = useState("");
+  const [deliverAfterGain, setDeliverAfterGain] = useState("");
+  const [deliverChecklist, setDeliverChecklist] = useState<{ task: string; tip: string }[]>([]);
+  const [deliverLearningModules, setDeliverLearningModules] = useState<{ title: string; description: string; content: string }[]>([]);
+
+  // Part D — dry-run review + hard validation gate before any DB write.
+  const [showDryRun, setShowDryRun] = useState(false);
+  const [dryRunPayload, setDryRunPayload] = useState<any | null>(null);
+  const [dryRunErrors, setDryRunErrors] = useState<string[]>([]);
+
+  // Real pipeline: scan the client's actual site (PageSpeed + HTML, same
+  // as the public /scan flow), derive evidence tiers + confidence from
+  // that report programmatically, then feed the same report to Claude for
+  // signal/friction/hypothesis synthesis. Previously this button skipped
+  // scan-url.ts entirely and fed Claude a guessed domain — the admin's own
+  // diagnostic was less grounded than the public one. Not anymore.
+  const handleScanAndDiagnose = async () => {
     if (!selectedClient) return;
+    if (!scanUrl.trim()) {
+      setScanError("Enter the client's website URL first — this scan hits their real site.");
+      return;
+    }
+    setScanLoading(true);
     setDiagnoseLoading(true);
+    setScanError("");
+    setScanResult(null);
     setDiagnoseResult(null);
+    setDiagEvidence([]);
+    setDiagConfidenceLevel(null);
+    setDiagConfidenceReason("");
     try {
-      // Build site matrix from available client data
-      const payload = {
-        company: selectedClient.company_name,
-        domain: selectedClient.contact_email?.split('@')[1] ?? selectedClient.company_name,
-        context: selectedClient.private_notes || undefined,
-        // Hydrate from lead answers if available
-        frictionScore: selectedClient.cognitive_fatigue_score ?? undefined,
-      };
-      const res = await fetch('/api/diagnose', {
+      const scanRes = await fetch('/api/scan-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ url: scanUrl.trim(), company: selectedClient.company_name }),
       });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-        throw new Error(err.error || `HTTP ${res.status}`);
+      if (!scanRes.ok) {
+        const err = await scanRes.json().catch(() => ({ error: `HTTP ${scanRes.status}` }));
+        throw new Error(err.error || `Scan failed: HTTP ${scanRes.status}`);
       }
-      const data = await res.json();
-      setDiagnoseResult(data);
-    } catch (e: any) {
-      setDiagnoseResult({
-        signal: 'Vault not initialized — Anthropic key pending',
-        friction: e.message || 'Endpoint unreachable in local dev environment',
-        hypothesis: 'Deploy to Cloudflare Pages and run vault.create_secret() in Supabase to activate live diagnostics.',
-        decision: {
-          type: 'A',
-          label: 'Initialize Vault',
-          action: 'Run: SELECT vault.create_secret(\'sk-ant-…\', \'ANTHROPIC_API_KEY\', \'S&F production\') in Supabase SQL editor.',
-          reasoning: 'The /api/diagnose endpoint retrieves the key from Supabase Vault at runtime. Key is absent in current environment.',
-          tradeoff: 'One-time setup cost. Zero key leakage after initialization.',
-        },
-        confidence: 0,
+      const report: ScanReport = await scanRes.json();
+      setScanResult(report);
+      setScanLoading(false);
+
+      const evidence = buildEvidenceFromScan(report);
+      setDiagEvidence(evidence);
+      const { level, reason } = computeConfidence(report);
+      setDiagConfidenceLevel(level);
+      setDiagConfidenceReason(reason);
+
+      const diagRes = await fetch('/api/diagnose', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company: selectedClient.company_name,
+          domain: report.domain,
+          url: report.url,
+          grade: report.grade,
+          frictionScore: report.frictionScore,
+          metrics: report.metrics,
+          signals: report.signals,
+          frictionMechanisms: report.frictionMechanisms,
+          abandonmentDelta: report.abandonmentDelta,
+          context: selectedClient.private_notes || undefined,
+        }),
       });
+      if (!diagRes.ok) {
+        const err = await diagRes.json().catch(() => ({ error: `HTTP ${diagRes.status}` }));
+        throw new Error(err.error || `Diagnosis failed: HTTP ${diagRes.status}`);
+      }
+      const diag = await diagRes.json();
+      setDiagnoseResult(diag);
+
+      // Auto-populate the delivery form's narrative fields — still
+      // editable before publish, never auto-published as-is.
+      setDiagSignal(diag.signal || "");
+      setDiagMechanism(diag.friction || "");
+      setDiagRootCause(diag.hypothesis || "");
+    } catch (e: any) {
+      setScanError(e.message || "Scan/diagnosis failed");
     } finally {
+      setScanLoading(false);
       setDiagnoseLoading(false);
     }
   };
@@ -263,7 +455,44 @@ export default function AdminDashboard() {
     setDiagnosticError("");
     setSelectedClientLogs([]);
     setSelectedClientInteractions([]);
-    
+    setScanUrl("");
+    setScanLoading(false);
+    setScanResult(null);
+    setScanError("");
+    setDiagnoseResult(null);
+    setDiagEvidence([]);
+    setDiagConfidenceLevel(null);
+    setDiagConfidenceReason("");
+    setDiagSignal("");
+    setDiagMechanism("");
+    setDiagRootCause("");
+    setDeliverImpactLow("");
+    setDeliverImpactHigh("");
+    setDeliverImpactUnit("%");
+    setDeliverImpactStep("");
+    setDeliverImpactModeledFrom("");
+    setDeliverImpactNarrowsWith("");
+    setDeliverDecisionLabel("");
+    setDeliverDecisionAction("");
+    setDeliverDecisionReasoning("");
+    setDeliverDecisionTradeoff("");
+    setDeliverAvoid([{ action: "", reason: "" }]);
+    setDeliverBeforeTitle("");
+    setDeliverBeforeIssue("");
+    setDeliverBeforeFields([""]);
+    setDeliverBeforeWarning("");
+    setDeliverBeforeBounce("");
+    setDeliverAfterTitle("");
+    setDeliverAfterDomain("");
+    setDeliverAfterConfirmation("");
+    setDeliverAfterDescription("");
+    setDeliverAfterGain("");
+    setDeliverChecklist([]);
+    setDeliverLearningModules([]);
+    setShowDryRun(false);
+    setDryRunPayload(null);
+    setDryRunErrors([]);
+
     if (client.guarantee) {
       setModalTrafficGate(!!client.guarantee.traffic_gate_met);
       // Auto-compute SLA gate: delivered within 72h of lead created_at
@@ -421,17 +650,128 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleConfirmDelivery = async () => {
-    if (!selectedClient || !selectedClient.projectId) return;
-    if (!loomUrl || !loomUrl.includes("loom.com/")) {
-      setDiagnosticError("A valid Loom URL is required (e.g. loom.com/share/...)");
-      return;
+  // Assembles the full DeliverableData payload from every field currently
+  // in the form (Part E — evidence/impact/confidence/avoid/beforeAfter/
+  // checklist/learningModules, not just Loom+signal+mechanism+rootCause).
+  const buildDeliveryPayload = () => {
+    const clientKey = (selectedClient.company_name || selectedClient.company || "client")
+      .toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    const cleanAvoid = deliverAvoid.filter((a) => a.action.trim() && a.reason.trim());
+    const cleanChecklist = deliverChecklist.filter((c) => c.task.trim());
+    const cleanModules = deliverLearningModules.filter((m) => m.title.trim());
+    const cleanBeforeFields = deliverBeforeFields.filter((f) => f.trim());
+
+    return {
+      clientKey,
+      clientName: selectedClient.company_name || selectedClient.company || "Client",
+      date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+      consultant: "Signal & Friction",
+      loomUrl,
+      figmaUrl: figmaUrl || null,
+      segment: (selectedClient.segment === "DFY" || selectedClient.segment === "high_ticket") ? "high_ticket" : "microdosing",
+      founderFocusScore: 85,
+      daysRemaining: 30,
+      guaranteeStatus: "Specificity Guarantee Active",
+      telemetryStatus: scanResult ? "✓ Public Signal Scan Confirmed (PageSpeed + HTML)" : "✓ Traffic & Baseline Confirmed",
+      evidence: diagEvidence.length ? diagEvidence : undefined,
+      projectedImpact: deliverImpactStep.trim()
+        ? {
+            low: Number(deliverImpactLow),
+            high: Number(deliverImpactHigh),
+            unit: deliverImpactUnit,
+            step: deliverImpactStep.trim(),
+            modeledFrom: deliverImpactModeledFrom.trim(),
+            narrowsWith: deliverImpactNarrowsWith.trim(),
+          }
+        : null,
+      confidenceLevel: diagConfidenceLevel ?? undefined,
+      confidenceReason: diagConfidenceReason || undefined,
+      avoid: cleanAvoid,
+      beforeAfter: deliverBeforeTitle.trim()
+        ? {
+            beforeTitle: deliverBeforeTitle.trim(),
+            beforeIssue: deliverBeforeIssue.trim(),
+            beforeFields: cleanBeforeFields,
+            beforeWarning: deliverBeforeWarning.trim() || undefined,
+            beforeBounce: deliverBeforeBounce.trim(),
+            afterTitle: deliverAfterTitle.trim(),
+            afterDomain: deliverAfterDomain.trim(),
+            afterConfirmation: deliverAfterConfirmation.trim() || undefined,
+            afterDescription: deliverAfterDescription.trim() || undefined,
+            afterGain: deliverAfterGain.trim(),
+          }
+        : undefined,
+      checklist: cleanChecklist.length
+        ? cleanChecklist.map((c, i) => ({ id: `c-${i + 1}`, task: c.task.trim(), tip: c.tip.trim(), done: false }))
+        : undefined,
+      learningModules: cleanModules.length
+        ? cleanModules.map((m, i) => ({ id: `m-${i + 1}`, title: m.title.trim(), description: m.description.trim(), content: m.content.trim(), completed: false }))
+        : undefined,
+      diagnosis: {
+        signal: diagSignal || "See Loom video for complete funnel signal breakdown.",
+        friction: {
+          mechanism: diagMechanism || "Cognitive Load",
+          rootCause: diagRootCause || "See Loom video for complete root cause analysis and recommended intervention stack.",
+        },
+        finalDecision: {
+          type: "A",
+          label: deliverDecisionLabel.trim(),
+          action: deliverDecisionAction.trim(),
+          reasoning: deliverDecisionReasoning.trim(),
+          tradeoff: deliverDecisionTradeoff.trim(),
+        },
+        decisions: [],
+      },
+    };
+  };
+
+  // Part C/D — hard validation gate. projectedImpact, finalDecision, and
+  // avoid[] are never model-generated: if any of them is incomplete, or
+  // any measured claim has no traceable source, or the Loom URL is
+  // missing/placeholder, publishing is refused outright.
+  const validateDeliveryPayload = (payload: ReturnType<typeof buildDeliveryPayload>): string[] => {
+    const errors: string[] = [];
+    if (!loomUrl || !loomUrl.includes("loom.com/") || loomUrl.toLowerCase().includes("placeholder")) {
+      errors.push('Loom URL is missing, invalid, or contains "placeholder".');
     }
-    setDiagnosticError("");
+    const pi = payload.projectedImpact;
+    if (!pi || !pi.step || !pi.modeledFrom || !pi.narrowsWith || Number.isNaN(pi.low) || Number.isNaN(pi.high)) {
+      errors.push("Projected Impact is required and must be fully filled in — this is never model-generated.");
+    }
+    const fd = payload.diagnosis.finalDecision;
+    if (!fd.label || !fd.action || !fd.reasoning || !fd.tradeoff) {
+      errors.push("Final Decision is required and must be fully filled in — this is never model-generated.");
+    }
+    if (!payload.avoid || payload.avoid.length === 0) {
+      errors.push("At least one complete Avoid item is required — this is never model-generated.");
+    }
+    const unsourced = (payload.evidence || []).filter((e) => e.tier === "measured" && !e.source?.trim());
+    if (unsourced.length > 0) {
+      errors.push(`${unsourced.length} measured evidence item(s) have no traceable source.`);
+    }
+    return errors;
+  };
+
+  // Part D — builds and validates the payload, then opens the dry-run
+  // review. Nothing is written to the database from this function.
+  const handleReviewDelivery = () => {
+    if (!selectedClient) return;
+    const payload = buildDeliveryPayload();
+    const errors = validateDeliveryPayload(payload);
+    setDryRunPayload(payload);
+    setDryRunErrors(errors);
+    setShowDryRun(true);
+  };
+
+  // The only function in this file that writes a deliverable — reachable
+  // exclusively from the dry-run panel, and only when dryRunErrors is empty.
+  const handlePublishDelivery = async () => {
+    if (!selectedClient || !selectedClient.projectId || !dryRunPayload || dryRunErrors.length > 0) return;
     setActionLoading("delivered");
     try {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tsaarsuuclvkjsgjcmoj.supabase.co";
       const headers = getAuthHeaders();
+      const clientKey = dryRunPayload.clientKey;
 
       // 1. Insert interaction
       const resInter = await fetch(`${supabaseUrl}/rest/v1/interactions`, {
@@ -481,29 +821,6 @@ export default function AdminDashboard() {
       });
 
       // 4. Write deliverable to Supabase — page goes live immediately, no rebuild needed
-      const clientKey = (selectedClient.company_name || selectedClient.company || "client")
-        .toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-      const deliverableData = {
-        clientKey,
-        clientName: selectedClient.company_name || selectedClient.company || "Client",
-        date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
-        consultant: "Signal & Friction",
-        loomUrl,
-        figmaUrl: figmaUrl || null,
-        segment: (selectedClient.segment === "DFY" || selectedClient.segment === "high_ticket") ? "high_ticket" : "microdosing",
-        founderFocusScore: 85,
-        daysRemaining: 30,
-        guaranteeStatus: "Specificity Guarantee Active",
-        telemetryStatus: "✓ Traffic & Baseline Confirmed",
-        diagnosis: {
-          signal: diagSignal || "Custom diagnostic analysis delivered via Loom walkthrough. See video for complete funnel signal breakdown.",
-          friction: {
-            mechanism: diagMechanism || "Cognitive Load",
-            rootCause: diagRootCause || "See Loom video for complete root cause analysis and recommended intervention stack.",
-          },
-          decisions: [],
-        },
-      };
       await fetch(`${supabaseUrl}/rest/v1/deliverables`, {
         method: "POST",
         headers: {
@@ -511,7 +828,7 @@ export default function AdminDashboard() {
           "Content-Type": "application/json",
           "Prefer": "resolution=merge-duplicates",
         },
-        body: JSON.stringify({ client_key: clientKey, data: deliverableData, updated_at: new Date().toISOString() }),
+        body: JSON.stringify({ client_key: clientKey, data: dryRunPayload, updated_at: new Date().toISOString() }),
       });
 
       // 5. Fire delivery notification email — non-fatal, idempotent
@@ -527,12 +844,42 @@ export default function AdminDashboard() {
 
       setSelectedClient((prev: any) => prev ? { ...prev, status: "delivered" } : null);
       setShowDiagnosticForm(false);
+      setShowDryRun(false);
+      setDryRunPayload(null);
+      setDryRunErrors([]);
       setLoomUrl("");
       setFigmaUrl("");
       setDiagSignal("");
-      setDiagMechanism("Cognitive Load");
+      setDiagMechanism("");
       setDiagRootCause("");
-      
+      setScanUrl("");
+      setScanResult(null);
+      setDiagEvidence([]);
+      setDiagConfidenceLevel(null);
+      setDiagConfidenceReason("");
+      setDeliverImpactLow("");
+      setDeliverImpactHigh("");
+      setDeliverImpactStep("");
+      setDeliverImpactModeledFrom("");
+      setDeliverImpactNarrowsWith("");
+      setDeliverDecisionLabel("");
+      setDeliverDecisionAction("");
+      setDeliverDecisionReasoning("");
+      setDeliverDecisionTradeoff("");
+      setDeliverAvoid([{ action: "", reason: "" }]);
+      setDeliverBeforeTitle("");
+      setDeliverBeforeIssue("");
+      setDeliverBeforeFields([""]);
+      setDeliverBeforeWarning("");
+      setDeliverBeforeBounce("");
+      setDeliverAfterTitle("");
+      setDeliverAfterDomain("");
+      setDeliverAfterConfirmation("");
+      setDeliverAfterDescription("");
+      setDeliverAfterGain("");
+      setDeliverChecklist([]);
+      setDeliverLearningModules([]);
+
       // Refresh interactions & logs
       const resLogs = await fetch(`${supabaseUrl}/rest/v1/activity_log?client_id=eq.${selectedClient.id}&order=created_at.desc`, { headers });
       if (resLogs.ok) {
@@ -546,6 +893,7 @@ export default function AdminDashboard() {
       await fetchAllData();
     } catch (e: any) {
       setDiagnosticError(e.message);
+      setShowDryRun(false);
     } finally {
       setActionLoading(null);
     }
@@ -1997,7 +2345,7 @@ export default function AdminDashboard() {
                         <button
                           type="button"
                           disabled={actionLoading !== null}
-                          onClick={() => setShowDiagnosticForm(true)}
+                          onClick={() => { setShowDiagnosticForm(true); setShowDryRun(false); setDryRunPayload(null); setDryRunErrors([]); }}
                           className="px-3 py-1.5 bg-[#D4A853]/10 border border-[#D4A853]/30 text-[#D4A853] rounded-md text-xs font-mono hover:bg-[#D4A853]/25 cursor-pointer uppercase disabled:opacity-50"
                         >
                           {"📬 Deliver Diagnostic"}
@@ -2021,10 +2369,127 @@ export default function AdminDashboard() {
                       </div>
                     )}
 
-                    {/* Diagnostic Form */}
-                    {showDiagnosticForm && (
-                      <div className="border border-[#D4A853]/20 p-4 rounded bg-black/40 space-y-3 mt-3">
+                    {/* ── AI Diagnostic Engine — real scan + Claude synthesis ── */}
+                    <div className="border border-[#D4A853]/20 p-4 rounded bg-black/30 space-y-4 mt-3">
+                      <div className="flex items-center justify-between border-b border-[#D4A853]/8 pb-2">
+                        <span className="font-mono text-xs text-[#D4A853] uppercase tracking-wider">{"AI Diagnostic Engine"}</span>
+                        <span className="font-mono text-[9px] text-[#7A6F65] uppercase border border-[#D4A853]/10 px-2 py-0.5 rounded">
+                          scan-url.ts → Claude · Vault Secured
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[#B0A89E] uppercase text-xs font-mono">{"Client Website URL"}</label>
+                        <input
+                          type="text"
+                          value={scanUrl}
+                          onChange={(e) => setScanUrl(e.target.value)}
+                          placeholder="https://client-product.com"
+                          className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white text-xs font-mono focus:border-[#D4A853] focus:outline-none"
+                        />
+                        <p className="text-[9px] text-[#7A6F65] font-mono">{"This hits the client's real site — PageSpeed Insights + HTML scan, same pipeline as the public /scan flow."}</p>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={diagnoseLoading || scanLoading}
+                        onClick={handleScanAndDiagnose}
+                        className="w-full py-2.5 bg-[#D4A853]/10 border border-[#D4A853]/30 text-[#D4A853] rounded font-mono text-xs uppercase tracking-wider hover:bg-[#D4A853]/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {scanLoading ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <span className="w-3 h-3 border border-[#D4A853] border-t-transparent rounded-full animate-spin inline-block" />
+                            {"Scanning site (PageSpeed + HTML)..."}
+                          </span>
+                        ) : diagnoseLoading ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <span className="w-3 h-3 border border-[#D4A853] border-t-transparent rounded-full animate-spin inline-block" />
+                            {"Processing telemetry..."}
+                          </span>
+                        ) : 'Scan & Diagnose →'}
+                      </button>
+                      {scanError && <p className="text-[#C85C5C] text-xs font-mono">{scanError}</p>}
+
+                      {diagEvidence.length > 0 && (
+                        <div className="space-y-2 pt-1">
+                          <span className="font-mono text-[9px] text-[#7A6F65] uppercase tracking-widest block">{"Evidence — every item traceable to the scan above"}</span>
+                          <div className="space-y-1.5">
+                            {diagEvidence.map((ev, i) => {
+                              const tierColor = ev.tier === "measured" ? "#5C9A6B" : ev.tier === "modeled" ? "#D4A853" : "#7A6F65";
+                              return (
+                                <div key={i} className="bg-black/40 border border-white/5 p-2 rounded flex items-start justify-between gap-2">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-mono text-[10px] text-[#F5F0EB]">{ev.label}: <span style={{ color: tierColor }}>{ev.value}</span></p>
+                                    <p className="font-mono text-[9px] text-[#7A6F65] mt-0.5">{ev.source}</p>
+                                  </div>
+                                  <span
+                                    className="font-mono text-[8px] font-bold uppercase px-1.5 py-0.5 rounded border shrink-0"
+                                    style={{ color: tierColor, borderColor: tierColor + "60", background: tierColor + "15" }}
+                                  >
+                                    {ev.tier}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {diagConfidenceLevel !== null && (
+                        <div className="space-y-1">
+                          <div className="flex justify-between font-mono text-[10px]">
+                            <span className="text-[#7A6F65] uppercase">{"Confidence (computed from evidence density)"}</span>
+                            <span className={`font-bold ${diagConfidenceLevel >= 65 ? 'text-[#5C9A6B]' : diagConfidenceLevel >= 40 ? 'text-[#D4A853]' : 'text-[#C85C5C]'}`}>
+                              {diagConfidenceLevel}/100
+                            </span>
+                          </div>
+                          <div className="h-1 bg-black/60 rounded-full overflow-hidden border border-[#D4A853]/8">
+                            <div
+                              className={`h-full rounded-full transition-all ${diagConfidenceLevel >= 65 ? 'bg-[#5C9A6B]' : diagConfidenceLevel >= 40 ? 'bg-[#D4A853]' : 'bg-[#C85C5C]'}`}
+                              style={{ width: `${diagConfidenceLevel}%` }}
+                            />
+                          </div>
+                          <p className="font-mono text-[9px] text-[#7A6F65] leading-relaxed">{diagConfidenceReason}</p>
+                        </div>
+                      )}
+
+                      {diagnoseResult && (
+                        <div className="space-y-3 pt-1">
+                          <div className="bg-black/40 border border-[#D4A853]/8 p-3 rounded space-y-1">
+                            <span className="font-mono text-[9px] text-[#D4A853] uppercase tracking-widest block">{"Signal (candidateFriction) — auto-filled below, editable"}</span>
+                            <p className="font-mono text-xs text-[#F5F0EB] leading-relaxed">{diagnoseResult.signal}</p>
+                          </div>
+                          <div className="bg-black/40 border border-[#C85C5C]/15 p-3 rounded space-y-1">
+                            <span className="font-mono text-[9px] text-[#C85C5C] uppercase tracking-widest block">{"Friction Mechanism (behavioralMechanism) — auto-filled below, editable"}</span>
+                            <p className="font-mono text-xs text-[#F5F0EB] leading-relaxed">{diagnoseResult.friction}</p>
+                          </div>
+                          <div className="bg-black/40 border border-white/5 p-3 rounded space-y-1">
+                            <span className="font-mono text-[9px] text-[#B0A89E] uppercase tracking-widest block">{"Causal Hypothesis — auto-filled as Root Cause below, editable"}</span>
+                            <p className="font-mono text-xs text-[#B0A89E] leading-relaxed italic">{diagnoseResult.hypothesis}</p>
+                          </div>
+                          <div className="bg-[#D4A853]/[0.04] border border-[#D4A853]/20 p-3 rounded space-y-2">
+                            <span className="font-mono text-[9px] text-[#7A6F65] uppercase tracking-widest block">{"Claude's suggested decision — reference only. finalDecision below is never auto-filled from this."}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-[9px] font-bold bg-[#D4A853] text-[#0A0908] px-1.5 py-0.5 rounded">
+                                {diagnoseResult.decision.type}
+                              </span>
+                              <span className="font-mono text-xs font-bold text-[#F5F0EB]">{diagnoseResult.decision.label}</span>
+                            </div>
+                            <p className="font-mono text-xs text-[#F5F0EB] leading-relaxed">
+                              <span className="text-[#D4A853]">→ </span>{diagnoseResult.decision.action}
+                            </p>
+                            <p className="font-mono text-xs text-[#7A6F65] leading-relaxed">{diagnoseResult.decision.reasoning}</p>
+                            <p className="font-mono text-[10px] text-[#7A6F65]/70 border-t border-[#D4A853]/8 pt-2 mt-1">
+                              {"Tradeoff: "}{diagnoseResult.decision.tradeoff}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Diagnostic Deliverable Form */}
+                    {showDiagnosticForm && !showDryRun && (
+                      <div className="border border-[#D4A853]/20 p-4 rounded bg-black/40 space-y-4 mt-3">
                         <span className="font-mono text-xs text-[#D4A853] uppercase block">{"Diagnostic Deliverable Form"}</span>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono">
                           <div className="space-y-1">
                             <label className="text-[#B0A89E] uppercase">{"Loom URL (Required)"}</label>
@@ -2052,21 +2517,19 @@ export default function AdminDashboard() {
                               value={diagSignal}
                               onChange={(e) => setDiagSignal(e.target.value)}
                               rows={2}
-                              placeholder="Ej: 85% de trials de alto intento llegan al pricing selector. Solo el 12% procede al checkout..."
+                              placeholder="Auto-filled from Scan & Diagnose above — editable."
                               className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none resize-none"
                             />
                           </div>
                           <div className="space-y-1">
                             <label className="text-[#B0A89E] uppercase">{"Friction Mechanism"}</label>
-                            <select
+                            <input
+                              type="text"
                               value={diagMechanism}
                               onChange={(e) => setDiagMechanism(e.target.value)}
+                              placeholder="Auto-filled from Scan & Diagnose above — editable."
                               className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none"
-                            >
-                              {["Cognitive Load", "Trust Deficit", "Technical Friction", "Ordering Error", "Value Ambiguity", "Motivation Gap"].map(m => (
-                                <option key={m} value={m}>{m}</option>
-                              ))}
-                            </select>
+                            />
                           </div>
                           <div className="space-y-1">
                             <label className="text-[#B0A89E] uppercase">{"Root Cause"}</label>
@@ -2074,40 +2537,132 @@ export default function AdminDashboard() {
                               value={diagRootCause}
                               onChange={(e) => setDiagRootCause(e.target.value)}
                               rows={2}
-                              placeholder="Describe the identified root cause..."
+                              placeholder="Auto-filled from Scan & Diagnose above — editable."
                               className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none resize-none"
                             />
                           </div>
                         </div>
-                        {(() => {
-                          const ck = (selectedClient?.company_name || selectedClient?.company || "client")
-                            .toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-                          const cid = selectedClient?.id ? `?cid=${encodeURIComponent(selectedClient.id)}` : "";
-                          return (
-                            <div className="space-y-1.5 text-[10px] font-mono">
-                              <div className="text-[#5C9A6B] bg-[#5C9A6B]/5 border border-[#5C9A6B]/15 px-3 py-1.5 rounded flex items-center justify-between gap-2">
-                                <span>{"✓ Deliverable active immediately — no rebuild"}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => navigator.clipboard.writeText(`https://signal-and-friction.com/deliverable/${ck}${cid}`).catch(() => {})}
-                                  className="shrink-0 text-[#5C9A6B] hover:text-white border border-[#5C9A6B]/30 px-2 py-0.5 rounded cursor-pointer"
-                                >
-                                  ⧉ /deliverable/{ck}
-                                </button>
+
+                        {/* ── REQUIRED, MANUAL ONLY — never model-generated ── */}
+                        <div className="border-2 border-[#C85C5C]/30 bg-[#C85C5C]/[0.03] p-3 rounded space-y-3">
+                          <span className="font-mono text-[10px] text-[#C85C5C] uppercase tracking-widest block">
+                            {"Required — Manual Only. Never AI-Generated."}
+                          </span>
+
+                          <div className="space-y-2">
+                            <span className="text-[#B0A89E] uppercase text-xs font-mono block">{"Projected Impact"}</span>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-mono">
+                              <input type="text" value={deliverImpactStep} onChange={(e) => setDeliverImpactStep(e.target.value)} placeholder="Step this range applies to (e.g. checkout completion rate)" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none md:col-span-2" />
+                              <div className="flex gap-2 items-center">
+                                <input type="number" value={deliverImpactLow} onChange={(e) => setDeliverImpactLow(e.target.value)} placeholder="Low" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none" />
+                                <span className="text-[#7A6F65]">–</span>
+                                <input type="number" value={deliverImpactHigh} onChange={(e) => setDeliverImpactHigh(e.target.value)} placeholder="High" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none" />
+                                <select value={deliverImpactUnit} onChange={(e) => setDeliverImpactUnit(e.target.value as "%" | "$")} className="bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none">
+                                  <option value="%">%</option>
+                                  <option value="$">$</option>
+                                </select>
                               </div>
-                              <div className="text-[#D4A853] bg-[#D4A853]/5 border border-[#D4A853]/15 px-3 py-1.5 rounded flex items-center justify-between gap-2">
-                                <span>{"⏱ SLA active — share with client now"}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => navigator.clipboard.writeText(`https://signal-and-friction.com/sla/${ck}${cid}`).catch(() => {})}
-                                  className="shrink-0 text-[#D4A853] hover:text-white border border-[#D4A853]/30 px-2 py-0.5 rounded cursor-pointer"
-                                >
-                                  ⧉ /sla/{ck}
-                                </button>
-                              </div>
+                              <input type="text" value={deliverImpactModeledFrom} onChange={(e) => setDeliverImpactModeledFrom(e.target.value)} placeholder="Modeled from (benchmark/coefficient named)" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none" />
+                              <input type="text" value={deliverImpactNarrowsWith} onChange={(e) => setDeliverImpactNarrowsWith(e.target.value)} placeholder="Narrows with (what client data would sharpen this)" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none" />
                             </div>
-                          );
-                        })()}
+                          </div>
+
+                          <div className="space-y-2 border-t border-[#C85C5C]/15 pt-3">
+                            <span className="text-[#B0A89E] uppercase text-xs font-mono block">{"Final Decision"}</span>
+                            <div className="space-y-2 text-xs font-mono">
+                              <input type="text" value={deliverDecisionLabel} onChange={(e) => setDeliverDecisionLabel(e.target.value)} placeholder="Decision label (short headline)" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none" />
+                              <textarea value={deliverDecisionAction} onChange={(e) => setDeliverDecisionAction(e.target.value)} rows={2} placeholder="Action — specific, implementable" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none resize-none" />
+                              <textarea value={deliverDecisionReasoning} onChange={(e) => setDeliverDecisionReasoning(e.target.value)} rows={2} placeholder="Reasoning — why this, grounded in the evidence" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none resize-none" />
+                              <textarea value={deliverDecisionTradeoff} onChange={(e) => setDeliverDecisionTradeoff(e.target.value)} rows={2} placeholder="Tradeoff — what this sacrifices or risks" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none resize-none" />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2 border-t border-[#C85C5C]/15 pt-3">
+                            <span className="text-[#B0A89E] uppercase text-xs font-mono block">{"What NOT To Do (at least 1 required)"}</span>
+                            {deliverAvoid.map((item, i) => (
+                              <div key={i} className="flex gap-2 items-start">
+                                <div className="flex-1 space-y-1.5">
+                                  <input
+                                    type="text"
+                                    value={item.action}
+                                    onChange={(e) => setDeliverAvoid((prev) => prev.map((a, idx) => (idx === i ? { ...a, action: e.target.value } : a)))}
+                                    placeholder="Action to avoid"
+                                    className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white text-xs font-mono focus:border-[#D4A853] focus:outline-none"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={item.reason}
+                                    onChange={(e) => setDeliverAvoid((prev) => prev.map((a, idx) => (idx === i ? { ...a, reason: e.target.value } : a)))}
+                                    placeholder="Why it backfires"
+                                    className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white text-xs font-mono focus:border-[#D4A853] focus:outline-none"
+                                  />
+                                </div>
+                                {deliverAvoid.length > 1 && (
+                                  <button type="button" onClick={() => setDeliverAvoid((prev) => prev.filter((_, idx) => idx !== i))} className="text-[#C85C5C] hover:text-white border border-[#C85C5C]/30 px-2 py-1 rounded font-mono text-xs shrink-0">✕</button>
+                                )}
+                              </div>
+                            ))}
+                            <button type="button" onClick={() => setDeliverAvoid((prev) => [...prev, { action: "", reason: "" }])} className="text-[#D4A853] hover:text-white border border-[#D4A853]/30 px-2 py-1 rounded font-mono text-xs">+ Add avoid item</button>
+                          </div>
+                        </div>
+
+                        {/* ── Optional full-schema capture ── */}
+                        <details className="border border-[#D4A853]/10 rounded">
+                          <summary className="font-mono text-[10px] text-[#B0A89E] uppercase tracking-widest p-2 cursor-pointer select-none">{"Before / After (optional)"}</summary>
+                          <div className="p-3 space-y-2 text-xs font-mono border-t border-[#D4A853]/10">
+                            <input type="text" value={deliverBeforeTitle} onChange={(e) => setDeliverBeforeTitle(e.target.value)} placeholder="Before title" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none" />
+                            <input type="text" value={deliverBeforeIssue} onChange={(e) => setDeliverBeforeIssue(e.target.value)} placeholder="Before issue (measured, from evidence)" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none" />
+                            <textarea
+                              value={deliverBeforeFields.join("\n")}
+                              onChange={(e) => setDeliverBeforeFields(e.target.value.split("\n"))}
+                              rows={3}
+                              placeholder={"Before fields, one per line"}
+                              className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none resize-none"
+                            />
+                            <input type="text" value={deliverBeforeWarning} onChange={(e) => setDeliverBeforeWarning(e.target.value)} placeholder="Before warning (optional)" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none" />
+                            <input type="text" value={deliverBeforeBounce} onChange={(e) => setDeliverBeforeBounce(e.target.value)} placeholder="Before bounce/audit line" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none" />
+                            <div className="border-t border-[#D4A853]/8 my-1" />
+                            <input type="text" value={deliverAfterTitle} onChange={(e) => setDeliverAfterTitle(e.target.value)} placeholder="After title" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none" />
+                            <input type="text" value={deliverAfterDomain} onChange={(e) => setDeliverAfterDomain(e.target.value)} placeholder="After domain/reference" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none" />
+                            <input type="text" value={deliverAfterConfirmation} onChange={(e) => setDeliverAfterConfirmation(e.target.value)} placeholder="After confirmation (optional)" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none" />
+                            <textarea value={deliverAfterDescription} onChange={(e) => setDeliverAfterDescription(e.target.value)} rows={2} placeholder="After description — what changes (optional)" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none resize-none" />
+                            <input type="text" value={deliverAfterGain} onChange={(e) => setDeliverAfterGain(e.target.value)} placeholder="After gain (modeled, not guaranteed)" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none" />
+                          </div>
+                        </details>
+
+                        <details className="border border-[#D4A853]/10 rounded">
+                          <summary className="font-mono text-[10px] text-[#B0A89E] uppercase tracking-widest p-2 cursor-pointer select-none">{`Implementation Checklist (optional, ${deliverChecklist.length})`}</summary>
+                          <div className="p-3 space-y-2 text-xs font-mono border-t border-[#D4A853]/10">
+                            {deliverChecklist.map((item, i) => (
+                              <div key={i} className="flex gap-2 items-start">
+                                <div className="flex-1 space-y-1.5">
+                                  <input type="text" value={item.task} onChange={(e) => setDeliverChecklist((prev) => prev.map((c, idx) => (idx === i ? { ...c, task: e.target.value } : c)))} placeholder="Task" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none" />
+                                  <input type="text" value={item.tip} onChange={(e) => setDeliverChecklist((prev) => prev.map((c, idx) => (idx === i ? { ...c, tip: e.target.value } : c)))} placeholder="Tip" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none" />
+                                </div>
+                                <button type="button" onClick={() => setDeliverChecklist((prev) => prev.filter((_, idx) => idx !== i))} className="text-[#C85C5C] hover:text-white border border-[#C85C5C]/30 px-2 py-1 rounded text-xs shrink-0">✕</button>
+                              </div>
+                            ))}
+                            <button type="button" onClick={() => setDeliverChecklist((prev) => [...prev, { task: "", tip: "" }])} className="text-[#D4A853] hover:text-white border border-[#D4A853]/30 px-2 py-1 rounded text-xs">+ Add checklist item</button>
+                          </div>
+                        </details>
+
+                        <details className="border border-[#D4A853]/10 rounded">
+                          <summary className="font-mono text-[10px] text-[#B0A89E] uppercase tracking-widest p-2 cursor-pointer select-none">{`Learning Modules (optional, ${deliverLearningModules.length})`}</summary>
+                          <div className="p-3 space-y-2 text-xs font-mono border-t border-[#D4A853]/10">
+                            {deliverLearningModules.map((mod, i) => (
+                              <div key={i} className="flex gap-2 items-start border-b border-[#D4A853]/5 pb-2">
+                                <div className="flex-1 space-y-1.5">
+                                  <input type="text" value={mod.title} onChange={(e) => setDeliverLearningModules((prev) => prev.map((m, idx) => (idx === i ? { ...m, title: e.target.value } : m)))} placeholder="Module title" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none" />
+                                  <input type="text" value={mod.description} onChange={(e) => setDeliverLearningModules((prev) => prev.map((m, idx) => (idx === i ? { ...m, description: e.target.value } : m)))} placeholder="Description" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none" />
+                                  <textarea value={mod.content} onChange={(e) => setDeliverLearningModules((prev) => prev.map((m, idx) => (idx === i ? { ...m, content: e.target.value } : m)))} rows={2} placeholder="Content" className="w-full bg-black/60 border border-[#D4A853]/8 p-2 rounded text-white focus:border-[#D4A853] focus:outline-none resize-none" />
+                                </div>
+                                <button type="button" onClick={() => setDeliverLearningModules((prev) => prev.filter((_, idx) => idx !== i))} className="text-[#C85C5C] hover:text-white border border-[#C85C5C]/30 px-2 py-1 rounded text-xs shrink-0">✕</button>
+                              </div>
+                            ))}
+                            <button type="button" onClick={() => setDeliverLearningModules((prev) => [...prev, { title: "", description: "", content: "" }])} className="text-[#D4A853] hover:text-white border border-[#D4A853]/30 px-2 py-1 rounded text-xs">+ Add learning module</button>
+                          </div>
+                        </details>
+
                         {diagnosticError && <p className="text-[#C85C5C] text-xs font-mono">{diagnosticError}</p>}
                         <div className="flex justify-end gap-2 pt-2">
                           <button
@@ -2122,89 +2677,133 @@ export default function AdminDashboard() {
                           </button>
                           <button
                             type="button"
-                            onClick={handleConfirmDelivery}
+                            onClick={handleReviewDelivery}
                             className="px-3 py-1 bg-[#D4A853] text-[#0A0908] hover:bg-[#E8C97A] rounded font-mono font-bold text-xs"
                           >
-                            {"Confirm Delivery"}
+                            {"Review Delivery →"}
                           </button>
                         </div>
                       </div>
                     )}
-                  </div>
 
-                  {/* ── AI Diagnostic Engine ── */}
-                  <div className="border border-[#D4A853]/20 p-4 rounded bg-black/30 space-y-4">
-                    <div className="flex items-center justify-between border-b border-[#D4A853]/8 pb-2">
-                      <span className="font-mono text-xs text-[#D4A853] uppercase tracking-wider">{"AI Diagnostic Engine"}</span>
-                      <span className="font-mono text-[9px] text-[#7A6F65] uppercase border border-[#D4A853]/10 px-2 py-0.5 rounded">
-                        Claude · Vault Secured
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      disabled={diagnoseLoading}
-                      onClick={() => { setDiagnoseResult(null); handleDiagnose(); }}
-                      className="w-full py-2.5 bg-[#D4A853]/10 border border-[#D4A853]/30 text-[#D4A853] rounded font-mono text-xs uppercase tracking-wider hover:bg-[#D4A853]/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {diagnoseLoading ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <span className="w-3 h-3 border border-[#D4A853] border-t-transparent rounded-full animate-spin inline-block" />
-                          {"Processing telemetry..."}
-                        </span>
-                      ) : 'Generate diagnosis →'}
-                    </button>
+                    {/* ── Part D: Dry-run review — nothing is written until Publish is clicked here ── */}
+                    {showDryRun && dryRunPayload && (
+                      <div className="border-2 border-[#D4A853]/40 p-4 rounded bg-black/60 space-y-4 mt-3">
+                        <span className="font-mono text-xs text-[#D4A853] uppercase block">{"Dry Run — Review Before Publish"}</span>
 
-                    {diagnoseResult && (
-                      <div className="space-y-3 pt-1">
-                        {/* Confidence bar */}
-                        <div className="space-y-1">
-                          <div className="flex justify-between font-mono text-[10px]">
-                            <span className="text-[#7A6F65] uppercase">{"Confidence Index"}</span>
-                            <span className={`font-bold ${diagnoseResult.confidence >= 65 ? 'text-[#5C9A6B]' : diagnoseResult.confidence >= 40 ? 'text-[#D4A853]' : 'text-[#C85C5C]'}`}>
-                              {diagnoseResult.confidence}/100
-                            </span>
+                        {dryRunErrors.length > 0 ? (
+                          <div className="border border-[#C85C5C]/40 bg-[#C85C5C]/10 p-3 rounded space-y-1">
+                            <span className="font-mono text-[10px] text-[#C85C5C] uppercase tracking-widest block">{"Publish blocked — fix these first"}</span>
+                            {dryRunErrors.map((err, i) => (
+                              <p key={i} className="font-mono text-xs text-[#C85C5C]">{"✗ "}{err}</p>
+                            ))}
                           </div>
-                          <div className="h-1 bg-black/60 rounded-full overflow-hidden border border-[#D4A853]/8">
-                            <div
-                              className={`h-full rounded-full transition-all ${diagnoseResult.confidence >= 65 ? 'bg-[#5C9A6B]' : diagnoseResult.confidence >= 40 ? 'bg-[#D4A853]' : 'bg-[#C85C5C]'}`}
-                              style={{ width: `${diagnoseResult.confidence}%` }}
-                            />
+                        ) : (
+                          <div className="border border-[#5C9A6B]/40 bg-[#5C9A6B]/10 p-3 rounded">
+                            <p className="font-mono text-xs text-[#5C9A6B]">{"✓ Validation passed — ready to publish."}</p>
+                          </div>
+                        )}
+
+                        {(() => {
+                          const cid = selectedClient?.id ? `?cid=${encodeURIComponent(selectedClient.id)}` : "";
+                          return (
+                            <div className="space-y-1.5 text-[10px] font-mono">
+                              <div className="text-[#5C9A6B] bg-[#5C9A6B]/5 border border-[#5C9A6B]/15 px-3 py-1.5 rounded flex items-center justify-between gap-2">
+                                <span>{"✓ Deliverable goes live immediately on publish — no rebuild"}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => navigator.clipboard.writeText(`https://signal-and-friction.com/deliverable/${dryRunPayload.clientKey}${cid}`).catch(() => {})}
+                                  className="shrink-0 text-[#5C9A6B] hover:text-white border border-[#5C9A6B]/30 px-2 py-0.5 rounded cursor-pointer"
+                                >
+                                  ⧉ /deliverable/{dryRunPayload.clientKey}
+                                </button>
+                              </div>
+                              <div className="text-[#D4A853] bg-[#D4A853]/5 border border-[#D4A853]/15 px-3 py-1.5 rounded flex items-center justify-between gap-2">
+                                <span>{"⏱ SLA link — share with client now"}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => navigator.clipboard.writeText(`https://signal-and-friction.com/sla/${dryRunPayload.clientKey}${cid}`).catch(() => {})}
+                                  className="shrink-0 text-[#D4A853] hover:text-white border border-[#D4A853]/30 px-2 py-0.5 rounded cursor-pointer"
+                                >
+                                  ⧉ /sla/{dryRunPayload.clientKey}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        <div className="space-y-2 text-xs font-mono">
+                          <div className="flex justify-between border-b border-[#D4A853]/8 pb-1"><span className="text-[#7A6F65] uppercase">{"Target URL"}</span><span className="text-[#F5F0EB]">/deliverable/{dryRunPayload.clientKey}</span></div>
+                          <div className="flex justify-between border-b border-[#D4A853]/8 pb-1"><span className="text-[#7A6F65] uppercase">{"Client Name"}</span><span className="text-[#F5F0EB]">{dryRunPayload.clientName}</span></div>
+                          <div className="flex justify-between border-b border-[#D4A853]/8 pb-1"><span className="text-[#7A6F65] uppercase">{"Segment"}</span><span className="text-[#F5F0EB]">{dryRunPayload.segment}</span></div>
+                          <div className="flex justify-between border-b border-[#D4A853]/8 pb-1"><span className="text-[#7A6F65] uppercase">{"Loom URL"}</span><span className="text-[#F5F0EB] truncate max-w-[60%]">{dryRunPayload.loomUrl || "(missing)"}</span></div>
+
+                          <div className="pt-2">
+                            <span className="text-[#7A6F65] uppercase block mb-1">{`Evidence (${dryRunPayload.evidence?.length || 0} items)`}</span>
+                            {(dryRunPayload.evidence || []).map((ev: EvidenceItem, i: number) => (
+                              <div key={i} className="pl-2 border-l border-[#D4A853]/15 mb-1">
+                                <span className="text-[#F5F0EB]">[{ev.tier}] {ev.label}: {ev.value}</span>
+                                <p className="text-[#7A6F65] text-[10px]">{ev.source}</p>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="pt-2 border-t border-[#D4A853]/8">
+                            <span className="text-[#7A6F65] uppercase block mb-1">{"Projected Impact"}</span>
+                            {dryRunPayload.projectedImpact ? (
+                              <p className="text-[#F5F0EB]">{dryRunPayload.projectedImpact.low}–{dryRunPayload.projectedImpact.high}{dryRunPayload.projectedImpact.unit} on {dryRunPayload.projectedImpact.step} — modeled from {dryRunPayload.projectedImpact.modeledFrom}</p>
+                            ) : (
+                              <p className="text-[#C85C5C]">{"(missing)"}</p>
+                            )}
+                          </div>
+
+                          <div className="pt-2 border-t border-[#D4A853]/8">
+                            <span className="text-[#7A6F65] uppercase block mb-1">{`Confidence: ${dryRunPayload.confidenceLevel ?? "(none)"}/100`}</span>
+                            <p className="text-[#7A6F65] text-[10px]">{dryRunPayload.confidenceReason}</p>
+                          </div>
+
+                          <div className="pt-2 border-t border-[#D4A853]/8">
+                            <span className="text-[#7A6F65] uppercase block mb-1">{"Final Decision"}</span>
+                            <p className="text-[#F5F0EB]">{dryRunPayload.diagnosis.finalDecision.label || "(missing)"}</p>
+                            <p className="text-[#B0A89E] text-[10px] mt-1">{dryRunPayload.diagnosis.finalDecision.action}</p>
+                          </div>
+
+                          <div className="pt-2 border-t border-[#D4A853]/8">
+                            <span className="text-[#7A6F65] uppercase block mb-1">{`Avoid (${dryRunPayload.avoid?.length || 0} items)`}</span>
+                            {(dryRunPayload.avoid || []).map((a: { action: string; reason: string }, i: number) => (
+                              <p key={i} className="text-[#F5F0EB] text-[10px]">✗ {a.action}</p>
+                            ))}
+                          </div>
+
+                          <div className="pt-2 border-t border-[#D4A853]/8 flex gap-4">
+                            <span className="text-[#7A6F65]">{`Before/After: ${dryRunPayload.beforeAfter ? "set" : "not set"}`}</span>
+                            <span className="text-[#7A6F65]">{`Checklist: ${dryRunPayload.checklist?.length || 0}`}</span>
+                            <span className="text-[#7A6F65]">{`Learning modules: ${dryRunPayload.learningModules?.length || 0}`}</span>
                           </div>
                         </div>
 
-                        {/* Signal */}
-                        <div className="bg-black/40 border border-[#D4A853]/8 p-3 rounded space-y-1">
-                          <span className="font-mono text-[9px] text-[#D4A853] uppercase tracking-widest block">{"Signal"}</span>
-                          <p className="font-mono text-xs text-[#F5F0EB] leading-relaxed">{diagnoseResult.signal}</p>
-                        </div>
+                        <details className="border border-[#D4A853]/10 rounded">
+                          <summary className="font-mono text-[10px] text-[#B0A89E] uppercase tracking-widest p-2 cursor-pointer select-none">{"Raw JSON payload"}</summary>
+                          <pre className="p-3 text-[9px] text-[#7A6F65] font-mono overflow-auto max-h-64 border-t border-[#D4A853]/10 whitespace-pre-wrap">{JSON.stringify(dryRunPayload, null, 2)}</pre>
+                        </details>
 
-                        {/* Friction */}
-                        <div className="bg-black/40 border border-[#C85C5C]/15 p-3 rounded space-y-1">
-                          <span className="font-mono text-[9px] text-[#C85C5C] uppercase tracking-widest block">{"Friction Mechanism"}</span>
-                          <p className="font-mono text-xs text-[#F5F0EB] leading-relaxed">{diagnoseResult.friction}</p>
-                        </div>
-
-                        {/* Hypothesis */}
-                        <div className="bg-black/40 border border-white/5 p-3 rounded space-y-1">
-                          <span className="font-mono text-[9px] text-[#B0A89E] uppercase tracking-widest block">{"Causal Hypothesis"}</span>
-                          <p className="font-mono text-xs text-[#B0A89E] leading-relaxed italic">{diagnoseResult.hypothesis}</p>
-                        </div>
-
-                        {/* Decision card */}
-                        <div className="bg-[#D4A853]/[0.04] border border-[#D4A853]/20 p-3 rounded space-y-2">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-[9px] font-bold bg-[#D4A853] text-[#0A0908] px-1.5 py-0.5 rounded">
-                              {diagnoseResult.decision.type}
-                            </span>
-                            <span className="font-mono text-xs font-bold text-[#F5F0EB]">{diagnoseResult.decision.label}</span>
-                          </div>
-                          <p className="font-mono text-xs text-[#F5F0EB] leading-relaxed">
-                            <span className="text-[#D4A853]">→ </span>{diagnoseResult.decision.action}
-                          </p>
-                          <p className="font-mono text-xs text-[#7A6F65] leading-relaxed">{diagnoseResult.decision.reasoning}</p>
-                          <p className="font-mono text-[10px] text-[#7A6F65]/70 border-t border-[#D4A853]/8 pt-2 mt-1">
-                            {"Tradeoff: "}{diagnoseResult.decision.tradeoff}
-                          </p>
+                        {diagnosticError && <p className="text-[#C85C5C] text-xs font-mono">{diagnosticError}</p>}
+                        <div className="flex justify-end gap-2 pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowDryRun(false)}
+                            className="px-3 py-1 bg-white/5 text-white border border-white/10 hover:bg-white/10 rounded font-mono text-xs"
+                          >
+                            {"← Back to Edit"}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={dryRunErrors.length > 0 || actionLoading !== null}
+                            onClick={handlePublishDelivery}
+                            className="px-3 py-1 bg-[#D4A853] text-[#0A0908] hover:bg-[#E8C97A] rounded font-mono font-bold text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            {actionLoading === "delivered" ? "Publishing..." : `Publish to /deliverable/${dryRunPayload.clientKey} →`}
+                          </button>
                         </div>
                       </div>
                     )}
