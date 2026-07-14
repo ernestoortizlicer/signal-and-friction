@@ -30,8 +30,14 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   const [stats, setStats] = useState({ activeLeads: 0, netWorth: 0, tasksToday: 0 });
   const [authorized, setAuthorized] = useState(false);
 
+  // next.config.ts sets trailingSlash: true, so usePathname() reports
+  // "/admin/login/" in production, not "/admin/login" — normalize before
+  // comparing so this isn't silently broken by that config again.
+  const normalizedPathname = pathname?.replace(/\/$/, "");
+  const isLoginPage = normalizedPathname === "/admin/login";
+
   useEffect(() => {
-    if (pathname === "/admin/login") return;
+    if (isLoginPage) return;
 
     const adminEmailsEnv =
       process.env.NEXT_PUBLIC_ALLOWED_ADMIN_EMAIL ||
@@ -72,10 +78,10 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [router, pathname]);
+  }, [router, pathname, isLoginPage]);
 
   useEffect(() => {
-    if (pathname === "/admin/login" || !authorized) return;
+    if (isLoginPage || !authorized) return;
     async function fetchHeaderStats() {
       try {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://your-supabase.supabase.co";
@@ -130,7 +136,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     }
 
     fetchHeaderStats();
-  }, [pathname, authorized]);
+  }, [pathname, authorized, isLoginPage]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -146,7 +152,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     { href: "/admin/certified", label: "Certified", code: "CE" },
   ];
 
-  if (pathname === "/admin/login") {
+  if (isLoginPage) {
     return <>{children}</>;
   }
 

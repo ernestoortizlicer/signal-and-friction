@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "crm": "node scripts/crm-server.mjs"
+    "crm": "node scripts/crm-server.mjs",
+    "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs",
+    "deploy": "wrangler pages deploy out --project-name=signal-and-friction"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
