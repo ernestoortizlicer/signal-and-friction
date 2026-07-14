@@ -118,6 +118,7 @@ The exam brief pool has 12 cases across 4 verticals. No two practitioners get th
 export default function AdminCertifiedManager() {
   const [practitioners, setPractitioners] = useState<CertifiedPractitioner[]>([]);
   const [loading, setLoading] = useState(true);
+  const [usingMockData, setUsingMockData] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editScore, setEditScore] = useState<number>(100);
   const [editStatus, setEditStatus] = useState<"active" | "suspended" | "expired">("active");
@@ -138,6 +139,7 @@ export default function AdminCertifiedManager() {
       setPractitioners(data);
     } catch (err) {
       console.warn("API offline. Loading mockup data.", err);
+      setUsingMockData(true);
       setPractitioners(MOCK_PRACTITIONERS);
     } finally {
       setLoading(false);
@@ -185,6 +187,14 @@ export default function AdminCertifiedManager() {
   return (
     <main className="min-h-screen bg-[#0A0908] text-[#B8B0A8] p-8 md:p-12 grain overflow-x-hidden">
       <div className="max-w-[1200px] mx-auto space-y-12">
+        {usingMockData && (
+          <div className="border-2 border-[#C85C5C]/50 bg-[#C85C5C]/10 px-4 py-2.5 rounded flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#C85C5C] animate-pulse shrink-0" />
+            <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#C85C5C]">
+              {"⚠ Showing Mock Data — Live Fetch Failed"}
+            </span>
+          </div>
+        )}
 
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#D4A853]/8 pb-8">

@@ -75,6 +75,7 @@ export default function PriorityCommandCenter() {
   const [tasks, setTasks] = useState<PriorityTask[]>([]);
   const [scoreLogs, setScoreLogs] = useState<PriorityScoreLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [usingMockData, setUsingMockData] = useState(false);
   const [autopilotMinutes, setAutopilotMinutes] = useState(60);
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -146,6 +147,7 @@ export default function PriorityCommandCenter() {
         setLoading(false);
       } catch (err) {
         console.warn("Offline fallback for priority engine:", err);
+        setUsingMockData(true);
         setTasks([
           { id: "t-1", title: "Send outreach to Formbricks", description: "Auto-generated from beta_projects status change", category: "beta_project", effort_minutes: 20, energy_required: "creative", deadline: new Date(Date.now() + 172800000).toISOString(), status: "pending", priority_score: 72.5, quadrant: "do_now", revenue_impact: 35000, learning_multiplier: 4, source_table: "beta_projects", auto_generated: true, created_at: new Date(Date.now() - 86400000).toISOString(), updated_at: new Date().toISOString() },
           { id: "t-2", title: "Send outreach to Documenso", description: "Auto-generated from beta_projects status change", category: "beta_project", effort_minutes: 20, energy_required: "creative", deadline: new Date(Date.now() + 172800000).toISOString(), status: "pending", priority_score: 68.3, quadrant: "do_now", revenue_impact: 35000, learning_multiplier: 4, source_table: "beta_projects", auto_generated: true, created_at: new Date(Date.now() - 86400000).toISOString(), updated_at: new Date().toISOString() },
@@ -221,6 +223,14 @@ export default function PriorityCommandCenter() {
   return (
     <main className="min-h-screen bg-[#0A0908] text-[#B8B0A8] p-8 md:p-12 grain overflow-x-hidden">
       <div className="max-w-[1400px] mx-auto space-y-10">
+        {usingMockData && (
+          <div className="border-2 border-[#C85C5C]/50 bg-[#C85C5C]/10 px-4 py-2.5 rounded flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#C85C5C] animate-pulse shrink-0" />
+            <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#C85C5C]">
+              {"⚠ Showing Mock Data — Live Fetch Failed"}
+            </span>
+          </div>
+        )}
 
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#D4A853]/8 pb-8">

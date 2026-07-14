@@ -377,15 +377,15 @@ export default function SLAClientView({ staticClientKey }: { staticClientKey: st
               },
               {
                 icon: "⚡",
-                title: "3 Decisions",
+                title: "One Recommendation, With a Range",
                 description:
-                  "Conservative / Aggressive / Lateral. Three divergent intervention paths to eliminate the identified friction point.",
+                  "A single evidence-grounded decision and a projected impact range — not three options, not a fixed promise.",
               },
               {
-                icon: "📐",
-                title: "Figma Wireframe",
+                icon: "📊",
+                title: "Evidence, Tiered by Confidence",
                 description:
-                  "A redesigned interface with surgical annotations — ready to pass directly to your product team.",
+                  "Every claim marked measured, modeled, or pending — plus a stated confidence level for the diagnosis as a whole.",
               },
             ].map((item) => (
               <div

@@ -273,6 +273,16 @@ export default function AdminDashboard() {
   const [revenueSparkline, setRevenueSparkline] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [arrTotal, setArrTotal] = useState<number>(0);
+  const [recentPayments, setRecentPayments] = useState<Array<{
+    id: string;
+    email: string | null;
+    amount_total: number;
+    currency: string;
+    product_name: string | null;
+    created_at: string;
+    lead_id: string | null;
+    clientName: string | null;
+  }>>([]);
   const [leads, setLeads] = useState<LeadRecord[]>([]);
   const [selectedLead, setSelectedLead] = useState<LeadRecord | null>(null);
   const [showLeadDrawer, setShowLeadDrawer] = useState(false);
@@ -1055,7 +1065,8 @@ export default function AdminDashboard() {
         setRevenueSparkline(sparkData.map(e => Math.round(e.amount_total / 100)));
       }
 
-      // 5. ARR: sum of all payments
+      // 5. ARR: sum of all payments (unlimited select — must stay accurate,
+      // not capped to whatever the recent-payments list below shows)
       const resPayments = await fetch(
         `${supabaseUrl}/rest/v1/payments?select=amount_total`,
         { headers }
@@ -1063,6 +1074,35 @@ export default function AdminDashboard() {
       if (resPayments.ok) {
         const paymentsData: Array<{ amount_total: number }> = await resPayments.json();
         setArrTotal(paymentsData.reduce((sum, p) => sum + (p.amount_total || 0), 0));
+      }
+
+      // 5b. Recent payments, WHO paid — the dashboard could previously only
+      // show a global revenue total, never which client it came from.
+      // payments.lead_id has no FK constraint (see the migration that
+      // documents this table), so PostgREST can't auto-embed a `clients`
+      // relationship — resolve names with a second lookup instead.
+      const resRecentPayments = await fetch(
+        `${supabaseUrl}/rest/v1/payments?select=id,email,amount_total,currency,product_name,created_at,lead_id&order=created_at.desc&limit=25`,
+        { headers }
+      );
+      if (resRecentPayments.ok) {
+        const recentData: Array<{ id: string; email: string | null; amount_total: number; currency: string; product_name: string | null; created_at: string; lead_id: string | null }> =
+          await resRecentPayments.json();
+        const leadIds = [...new Set(recentData.map((p) => p.lead_id).filter((id): id is string => !!id))];
+        let clientNameMap: Record<string, string> = {};
+        if (leadIds.length > 0) {
+          const resNames = await fetch(
+            `${supabaseUrl}/rest/v1/clients?select=id,company_name&id=in.(${leadIds.join(",")})`,
+            { headers }
+          );
+          if (resNames.ok) {
+            const rows: Array<{ id: string; company_name: string }> = await resNames.json();
+            clientNameMap = Object.fromEntries(rows.map((r) => [r.id, r.company_name]));
+          }
+        }
+        setRecentPayments(
+          recentData.map((p) => ({ ...p, clientName: p.lead_id ? clientNameMap[p.lead_id] || null : null }))
+        );
       }
 
       // 6. Leads for Conversion Queue
@@ -1407,6 +1447,47 @@ export default function AdminDashboard() {
                   </div>
                 );
               })()}
+
+              {/* Recent Payments — WHO paid, not just the aggregate total */}
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.3em] uppercase">{"Recent Payments"}</span>
+                  <span className="font-mono text-xs text-[#7A6F65] border border-[#D4A853]/10 px-2 py-0.5 rounded-full">{`Last ${recentPayments.length}`}</span>
+                </div>
+                <div className="border border-[#D4A853]/15 bg-[#110F0D] rounded-2xl overflow-hidden">
+                  {recentPayments.length === 0 ? (
+                    <div className="p-6 text-center font-mono text-xs text-[#7A6F65]">{"No payments recorded yet."}</div>
+                  ) : (
+                    <div className="divide-y divide-[#D4A853]/8">
+                      {recentPayments.map((p) => (
+                        <div key={p.id} className="flex items-center justify-between px-5 py-3 hover:bg-[#D4A853]/[0.03] transition-colors">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-sm text-[#F5F0EB] truncate">
+                                {p.clientName || p.email || "Unmatched payment"}
+                              </span>
+                              {!p.lead_id && (
+                                <span className="font-mono text-[9px] uppercase text-[#C85C5C] border border-[#C85C5C]/30 px-1.5 py-0.5 rounded shrink-0" title="No client record matched this payment's email">
+                                  {"Unlinked"}
+                                </span>
+                              )}
+                            </div>
+                            <span className="font-mono text-[10px] text-[#7A6F65]">{p.product_name || "—"} · {p.email || "no email"}</span>
+                          </div>
+                          <div className="text-right shrink-0 pl-4">
+                            <span className="font-mono text-sm font-bold text-[#D4A853]">
+                              ${Math.round(p.amount_total / 100).toLocaleString()} {p.currency?.toUpperCase()}
+                            </span>
+                            <span className="font-mono text-[10px] text-[#7A6F65] block">
+                              {new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
 
               {/* 30-Day Sprint Tracker */}
               <section>

@@ -165,13 +165,13 @@ function buildEmail(clientName: string, deliverableUrl: string): string {
     ],
     [
       "⚡",
-      "3 Intervention Decisions",
-      "Conservative / Aggressive / Lateral. Three divergent paths to eliminate the identified friction.",
+      "One Recommendation, With a Range",
+      "A single evidence-grounded decision and a projected impact range — not three options, not a fixed promise.",
     ],
     [
-      "📐",
-      "Figma Wireframe",
-      "A redesigned interface with surgical annotations — ready to hand directly to your product team.",
+      "📊",
+      "Evidence, Tiered by Confidence",
+      "Every claim marked measured, modeled, or pending — plus a stated confidence level for the diagnosis as a whole.",
     ],
   ];
 
@@ -215,9 +215,9 @@ function buildEmail(clientName: string, deliverableUrl: string): string {
               Hi ${greeting} —
             </p>
             <p style="margin:0 0 16px;font-size:15px;color:#9A8F82;line-height:1.7;">
-              Your friction diagnostic is complete. We have analyzed your funnel,
-              isolated the exact friction mechanism, and produced three intervention
-              decisions — Loom walkthrough included.
+              Your friction diagnostic is complete. We've analyzed your funnel,
+              isolated the friction mechanism, and produced one evidence-grounded
+              recommendation — Loom walkthrough included.
             </p>
             <p style="margin:0 0 32px;font-size:15px;color:#9A8F82;line-height:1.7;">
               The 72-hour protocol has been fulfilled. Everything is waiting in your

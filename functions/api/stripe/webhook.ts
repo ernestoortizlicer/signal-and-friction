@@ -120,6 +120,25 @@ export const onRequestPost = async ({
       // Still process - email may be optional for some flows
     }
 
+    // lead_id has no FK constraint (see the migration that documents this
+    // table), so nothing enforced it being set — it just silently stayed
+    // null on every payment, and the admin dashboard could show a revenue
+    // total but never which client actually paid. Look up the client the
+    // checkout email belongs to and link it here.
+    let leadId: string | null = null;
+    if (email) {
+      try {
+        const { data: matchedClient } = await supabase
+          .from('clients')
+          .select('id')
+          .eq('contact_email', email)
+          .maybeSingle();
+        leadId = matchedClient?.id ?? null;
+      } catch (err) {
+        console.warn(`⚠️ Client lookup for lead_id failed (non-fatal): ${err instanceof Error ? err.message : 'unknown error'}`);
+      }
+    }
+
     const { error: insertError } = await supabase.from('payments').insert({
       stripe_session_id: session.id,
       stripe_customer_id: typeof session.customer === 'string' ? session.customer : null,
@@ -131,6 +150,7 @@ export const onRequestPost = async ({
       segment: inferSegment(productName),
       referral_code: referralCode,
       raw_event: event as unknown as Record<string, unknown>,
+      lead_id: leadId,
     });
 
     if (insertError) {

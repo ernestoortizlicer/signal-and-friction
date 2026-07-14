@@ -118,6 +118,7 @@ export default function PersonalFinanceCenter() {
   const [taxIncome, setTaxIncome] = useState(30000);
   const [taxPension, setTaxPension] = useState(Math.round(700.92 * 14 * 1.10)); // €700,92 × 14 pagas × EUR/USD 1.10 = $10,794
   const [loading, setLoading] = useState(true);
+  const [usingMockData, setUsingMockData] = useState(false);
   const [expandedArticleId, setExpandedArticleId] = useState<string | null>(null);
 
   // Database States
@@ -190,6 +191,7 @@ export default function PersonalFinanceCenter() {
         setLoading(false);
       } catch (err) {
         console.warn("Using offline fallback data for personal finance.", err);
+        setUsingMockData(true);
         // Seed visual fallback data matching Ernesto's portfolio
         setAccounts([
           { id: "a-1", name: "Signal & Friction Checking", type: "asset", currency: "USD" },
@@ -437,7 +439,15 @@ export default function PersonalFinanceCenter() {
   return (
     <main className="min-h-screen bg-[#0A0908] text-[#cbd5e1] p-8 md:p-12 grain overflow-x-hidden">
       <div className="max-w-[1200px] mx-auto space-y-12">
-        
+        {usingMockData && (
+          <div className="border-2 border-[#C85C5C]/50 bg-[#C85C5C]/10 px-4 py-2.5 rounded flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#C85C5C] animate-pulse shrink-0" />
+            <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#C85C5C]">
+              {"⚠ Showing Mock Data — Live Fetch Failed"}
+            </span>
+          </div>
+        )}
+
         {/* Navigation & Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#D4A853]/8 pb-8">
           <div>
