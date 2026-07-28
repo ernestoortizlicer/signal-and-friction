@@ -189,11 +189,21 @@ export default function ProspectingCommandCenter() {
         headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
         body: JSON.stringify({ candidateId: id }),
       });
-      const body = await res.json().catch(() => null);
+      const rawText = await res.text();
+      let body: { error?: string; [key: string]: unknown } | null = null;
+      try {
+        body = rawText ? JSON.parse(rawText) : null;
+      } catch {
+        // Not JSON — something between the Worker and this browser rewrote
+        // the response body (seen once already: Cloudflare's edge swaps in
+        // its own page for 50x "gateway" statuses). Show the raw bytes
+        // rather than a canned message, so that's visible instead of hidden.
+      }
       if (res.ok && body) {
-        setCandidates((prev) => prev.map((c) => (c.id === id ? body : c)));
+        setCandidates((prev) => prev.map((c) => (c.id === id ? (body as unknown as Candidate) : c)));
       } else {
-        setNotice({ message: body?.error || `Scan failed (HTTP ${res.status}) — no detail returned.`, variant: "red" });
+        const detail = body?.error || (rawText ? rawText.slice(0, 300) : "(empty response body)");
+        setNotice({ message: `Scan failed (HTTP ${res.status}): ${detail}`, variant: "red" });
         await fetchCandidates();
       }
     } catch (err) {

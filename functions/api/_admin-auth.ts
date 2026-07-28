@@ -53,10 +53,15 @@ export async function requireAdmin(
     // anywhere, not even in logs the caller could see. Every caller of
     // requireAdmin depends on it resolving to either an AdminUser or a
     // Response; it must never throw.
+    // 500, not 502/503/504 — Cloudflare's edge treats the 50x "gateway"
+    // range as a signal the origin itself is down and substitutes its own
+    // generic error page over whatever body the Worker actually returned,
+    // even when the Worker ran successfully and produced valid JSON. 502
+    // was confirmed to swallow this exact message in production.
     const message = err instanceof Error ? err.message : "Unknown error";
     return Response.json(
       { error: `Auth verification failed: could not reach Supabase Auth (${message})` },
-      { status: 502 }
+      { status: 500 }
     );
   }
   if (!userRes.ok) {
