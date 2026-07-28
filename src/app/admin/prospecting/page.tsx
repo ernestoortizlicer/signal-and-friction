@@ -209,7 +209,7 @@ export default function ProspectingCommandCenter() {
   }
 
   async function scanAllPending() {
-    const pending = candidates.filter((c) => c.status === "new" || c.status === "scan_failed");
+    const pending = candidates.filter((c) => c.status === "new" || c.status === "scan_failed" || c.status === "scanning");
     if (pending.length === 0) return;
     setBulkScanning(true);
     // Sequential, not parallel — each scan already hits PageSpeed's own
@@ -302,7 +302,7 @@ export default function ProspectingCommandCenter() {
     }
   }
 
-  const pendingCount = candidates.filter((c) => c.status === "new" || c.status === "scan_failed").length;
+  const pendingCount = candidates.filter((c) => c.status === "new" || c.status === "scan_failed" || c.status === "scanning").length;
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
@@ -366,7 +366,12 @@ export default function ProspectingCommandCenter() {
           headers={["Company", "Score", "LCP", "Perf", "Platform", "Checkout", "Missing OG", "Founder Contact", "Status", "Actions"]}
         >
           {candidates.map((c) => {
-            const isScanning = scanningIds.has(c.id) || c.status === "scanning";
+            // Only "this browser tab has an in-flight request for this row"
+            // disables the button. c.status === "scanning" is DB state and
+            // can be stale from a request that died before writing back —
+            // gating the button on it would make a stuck row unrecoverable
+            // from the UI (no request in flight, but no button to retry).
+            const isScanning = scanningIds.has(c.id);
             const draft = contactDrafts[c.id] ?? c.founder_contact ?? "";
             return (
               <tr key={c.id} className="hover:bg-[#D4A853]/[0.02] transition-colors align-top">
@@ -418,14 +423,14 @@ export default function ProspectingCommandCenter() {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex flex-col gap-1.5 min-w-[100px]">
-                    {(c.status === "new" || c.status === "scan_failed") && (
+                    {(c.status === "new" || c.status === "scan_failed" || c.status === "scanning") && (
                       <button
                         type="button"
                         onClick={() => scanOne(c.id)}
                         disabled={isScanning}
                         className="px-2.5 py-1 rounded bg-[#D4A853]/10 border border-[#D4A853]/25 text-[#D4A853] text-[10px] font-mono uppercase tracking-wide hover:bg-[#D4A853]/15 disabled:opacity-40 cursor-pointer"
                       >
-                        {isScanning ? "Scanning…" : c.status === "scan_failed" ? "Retry Scan" : "Scan"}
+                        {isScanning ? "Scanning…" : c.status === "new" ? "Scan" : "Retry Scan"}
                       </button>
                     )}
                     {c.status === "scanned" && (
