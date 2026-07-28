@@ -130,9 +130,18 @@ export async function requireAdmin(
     const claimsSummary = claims
       ? `exp=${claims.exp ? new Date(Number(claims.exp) * 1000).toISOString() : "(none)"} (expired=${claims.exp ? Date.now() > Number(claims.exp) * 1000 : "unknown"}), email=${claims.email ?? "(none)"}, role=${claims.role ?? "(none)"}, sub=${claims.sub ?? "(none)"}, aud=${claims.aud ?? "(none)"}`
       : "token does not decode as a 3-segment JWT";
+    // Supabase's own API keys (anon and service_role) are themselves JWTs
+    // with a role claim — decode ours the same way to confirm which one is
+    // actually deployed, without ever printing the key itself. This is the
+    // server's own credential, not the caller's, so it's diagnosed
+    // independently of whatever the caller sent.
+    const apikeyClaims = decodeJwtPayloadForDiagnostics(apikey);
+    const apikeySummary = apikeyClaims
+      ? `role=${apikeyClaims.role ?? "(none)"}, ref=${apikeyClaims.ref ?? "(none)"}, iss=${apikeyClaims.iss ?? "(none)"}, iat=${apikeyClaims.iat ? new Date(Number(apikeyClaims.iat) * 1000).toISOString() : "(none)"}`
+      : "SUPABASE_SERVICE_ROLE_KEY does not decode as a 3-segment JWT";
     return Response.json(
       {
-        error: `Unauthorized — Supabase Auth responded ${userRes.status}: ${supabaseBody}. Token claims: ${claimsSummary}`,
+        error: `Unauthorized — Supabase Auth responded ${userRes.status}: ${supabaseBody}. Token claims: ${claimsSummary}. Deployed SUPABASE_SERVICE_ROLE_KEY claims: ${apikeySummary}`,
       },
       { status: 401 }
     );
