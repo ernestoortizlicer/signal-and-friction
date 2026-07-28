@@ -40,9 +40,25 @@ export async function requireAdmin(
   }
 
   const token = authHeader.slice(7);
-  const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
-    headers: { Authorization: `Bearer ${token}`, apikey },
-  });
+  let userRes: Response;
+  try {
+    userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: { Authorization: `Bearer ${token}`, apikey },
+    });
+  } catch (err) {
+    // A network-level failure here (as opposed to a non-2xx from Supabase,
+    // which is handled below) previously propagated as an uncaught
+    // exception out of every admin-gated endpoint — Cloudflare then served
+    // its own bare 500 with no body, so the real reason was never visible
+    // anywhere, not even in logs the caller could see. Every caller of
+    // requireAdmin depends on it resolving to either an AdminUser or a
+    // Response; it must never throw.
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return Response.json(
+      { error: `Auth verification failed: could not reach Supabase Auth (${message})` },
+      { status: 502 }
+    );
+  }
   if (!userRes.ok) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
