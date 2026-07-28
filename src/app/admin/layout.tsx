@@ -146,6 +146,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
   const navLinks = [
     { href: "/admin/dashboard", label: "Pipeline", code: "PL" },
+    { href: "/admin/prospecting", label: "Prospecting", code: "PS" },
     { href: "/admin/finance", label: "Finance", code: "FN" },
     { href: "/admin/priorities", label: "Priorities", code: "PR" },
     { href: "/admin/learning", label: "Learning", code: "LE" },
