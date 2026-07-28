@@ -24,6 +24,23 @@ export interface AdminUser {
   email: string;
 }
 
+// Decodes a JWT's payload segment WITHOUT verifying its signature — this is
+// only ever used to report diagnostic claims (exp, email) back in an error
+// message, never to make an authorization decision. Verification of the
+// token itself is Supabase's /auth/v1/user call above; this just explains
+// *why* that call may have rejected it.
+function decodeJwtPayloadForDiagnostics(jwt: string): Record<string, unknown> | null {
+  try {
+    const parts = jwt.split(".");
+    if (parts.length !== 3) return null;
+    const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
+    return JSON.parse(atob(padded));
+  } catch {
+    return null;
+  }
+}
+
 export async function requireAdmin(
   request: Request,
   env: Record<string, string>
@@ -98,7 +115,23 @@ export async function requireAdmin(
     );
   }
   if (!userRes.ok) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    // Previously collapsed every non-OK response from Supabase into a bare
+    // "Unauthorized" with no indication of what Supabase actually said
+    // (expired token, malformed JWT, wrong project, etc.) or what the
+    // token itself claims. Surface both — this is the same class of fix
+    // as the fetch-failure branch above: don't let a real reason get
+    // discarded on the way back to the caller.
+    const supabaseBody = await userRes.text().catch(() => "(could not read response body)");
+    const claims = decodeJwtPayloadForDiagnostics(token);
+    const claimsSummary = claims
+      ? `exp=${claims.exp ? new Date(Number(claims.exp) * 1000).toISOString() : "(none)"} (expired=${claims.exp ? Date.now() > Number(claims.exp) * 1000 : "unknown"}), email=${claims.email ?? "(none)"}, role=${claims.role ?? "(none)"}, sub=${claims.sub ?? "(none)"}, aud=${claims.aud ?? "(none)"}`
+      : "token does not decode as a 3-segment JWT";
+    return Response.json(
+      {
+        error: `Unauthorized — Supabase Auth responded ${userRes.status}: ${supabaseBody}. Token claims: ${claimsSummary}`,
+      },
+      { status: 401 }
+    );
   }
 
   const user = (await userRes.json()) as { email?: string };
