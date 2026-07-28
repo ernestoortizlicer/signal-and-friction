@@ -58,9 +58,16 @@ export async function requireAdmin(
     // generic error page over whatever body the Worker actually returned,
     // even when the Worker ran successfully and produced valid JSON. 502
     // was confirmed to swallow this exact message in production.
+    // err.message alone is the generic wrapper ("Fetch API cannot load: <url>")
+    // — workerd's fetch() attaches the actual underlying reason (DNS
+    // failure, connection reset, TLS error, etc.) as err.cause, which was
+    // being silently discarded here. Surface it explicitly.
     const message = err instanceof Error ? err.message : "Unknown error";
+    const cause = err instanceof Error && err.cause !== undefined ? String(err.cause) : null;
     return Response.json(
-      { error: `Auth verification failed: could not reach Supabase Auth (${message})` },
+      {
+        error: `Auth verification failed: could not reach Supabase Auth (${message})${cause ? ` — cause: ${cause}` : ' — no cause attached'}`,
+      },
       { status: 500 }
     );
   }
