@@ -94,7 +94,7 @@ export default function ProspectingCommandCenter() {
   const [scanningIds, setScanningIds] = useState<Set<string>>(new Set());
   const [bulkScanning, setBulkScanning] = useState(false);
   const [contactDrafts, setContactDrafts] = useState<Record<string, string>>({});
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ message: string; variant: "green" | "red" } | null>(null);
 
   async function fetchCandidates() {
     try {
@@ -142,7 +142,7 @@ export default function ProspectingCommandCenter() {
       .filter((v): v is { url: string; domain: string } => v !== null);
 
     if (parsed.length === 0) {
-      setNotice("No valid URLs found in the pasted list.");
+      setNotice({ message: "No valid URLs found in the pasted list.", variant: "red" });
       return;
     }
 
@@ -168,14 +168,14 @@ export default function ProspectingCommandCenter() {
         { method: "POST", headers, body: JSON.stringify(rows) }
       );
       if (!res.ok) {
-        setNotice("Failed to add candidates — check the admin session and try again.");
+        setNotice({ message: "Failed to add candidates — check the admin session and try again.", variant: "red" });
         return;
       }
       setSeedText("");
-      setNotice(`Added ${rows.length} candidate${rows.length === 1 ? "" : "s"} (existing domains skipped).`);
+      setNotice({ message: `Added ${rows.length} candidate${rows.length === 1 ? "" : "s"} (existing domains skipped).`, variant: "green" });
       await fetchCandidates();
     } catch {
-      setNotice("Failed to add candidates.");
+      setNotice({ message: "Failed to add candidates.", variant: "red" });
     } finally {
       setAdding(false);
     }
@@ -189,13 +189,15 @@ export default function ProspectingCommandCenter() {
         headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
         body: JSON.stringify({ candidateId: id }),
       });
-      const updated = await res.json().catch(() => null);
-      if (res.ok && updated) {
-        setCandidates((prev) => prev.map((c) => (c.id === id ? updated : c)));
+      const body = await res.json().catch(() => null);
+      if (res.ok && body) {
+        setCandidates((prev) => prev.map((c) => (c.id === id ? body : c)));
       } else {
+        setNotice({ message: body?.error || `Scan failed (HTTP ${res.status}) — no detail returned.`, variant: "red" });
         await fetchCandidates();
       }
-    } catch {
+    } catch (err) {
+      setNotice({ message: `Scan request failed: ${err instanceof Error ? err.message : "network error"}`, variant: "red" });
       await fetchCandidates();
     } finally {
       setScanningIds((prev) => {
@@ -241,7 +243,7 @@ export default function ProspectingCommandCenter() {
   async function promoteCandidate(candidate: Candidate) {
     const founderContact = (contactDrafts[candidate.id] ?? candidate.founder_contact ?? "").trim();
     if (!founderContact) {
-      setNotice("Add a founder contact before promoting — that's the manual step that keeps this from auto-contacting anyone.");
+      setNotice({ message: "Add a founder contact before promoting — that's the manual step that keeps this from auto-contacting anyone.", variant: "red" });
       return;
     }
     try {
@@ -259,7 +261,7 @@ export default function ProspectingCommandCenter() {
         }),
       });
       if (!clientRes.ok) {
-        setNotice("Failed to create the client record.");
+        setNotice({ message: "Failed to create the client record.", variant: "red" });
         return;
       }
       const [newClient] = await clientRes.json();
@@ -277,9 +279,9 @@ export default function ProspectingCommandCenter() {
         const [updated] = await candRes.json();
         if (updated) setCandidates((prev) => prev.map((c) => (c.id === candidate.id ? updated : c)));
       }
-      setNotice(`${candidate.domain} promoted to the client pipeline.`);
+      setNotice({ message: `${candidate.domain} promoted to the client pipeline.`, variant: "green" });
     } catch {
-      setNotice("Failed to promote this candidate.");
+      setNotice({ message: "Failed to promote this candidate.", variant: "red" });
     }
   }
 
@@ -316,8 +318,8 @@ export default function ProspectingCommandCenter() {
       </AdminAlert>
 
       {notice && (
-        <AdminAlert variant="green">
-          {notice}{" "}
+        <AdminAlert variant={notice.variant}>
+          {notice.message}{" "}
           <button type="button" onClick={() => setNotice(null)} className="underline ml-2 cursor-pointer">
             dismiss
           </button>
