@@ -35,7 +35,16 @@ CREATE TABLE IF NOT EXISTS public.prospect_candidates (
 CREATE INDEX IF NOT EXISTS idx_prospect_candidates_score ON public.prospect_candidates(technical_score DESC NULLS LAST);
 CREATE INDEX IF NOT EXISTS idx_prospect_candidates_status ON public.prospect_candidates(status);
 
--- Reuses public.set_updated_at(), defined in 20260618000000_init_prospection.sql
+-- KNOWN DIVERGENCE (found 2026-07-28, applied via SQL editor): this CREATE
+-- TRIGGER failed silently against the live DB — public.set_updated_at()
+-- does not exist there under that name, despite being defined in
+-- 20260618000000_init_prospection.sql in this repo. Same class of
+-- migration-history-vs-live-DB drift already documented in
+-- 20260711000000_close_anon_rls_gaps.sql. Table, indexes, and the RLS
+-- policy below all applied fine; only this trigger is missing live, so
+-- updated_at on prospect_candidates does not currently auto-update.
+-- Not fixed yet — either create public.set_updated_at() live or drop this
+-- trigger so the file matches reality.
 CREATE TRIGGER trigger_set_prospect_candidates_updated
     BEFORE UPDATE ON public.prospect_candidates
     FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
