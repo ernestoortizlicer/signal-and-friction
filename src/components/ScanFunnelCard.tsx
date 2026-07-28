@@ -191,7 +191,6 @@ export default function ScanFunnelCard({
                   <input
                     type="url"
                     required
-                    autoFocus
                     value={url}
                     onChange={(e) => onUrlChange(e.target.value)}
                     onKeyDown={(e) => {

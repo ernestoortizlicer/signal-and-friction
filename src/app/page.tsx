@@ -257,14 +257,14 @@ export default function Home() {
 
       {/* ── Main Content — Split Screen ────────────────── */}
       <div className="min-h-screen flex items-center justify-center px-6 relative z-10 pt-24 pb-16">
-        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20 max-w-6xl w-full">
+        <div className="flex flex-col lg:flex-row lg:justify-center items-center gap-12 lg:gap-20 max-w-6xl w-full">
 
           {/* LEFT: Headline + Info */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="flex-1 max-w-md lg:max-w-lg space-y-6"
+            className="w-full max-w-md lg:max-w-lg space-y-6"
           >
             <div className="space-y-2">
               <div className="font-mono text-xs text-[#D4A853]/70 tracking-[0.4em] uppercase">
