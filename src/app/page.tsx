@@ -264,7 +264,7 @@ export default function Home() {
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="flex-1 max-w-lg space-y-6"
+            className="flex-1 max-w-md lg:max-w-lg space-y-6"
           >
             <div className="space-y-2">
               <div className="font-mono text-xs text-[#D4A853]/70 tracking-[0.4em] uppercase">
