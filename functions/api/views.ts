@@ -7,6 +7,8 @@
  * No auth required — admin-only page calls this, data carries no PII.
  */
 
+import { getSupabaseUrl, getServiceRoleKey } from "./_env";
+
 interface Env {
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
@@ -31,17 +33,19 @@ export const onRequestGet = async ({
     "Content-Type": "application/json",
   };
 
-  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+  const supabaseUrl = getSupabaseUrl(env);
+  const serviceRoleKey = getServiceRoleKey(env);
+  if (!serviceRoleKey) {
     return new Response(JSON.stringify({}), { headers: cors });
   }
 
   try {
     const res = await fetch(
-      `${env.SUPABASE_URL}/rest/v1/deliverable_view_events?select=client_key,count:id.count(),last_viewed:viewed_at.max()&group=client_key`,
+      `${supabaseUrl}/rest/v1/deliverable_view_events?select=client_key,count:id.count(),last_viewed:viewed_at.max()&group=client_key`,
       {
         headers: {
-          "apikey": env.SUPABASE_SERVICE_ROLE_KEY,
-          "Authorization": `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+          "apikey": serviceRoleKey,
+          "Authorization": `Bearer ${serviceRoleKey}`,
           "Accept": "application/json",
         },
       },

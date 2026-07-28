@@ -1,4 +1,5 @@
 import { requireAdmin } from "../_admin-auth";
+import { getSupabaseUrl, getServiceRoleKey } from "../_env";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -21,14 +22,19 @@ export const onRequestPost = async ({
   }
 
   const { clientKey } = params;
-  const supabaseUrl =
-    env.SUPABASE_URL || "https://tsaarsuuclvkjsgjcmoj.supabase.co";
-  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = getSupabaseUrl(env);
+  const serviceKey = getServiceRoleKey(env);
   const resendKey = env.RESEND_API_KEY;
 
   if (!resendKey) {
     return Response.json(
       { error: "RESEND_API_KEY not configured" },
+      { status: 500, headers: CORS }
+    );
+  }
+  if (!serviceKey) {
+    return Response.json(
+      { error: "SUPABASE_SERVICE_ROLE_KEY not configured" },
       { status: 500, headers: CORS }
     );
   }

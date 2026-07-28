@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { getSupabaseUrl, getServiceRoleKey } from '../_env';
 
 interface Env {
   STRIPE_SECRET_KEY: string;
@@ -69,12 +70,13 @@ export const onRequestPost = async ({
 
     const session = event.data.object as Stripe.Checkout.Session;
 
-    if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+    const serviceRoleKey = getServiceRoleKey(env);
+    if (!serviceRoleKey) {
       console.error('❌ Missing Supabase credentials in environment');
       return Response.json({ error: 'Server misconfiguration', received: true }, { status: 200 });
     }
 
-    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+    const supabase = createClient(getSupabaseUrl(env), serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 

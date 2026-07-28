@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { CLAUDE_MODEL, DIAGNOSTIC_MAX_TOKENS } from './_models';
+import { getSupabaseUrl, getServiceRoleKey } from './_env';
 
 // Inlined from src/lib/linguistic-sandbox.ts — cross-directory relative imports
 // are not resolvable by Cloudflare esbuild at function compile time.
@@ -172,7 +173,8 @@ export const onRequestPost = async ({
   env: Env;
 }): Promise<Response> => {
   // Validate environment
-  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+  const serviceRoleKey = getServiceRoleKey(env);
+  if (!serviceRoleKey) {
     return Response.json({ error: 'Server misconfiguration: Supabase env vars absent' }, { status: 500 });
   }
 
@@ -184,7 +186,7 @@ export const onRequestPost = async ({
   }
 
   // Retrieve ANTHROPIC_API_KEY from Supabase Vault — never expose to client
-  const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+  const supabase = createClient(getSupabaseUrl(env), serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 

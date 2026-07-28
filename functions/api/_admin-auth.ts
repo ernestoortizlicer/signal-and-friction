@@ -18,6 +18,8 @@
  * module as a route.
  */
 
+import { getSupabaseUrl, getServiceRoleKey } from "./_env";
+
 const ADMIN_ALLOWLIST_FALLBACK = "ernestoortiz@gmail.com,ernestoortizlicer@gmail.com";
 
 export interface AdminUser {
@@ -50,11 +52,13 @@ export async function requireAdmin(
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // .trim() defensively — a secret set via a pasted value can carry an
-  // invisible trailing newline/space that survives into the env var and
-  // silently produces a malformed fetch() target.
-  const supabaseUrl = (env.SUPABASE_URL || "https://tsaarsuuclvkjsgjcmoj.supabase.co").trim();
-  const apikey = env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = getSupabaseUrl(env);
+  // The actual root cause found in production 2026-07-28: this specific
+  // value (not the URL) had a hidden trailing character, so Supabase
+  // rejected it with "Invalid API key" — a 401 with a *valid, unexpired*
+  // token, which reads exactly like an auth bug even though the token was
+  // never the problem.
+  const apikey = getServiceRoleKey(env);
   if (!apikey) {
     return Response.json({ error: "Server misconfiguration" }, { status: 500 });
   }

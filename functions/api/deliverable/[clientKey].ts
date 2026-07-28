@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { DEMO_CLIENT_KEYS } from '../_demo-clients';
+import { getSupabaseUrl, getServiceRoleKey } from '../_env';
 
 interface Env {
   SUPABASE_URL: string;
@@ -29,11 +30,12 @@ export const onRequestGet = async ({
 }): Promise<Response> => {
   const { clientKey } = params;
 
-  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+  const serviceRoleKey = getServiceRoleKey(env);
+  if (!serviceRoleKey) {
     return Response.json({ error: 'Missing credentials' }, { status: 500, headers: CORS });
   }
 
-  const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+  const supabase = createClient(getSupabaseUrl(env), serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 

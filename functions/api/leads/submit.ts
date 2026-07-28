@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { getSupabaseUrl, getServiceRoleKey } from '../_env';
 
 interface Env {
   SUPABASE_URL: string;
@@ -112,14 +113,15 @@ export const onRequestPost = async ({
 
     const region = body.region || 'US';
 
-    if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+    const serviceRoleKey = getServiceRoleKey(env);
+    if (!serviceRoleKey) {
       return new Response(
         JSON.stringify({ error: 'Server misconfiguration' }),
         { status: 500, headers: CORS }
       );
     }
 
-    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+    const supabase = createClient(getSupabaseUrl(env), serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 

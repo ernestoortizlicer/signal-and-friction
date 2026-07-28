@@ -1,6 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { requireAdmin } from '../_admin-auth';
 import { runScan, toRawTechnicalSignals, computeTechnicalSignalScore } from '../_scan';
+import { getSupabaseUrl, getServiceRoleKey } from '../_env';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -48,11 +49,12 @@ export const onRequestPost = async ({
     return Response.json({ error: 'candidateId is required' }, { status: 400, headers: CORS });
   }
 
-  const supabaseUrl = env.SUPABASE_URL || 'https://tsaarsuuclvkjsgjcmoj.supabase.co';
-  if (!env.SUPABASE_SERVICE_ROLE_KEY) {
+  const supabaseUrl = getSupabaseUrl(env);
+  const serviceRoleKey = getServiceRoleKey(env);
+  if (!serviceRoleKey) {
     return Response.json({ error: 'Server misconfiguration: SUPABASE_SERVICE_ROLE_KEY not set' }, { status: 500, headers: CORS });
   }
-  const supabase = createClient(supabaseUrl, env.SUPABASE_SERVICE_ROLE_KEY, {
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 

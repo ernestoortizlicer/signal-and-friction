@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { runScan } from './_scan';
+import { getSupabaseUrl, getServiceRoleKey } from './_env';
 
 interface Env {
   SUPABASE_URL: string;
@@ -39,9 +40,10 @@ export const onRequestPost = async ({
   }
 
   // If email provided, persist as lead with friction data
-  if (payload.email && env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY) {
+  const serviceRoleKey = getServiceRoleKey(env);
+  if (payload.email && serviceRoleKey) {
     try {
-      const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+      const supabase = createClient(getSupabaseUrl(env), serviceRoleKey, {
         auth: { persistSession: false, autoRefreshToken: false },
       });
       await supabase.from('leads').upsert({

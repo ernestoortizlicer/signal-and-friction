@@ -1,4 +1,5 @@
 import { DEMO_CLIENT_KEYS } from "../_demo-clients";
+import { getSupabaseUrl, getServiceRoleKey } from "../_env";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -19,13 +20,12 @@ export const onRequestGet = async ({
   env: Record<string, string>;
 }) => {
   const { clientKey } = params;
-  const supabaseUrl =
-    env.SUPABASE_URL || "https://tsaarsuuclvkjsgjcmoj.supabase.co";
-  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = getSupabaseUrl(env);
+  const serviceKey = getServiceRoleKey(env);
 
   const headers = {
-    apikey: serviceKey,
-    Authorization: `Bearer ${serviceKey}`,
+    apikey: serviceKey ?? "",
+    Authorization: `Bearer ${serviceKey ?? ""}`,
     "Content-Type": "application/json",
   };
 

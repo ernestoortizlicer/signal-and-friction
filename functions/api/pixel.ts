@@ -18,6 +18,8 @@
  *   CREATE INDEX ON deliverable_view_events (client_key, viewed_at DESC);
  */
 
+import { getSupabaseUrl, getServiceRoleKey } from "./_env";
+
 const TRANSPARENT_GIF = new Uint8Array([
   0x47, 0x49, 0x46, 0x38, 0x39, 0x61,
   0x01, 0x00, 0x01, 0x00, 0x80, 0x00, 0x00,
@@ -46,13 +48,15 @@ async function logView(
   userAgent: string,
   country: string,
 ): Promise<void> {
+  const supabaseUrl = getSupabaseUrl(env);
+  const serviceRoleKey = getServiceRoleKey(env);
   await Promise.allSettled([
     // Supabase event log
-    fetch(`${env.SUPABASE_URL}/rest/v1/deliverable_view_events`, {
+    fetch(`${supabaseUrl}/rest/v1/deliverable_view_events`, {
       method: "POST",
       headers: {
-        "apikey": env.SUPABASE_SERVICE_ROLE_KEY,
-        "Authorization": `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+        "apikey": serviceRoleKey ?? "",
+        "Authorization": `Bearer ${serviceRoleKey ?? ""}`,
         "Content-Type": "application/json",
         "Prefer": "return=minimal",
       },
@@ -101,7 +105,7 @@ export const onRequestGet = async ({
 
   const url = new URL(request.url);
   const clientKey = url.searchParams.get("client")?.slice(0, 64) ?? "";
-  if (!clientKey || !env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) return gif;
+  if (!clientKey || !getServiceRoleKey(env)) return gif;
 
   const country = request.headers.get("CF-IPCountry") ?? "XX";
 
