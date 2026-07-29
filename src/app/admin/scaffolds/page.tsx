@@ -44,6 +44,8 @@ interface Scaffold {
   the_decision: string | null;
   what_to_avoid: string | null;
   confidence_and_why: string | null;
+  loom_script: string | null;
+  loom_script_generated_at: string | null;
   status: "draft" | "pushed_to_deliverable";
   created_at: string;
   updated_at: string;
@@ -121,6 +123,9 @@ function ScaffoldEditor() {
   const [saving, setSaving] = useState(false);
   const [rescanning, setRescanning] = useState(false);
   const [notice, setNotice] = useState<{ message: string; variant: "green" | "red" } | null>(null);
+  const [loomScriptDraft, setLoomScriptDraft] = useState("");
+  const [generatingLoom, setGeneratingLoom] = useState(false);
+  const [savingLoom, setSavingLoom] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -150,6 +155,7 @@ function ScaffoldEditor() {
           what_to_avoid: row.what_to_avoid ?? "",
           confidence_and_why: row.confidence_and_why ?? "",
         });
+        setLoomScriptDraft(row.loom_script ?? "");
 
         if (row.client_id) {
           const cRes = await fetch(
@@ -174,35 +180,104 @@ function ScaffoldEditor() {
     })();
   }, [id]);
 
+  async function persistJudgmentFields(): Promise<Scaffold | null> {
+    if (!scaffold) return null;
+    const res = await fetch(`/api/scaffolds/${scaffold.id}`, {
+      method: "PATCH",
+      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({
+        friction_mechanism: drafts.friction_mechanism,
+        specific_friction_point: drafts.specific_friction_point,
+        why_blocks_conversion: drafts.why_blocks_conversion,
+        projected_impact: drafts.projected_impact,
+        the_decision: drafts.the_decision,
+        what_to_avoid: drafts.what_to_avoid,
+        confidence_and_why: drafts.confidence_and_why,
+      }),
+    });
+    const body = await res.json().catch(() => null);
+    if (res.ok && body) {
+      setScaffold(body);
+      return body;
+    }
+    setNotice({ message: body?.error || `Save failed (HTTP ${res.status}).`, variant: "red" });
+    return null;
+  }
+
   async function saveDraft() {
     if (!scaffold) return;
     setSaving(true);
     setNotice(null);
     try {
+      const saved = await persistJudgmentFields();
+      if (saved) {
+        setNotice({ message: "Draft saved.", variant: "green" });
+      }
+    } catch (err) {
+      setNotice({ message: `Save request failed: ${err instanceof Error ? err.message : "network error"}`, variant: "red" });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const judgmentReadyForScript = [
+    drafts.friction_mechanism,
+    drafts.specific_friction_point,
+    drafts.why_blocks_conversion,
+    drafts.the_decision,
+  ].every((v) => (v ?? "").trim().length > 0);
+
+  async function generateLoomScript() {
+    if (!scaffold || !judgmentReadyForScript) return;
+    setGeneratingLoom(true);
+    setNotice(null);
+    try {
+      // Persist whatever's currently in the judgment textareas first, so the
+      // script is generated from exactly what's on screen, not a stale save.
+      const saved = await persistJudgmentFields();
+      if (!saved) return;
+
+      const res = await fetch("/api/scaffolds/generate-loom", {
+        method: "POST",
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ scaffoldId: scaffold.id }),
+      });
+      const body = await res.json().catch(() => null);
+      if (res.ok && body) {
+        setScaffold((prev) => (prev ? { ...prev, ...body } : body));
+        setLoomScriptDraft(body.loom_script ?? "");
+        setNotice({ message: "Loom script generated.", variant: "green" });
+      } else {
+        setNotice({ message: body?.error || `Script generation failed (HTTP ${res.status}).`, variant: "red" });
+      }
+    } catch (err) {
+      setNotice({ message: `Script generation request failed: ${err instanceof Error ? err.message : "network error"}`, variant: "red" });
+    } finally {
+      setGeneratingLoom(false);
+    }
+  }
+
+  async function saveLoomScript() {
+    if (!scaffold) return;
+    setSavingLoom(true);
+    setNotice(null);
+    try {
       const res = await fetch(`/api/scaffolds/${scaffold.id}`, {
         method: "PATCH",
         headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-        body: JSON.stringify({
-          friction_mechanism: drafts.friction_mechanism,
-          specific_friction_point: drafts.specific_friction_point,
-          why_blocks_conversion: drafts.why_blocks_conversion,
-          projected_impact: drafts.projected_impact,
-          the_decision: drafts.the_decision,
-          what_to_avoid: drafts.what_to_avoid,
-          confidence_and_why: drafts.confidence_and_why,
-        }),
+        body: JSON.stringify({ loom_script: loomScriptDraft }),
       });
       const body = await res.json().catch(() => null);
       if (res.ok && body) {
         setScaffold(body);
-        setNotice({ message: "Draft saved.", variant: "green" });
+        setNotice({ message: "Script saved.", variant: "green" });
       } else {
         setNotice({ message: body?.error || `Save failed (HTTP ${res.status}).`, variant: "red" });
       }
     } catch (err) {
       setNotice({ message: `Save request failed: ${err instanceof Error ? err.message : "network error"}`, variant: "red" });
     } finally {
-      setSaving(false);
+      setSavingLoom(false);
     }
   }
 
@@ -340,6 +415,65 @@ function ScaffoldEditor() {
           </button>
           <span className="text-xs font-mono text-[#7A6F65]">Updated {formatDate(scaffold.updated_at)}</span>
         </div>
+      </AdminCard>
+
+      <AdminCard>
+        <div className="flex items-center justify-between mb-1">
+          <span className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-[0.15em]">
+            Loom Script — cold-outreach teaser
+          </span>
+          {scaffold.loom_script_generated_at && (
+            <span className="text-[10px] font-mono text-[#7A6F65]">
+              Generated {formatDate(scaffold.loom_script_generated_at)}
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-[#7A6F65] font-mono mb-4">
+          Built only from Friction Mechanism, Specific Friction Point, Why It Blocks Conversion, The Decision, and the measured evidence above.
+          Never reveals the fix — this is a teaser, not the deliverable.
+        </p>
+
+        {!judgmentReadyForScript && (
+          <AdminAlert variant="gold">
+            Fill in Friction Mechanism, Specific Friction Point, Why It Blocks Conversion, and The Decision above first —
+            an empty judgment field means there&apos;s no real finding to script from.
+          </AdminAlert>
+        )}
+
+        <div className="flex items-center gap-3 mt-3 mb-4">
+          <button
+            type="button"
+            onClick={generateLoomScript}
+            disabled={!judgmentReadyForScript || generatingLoom}
+            className="px-4 py-2 rounded-lg bg-[#D4A853]/10 border border-[#D4A853]/25 text-[#D4A853] text-sm font-mono uppercase tracking-wide hover:bg-[#D4A853]/15 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          >
+            {generatingLoom ? "Generating…" : scaffold.loom_script ? "Regenerate Loom Script" : "Generate Loom Script"}
+          </button>
+          {loomScriptDraft && (
+            <span className="text-xs font-mono text-[#7A6F65]">
+              {loomScriptDraft.trim().split(/\s+/).filter(Boolean).length} words
+            </span>
+          )}
+        </div>
+
+        {(scaffold.loom_script || loomScriptDraft) && (
+          <div className="space-y-2">
+            <textarea
+              value={loomScriptDraft}
+              onChange={(e) => setLoomScriptDraft(e.target.value)}
+              rows={16}
+              className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] leading-relaxed focus:outline-none focus:border-[#D4A853]/40"
+            />
+            <button
+              type="button"
+              onClick={saveLoomScript}
+              disabled={savingLoom}
+              className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-[#B0A89E] text-sm font-mono uppercase tracking-wide hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {savingLoom ? "Saving…" : "Save Script"}
+            </button>
+          </div>
+        )}
       </AdminCard>
 
       <div className="flex gap-4">

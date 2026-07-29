@@ -17,6 +17,11 @@
 -- finished scaffold into a real deliverable stays a deliberate manual
 -- step through the existing admin/dashboard delivery form
 -- (buildDeliveryPayload / handlePublishDelivery) — not automated here.
+--
+-- loom_script is generated from the 7 judgment fields above (never from
+-- anything else) by functions/api/scaffolds/generate-loom.ts, only once
+-- they're filled in — an empty judgment set has no real findings to script
+-- from. Human-revisable afterward, same as the judgment fields.
 -- ════════════════════════════════════════════════════════════
 
 CREATE TABLE IF NOT EXISTS public.diagnostic_scaffolds (
@@ -35,6 +40,8 @@ CREATE TABLE IF NOT EXISTS public.diagnostic_scaffolds (
     the_decision TEXT,
     what_to_avoid TEXT,
     confidence_and_why TEXT,
+    loom_script TEXT,
+    loom_script_generated_at TIMESTAMPTZ,
     status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'pushed_to_deliverable')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),

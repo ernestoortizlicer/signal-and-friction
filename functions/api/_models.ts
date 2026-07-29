@@ -20,3 +20,10 @@ export const CLAUDE_MODEL = 'claude-opus-4-8' as const;
  * JSON.parse and surfaced as an intermittent 422. 4096 gives the schema headroom.
  */
 export const DIAGNOSTIC_MAX_TOKENS = 4096;
+
+/**
+ * Output ceiling for the Loom outreach script (target 400-550 words, plain
+ * text, no JSON overhead). 2048 gives generous headroom without inviting
+ * the model to run long.
+ */
+export const LOOM_SCRIPT_MAX_TOKENS = 2048;
