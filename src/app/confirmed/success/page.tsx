@@ -44,7 +44,7 @@ function SuccessContent() {
   }, [email, product]);
 
   return (
-    <main className="h-screen w-screen bg-[#0A0908] text-[#F5F0EB] overflow-hidden relative flex flex-col items-center justify-center font-mono">
+    <main className="h-screen w-screen bg-[#0A0908] text-[#F5F0EB] overflow-y-auto relative flex flex-col items-center justify-center font-mono py-8">
       <HexGrid />
 
       {/* Background grid */}

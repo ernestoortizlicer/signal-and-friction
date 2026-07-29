@@ -105,7 +105,7 @@ function ConfirmedContent() {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6 }}
-        className="w-64 border-r border-[#D4A853]/8 bg-[#0A0908] flex flex-col py-6 px-5 flex-shrink-0 hidden md:flex"
+        className="w-64 border-r border-[#D4A853]/8 bg-[#0A0908] flex flex-col py-6 px-5 flex-shrink-0 hidden md:flex overflow-y-auto"
       >
         <div className="font-mono text-xs text-[#D4A853]/70 tracking-[0.35em] uppercase mb-6">
           Mission Parameters
@@ -171,7 +171,7 @@ function ConfirmedContent() {
       </motion.div>
 
       {/* MAIN — Telemetry Screen */}
-      <div className="flex-1 flex flex-col items-center justify-center relative">
+      <div className="flex-1 flex flex-col items-center justify-center relative overflow-y-auto py-8">
         {/* Faint grid */}
         <div className="absolute inset-0 pointer-events-none" style={{
           backgroundImage: "linear-gradient(rgba(212,168,83,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(212,168,83,0.02) 1px, transparent 1px)",

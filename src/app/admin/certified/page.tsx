@@ -397,7 +397,7 @@ export default function AdminCertifiedManager() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={springConfig}
-                    className="w-full max-w-lg border border-[#D4A853]/30 bg-[#121110] p-8 rounded relative glow-border text-left font-mono"
+                    className="w-full max-w-lg border border-[#D4A853]/30 bg-[#121110] p-8 rounded relative glow-border text-left font-mono max-h-[90vh] overflow-y-auto"
                   >
                     <button onClick={() => setSelectedPractitioner(null)} className="absolute top-4 right-4 text-xs hover:text-[#D4A853] text-[#B0A89E]">{"[CLOSE]"}</button>
 
