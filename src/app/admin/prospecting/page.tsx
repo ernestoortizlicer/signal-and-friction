@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getAuthHeaders } from "@/lib/supabase";
 import {
   AdminSectionHeader,
@@ -120,7 +121,10 @@ const STATUS_FILTERS: Array<{ key: "all" | Candidate["status"]; label: string }>
 ];
 
 export default function ProspectingCommandCenter() {
+  const router = useRouter();
   const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [scaffoldIds, setScaffoldIds] = useState<Record<string, string>>({});
+  const [generatingScaffoldIds, setGeneratingScaffoldIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [seedText, setSeedText] = useState("");
   const [adding, setAdding] = useState(false);
@@ -156,6 +160,27 @@ export default function ProspectingCommandCenter() {
     }
   }
 
+  async function fetchScaffolds() {
+    try {
+      const headers = getAuthHeaders();
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/diagnostic_scaffolds?select=id,prospect_candidate_id&prospect_candidate_id=not.is.null`,
+        { headers }
+      );
+      if (res.ok) {
+        const rows: Array<{ id: string; prospect_candidate_id: string }> = await res.json();
+        const map: Record<string, string> = {};
+        // Most-recent-first isn't guaranteed by this query, but candidates
+        // only ever have one live scaffold in practice — last write wins
+        // either way, which is harmless.
+        rows.forEach((r) => { map[r.prospect_candidate_id] = r.id; });
+        setScaffoldIds(map);
+      }
+    } catch (err) {
+      console.warn("Failed to load diagnostic scaffolds:", err);
+    }
+  }
+
   useEffect(() => {
     async function loadOnMount() {
       try {
@@ -173,9 +198,36 @@ export default function ProspectingCommandCenter() {
       } finally {
         setLoading(false);
       }
+      await fetchScaffolds();
     }
     loadOnMount();
   }, []);
+
+  async function generateScaffold(candidate: Candidate) {
+    setGeneratingScaffoldIds((prev) => new Set(prev).add(candidate.id));
+    try {
+      const res = await fetch("/api/scaffolds/generate", {
+        method: "POST",
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ prospectCandidateId: candidate.id }),
+      });
+      const body = await res.json().catch(() => null);
+      if (res.ok && body?.id) {
+        setScaffoldIds((prev) => ({ ...prev, [candidate.id]: body.id }));
+        router.push(`/admin/scaffolds?id=${body.id}`);
+      } else {
+        setNotice({ message: body?.error || `Scaffold generation failed (HTTP ${res.status}).`, variant: "red" });
+      }
+    } catch (err) {
+      setNotice({ message: `Scaffold request failed: ${err instanceof Error ? err.message : "network error"}`, variant: "red" });
+    } finally {
+      setGeneratingScaffoldIds((prev) => {
+        const next = new Set(prev);
+        next.delete(candidate.id);
+        return next;
+      });
+    }
+  }
 
   async function handleAddCandidates() {
     const lines = seedText.split(/[\n,]/).map((l) => l.trim()).filter(Boolean);
@@ -819,6 +871,24 @@ export default function ProspectingCommandCenter() {
                         {c.status === "promoted" && (
                           <span className="text-[10px] text-[#7A6F65] font-mono">In client pipeline</span>
                         )}
+                        {scaffoldIds[c.id] ? (
+                          <button
+                            type="button"
+                            onClick={() => router.push(`/admin/scaffolds?id=${scaffoldIds[c.id]}`)}
+                            className="px-2.5 py-1 rounded bg-[#D4A853]/10 border border-[#D4A853]/25 text-[#D4A853] text-[10px] font-mono uppercase tracking-wide hover:bg-[#D4A853]/15 cursor-pointer"
+                          >
+                            Open Scaffold
+                          </button>
+                        ) : c.status === "scanned" ? (
+                          <button
+                            type="button"
+                            onClick={() => generateScaffold(c)}
+                            disabled={generatingScaffoldIds.has(c.id)}
+                            className="px-2.5 py-1 rounded bg-white/5 border border-white/10 text-[#B0A89E] text-[10px] font-mono uppercase tracking-wide hover:bg-white/10 disabled:opacity-40 cursor-pointer"
+                          >
+                            {generatingScaffoldIds.has(c.id) ? "Generating…" : "Generate Scaffold"}
+                          </button>
+                        ) : null}
                         <button
                           type="button"
                           onClick={() => startEditing(c)}

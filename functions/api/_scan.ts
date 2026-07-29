@@ -517,3 +517,59 @@ export function computeTechnicalSignalScore(
   const score = Math.min(100, performance + lcp + tbt + cls + trustSignalsTotal);
   return { score, breakdown };
 }
+
+/**
+ * ── Diagnostic scaffold evidence ──
+ * Converts every raw scan signal into a MEASURED evidence row — one row
+ * per observation, each with its own source. Used only to populate the
+ * read-only evidence section of a diagnostic scaffold; never touches the
+ * 7 judgment fields a human fills in on that scaffold. Every row here is
+ * a direct fact from the scan — no interpretation, no severity language.
+ */
+
+export interface ScaffoldEvidenceRow {
+  tier: 'measured';
+  label: string;
+  value: string;
+  source: string;
+}
+
+function presenceLabel(p: Presence): string {
+  if (p === 'found') return 'Found';
+  if (p === 'not_found') return 'Not found';
+  return "Undetermined — page appears JS-rendered; a plain fetch can't verify";
+}
+
+export function buildScaffoldEvidence(signals: RawTechnicalSignals): ScaffoldEvidenceRow[] {
+  const scannedDate = new Date(signals.scannedAt).toLocaleDateString('en-US', {
+    year: 'numeric', month: 'long', day: 'numeric',
+  });
+  const pageSpeedSource = `Google PageSpeed Insights, mobile, scanned ${scannedDate}`;
+  const htmlSource = `Raw HTML scan, scanned ${scannedDate}`;
+
+  const checkoutLazyValue = signals.hasCheckoutIndicator
+    ? (signals.hasLazyImages ? 'Checkout indicator detected, lazy-loaded images present' : 'Checkout indicator detected, no lazy-loaded images')
+    : 'No checkout indicator detected';
+
+  const stripeValue = signals.hasStripe
+    ? (signals.stripeAsync ? 'Stripe.js detected, loaded async' : 'Stripe.js detected, loaded synchronously (blocking)')
+    : 'Not detected';
+
+  return [
+    { tier: 'measured', label: 'PageSpeed performance score (mobile)', value: `${signals.performanceScore}/100`, source: pageSpeedSource },
+    { tier: 'measured', label: 'Largest Contentful Paint (mobile)', value: signals.lcp.label, source: pageSpeedSource },
+    { tier: 'measured', label: 'Total Blocking Time (mobile)', value: signals.tbt.label, source: pageSpeedSource },
+    { tier: 'measured', label: 'Cumulative Layout Shift (mobile)', value: signals.cls.value.toFixed(3), source: pageSpeedSource },
+    { tier: 'measured', label: 'Detected platform', value: signals.platform ?? 'Not detected', source: htmlSource },
+    { tier: 'measured', label: 'Missing Open Graph tags', value: signals.missingOgTags.length > 0 ? signals.missingOgTags.join(', ') : 'None missing', source: htmlSource },
+    { tier: 'measured', label: 'Checkout indicator + lazy-loaded images', value: checkoutLazyValue, source: htmlSource },
+    { tier: 'measured', label: 'Stripe.js loading', value: stripeValue, source: htmlSource },
+    { tier: 'measured', label: 'HTTPS enabled', value: signals.httpsEnabled ? 'Yes' : 'No', source: htmlSource },
+    { tier: 'measured', label: 'Privacy policy link', value: presenceLabel(signals.privacyPolicyLink), source: htmlSource },
+    { tier: 'measured', label: 'Terms of service link', value: presenceLabel(signals.termsOfServiceLink), source: htmlSource },
+    { tier: 'measured', label: 'Social proof / testimonials', value: presenceLabel(signals.socialProof), source: htmlSource },
+    { tier: 'measured', label: 'Security/compliance badges (SOC2/GDPR/ISO 27001)', value: presenceLabel(signals.securityBadges), source: htmlSource },
+    { tier: 'measured', label: 'Live-chat / support widget', value: presenceLabel(signals.liveChatWidget), source: htmlSource },
+    { tier: 'measured', label: 'Pricing link present on page', value: presenceLabel(signals.pricingLink), source: htmlSource },
+  ];
+}

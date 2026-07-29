@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAuthHeaders } from "@/lib/supabase";
 import { AdminStatCard, RevenueProgressBar } from "@/components/admin/AdminComponents";
@@ -266,6 +267,7 @@ interface LeadRecord {
 const springConfig = { type: "spring" as const, stiffness: 100, damping: 18 };
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const [activeView, setActiveView] = useState<'pipeline' | 'learning'>('pipeline');
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [incidents, setIncidents] = useState<AIIncident[]>([]);
@@ -304,6 +306,12 @@ export default function AdminDashboard() {
   const [mcpToast, setMcpToast] = useState("");
   const [deliveryEmailStatus, setDeliveryEmailStatus] = useState<{ ok: boolean; message: string } | null>(null);
   const [resendingDeliveryEmail, setResendingDeliveryEmail] = useState(false);
+
+  // Diagnostic scaffold — private draft, generated from the same scanUrl
+  // used by the AI Diagnostic Engine above. Never auto-visible to a client.
+  const [existingScaffoldId, setExistingScaffoldId] = useState<string | null>(null);
+  const [scaffoldGenerating, setScaffoldGenerating] = useState(false);
+  const [scaffoldError, setScaffoldError] = useState("");
 
   // AI Diagnose engine state
   const [diagnoseLoading, setDiagnoseLoading] = useState(false);
@@ -504,6 +512,8 @@ export default function AdminDashboard() {
     setShowDryRun(false);
     setDryRunPayload(null);
     setDryRunErrors([]);
+    setExistingScaffoldId(null);
+    setScaffoldError("");
 
     if (client.guarantee) {
       setModalTrafficGate(!!client.guarantee.traffic_gate_met);
@@ -547,10 +557,43 @@ export default function AdminDashboard() {
         const interactionsData = await resInteractions.json();
         setSelectedClientInteractions(interactionsData);
       }
+      const resScaffold = await fetch(`${supabaseUrl}/rest/v1/diagnostic_scaffolds?client_id=eq.${client.id}&select=id&order=updated_at.desc&limit=1`, { headers });
+      if (resScaffold.ok) {
+        const [scaffold] = await resScaffold.json();
+        setExistingScaffoldId(scaffold?.id ?? null);
+      }
     } catch (e) {
       console.warn("Could not load client details:", e);
     } finally {
       setLoadingLogs(false);
+    }
+  };
+
+  const handleGenerateScaffold = async () => {
+    if (!selectedClient) return;
+    if (!scanUrl.trim()) {
+      setScaffoldError("Enter the client's website URL first — this scans their real site.");
+      return;
+    }
+    setScaffoldGenerating(true);
+    setScaffoldError("");
+    try {
+      const res = await fetch('/api/scaffolds/generate', {
+        method: 'POST',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId: selectedClient.id, url: scanUrl.trim() }),
+      });
+      const body = await res.json().catch(() => null);
+      if (res.ok && body?.id) {
+        setExistingScaffoldId(body.id);
+        router.push(`/admin/scaffolds?id=${body.id}`);
+      } else {
+        setScaffoldError(body?.error || `Scaffold generation failed (HTTP ${res.status}).`);
+      }
+    } catch (e: any) {
+      setScaffoldError(e.message || 'Scaffold generation failed');
+    } finally {
+      setScaffoldGenerating(false);
     }
   };
 
@@ -2560,6 +2603,30 @@ export default function AdminDashboard() {
                         ) : 'Scan & Diagnose →'}
                       </button>
                       {scanError && <p className="text-[#C85C5C] text-xs font-mono">{scanError}</p>}
+
+                      <div className="border-t border-[#D4A853]/8 pt-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-[10px] text-[#7A6F65] uppercase tracking-widest">
+                            {"Diagnostic Scaffold — private draft, honest evidence only"}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={scaffoldGenerating}
+                          onClick={existingScaffoldId ? () => router.push(`/admin/scaffolds?id=${existingScaffoldId}`) : handleGenerateScaffold}
+                          className="w-full py-2.5 bg-white/5 border border-white/10 text-[#B0A89E] rounded font-mono text-xs uppercase tracking-wider hover:bg-white/10 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {scaffoldGenerating
+                            ? (
+                              <span className="flex items-center justify-center gap-2">
+                                <span className="w-3 h-3 border border-[#B0A89E] border-t-transparent rounded-full animate-spin inline-block" />
+                                {"Generating scaffold…"}
+                              </span>
+                            )
+                            : existingScaffoldId ? 'Open Diagnostic Scaffold →' : 'Generate Diagnostic Scaffold →'}
+                        </button>
+                        {scaffoldError && <p className="text-[#C85C5C] text-xs font-mono">{scaffoldError}</p>}
+                      </div>
 
                       {diagEvidence.length > 0 && (
                         <div className="space-y-2 pt-1">
