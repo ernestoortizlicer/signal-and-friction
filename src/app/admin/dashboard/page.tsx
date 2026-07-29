@@ -302,6 +302,8 @@ export default function AdminDashboard() {
   const [diagRootCause, setDiagRootCause] = useState("");
   const [diagnosticError, setDiagnosticError] = useState("");
   const [mcpToast, setMcpToast] = useState("");
+  const [deliveryEmailStatus, setDeliveryEmailStatus] = useState<{ ok: boolean; message: string } | null>(null);
+  const [resendingDeliveryEmail, setResendingDeliveryEmail] = useState(false);
 
   // AI Diagnose engine state
   const [diagnoseLoading, setDiagnoseLoading] = useState(false);
@@ -841,16 +843,35 @@ export default function AdminDashboard() {
         body: JSON.stringify({ client_key: clientKey, data: dryRunPayload, updated_at: new Date().toISOString() }),
       });
 
-      // 5. Fire delivery notification email — non-fatal, idempotent
-      fetch(`/api/notify-delivery/${clientKey}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clientEmail: selectedClient.contact_email,
-          clientName: selectedClient.company_name || selectedClient.company || "",
-          clientId: selectedClient.id,
-        }),
-      }).catch(() => {});
+      // 5. Fire delivery notification email. Was silently missing the admin
+      // auth header — requireAdmin() rejected every call with 401 and the
+      // trailing .catch(() => {}) swallowed even that, so no email ever
+      // sent and nothing showed it. Now awaited, authenticated, and its
+      // result is shown regardless of what happens to the dry-run panel
+      // below (which closes on success either way).
+      try {
+        const notifyRes = await fetch(`/api/notify-delivery/${clientKey}`, {
+          method: "POST",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify({ clientId: selectedClient.id }),
+        });
+        const notifyBody = await notifyRes.json().catch(() => null);
+        if (notifyRes.ok && notifyBody?.sent) {
+          setDeliveryEmailStatus({ ok: true, message: `Delivery email sent to ${notifyBody.to}.` });
+        } else if (notifyRes.ok && notifyBody?.skipped) {
+          setDeliveryEmailStatus({ ok: true, message: `Delivery email already sent previously — not re-sent (idempotent).` });
+        } else {
+          setDeliveryEmailStatus({
+            ok: false,
+            message: `Deliverable published, but the notification email failed: ${notifyBody?.error || `HTTP ${notifyRes.status}`}. Send it manually or retry from here.`,
+          });
+        }
+      } catch (err) {
+        setDeliveryEmailStatus({
+          ok: false,
+          message: `Deliverable published, but the notification email request failed: ${err instanceof Error ? err.message : "network error"}. Send it manually or retry from here.`,
+        });
+      }
 
       setSelectedClient((prev: any) => prev ? { ...prev, status: "delivered" } : null);
       setShowDiagnosticForm(false);
@@ -906,6 +927,36 @@ export default function AdminDashboard() {
       setShowDryRun(false);
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  // Standalone retry for the delivery notification email — reachable after
+  // the publish flow has already closed (handlePublishDelivery clears
+  // dryRunPayload on success), so this re-derives clientKey the same way
+  // rather than depending on that now-gone state.
+  const handleResendDeliveryEmail = async () => {
+    if (!selectedClient) return;
+    const clientKey = (selectedClient.company_name || selectedClient.company || "client")
+      .toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    setResendingDeliveryEmail(true);
+    try {
+      const res = await fetch(`/api/notify-delivery/${clientKey}`, {
+        method: "POST",
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ clientId: selectedClient.id }),
+      });
+      const body = await res.json().catch(() => null);
+      if (res.ok && body?.sent) {
+        setDeliveryEmailStatus({ ok: true, message: `Delivery email sent to ${body.to}.` });
+      } else if (res.ok && body?.skipped) {
+        setDeliveryEmailStatus({ ok: true, message: `Delivery email already sent previously — not re-sent (idempotent).` });
+      } else {
+        setDeliveryEmailStatus({ ok: false, message: `Retry failed: ${body?.error || `HTTP ${res.status}`}. Send it manually or retry again.` });
+      }
+    } catch (err) {
+      setDeliveryEmailStatus({ ok: false, message: `Retry request failed: ${err instanceof Error ? err.message : "network error"}` });
+    } finally {
+      setResendingDeliveryEmail(false);
     }
   };
 
@@ -2447,6 +2498,27 @@ export default function AdminDashboard() {
                     {mcpToast && (
                       <div className="mt-3 p-2 bg-[#5C9A6B]/10 border border-[#5C9A6B]/30 text-[#5C9A6B] text-xs font-mono rounded-md animate-pulse">
                         {mcpToast}
+                      </div>
+                    )}
+                    {deliveryEmailStatus && (
+                      <div
+                        className={`mt-3 p-2 border rounded-md text-xs font-mono flex items-center justify-between gap-3 ${
+                          deliveryEmailStatus.ok
+                            ? "bg-[#5C9A6B]/10 border-[#5C9A6B]/30 text-[#5C9A6B]"
+                            : "bg-[#C85C5C]/10 border-[#C85C5C]/30 text-[#C85C5C]"
+                        }`}
+                      >
+                        <span>{deliveryEmailStatus.message}</span>
+                        {!deliveryEmailStatus.ok && (
+                          <button
+                            type="button"
+                            onClick={handleResendDeliveryEmail}
+                            disabled={resendingDeliveryEmail}
+                            className="px-2 py-1 rounded border border-current uppercase tracking-wide shrink-0 disabled:opacity-50 cursor-pointer"
+                          >
+                            {resendingDeliveryEmail ? "Sending…" : "Retry"}
+                          </button>
+                        )}
                       </div>
                     )}
 
