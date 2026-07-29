@@ -284,6 +284,25 @@ export default function Home() {
               One finding. One fix. Backed by the S&F Specificity Guarantee.
             </p>
 
+            {/* Magnetic pricing CTA — same hook as /pricing's hero, so
+                clicking it feels like continuing a thought, not switching
+                context. Scan-line reused from the pricing cards themselves,
+                ties the two pages together visually. */}
+            <Link
+              href="/pricing"
+              className="group relative inline-flex items-center gap-3 px-4 py-3 rounded-lg border border-[#D4A853]/25 bg-[#D4A853]/[0.03] overflow-hidden hover:border-[#D4A853]/50 hover:bg-[#D4A853]/[0.06] hover:scale-[1.015] transition-all duration-300"
+            >
+              <div className="pricing-card-scanline" />
+              <div className="text-left">
+                <div className="text-sm text-[#F5F0EB] font-medium leading-snug">
+                  Find the one friction killing your conversion.
+                </div>
+                <div className="font-mono text-xs text-[#D4A853] tracking-[0.15em] uppercase mt-0.5">
+                  See diagnostic pricing →
+                </div>
+              </div>
+            </Link>
+
             {/* Step indicators */}
             <div className="flex gap-1 pt-2">
               {STEPS.map((s) => (
@@ -386,7 +405,7 @@ export default function Home() {
                   }}
                 >
                   <span style={{ color: "#CBA135" }}>⚑</span>
-                  Full refund if the finding isn't specific to your product. 72h async. Zero sales calls.
+                  Full refund if the finding isn&apos;t specific to your product. 72h async. Zero sales calls.
                 </div>
               }
               submitCta="Find My Friction Point"
@@ -583,6 +602,23 @@ export default function Home() {
         <div className="text-center font-mono text-xs text-[#B0A89E]">
           Read the complete legally binding covenant: <Link href="/legal/guarantee" className="text-[#D4A853] hover:underline">S&amp;F Performance Terms &amp; Conditions</Link>.
         </div>
+      </section>
+
+      {/* ── Section 4: Pricing Teaser ──────────────────── */}
+      <section className="w-full max-w-3xl mx-auto px-6 py-20 relative z-10 border-t border-[#D4A853]/8 text-center space-y-6">
+        <h2 className="text-xl sm:text-2xl lg:text-3xl font-serif text-white tracking-tight leading-snug">
+          Your funnel is leaking revenue at{" "}
+          <span className="text-[#D4A853] glow-text">exactly one point.</span>
+          <br />
+          You feel it every month. You can&apos;t name it.
+        </h2>
+        <Link
+          href="/pricing"
+          className="relative inline-block px-8 py-3 border border-[#D4A853]/40 text-[#D4A853] font-mono text-xs uppercase tracking-[0.2em] overflow-hidden hover:bg-[#D4A853] hover:text-[#0A0908] hover:scale-[1.03] transition-all rounded"
+        >
+          <div className="pricing-card-scanline" />
+          See the diagnostic pricing →
+        </Link>
       </section>
 
       {/* ── Footer ──────────────────────────────────────── */}

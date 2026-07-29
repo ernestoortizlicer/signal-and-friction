@@ -12,12 +12,12 @@
  *
  * `priceUsd` is always the CURRENT LIVE price: what the Stripe payment link
  * behind `priceId` actually charges right now. Where a price change has been
- * business-approved but not yet made live in Stripe, it is recorded in
+ * business-approved but not yet made live in Stripe, it belongs in
  * PENDING_PRICE_CHANGES instead of overwriting priceUsd — a stale number
- * here would make a future pricing page advertise a price its own payment
- * link doesn't actually charge. See PENDING_PRICE_CHANGES for what's queued
- * and functions/api/stripe/webhook.ts / the Stripe change plan for what has
- * to happen before a pending change can move into priceUsd.
+ * here would make the pricing page advertise a price its own payment link
+ * doesn't actually charge. Move it into priceUsd (and clear the pending
+ * entry) only once the new Stripe Price + Payment Link are live and
+ * stripe_payment_links is updated to match.
  */
 
 export type BillingType = 'one_time' | 'monthly';
@@ -63,7 +63,7 @@ export const DWY_LADDER: OfferPhase[] = [
   },
   {
     priceId: 'price_dwy_expansion', order: 4, name: 'Expansion', segment: 'dwy',
-    priceUsd: 350, billing: 'one_time', // LIVE price. Approved change to $500 not yet in Stripe — see PENDING_PRICE_CHANGES.
+    priceUsd: 500, billing: 'one_time',
     scope: 'The diagnostic repeated on another funnel area.',
   },
   {
@@ -92,7 +92,7 @@ export const DFY_LADDER: OfferPhase[] = [
   },
   {
     priceId: 'price_dfy_expansion', order: 4, name: 'Expansion', segment: 'dfy',
-    priceUsd: 2000, billing: 'one_time', // LIVE price. Approved change to $2,500 not yet in Stripe — see PENDING_PRICE_CHANGES.
+    priceUsd: 2500, billing: 'one_time',
     scope: 'The diagnostic repeated on another funnel area, with S&F implementing the fix directly.',
   },
   {
@@ -120,18 +120,12 @@ export const CERTIFIED_TIER: { archived: true; archivedNote: string; phases: Off
   ],
 };
 
-export const PENDING_PRICE_CHANGES: PendingPriceChange[] = [
-  {
-    priceId: 'price_dwy_expansion', fromUsd: 350, toUsd: 500,
-    approvedAt: '2026-07-29', status: 'awaiting_stripe_update',
-    note: 'priceUsd above stays at 350 (the real live price) until a new Stripe Price + Payment Link exist and stripe_payment_links.payment_link_url / amount for price_dwy_expansion are updated to match — Stripe Prices are immutable, so this cannot be edited in place.',
-  },
-  {
-    priceId: 'price_dfy_expansion', fromUsd: 2000, toUsd: 2500,
-    approvedAt: '2026-07-29', status: 'awaiting_stripe_update',
-    note: 'priceUsd above stays at 2000 (the real live price) until a new Stripe Price + Payment Link exist and stripe_payment_links.payment_link_url / amount for price_dfy_expansion are updated to match — Stripe Prices are immutable, so this cannot be edited in place.',
-  },
-];
+// Empty as of 2026-07-29 — the DWY/DFY Expansion price changes that used to
+// sit here (350→500, 2000→2500) are both live in Stripe now (new Price +
+// Payment Link each, old ones archived/deactivated) and reflected directly
+// in priceUsd above. Add an entry here again if a future price change is
+// approved before it's actually live in Stripe.
+export const PENDING_PRICE_CHANGES: PendingPriceChange[] = [];
 
 /** Certified is deliberately excluded — archived, never public. */
 export const ALL_LADDERS: OfferPhase[] = [...DWY_LADDER, ...DFY_LADDER];

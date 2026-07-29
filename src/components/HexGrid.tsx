@@ -33,6 +33,12 @@ export default function HexGrid() {
       ]);
     }
 
+    // Resizing a canvas's width/height always clears its pixel buffer per
+    // spec — the idle-skip below would otherwise leave it blank after a
+    // resize (viewport rotation, devtools toggle) until the mouse next
+    // moves. This forces exactly one repaint after each resize.
+    let forceRedraw = true;
+
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
       w = window.innerWidth;
@@ -42,6 +48,7 @@ export default function HexGrid() {
       canvas.style.width = w + 'px';
       canvas.style.height = h + 'px';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      forceRedraw = true;
     };
 
     resize();
@@ -75,10 +82,9 @@ export default function HexGrid() {
 
     // Smooth mouse position for parallax
     let smoothMx = 0, smoothMy = 0;
+    let lastMx = -99999, lastMy = -99999;
 
     const render = () => {
-      ctx.clearRect(0, 0, w, h);
-
       const mx = mouseRef.current.x;
       const my = mouseRef.current.y;
       const normX = mouseRef.current.normX;
@@ -87,6 +93,29 @@ export default function HexGrid() {
       // Smooth parallax
       smoothMx += (normX - smoothMx) * 0.08;
       smoothMy += (normY - smoothMy) * 0.08;
+
+      // Scrolling alone never moves the mouse — mx/my only change on an
+      // actual mousemove event. Once the parallax ease settles (~1s after
+      // mount or after the mouse stops), every subsequent frame was an
+      // exact repaint of the previous one: full clear + ~hundreds of hex
+      // strokes + a fresh radial-gradient allocation, 60x/sec, forever,
+      // competing with the main thread for scroll-compositing budget the
+      // whole time the page sat open. That's what read as scroll stutter
+      // on this page — it's just far more noticeable on a page tall
+      // enough to scroll through for several seconds, unlike the shorter
+      // pages this component already shipped on. Skip the repaint
+      // entirely when nothing will actually look different.
+      const parallaxConverged = Math.abs(normX - smoothMx) < 0.0008 && Math.abs(normY - smoothMy) < 0.0008;
+      const mouseUnchanged = mx === lastMx && my === lastMy;
+      if (mouseUnchanged && parallaxConverged && !forceRedraw) {
+        animId = requestAnimationFrame(render);
+        return;
+      }
+      lastMx = mx;
+      lastMy = my;
+      forceRedraw = false;
+
+      ctx.clearRect(0, 0, w, h);
 
       // Parallax offset (opposite direction)
       const parallaxX = -smoothMx * 12;

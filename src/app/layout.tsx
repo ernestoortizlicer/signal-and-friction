@@ -128,7 +128,7 @@ export default function RootLayout({
                   price: '2000',
                   name: 'Done-For-You Concierge (DFY)',
                   description: 'S&F executes diagnostic & implementation. Backed by the S&F Specificity Guarantee — full refund if the finding isn\'t specific to your product.',
-                  url: 'https://signal-and-friction.com/#dfy-pricing',
+                  url: 'https://signal-and-friction.com/pricing#dfy-pricing',
                 },
                 {
                   '@type': 'Offer',
@@ -136,7 +136,7 @@ export default function RootLayout({
                   price: '350',
                   name: 'Done-With-You Autonomy (DWY)',
                   description: 'Learn S&F methodology, build internal capacity, earn Certified credentials.',
-                  url: 'https://signal-and-friction.com/#dwy-pricing',
+                  url: 'https://signal-and-friction.com/pricing#dwy-pricing',
                 },
                 {
                   '@type': 'Offer',

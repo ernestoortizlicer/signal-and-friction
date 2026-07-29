@@ -146,18 +146,24 @@ export default function WireframeCanvas() {
       const parallaxY = my * 15;
 
       // --- Dot grid ---
+      // Batched into a single path + one fill() instead of a beginPath+arc+fill
+      // per dot (500+ individual draw calls/frame at desktop widths, forever,
+      // on every page mounting this component) — same pixels, far less
+      // per-frame canvas overhead. This was the dominant cost in this
+      // component; the wireframe edges below are comparatively cheap.
       ctx.globalAlpha = 0.03;
       ctx.fillStyle = '#ffffff';
       const spacing = 60;
       const gridOffsetX = (parallaxX * 0.3) % spacing;
       const gridOffsetY = (parallaxY * 0.3) % spacing;
+      ctx.beginPath();
       for (let x = gridOffsetX; x < w; x += spacing) {
         for (let y = gridOffsetY; y < h; y += spacing) {
-          ctx.beginPath();
+          ctx.moveTo(x + 1, y);
           ctx.arc(x, y, 1, 0, Math.PI * 2);
-          ctx.fill();
         }
       }
+      ctx.fill();
 
       // Mouse-driven camera tilt
       const camTiltX = my * 0.12;

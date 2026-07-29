@@ -689,4 +689,22 @@
       font-size: 18px;
     }
   }
+
+  /* ── Pricing card scan-line — reuses the sf-scan keyframe (already
+     defined above) with its own literal duration instead of var(--sf-beat),
+     since these cards live outside .scan-funnel-wrap. Pure CSS animation:
+     no JS, no rAF, no scroll cost — animating `top` on an absolutely
+     positioned, pointer-events:none element composites independently of
+     scroll. Requires position:relative + overflow-hidden on the card,
+     which PhaseCard already has. ── */
+  .pricing-card-scanline {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    top: 0;
+    background: linear-gradient(90deg, transparent, rgba(212,168,83,.9), transparent);
+    animation: sf-scan 4.2s cubic-bezier(.45,0,.55,1) infinite;
+    pointer-events: none;
+  }
 }
