@@ -582,7 +582,7 @@ export default function Home() {
               </tr>
               <tr>
                 <td className="p-4 font-bold text-white uppercase text-xs">Verification Engine</td>
-                <td className="p-4">Hardened PostHog telemetry &amp; strict isolation gating.</td>
+                <td className="p-4">Every claim tagged: measured, modeled, or pending your data. Traceable to its source — or we say we can&apos;t see it.</td>
                 <td className="p-4">Unverified self-reported screenshots.</td>
               </tr>
               <tr>
@@ -592,7 +592,7 @@ export default function Home() {
               </tr>
               <tr>
                 <td className="p-4 font-bold text-white uppercase text-xs">Core Intelligence</td>
-                <td className="p-4">21 Specialized Agent Mind consortium.</td>
+                <td className="p-4">Real scan signals + human judgment on the one friction that matters. Never a guessed number.</td>
                 <td className="p-4">Single LLM API calls with generic template prompts.</td>
               </tr>
             </tbody>

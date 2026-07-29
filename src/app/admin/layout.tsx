@@ -151,7 +151,6 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     { href: "/admin/priorities", label: "Priorities", code: "PR" },
     { href: "/admin/learning", label: "Learning", code: "LE" },
     { href: "/admin/certified", label: "Certified", code: "CE" },
-    { href: "/admin/guarantees", label: "Guarantees", code: "GT" },
   ];
 
   if (isLoginPage) {
