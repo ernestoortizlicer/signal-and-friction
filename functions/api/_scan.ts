@@ -18,6 +18,11 @@ export interface FrictionMechanism {
   detail: string;
 }
 
+// Presence/absence only — 'undetermined' when the page is a client-rendered
+// shell with too little server-side text to search honestly. Never
+// collapsed to a false negative just because we couldn't check.
+export type Presence = 'found' | 'not_found' | 'undetermined';
+
 export interface ScanReport {
   domain: string;
   url: string;
@@ -41,6 +46,13 @@ export interface ScanReport {
     missingOgTags: string[];
     hasCheckoutIndicator: boolean;
     hasLazyImages: boolean;
+    httpsEnabled: boolean;
+    privacyPolicyLink: Presence;
+    termsOfServiceLink: Presence;
+    socialProof: Presence;
+    securityBadges: Presence;
+    liveChatWidget: Presence;
+    pricingLink: Presence;
   };
   frictionMechanisms: FrictionMechanism[];
   abandonmentDelta: number;
@@ -96,6 +108,26 @@ function frictionGrade(score: number): 'A' | 'B' | 'C' | 'D' | 'F' {
 // gracefully via the Promise.allSettled below (unchanged behavior there);
 // the prospecting pipeline needs the real failure reason instead of a
 // silent all-false/zero result that reads exactly like "measured, clean."
+// Strips script/style blocks and remaining tags to approximate what a
+// visitor actually sees server-side, before any client JS runs. Under
+// ~500 characters of that is treated as "this is a JS-rendered shell, not
+// real content" — the concrete, checkable condition behind 'undetermined'
+// for the SaaS-trust-signal checks below. Not a judgment about the site;
+// just an honest limit of what a plain fetch (no JS execution) can see.
+function visibleTextLength(html: string): number {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim().length;
+}
+
+function detectPresence(html: string, contentIsRendered: boolean, pattern: RegExp): Presence {
+  if (!contentIsRendered) return 'undetermined';
+  return pattern.test(html) ? 'found' : 'not_found';
+}
+
 async function detectHtmlSignals(url: string): Promise<{
   hasStripe: boolean;
   stripeAsync: boolean;
@@ -104,6 +136,13 @@ async function detectHtmlSignals(url: string): Promise<{
   hasCheckoutIndicator: boolean;
   hasLazyImages: boolean;
   platform: string | null;
+  httpsEnabled: boolean;
+  privacyPolicyLink: Presence;
+  termsOfServiceLink: Presence;
+  socialProof: Presence;
+  securityBadges: Presence;
+  liveChatWidget: Presence;
+  pricingLink: Presence;
 }> {
   const res = await fetch(url, {
     headers: { 'User-Agent': 'SignalFrictionAudit/1.0 (+https://signal-and-friction.pages.dev)' },
@@ -113,6 +152,10 @@ async function detectHtmlSignals(url: string): Promise<{
     throw new Error(`Target returned HTTP ${res.status}`);
   }
   const html = await res.text();
+
+  // The final URL after redirects — the honest answer to "is this site
+  // actually served over HTTPS", not just what protocol we requested.
+  const httpsEnabled = res.url.startsWith('https://');
 
   const scriptTags = (html.match(/<script[^>]*>/gi) || []);
   const scriptCount = scriptTags.length;
@@ -140,7 +183,24 @@ async function detectHtmlSignals(url: string): Promise<{
   else if (html.includes('webflow')) platform = 'Webflow';
   else if (html.includes('next') || html.includes('__NEXT_DATA__')) platform = 'Next.js';
 
-  return { hasStripe, stripeAsync, scriptCount, missingOgTags, hasCheckoutIndicator, hasLazyImages, platform };
+  // B2B-SaaS-appropriate trust signals — presence/absence only, checked
+  // against a marketing homepage rather than the checkout-page-shaped
+  // signals above. "Pricing link" is deliberately not scoped to "in nav"
+  // — a plain-text/regex search can't reliably isolate a nav region, so
+  // it checks for a pricing link anywhere on the page, matching what's
+  // actually measured rather than overclaiming precision.
+  const contentIsRendered = visibleTextLength(html) >= 500;
+  const privacyPolicyLink = detectPresence(html, contentIsRendered, /href="[^"]*privacy[^"]*"|privacy\s*policy/i);
+  const termsOfServiceLink = detectPresence(html, contentIsRendered, /href="[^"]*terms[^"]*"|terms\s*(of\s*(service|use)|and\s*conditions)/i);
+  const socialProof = detectPresence(html, contentIsRendered, /testimonial|case\s*stud(y|ies)|trustpilot|g2\.com|capterra/i);
+  const securityBadges = detectPresence(html, contentIsRendered, /soc\s?2|gdpr|iso\s?27001/i);
+  const liveChatWidget = detectPresence(html, contentIsRendered, /intercom|drift\.com|crisp\.chat|tawk\.to|zendesk|zopim|hubspot|chatwoot|frontapp\.com/i);
+  const pricingLink = detectPresence(html, contentIsRendered, /href="[^"]*pricing[^"]*"|>\s*pricing\s*</i);
+
+  return {
+    hasStripe, stripeAsync, scriptCount, missingOgTags, hasCheckoutIndicator, hasLazyImages, platform,
+    httpsEnabled, privacyPolicyLink, termsOfServiceLink, socialProof, securityBadges, liveChatWidget, pricingLink,
+  };
 }
 
 function sleep(ms: number): Promise<void> {
@@ -234,6 +294,13 @@ export async function runScan(rawUrl: string, env: ScanEnv): Promise<ScanReport>
   const html = htmlSignals.status === 'fulfilled' ? htmlSignals.value : {
     hasStripe: false, stripeAsync: false, scriptCount: 0,
     missingOgTags: [], hasCheckoutIndicator: false, hasLazyImages: false, platform: null,
+    httpsEnabled: false,
+    privacyPolicyLink: 'undetermined' as Presence,
+    termsOfServiceLink: 'undetermined' as Presence,
+    socialProof: 'undetermined' as Presence,
+    securityBadges: 'undetermined' as Presence,
+    liveChatWidget: 'undetermined' as Presence,
+    pricingLink: 'undetermined' as Presence,
   };
   if (htmlSignals.status === 'rejected') {
     htmlSignalsError = htmlSignals.reason instanceof Error ? htmlSignals.reason.message : 'HTML fetch failed';
@@ -306,6 +373,13 @@ export async function runScan(rawUrl: string, env: ScanEnv): Promise<ScanReport>
       missingOgTags: html.missingOgTags,
       hasCheckoutIndicator: html.hasCheckoutIndicator,
       hasLazyImages: html.hasLazyImages,
+      httpsEnabled: html.httpsEnabled,
+      privacyPolicyLink: html.privacyPolicyLink,
+      termsOfServiceLink: html.termsOfServiceLink,
+      socialProof: html.socialProof,
+      securityBadges: html.securityBadges,
+      liveChatWidget: html.liveChatWidget,
+      pricingLink: html.pricingLink,
     },
     frictionMechanisms,
     abandonmentDelta,
@@ -337,6 +411,13 @@ export interface RawTechnicalSignals {
   missingOgTags: string[];
   hasCheckoutIndicator: boolean;
   hasLazyImages: boolean;
+  httpsEnabled: boolean;
+  privacyPolicyLink: Presence;
+  termsOfServiceLink: Presence;
+  socialProof: Presence;
+  securityBadges: Presence;
+  liveChatWidget: Presence;
+  pricingLink: Presence;
   scannedAt: string;
   psError: string | null;
   htmlSignalsError: string | null;
@@ -357,18 +438,39 @@ export function toRawTechnicalSignals(report: ScanReport): RawTechnicalSignals {
     missingOgTags: report.signals.missingOgTags,
     hasCheckoutIndicator: report.signals.hasCheckoutIndicator,
     hasLazyImages: report.signals.hasLazyImages,
+    httpsEnabled: report.signals.httpsEnabled,
+    privacyPolicyLink: report.signals.privacyPolicyLink,
+    termsOfServiceLink: report.signals.termsOfServiceLink,
+    socialProof: report.signals.socialProof,
+    securityBadges: report.signals.securityBadges,
+    liveChatWidget: report.signals.liveChatWidget,
+    pricingLink: report.signals.pricingLink,
     scannedAt: report.scannedAt,
     psError: report.psError,
     htmlSignalsError: report.htmlSignalsError,
   };
 }
 
+export interface TrustSignalBreakdown {
+  missingOgTags: number;           // 0 or 5 — any of og:title/description/image absent
+  checkoutWithoutLazyLoad: number; // 0 or 5 — checkout indicator found, no lazy-loaded images
+  syncStripe: number;              // 0 or 5 — Stripe found, not loaded async
+  httpsMissing: number;            // 0 or 5 — final URL isn't https
+  privacyMissing: number;          // 0 or 3 — no privacy policy link found
+  termsMissing: number;            // 0 or 3 — no terms of service link found
+  socialProofMissing: number;      // 0 or 3 — no testimonials/case studies/review-platform embed found
+  securityBadgeMissing: number;    // 0 or 2 — no SOC2/GDPR/ISO 27001 mention found
+  liveChatMissing: number;         // 0 or 2 — no known chat-widget provider found
+  pricingLinkMissing: number;      // 0 or 2 — no pricing link found anywhere on the page
+}
+
 export interface TechnicalScoreBreakdown {
-  performance: number; // 0-40, from PageSpeed performance score deficit
-  lcp: number;          // 0-20, from Largest Contentful Paint over 2.5s baseline
-  tbt: number;           // 0-15, from Total Blocking Time over 200ms baseline
-  cls: number;           // 0-10, from Cumulative Layout Shift over 0.1 baseline
-  trustSignals: number;  // 0-15, from missing OG tags / sync Stripe / no lazy-loading on a checkout page
+  performance: number;  // 0-40, from PageSpeed performance score deficit
+  lcp: number;           // 0-20, from Largest Contentful Paint over 2.5s baseline
+  tbt: number;            // 0-15, from Total Blocking Time over 200ms baseline
+  cls: number;            // 0-10, from Cumulative Layout Shift over 0.1 baseline
+  trustSignals: TrustSignalBreakdown; // per-signal, only confirmed absence scores
+  trustSignalsTotal: number;          // 0-35, sum of trustSignals
 }
 
 /**
@@ -377,6 +479,11 @@ export interface TechnicalScoreBreakdown {
  * anything infers "how much this company is hurting". This is a triage
  * ranking, not a diagnosis; the breakdown is returned alongside the score
  * so the admin view can show exactly which observed signals produced it.
+ *
+ * Only a confirmed 'not_found' adds points. 'found' and 'undetermined'
+ * both add 0 — an undetermined check is a gap in what a plain fetch can
+ * see, not evidence of anything, so it must never score like a confirmed
+ * absence.
  */
 export function computeTechnicalSignalScore(
   signals: RawTechnicalSignals
@@ -392,12 +499,21 @@ export function computeTechnicalSignalScore(
   const clsVal = signals.cls.value;
   const cls = clsVal <= 0.1 ? 0 : Math.min(10, Math.round(((clsVal - 0.1) / 0.4) * 10));
 
-  let trustSignals = 0;
-  if (signals.missingOgTags.length > 0) trustSignals += 5;
-  if (signals.hasCheckoutIndicator && !signals.hasLazyImages) trustSignals += 5;
-  if (signals.hasStripe && !signals.stripeAsync) trustSignals += 5;
+  const trustSignals: TrustSignalBreakdown = {
+    missingOgTags: signals.missingOgTags.length > 0 ? 5 : 0,
+    checkoutWithoutLazyLoad: signals.hasCheckoutIndicator && !signals.hasLazyImages ? 5 : 0,
+    syncStripe: signals.hasStripe && !signals.stripeAsync ? 5 : 0,
+    httpsMissing: signals.httpsEnabled ? 0 : 5,
+    privacyMissing: signals.privacyPolicyLink === 'not_found' ? 3 : 0,
+    termsMissing: signals.termsOfServiceLink === 'not_found' ? 3 : 0,
+    socialProofMissing: signals.socialProof === 'not_found' ? 3 : 0,
+    securityBadgeMissing: signals.securityBadges === 'not_found' ? 2 : 0,
+    liveChatMissing: signals.liveChatWidget === 'not_found' ? 2 : 0,
+    pricingLinkMissing: signals.pricingLink === 'not_found' ? 2 : 0,
+  };
+  const trustSignalsTotal = Object.values(trustSignals).reduce((sum, v) => sum + v, 0);
 
-  const breakdown: TechnicalScoreBreakdown = { performance, lcp, tbt, cls, trustSignals };
-  const score = Math.min(100, performance + lcp + tbt + cls + trustSignals);
+  const breakdown: TechnicalScoreBreakdown = { performance, lcp, tbt, cls, trustSignals, trustSignalsTotal };
+  const score = Math.min(100, performance + lcp + tbt + cls + trustSignalsTotal);
   return { score, breakdown };
 }

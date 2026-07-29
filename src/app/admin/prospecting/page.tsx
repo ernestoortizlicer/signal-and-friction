@@ -11,6 +11,8 @@ import {
   AdminEmptyState,
 } from "@/components/admin/AdminComponents";
 
+type Presence = "found" | "not_found" | "undetermined";
+
 interface TechnicalSignals {
   lcp: { ms: number; label: string; status: string };
   tbt: { ms: number; label: string; status: string };
@@ -25,8 +27,28 @@ interface TechnicalSignals {
   missingOgTags: string[];
   hasCheckoutIndicator: boolean;
   hasLazyImages: boolean;
+  httpsEnabled: boolean;
+  privacyPolicyLink: Presence;
+  termsOfServiceLink: Presence;
+  socialProof: Presence;
+  securityBadges: Presence;
+  liveChatWidget: Presence;
+  pricingLink: Presence;
   scannedAt: string;
   psError: string | null;
+}
+
+interface TrustSignalBreakdown {
+  missingOgTags: number;
+  checkoutWithoutLazyLoad: number;
+  syncStripe: number;
+  httpsMissing: number;
+  privacyMissing: number;
+  termsMissing: number;
+  socialProofMissing: number;
+  securityBadgeMissing: number;
+  liveChatMissing: number;
+  pricingLinkMissing: number;
 }
 
 interface ScoreBreakdown {
@@ -34,7 +56,8 @@ interface ScoreBreakdown {
   lcp: number;
   tbt: number;
   cls: number;
-  trustSignals: number;
+  trustSignals: TrustSignalBreakdown;
+  trustSignalsTotal: number;
 }
 
 interface Candidate {
