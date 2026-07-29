@@ -342,8 +342,6 @@ export default function PricingPage() {
           <span>© {new Date().getFullYear()} Signal &amp; Friction Method™. All rights reserved.</span>
           <span className="hidden md:inline">|</span>
           <Link href="/portfolio" className="hover:text-white transition-colors uppercase tracking-wider">Clinical Portfolio</Link>
-          <span className="hidden md:inline">|</span>
-          <Link href="/certified" className="hover:text-white transition-colors uppercase tracking-wider">Certified Licensing</Link>
         </div>
       </footer>
     </main>

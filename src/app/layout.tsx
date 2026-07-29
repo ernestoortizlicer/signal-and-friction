@@ -135,16 +135,8 @@ export default function RootLayout({
                   priceCurrency: 'USD',
                   price: '350',
                   name: 'Done-With-You Autonomy (DWY)',
-                  description: 'Learn S&F methodology, build internal capacity, earn Certified credentials.',
+                  description: 'Learn S&F methodology and build internal capacity to run diagnostics yourself.',
                   url: 'https://signal-and-friction.com/pricing#dwy-pricing',
-                },
-                {
-                  '@type': 'Offer',
-                  priceCurrency: 'USD',
-                  price: '4500',
-                  name: 'Certified Partnership',
-                  description: 'Annual license to deliver S&F diagnostics under your brand.',
-                  url: 'https://signal-and-friction.com/certified',
                 },
               ],
               aggregateRating: {
@@ -177,12 +169,6 @@ export default function RootLayout({
                   position: 2,
                   name: 'Diagnostic',
                   item: 'https://signal-and-friction.com/scan',
-                },
-                {
-                  '@type': 'ListItem',
-                  position: 3,
-                  name: 'Certified Partners',
-                  item: 'https://signal-and-friction.com/certified',
                 },
               ],
             }),
@@ -219,14 +205,6 @@ export default function RootLayout({
                   acceptedAnswer: {
                     '@type': 'Answer',
                     text: 'We guarantee our work\'s specificity, not your business outcome — actual results depend on execution, market conditions, and data we don\'t have access to. If the diagnosis doesn\'t surface a friction point specific to your product — something we observed in your actual funnel, not generic advice — you don\'t pay.',
-                  },
-                },
-                {
-                  '@type': 'Question',
-                  name: 'Can I become a Certified partner?',
-                  acceptedAnswer: {
-                    '@type': 'Answer',
-                    text: 'Yes. Our Certified program grants you licensing to deliver S&F diagnostics under your brand. $4,500/year.',
                   },
                 },
               ],

@@ -64,13 +64,13 @@ const FUNNEL_OPTIONS = [
 
 const SEGMENT_OPTIONS = [
   { key: "concierge", label: "Done-For-You Concierge", sub: "S&F executes diagnostic & implementation. If it isn't specific to your product, you don't pay." },
-  { key: "autonomy", label: "Done-With-You Autonomy", sub: "Learn the S&F methodology, build internal capacity, and earn S&F Certified™ credentials." },
+  { key: "autonomy", label: "Done-With-You Autonomy", sub: "Learn the S&F methodology and build internal capacity to run diagnostics yourself." },
   { key: "elite_us", label: "🏆 Elite Partnership (USA)", sub: "White-glove account management + priority support. For US-based SaaS only." },
 ];
 
 const SEGMENT_OPTIONS_APAC = [
   { key: "concierge", label: "Done-For-You Concierge", sub: "S&F executes diagnostic & implementation. If it isn't specific to your product, you don't pay." },
-  { key: "autonomy", label: "Done-With-You Autonomy", sub: "Learn the S&F methodology, build internal capacity, and earn S&F Certified™ credentials." },
+  { key: "autonomy", label: "Done-With-You Autonomy", sub: "Learn the S&F methodology and build internal capacity to run diagnostics yourself." },
   { key: "elite_sg", label: "🏆 Elite Partnership (Singapore)", sub: "White-glove account management + priority support. Optimized for APAC market dynamics." },
 ];
 
@@ -587,7 +587,7 @@ export default function Home() {
               </tr>
               <tr>
                 <td className="p-4 font-bold text-white uppercase text-xs">Implementation</td>
-                <td className="p-4">Done-For-You single surgical code/copy tweak.</td>
+                <td className="p-4">One finding, one fix — never a laundry list of generic suggestions.</td>
                 <td className="p-4">Dozens of generic, low-impact suggestions.</td>
               </tr>
               <tr>
@@ -627,8 +627,6 @@ export default function Home() {
           <span>© {new Date().getFullYear()} Signal &amp; Friction Method™. All rights reserved.</span>
           <span className="hidden md:inline">|</span>
           <Link href="/portfolio" className="hover:text-white transition-colors uppercase tracking-wider">Clinical Portfolio</Link>
-          <span className="hidden md:inline">|</span>
-          <Link href="/certified" className="hover:text-white transition-colors uppercase tracking-wider">Certified Licensing</Link>
         </div>
       </footer>
     </main>
