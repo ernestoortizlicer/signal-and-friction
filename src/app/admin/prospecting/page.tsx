@@ -86,6 +86,16 @@ const STATUS_BADGE: Record<Candidate["status"], { variant: "muted" | "gold" | "g
   dismissed: { variant: "muted", label: "Dismissed" },
 };
 
+const STATUS_FILTERS: Array<{ key: "all" | Candidate["status"]; label: string }> = [
+  { key: "all", label: "All" },
+  { key: "new", label: "New" },
+  { key: "scanning", label: "Scanning" },
+  { key: "scanned", label: "Scanned" },
+  { key: "scan_failed", label: "Failed" },
+  { key: "promoted", label: "Promoted" },
+  { key: "dismissed", label: "Dismissed" },
+];
+
 export default function ProspectingCommandCenter() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,6 +105,15 @@ export default function ProspectingCommandCenter() {
   const [bulkScanning, setBulkScanning] = useState(false);
   const [contactDrafts, setContactDrafts] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState<{ message: string; variant: "green" | "red" } | null>(null);
+
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<"all" | Candidate["status"]>("all");
+  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
+  const [editingIds, setEditingIds] = useState<Set<string>>(new Set());
+  const [editDrafts, setEditDrafts] = useState<Record<string, { company_name: string; url: string }>>({});
+  const [savingEditIds, setSavingEditIds] = useState<Set<string>>(new Set());
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+  const [selectedActionRunning, setSelectedActionRunning] = useState(false);
 
   async function fetchCandidates() {
     try {
@@ -312,7 +331,182 @@ export default function ProspectingCommandCenter() {
     }
   }
 
+  // ── Delete (hard, admin-gated) ──
+  async function deleteCandidate(id: string, label: string) {
+    if (!window.confirm(`Permanently delete ${label}? This cannot be undone.`)) return;
+    setDeletingIds((prev) => new Set(prev).add(id));
+    try {
+      const res = await fetch(`/api/prospecting/candidates/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+      if (res.ok) {
+        setCandidates((prev) => prev.filter((c) => c.id !== id));
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      } else {
+        const body = await res.json().catch(() => null);
+        setNotice({ message: body?.error || `Delete failed (HTTP ${res.status}).`, variant: "red" });
+      }
+    } catch (err) {
+      setNotice({ message: `Delete request failed: ${err instanceof Error ? err.message : "network error"}`, variant: "red" });
+    } finally {
+      setDeletingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  }
+
+  // ── Reset to New (un-dismiss, admin-gated) ──
+  async function resetToNew(id: string) {
+    try {
+      const res = await fetch(`/api/prospecting/candidates/${id}`, {
+        method: "PATCH",
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "new" }),
+      });
+      const body = await res.json().catch(() => null);
+      if (res.ok && body) {
+        setCandidates((prev) => prev.map((c) => (c.id === id ? body : c)));
+      } else {
+        setNotice({ message: body?.error || `Reset failed (HTTP ${res.status}).`, variant: "red" });
+      }
+    } catch (err) {
+      setNotice({ message: `Reset request failed: ${err instanceof Error ? err.message : "network error"}`, variant: "red" });
+    }
+  }
+
+  // ── Inline edit of company_name / url (admin-gated) ──
+  function startEditing(c: Candidate) {
+    setEditDrafts((prev) => ({ ...prev, [c.id]: { company_name: c.company_name ?? "", url: c.url } }));
+    setEditingIds((prev) => new Set(prev).add(c.id));
+  }
+
+  function cancelEditing(id: string) {
+    setEditingIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    setEditDrafts((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }
+
+  async function saveEditing(id: string) {
+    const draft = editDrafts[id];
+    const current = candidates.find((c) => c.id === id);
+    if (!draft || !current) return;
+
+    const patch: { company_name?: string; url?: string } = {};
+    if (draft.company_name !== (current.company_name ?? "")) patch.company_name = draft.company_name;
+    if (draft.url !== current.url) patch.url = draft.url;
+
+    if (Object.keys(patch).length === 0) {
+      cancelEditing(id);
+      return;
+    }
+
+    setSavingEditIds((prev) => new Set(prev).add(id));
+    try {
+      const res = await fetch(`/api/prospecting/candidates/${id}`, {
+        method: "PATCH",
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      const body = await res.json().catch(() => null);
+      if (res.ok && body) {
+        setCandidates((prev) => prev.map((c) => (c.id === id ? body : c)));
+        cancelEditing(id);
+        if (patch.url) {
+          setNotice({ message: "URL updated — status reset to New so it can be scanned cleanly.", variant: "green" });
+        }
+      } else {
+        setNotice({ message: body?.error || `Save failed (HTTP ${res.status}).`, variant: "red" });
+      }
+    } catch (err) {
+      setNotice({ message: `Save request failed: ${err instanceof Error ? err.message : "network error"}`, variant: "red" });
+    } finally {
+      setSavingEditIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  }
+
+  // ── Bulk selection ──
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAllVisible(visible: Candidate[]) {
+    setSelectedIds((prev) => {
+      const allSelected = visible.length > 0 && visible.every((c) => prev.has(c.id));
+      const next = new Set(prev);
+      if (allSelected) {
+        visible.forEach((c) => next.delete(c.id));
+      } else {
+        visible.forEach((c) => next.add(c.id));
+      }
+      return next;
+    });
+  }
+
+  async function deleteSelected() {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!window.confirm(`Permanently delete ${ids.length} candidate${ids.length === 1 ? "" : "s"}? This cannot be undone.`)) return;
+    setSelectedActionRunning(true);
+    for (const id of ids) {
+      try {
+        const res = await fetch(`/api/prospecting/candidates/${id}`, {
+          method: "DELETE",
+          headers: getAuthHeaders(),
+        });
+        if (res.ok) {
+          setCandidates((prev) => prev.filter((c) => c.id !== id));
+        }
+      } catch {
+        /* continue deleting the rest of the batch */
+      }
+    }
+    setSelectedIds(new Set());
+    setSelectedActionRunning(false);
+  }
+
+  async function rescanSelected() {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setSelectedActionRunning(true);
+    for (const id of ids) {
+      await scanOne(id);
+    }
+    setSelectedActionRunning(false);
+  }
+
   const pendingCount = candidates.filter((c) => c.status === "new" || c.status === "scan_failed" || c.status === "scanning").length;
+
+  const filteredCandidates = statusFilter === "all" ? candidates : candidates.filter((c) => c.status === statusFilter);
+  const scoredCandidates = filteredCandidates.filter((c) => c.technical_score !== null);
+  const unscoredCandidates = filteredCandidates.filter((c) => c.technical_score === null);
+  scoredCandidates.sort((a, b) =>
+    sortDir === "desc" ? b.technical_score! - a.technical_score! : a.technical_score! - b.technical_score!
+  );
+  const visibleCandidates = [...scoredCandidates, ...unscoredCandidates];
+  const allVisibleSelected = visibleCandidates.length > 0 && visibleCandidates.every((c) => selectedIds.has(c.id));
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
@@ -367,28 +561,138 @@ export default function ProspectingCommandCenter() {
         </div>
       </AdminCard>
 
+      {candidates.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {STATUS_FILTERS.map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => setStatusFilter(f.key)}
+                className={`px-3 py-1.5 rounded-full text-xs font-mono uppercase tracking-wide border cursor-pointer transition-colors ${
+                  statusFilter === f.key
+                    ? "bg-[#D4A853]/15 border-[#D4A853]/40 text-[#D4A853]"
+                    : "bg-white/5 border-white/10 text-[#7A6F65] hover:text-[#B0A89E]"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setSortDir((d) => (d === "desc" ? "asc" : "desc"))}
+              className="px-3 py-1.5 rounded-full text-xs font-mono uppercase tracking-wide border border-white/10 bg-white/5 text-[#7A6F65] hover:text-[#B0A89E] cursor-pointer transition-colors ml-2"
+            >
+              Score {sortDir === "desc" ? "↓" : "↑"}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-[#7A6F65]">
+              {selectedIds.size > 0 ? `${selectedIds.size} selected` : ""}
+            </span>
+            <button
+              type="button"
+              onClick={rescanSelected}
+              disabled={selectedIds.size === 0 || selectedActionRunning}
+              className="px-3 py-1.5 rounded-lg bg-[#D4A853]/10 border border-[#D4A853]/25 text-[#D4A853] text-xs font-mono uppercase tracking-wide hover:bg-[#D4A853]/15 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {selectedActionRunning ? "Working…" : `Rescan Selected (${selectedIds.size})`}
+            </button>
+            <button
+              type="button"
+              onClick={deleteSelected}
+              disabled={selectedIds.size === 0 || selectedActionRunning}
+              className="px-3 py-1.5 rounded-lg bg-[#C85C5C]/10 border border-[#C85C5C]/25 text-[#C85C5C] text-xs font-mono uppercase tracking-wide hover:bg-[#C85C5C]/15 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {selectedActionRunning ? "Working…" : `Delete Selected (${selectedIds.size})`}
+            </button>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <AdminEmptyState text="Loading candidates…" />
       ) : candidates.length === 0 ? (
         <AdminEmptyState icon="🔍" text="No candidates yet" subtext="Paste a seed list above to get started." />
+      ) : visibleCandidates.length === 0 ? (
+        <AdminEmptyState icon="🔍" text="No candidates match this filter" />
       ) : (
         <AdminTable
-          headers={["Company", "Score", "LCP", "Perf", "Platform", "Checkout", "Missing OG", "Founder Contact", "Status", "Actions"]}
+          headers={[
+            <input
+              key="select-all"
+              type="checkbox"
+              checked={allVisibleSelected}
+              onChange={() => toggleSelectAllVisible(visibleCandidates)}
+              className="cursor-pointer"
+              aria-label="Select all visible candidates"
+            />,
+            "Company",
+            "Score",
+            "LCP",
+            "Perf",
+            "Platform",
+            "Checkout",
+            "Missing OG",
+            "Founder Contact",
+            "Status",
+            "Actions",
+          ]}
         >
-          {candidates.map((c) => {
+          {visibleCandidates.map((c) => {
             // Only "this browser tab has an in-flight request for this row"
             // disables the button. c.status === "scanning" is DB state and
             // can be stale from a request that died before writing back —
             // gating the button on it would make a stuck row unrecoverable
             // from the UI (no request in flight, but no button to retry).
             const isScanning = scanningIds.has(c.id);
+            const isDeleting = deletingIds.has(c.id);
+            const isSavingEdit = savingEditIds.has(c.id);
+            const isEditing = editingIds.has(c.id);
             const draft = contactDrafts[c.id] ?? c.founder_contact ?? "";
+            const editDraft = editDrafts[c.id] ?? { company_name: c.company_name ?? "", url: c.url };
             return (
               <tr key={c.id} className="hover:bg-[#D4A853]/[0.02] transition-colors align-top">
                 <td className="px-4 py-3">
-                  <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-[#F5F0EB] hover:text-[#D4A853] underline decoration-[#D4A853]/20">
-                    {c.domain}
-                  </a>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(c.id)}
+                    onChange={() => toggleSelect(c.id)}
+                    className="cursor-pointer"
+                    aria-label={`Select ${c.domain}`}
+                  />
+                </td>
+                <td className="px-4 py-3 min-w-[190px]">
+                  {isEditing ? (
+                    <div className="space-y-1.5">
+                      <input
+                        type="text"
+                        value={editDraft.company_name}
+                        onChange={(e) =>
+                          setEditDrafts((prev) => ({ ...prev, [c.id]: { ...editDraft, company_name: e.target.value } }))
+                        }
+                        placeholder="Company name"
+                        className="w-full bg-black/30 border border-white/10 rounded px-2 py-1 text-xs font-mono text-[#F5F0EB] placeholder:text-[#7A6F65] focus:outline-none focus:border-[#D4A853]/40"
+                      />
+                      <input
+                        type="text"
+                        value={editDraft.url}
+                        onChange={(e) =>
+                          setEditDrafts((prev) => ({ ...prev, [c.id]: { ...editDraft, url: e.target.value } }))
+                        }
+                        placeholder="https://example.com"
+                        className="w-full bg-black/30 border border-white/10 rounded px-2 py-1 text-xs font-mono text-[#F5F0EB] placeholder:text-[#7A6F65] focus:outline-none focus:border-[#D4A853]/40"
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="text-[#F5F0EB] text-sm">{c.company_name || c.domain}</div>
+                      <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-xs text-[#7A6F65] hover:text-[#D4A853] underline decoration-[#D4A853]/20">
+                        {c.domain}
+                      </a>
+                    </div>
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   <AdminBadge variant={scoreVariant(c.technical_score)}>
@@ -432,45 +736,82 @@ export default function ProspectingCommandCenter() {
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex flex-col gap-1.5 min-w-[100px]">
-                    {(c.status === "new" || c.status === "scan_failed" || c.status === "scanning") && (
-                      <button
-                        type="button"
-                        onClick={() => scanOne(c.id)}
-                        disabled={isScanning}
-                        className="px-2.5 py-1 rounded bg-[#D4A853]/10 border border-[#D4A853]/25 text-[#D4A853] text-[10px] font-mono uppercase tracking-wide hover:bg-[#D4A853]/15 disabled:opacity-40 cursor-pointer"
-                      >
-                        {isScanning ? "Scanning…" : c.status === "new" ? "Scan" : "Retry Scan"}
-                      </button>
-                    )}
-                    {c.status === "scanned" && (
+                  <div className="flex flex-col gap-1.5 min-w-[110px]">
+                    {isEditing ? (
                       <>
                         <button
                           type="button"
-                          onClick={() => promoteCandidate(c)}
-                          className="px-2.5 py-1 rounded bg-[#5C9A6B]/10 border border-[#5C9A6B]/25 text-[#5C9A6B] text-[10px] font-mono uppercase tracking-wide hover:bg-[#5C9A6B]/15 cursor-pointer"
+                          onClick={() => saveEditing(c.id)}
+                          disabled={isSavingEdit}
+                          className="px-2.5 py-1 rounded bg-[#5C9A6B]/10 border border-[#5C9A6B]/25 text-[#5C9A6B] text-[10px] font-mono uppercase tracking-wide hover:bg-[#5C9A6B]/15 disabled:opacity-40 cursor-pointer"
                         >
-                          Promote
+                          {isSavingEdit ? "Saving…" : "Save"}
                         </button>
                         <button
                           type="button"
-                          onClick={() => dismissCandidate(c.id)}
-                          className="px-2.5 py-1 rounded bg-white/5 border border-white/10 text-[#B0A89E] text-[10px] font-mono uppercase tracking-wide hover:bg-white/10 cursor-pointer"
+                          onClick={() => cancelEditing(c.id)}
+                          disabled={isSavingEdit}
+                          className="px-2.5 py-1 rounded bg-white/5 border border-white/10 text-[#B0A89E] text-[10px] font-mono uppercase tracking-wide hover:bg-white/10 disabled:opacity-40 cursor-pointer"
                         >
-                          Dismiss
+                          Cancel
                         </button>
+                      </>
+                    ) : (
+                      <>
                         <button
                           type="button"
                           onClick={() => scanOne(c.id)}
                           disabled={isScanning}
-                          className="px-2.5 py-1 rounded bg-white/5 border border-white/10 text-[#7A6F65] text-[10px] font-mono uppercase tracking-wide hover:bg-white/10 disabled:opacity-40 cursor-pointer"
+                          className="px-2.5 py-1 rounded bg-[#D4A853]/10 border border-[#D4A853]/25 text-[#D4A853] text-[10px] font-mono uppercase tracking-wide hover:bg-[#D4A853]/15 disabled:opacity-40 cursor-pointer"
                         >
-                          {isScanning ? "Scanning…" : "Rescan"}
+                          {isScanning ? "Scanning…" : c.status === "new" ? "Scan" : "Rescan"}
+                        </button>
+                        {c.status === "scanned" && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => promoteCandidate(c)}
+                              className="px-2.5 py-1 rounded bg-[#5C9A6B]/10 border border-[#5C9A6B]/25 text-[#5C9A6B] text-[10px] font-mono uppercase tracking-wide hover:bg-[#5C9A6B]/15 cursor-pointer"
+                            >
+                              Promote
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => dismissCandidate(c.id)}
+                              className="px-2.5 py-1 rounded bg-white/5 border border-white/10 text-[#B0A89E] text-[10px] font-mono uppercase tracking-wide hover:bg-white/10 cursor-pointer"
+                            >
+                              Dismiss
+                            </button>
+                          </>
+                        )}
+                        {c.status === "dismissed" && (
+                          <button
+                            type="button"
+                            onClick={() => resetToNew(c.id)}
+                            className="px-2.5 py-1 rounded bg-white/5 border border-white/10 text-[#B0A89E] text-[10px] font-mono uppercase tracking-wide hover:bg-white/10 cursor-pointer"
+                          >
+                            Reset to New
+                          </button>
+                        )}
+                        {c.status === "promoted" && (
+                          <span className="text-[10px] text-[#7A6F65] font-mono">In client pipeline</span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => startEditing(c)}
+                          className="px-2.5 py-1 rounded bg-white/5 border border-white/10 text-[#7A6F65] text-[10px] font-mono uppercase tracking-wide hover:bg-white/10 cursor-pointer"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteCandidate(c.id, c.company_name || c.domain)}
+                          disabled={isDeleting}
+                          className="px-2.5 py-1 rounded bg-[#C85C5C]/10 border border-[#C85C5C]/25 text-[#C85C5C] text-[10px] font-mono uppercase tracking-wide hover:bg-[#C85C5C]/15 disabled:opacity-40 cursor-pointer"
+                        >
+                          {isDeleting ? "Deleting…" : "Delete"}
                         </button>
                       </>
-                    )}
-                    {c.status === "promoted" && (
-                      <span className="text-[10px] text-[#7A6F65] font-mono">In client pipeline</span>
                     )}
                   </div>
                 </td>

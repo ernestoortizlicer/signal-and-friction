@@ -250,7 +250,7 @@ export function AdminTable({
   children,
   className = "",
 }: {
-  headers: string[];
+  headers: React.ReactNode[];
   children: React.ReactNode;
   className?: string;
 }) {
@@ -259,9 +259,9 @@ export function AdminTable({
       <table className="w-full text-left font-mono text-xs">
         <thead>
           <tr className="border-b border-[#D4A853]/8 bg-[#D4A853]/[0.02]">
-            {headers.map((h) => (
+            {headers.map((h, i) => (
               <th
-                key={h}
+                key={i}
                 className="px-4 py-3 text-[#D4A853]/70 uppercase tracking-[0.12em] font-semibold text-xs whitespace-nowrap"
               >
                 {h}
