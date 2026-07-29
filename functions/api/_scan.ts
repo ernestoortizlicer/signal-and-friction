@@ -25,6 +25,7 @@ export interface ScanReport {
   grade: 'A' | 'B' | 'C' | 'D' | 'F';
   frictionScore: number;
   psError: string | null;
+  htmlSignalsError: string | null;
   metrics: {
     lcp: { ms: number; label: string; status: 'poor' | 'needs_improvement' | 'good' };
     tbt: { ms: number; label: string; status: 'poor' | 'needs_improvement' | 'good' };
@@ -90,6 +91,11 @@ function frictionGrade(score: number): 'A' | 'B' | 'C' | 'D' | 'F' {
   return 'F';
 }
 
+// Throws on any failure (unreachable host, timeout, non-2xx response)
+// instead of swallowing it. scan-url.ts's public tool still degrades this
+// gracefully via the Promise.allSettled below (unchanged behavior there);
+// the prospecting pipeline needs the real failure reason instead of a
+// silent all-false/zero result that reads exactly like "measured, clean."
 async function detectHtmlSignals(url: string): Promise<{
   hasStripe: boolean;
   stripeAsync: boolean;
@@ -99,46 +105,88 @@ async function detectHtmlSignals(url: string): Promise<{
   hasLazyImages: boolean;
   platform: string | null;
 }> {
-  try {
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'SignalFrictionAudit/1.0 (+https://signal-and-friction.pages.dev)' },
-      signal: AbortSignal.timeout(8000),
-    });
-    const html = await res.text();
-
-    const scriptTags = (html.match(/<script[^>]*>/gi) || []);
-    const scriptCount = scriptTags.length;
-
-    const hasStripe = html.includes('stripe.js') || html.includes('stripe.com/v3');
-    const stripeAsync = hasStripe && (
-      html.includes('async') && (html.includes('stripe.js') || html.includes('stripe.com/v3'))
-    );
-
-    const missingOgTags: string[] = [];
-    if (!html.includes('og:title')) missingOgTags.push('og:title');
-    if (!html.includes('og:description')) missingOgTags.push('og:description');
-    if (!html.includes('og:image')) missingOgTags.push('og:image');
-
-    const checkoutKeywords = ['/checkout', 'add-to-cart', 'add_to_cart', 'buy-now', 'cart', 'basket'];
-    const hasCheckoutIndicator = checkoutKeywords.some(k => html.toLowerCase().includes(k));
-
-    const hasLazyImages = html.includes('loading="lazy"') || html.includes("loading='lazy'");
-
-    let platform: string | null = null;
-    if (html.includes('Shopify')) platform = 'Shopify';
-    else if (html.includes('WooCommerce') || html.includes('woocommerce')) platform = 'WooCommerce';
-    else if (html.includes('BigCommerce')) platform = 'BigCommerce';
-    else if (html.includes('squarespace')) platform = 'Squarespace';
-    else if (html.includes('webflow')) platform = 'Webflow';
-    else if (html.includes('next') || html.includes('__NEXT_DATA__')) platform = 'Next.js';
-
-    return { hasStripe, stripeAsync, scriptCount, missingOgTags, hasCheckoutIndicator, hasLazyImages, platform };
-  } catch {
-    return {
-      hasStripe: false, stripeAsync: false, scriptCount: 0,
-      missingOgTags: [], hasCheckoutIndicator: false, hasLazyImages: false, platform: null,
-    };
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'SignalFrictionAudit/1.0 (+https://signal-and-friction.pages.dev)' },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!res.ok) {
+    throw new Error(`Target returned HTTP ${res.status}`);
   }
+  const html = await res.text();
+
+  const scriptTags = (html.match(/<script[^>]*>/gi) || []);
+  const scriptCount = scriptTags.length;
+
+  const hasStripe = html.includes('stripe.js') || html.includes('stripe.com/v3');
+  const stripeAsync = hasStripe && (
+    html.includes('async') && (html.includes('stripe.js') || html.includes('stripe.com/v3'))
+  );
+
+  const missingOgTags: string[] = [];
+  if (!html.includes('og:title')) missingOgTags.push('og:title');
+  if (!html.includes('og:description')) missingOgTags.push('og:description');
+  if (!html.includes('og:image')) missingOgTags.push('og:image');
+
+  const checkoutKeywords = ['/checkout', 'add-to-cart', 'add_to_cart', 'buy-now', 'cart', 'basket'];
+  const hasCheckoutIndicator = checkoutKeywords.some(k => html.toLowerCase().includes(k));
+
+  const hasLazyImages = html.includes('loading="lazy"') || html.includes("loading='lazy'");
+
+  let platform: string | null = null;
+  if (html.includes('Shopify')) platform = 'Shopify';
+  else if (html.includes('WooCommerce') || html.includes('woocommerce')) platform = 'WooCommerce';
+  else if (html.includes('BigCommerce')) platform = 'BigCommerce';
+  else if (html.includes('squarespace')) platform = 'Squarespace';
+  else if (html.includes('webflow')) platform = 'Webflow';
+  else if (html.includes('next') || html.includes('__NEXT_DATA__')) platform = 'Next.js';
+
+  return { hasStripe, stripeAsync, scriptCount, missingOgTags, hasCheckoutIndicator, hasLazyImages, platform };
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function isRetryablePageSpeedError(message: string): boolean {
+  return /quota|rate.?limit|429|resource.?exhausted/i.test(message);
+}
+
+// Running keyless against Google's shared anonymous PageSpeed quota (no
+// PAGESPEED_API_KEY configured) means individual requests fail with a
+// quota error far more often than a keyed request would. Retrying a
+// transient quota rejection gives a keyless scan a real second (and
+// third) chance at getting genuine data instead of giving up on the
+// first hit. Only retries quota/rate-limit-shaped errors — a permanent
+// failure (bad URL, Lighthouse crash on the target) won't be fixed by
+// trying again, so don't waste the attempts on those.
+async function runPageSpeedWithRetry(psUrl: string): Promise<{ result: PageSpeedResult | null; error: string | null }> {
+  const timeoutsMs = [25000, 12000, 12000];
+  let lastError = 'PageSpeed request failed';
+
+  for (let attempt = 0; attempt < timeoutsMs.length; attempt++) {
+    const isLastAttempt = attempt === timeoutsMs.length - 1;
+    try {
+      const res = await fetch(psUrl, { signal: AbortSignal.timeout(timeoutsMs[attempt]) });
+      const parsed = (await res.json()) as PageSpeedResult;
+      if (!parsed.error) {
+        return { result: parsed, error: null };
+      }
+      lastError = parsed.error.message;
+      if (isLastAttempt || !isRetryablePageSpeedError(lastError)) {
+        return { result: null, error: lastError };
+      }
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : 'PageSpeed request failed';
+      if (isLastAttempt) {
+        return { result: null, error: lastError };
+      }
+      // Network-level failures (timeout, DNS) are worth one retry too —
+      // they can be as transient as a quota rejection.
+    }
+    await sleep(1500 * (attempt + 1));
+  }
+
+  return { result: null, error: lastError };
 }
 
 export async function runScan(rawUrl: string, env: ScanEnv): Promise<ScanReport> {
@@ -153,8 +201,8 @@ export async function runScan(rawUrl: string, env: ScanEnv): Promise<ScanReport>
   const psKey = env.PAGESPEED_API_KEY ? `&key=${env.PAGESPEED_API_KEY}` : '';
   const psUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&strategy=mobile${psKey}`;
 
-  const [psResponse, htmlSignals] = await Promise.allSettled([
-    fetch(psUrl, { signal: AbortSignal.timeout(25000) }).then(r => r.json() as Promise<PageSpeedResult>),
+  const [psOutcome, htmlSignals] = await Promise.allSettled([
+    runPageSpeedWithRetry(psUrl),
     detectHtmlSignals(normalizedUrl),
   ]);
 
@@ -166,10 +214,10 @@ export async function runScan(rawUrl: string, env: ScanEnv): Promise<ScanReport>
   let speedIndexMs = 0;
   let psError: string | null = null;
 
-  if (psResponse.status === 'fulfilled') {
-    const ps = psResponse.value;
-    if (ps.error) {
-      psError = ps.error.message;
+  if (psOutcome.status === 'fulfilled') {
+    const { result: ps, error } = psOutcome.value;
+    if (error || !ps) {
+      psError = error ?? 'PageSpeed returned no result';
     } else {
       const audits = ps.lighthouseResult?.audits ?? {};
       lcpMs = audits['largest-contentful-paint']?.numericValue ?? 0;
@@ -179,13 +227,17 @@ export async function runScan(rawUrl: string, env: ScanEnv): Promise<ScanReport>
       speedIndexMs = audits['speed-index']?.numericValue ?? 0;
     }
   } else {
-    psError = 'PageSpeed API timeout';
+    psError = psOutcome.reason instanceof Error ? psOutcome.reason.message : 'PageSpeed request failed';
   }
 
+  let htmlSignalsError: string | null = null;
   const html = htmlSignals.status === 'fulfilled' ? htmlSignals.value : {
     hasStripe: false, stripeAsync: false, scriptCount: 0,
     missingOgTags: [], hasCheckoutIndicator: false, hasLazyImages: false, platform: null,
   };
+  if (htmlSignals.status === 'rejected') {
+    htmlSignalsError = htmlSignals.reason instanceof Error ? htmlSignals.reason.message : 'HTML fetch failed';
+  }
 
   // Compute derived metrics
   const abandonmentDelta = lcpAbandonmentDelta(lcpMs);
@@ -238,6 +290,7 @@ export async function runScan(rawUrl: string, env: ScanEnv): Promise<ScanReport>
     grade,
     frictionScore,
     psError,
+    htmlSignalsError,
     metrics: {
       lcp: { ms: Math.round(lcpMs), label: `${(lcpMs / 1000).toFixed(2)}s`, status: lcpMs > 4000 ? 'poor' : lcpMs > 2500 ? 'needs_improvement' : 'good' },
       tbt: { ms: Math.round(tbtMs), label: `${Math.round(tbtMs)}ms`, status: tbtMs > 600 ? 'poor' : tbtMs > 200 ? 'needs_improvement' : 'good' },
@@ -286,6 +339,7 @@ export interface RawTechnicalSignals {
   hasLazyImages: boolean;
   scannedAt: string;
   psError: string | null;
+  htmlSignalsError: string | null;
 }
 
 export function toRawTechnicalSignals(report: ScanReport): RawTechnicalSignals {
@@ -305,6 +359,7 @@ export function toRawTechnicalSignals(report: ScanReport): RawTechnicalSignals {
     hasLazyImages: report.signals.hasLazyImages,
     scannedAt: report.scannedAt,
     psError: report.psError,
+    htmlSignalsError: report.htmlSignalsError,
   };
 }
 

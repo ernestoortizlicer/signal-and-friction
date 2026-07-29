@@ -100,6 +100,24 @@ export const onRequestPost = async ({
       return Response.json({ error: message }, { status: 422, headers: CORS });
     }
 
+    // A technical score built from a PageSpeed failure (perfScore=0,
+    // lcp/tbt/cls=0 — the same zero-value defaults a genuinely perfect
+    // site would produce) or a failed HTML fetch (trustSignals=0 — the
+    // same shape as "no issues found") is indistinguishable from real
+    // measurement once written. That's the exact fabrication problem this
+    // pipeline exists to avoid. If either signal source didn't actually
+    // measure the target, the scan fails honestly instead of producing a
+    // plausible-looking number.
+    if (report.psError || report.htmlSignalsError) {
+      const reasons = [
+        report.psError ? `PageSpeed: ${report.psError}` : null,
+        report.htmlSignalsError ? `HTML fetch: ${report.htmlSignalsError}` : null,
+      ].filter(Boolean).join(' | ');
+      const message = `Scan did not produce real measurements — ${reasons}`;
+      await markFailed(supabase, candidate.id, message);
+      return Response.json({ error: message }, { status: 422, headers: CORS });
+    }
+
     const signals = toRawTechnicalSignals(report);
     const { score, breakdown } = computeTechnicalSignalScore(signals);
 

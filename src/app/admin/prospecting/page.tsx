@@ -459,6 +459,14 @@ export default function ProspectingCommandCenter() {
                         >
                           Dismiss
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => scanOne(c.id)}
+                          disabled={isScanning}
+                          className="px-2.5 py-1 rounded bg-white/5 border border-white/10 text-[#7A6F65] text-[10px] font-mono uppercase tracking-wide hover:bg-white/10 disabled:opacity-40 cursor-pointer"
+                        >
+                          {isScanning ? "Scanning…" : "Rescan"}
+                        </button>
                       </>
                     )}
                     {c.status === "promoted" && (
