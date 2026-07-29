@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseUrl, getServiceRoleKey } from '../_env';
+import { computeReferralCreditCents, REFERRALS_LIVE } from '../_referral-credit';
 
 interface Env {
   STRIPE_SECRET_KEY: string;
@@ -166,6 +167,59 @@ export const onRequestPost = async ({
     }
 
     console.log(`✅ Payment processed successfully: ${session.id} | Amount: ${session.amount_total} ${session.currency}`);
+
+    // Referral credit — proportional (20% of what the referred person
+    // actually paid, see _referral-credit.ts). This webhook is the only
+    // place that authoritatively knows both the real purchase amount and
+    // that the payment genuinely succeeded, so it owns writing the
+    // `referrals` row — the old client-side insert on /confirmed/success
+    // never had the amount and always hardcoded a flat $500 coupon
+    // reference; that write path has been removed. Non-fatal: a referral
+    // bookkeeping failure must never affect the payment that's already
+    // recorded above.
+    //
+    // Gated on REFERRALS_LIVE: the `referrals` table itself doesn't exist
+    // yet (parked post-launch, see _referral-credit.ts) — without this
+    // guard, every single payment would attempt and fail this Supabase
+    // call. That's not a graceful degrade to leave running, it's log spam
+    // on every real transaction. Flip REFERRALS_LIVE to true once
+    // 20260729000003_referrals_table.sql has actually been run.
+    if (REFERRALS_LIVE && referralCode && email) {
+      try {
+        const amountTotal = session.amount_total ?? 0;
+        const creditOwedCents = computeReferralCreditCents(amountTotal);
+
+        const { data: existingReferral } = await supabase
+          .from('referrals')
+          .select('id')
+          .eq('ref_code', referralCode)
+          .eq('referred_email', email)
+          .maybeSingle();
+
+        if (existingReferral) {
+          await supabase
+            .from('referrals')
+            .update({
+              referred_product: productName,
+              referred_amount_cents: amountTotal,
+              credit_owed_cents: creditOwedCents,
+            })
+            .eq('id', existingReferral.id);
+        } else {
+          await supabase.from('referrals').insert({
+            ref_code: referralCode,
+            referred_email: email,
+            referred_product: productName,
+            referred_amount_cents: amountTotal,
+            credit_owed_cents: creditOwedCents,
+            status: 'pending',
+          });
+        }
+        console.log(`✅ Referral credit recorded: ${referralCode} → $${(creditOwedCents / 100).toFixed(2)}`);
+      } catch (err) {
+        console.warn(`⚠️ Referral credit recording failed (payment still recorded): ${err instanceof Error ? err.message : 'unknown error'}`);
+      }
+    }
 
     // Send the customer confirmation email. Non-fatal: a delivery failure must never
     // cause Stripe to retry the webhook (the payment is already recorded above).

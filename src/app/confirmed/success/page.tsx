@@ -13,35 +13,18 @@ function SuccessContent() {
   const email = searchParams.get("email") || "";
   const product = searchParams.get("product") || "Diagnostic Protocol";
 
-  // Record referral if this client arrived via a referral link
+  // The referral row itself is now recorded server-side by
+  // functions/api/stripe/webhook.ts, at the moment Stripe confirms the
+  // payment — that's the only place that actually knows the purchase
+  // amount, which the proportional 20% credit needs and this page never
+  // had. This client only clears its own local flag once it's landed here;
+  // it no longer writes to the referrals table (and no longer hardcodes
+  // the old flat $500 coupon reference).
   useEffect(() => {
-    const refCode = typeof window !== 'undefined'
-      ? localStorage.getItem('sf_referral_ref')
-      : null;
-    if (!refCode) return;
-
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tsaarsuuclvkjsgjcmoj.supabase.co';
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-    fetch(`${supabaseUrl}/rest/v1/referrals`, {
-      method: 'POST',
-      headers: {
-        apikey: supabaseAnonKey,
-        Authorization: `Bearer ${supabaseAnonKey}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify({
-        ref_code: refCode,
-        referred_email: email || null,
-        referred_product: product || null,
-        status: 'pending',
-        stripe_coupon_id: 'SFREF500',
-      }),
-    })
-      .then(() => localStorage.removeItem('sf_referral_ref'))
-      .catch(() => {});
-  }, [email, product]);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('sf_referral_ref');
+    }
+  }, []);
 
   return (
     <main className="h-screen w-screen bg-[#0A0908] text-[#F5F0EB] overflow-y-auto relative flex flex-col items-center justify-center font-mono py-8">
