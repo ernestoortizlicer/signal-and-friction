@@ -261,11 +261,17 @@ export default function PricingPage() {
             </svg>
             <div className="absolute inset-0 blur-md bg-[#D4A853]/20 rounded-full" />
           </div>
-          <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.35em] uppercase font-semibold">
+          <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.35em] uppercase font-semibold hidden sm:inline">
             Signal &amp; Friction
           </span>
         </Link>
         <div className="flex items-center gap-4">
+          <Link
+            href="/"
+            className="font-mono text-xs text-[#7A6F65] hover:text-[#D4A853] transition-colors tracking-widest uppercase"
+          >
+            ← Home
+          </Link>
           <div className="hidden sm:flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-[#5C9A6B] pulse-cyan" style={{ boxShadow: "0 0 6px rgba(92,154,107,0.5)" }} />
             <span className="font-mono text-xs text-[#5C9A6B] tracking-[0.15em] uppercase">Online</span>
@@ -339,9 +345,6 @@ export default function PricingPage() {
           <span className="hidden md:inline">|</span>
           <Link href="/certified" className="hover:text-white transition-colors uppercase tracking-wider">Certified Licensing</Link>
         </div>
-        <a href="/admin/login" className="hover:text-white transition-colors uppercase tracking-wider">
-          Operator Console →
-        </a>
       </footer>
     </main>
   );

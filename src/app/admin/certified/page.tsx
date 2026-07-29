@@ -67,7 +67,7 @@ const MOCK_PRACTITIONERS: CertifiedPractitioner[] = [
 const LINKEDIN_TEMPLATES = [
   {
     target: "SaaS Agency Owners",
-    text: `Hi [Name] — B2B SaaS agencies struggle to charge $5k+ for audits because clients are skeptical of outputs with no telemetry behind them. I license the S&F Method™ to agencies: clinical diagnostic framework, PostHog-backed, results-guaranteed. Licensed partners charge 3–5× more per engagement. Worth 5 minutes to see if it fits? [Link]`,
+    text: `Hi [Name] — B2B SaaS agencies struggle to charge $5k+ for audits because clients are skeptical of outputs with no telemetry behind them. I license the S&F Method™ to agencies: clinical diagnostic framework, PostHog-backed, backed by a Specificity Guarantee (full refund if a finding isn't specific to the client's product). Licensed partners charge 3–5× more per engagement. Worth 5 minutes to see if it fits? [Link]`,
   },
   {
     target: "VC Growth Partners",
@@ -557,7 +557,7 @@ export default function AdminCertifiedManager() {
                 <span className="text-[#D4A853] font-bold uppercase text-xs tracking-wider">{"10-Minute Loom Walkthrough Script"}</span>
                 <button
                   onClick={() => {
-                    const script = `0:00–1:30 | The CRO Crisis\n"If you run a growth agency, you know the problem: you deliver suggestions, results are murky, clients churn. The agencies charging $5–10K per diagnostic have a methodology with a name. The S&F Certified™ program is how you get one."\n\n1:30–4:00 | The S&F Protocol\n"We isolate the single friction point killing conversion in 72 hours. PostHog telemetry, strict isolation gates, results-based guarantee. If we don't hit the target, the client doesn't pay. That's the standard. The certification teaches you to operate at that standard."\n\n4:00–7:00 | The Curriculum (6 Modules)\n"42 hours over 12 weeks. The exam is a real 72-hour client brief — not multiple-choice. You produce three documents. We grade them against a 100-point rubric. Score 75+, you're certified."\n\n7:00–9:00 | The Business Layer\n"Module 5 covers how to run the practice: Wyoming LLC, Mercury banking, DWY/DFY pricing, LinkedIn outbound, AI-proofing. This isn't a skill course. It's a business architecture."\n\n9:00–10:00 | The CTA\n"$4,500/year. Annual or monthly. Your first diagnostic using the method typically covers the license cost. Apply at signal-and-friction.com/certified."`;
+                    const script = `0:00–1:30 | The CRO Crisis\n"If you run a growth agency, you know the problem: you deliver suggestions, results are murky, clients churn. The agencies charging $5–10K per diagnostic have a methodology with a name. The S&F Certified™ program is how you get one."\n\n1:30–4:00 | The S&F Protocol\n"We isolate the single friction point killing conversion in 72 hours. PostHog telemetry, strict isolation gates, and a Specificity Guarantee — if the finding isn't specific to the client's product, they get a full refund. That's the standard. The certification teaches you to operate at that standard."\n\n4:00–7:00 | The Curriculum (6 Modules)\n"42 hours over 12 weeks. The exam is a real 72-hour client brief — not multiple-choice. You produce three documents. We grade them against a 100-point rubric. Score 75+, you're certified."\n\n7:00–9:00 | The Business Layer\n"Module 5 covers how to run the practice: Wyoming LLC, Mercury banking, DWY/DFY pricing, LinkedIn outbound, AI-proofing. This isn't a skill course. It's a business architecture."\n\n9:00–10:00 | The CTA\n"$4,500/year. Annual or monthly. Your first diagnostic using the method typically covers the license cost. Apply at signal-and-friction.com/certified."`;
                     navigator.clipboard.writeText(script);
                     alert("✓ Loom script copied!");
                   }}
@@ -569,7 +569,7 @@ export default function AdminCertifiedManager() {
               <div className="space-y-3 text-xs text-[#B0A89E] leading-relaxed">
                 {[
                   { ts: "0:00–1:30", label: "The CRO Crisis", body: `"The agencies charging $5–10K per diagnostic have a methodology with a name. The S&F Certified™ program is how you get one."` },
-                  { ts: "1:30–4:00", label: "The S&F Protocol", body: `"72-hour diagnostic. PostHog telemetry. Results-based guarantee. The certification teaches you to operate at that standard."` },
+                  { ts: "1:30–4:00", label: "The S&F Protocol", body: `"72-hour diagnostic. PostHog telemetry. A Specificity Guarantee — full refund if the finding isn't specific to the client's product. The certification teaches you to operate at that standard."` },
                   { ts: "4:00–7:00", label: "The Curriculum", body: `"42 hours, 12 weeks. The exam is a real client brief. You produce 3 documents. 100-point rubric. Score 75+: certified."` },
                   { ts: "7:00–9:00", label: "The Business Layer", body: `"Wyoming LLC, Mercury banking, DWY/DFY pricing, LinkedIn outbound, AI-proofing. Not a skill course — a business architecture."` },
                   { ts: "9:00–10:00", label: "The CTA", body: `"$4,500/year. Annual or monthly. First diagnostic typically covers the license. Apply: signal-and-friction.com/certified."` },

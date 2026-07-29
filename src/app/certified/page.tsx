@@ -4,7 +4,7 @@ import CertifiedClient from "./CertifiedClient";
 export const metadata: Metadata = {
   title: "S&F Certified™ — License the Signal & Friction Diagnostic Methodology",
   description:
-    "License the clinical cognitive conversion diagnostics framework. Enable your agency to deliver results-guaranteed audits, run behavioral diagnosis, and secure high-ticket B2B SaaS clients.",
+    "License the clinical cognitive conversion diagnostics framework. Enable your agency to deliver specificity-guaranteed audits — full refund if a finding isn't specific to the client's product — and secure high-ticket B2B SaaS clients.",
   openGraph: {
     title: "S&F Certified™ — License the Signal & Friction Diagnostic Methodology",
     description:
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "S&F Certified™ — License the Diagnostic Methodology",
     description:
-      "Clinical cognitive conversion diagnostics framework for agencies. Results-guaranteed audits.",
+      "Clinical cognitive conversion diagnostics framework for agencies. Specificity-guaranteed audits.",
     images: ["https://signal-and-friction.com/sf_og_image.png"],
   },
   alternates: {

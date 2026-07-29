@@ -212,7 +212,7 @@ export default function SingaporeClient() {
 
       {/* ── Top Bar ─────────────────────────────────────── */}
       <div className="absolute top-0 left-0 right-0 z-20 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3">
           {/* Diamond logo with glow */}
           <div className="relative">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -221,12 +221,18 @@ export default function SingaporeClient() {
             </svg>
             <div className="absolute inset-0 blur-md bg-[#D4A853]/20 rounded-full" />
           </div>
-          <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.35em] uppercase font-semibold">
+          <span className="font-mono text-xs text-[#D4A853]/70 tracking-[0.35em] uppercase font-semibold hidden sm:inline">
             Signal &amp; Friction // SG
           </span>
-        </div>
+        </Link>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
+          <Link
+            href="/"
+            className="font-mono text-xs text-[#7A6F65] hover:text-[#D4A853] transition-colors tracking-widest uppercase"
+          >
+            ← Global Site
+          </Link>
+          <div className="hidden sm:flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-[#5C9A6B] pulse-cyan" style={{ boxShadow: "0 0 6px rgba(92,154,107,0.5)" }} />
             <span className="font-mono text-xs text-[#5C9A6B]/60 tracking-[0.15em] uppercase">
               APAC Gateway
@@ -616,9 +622,6 @@ export default function SingaporeClient() {
         <div className="text-center text-[#4A4540] text-xs mt-1 md:mt-0">
           APAC Regional Office: Singapore 🇸🇬
         </div>
-        <a href="/admin/login" className="hover:text-white transition-colors uppercase tracking-wider">
-          Operator Console →
-        </a>
       </footer>
     </main>
   );

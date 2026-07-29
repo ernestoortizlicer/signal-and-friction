@@ -95,7 +95,7 @@ async function run() {
       // 1. Create product
       const stripeProduct = await stripePost("/products", {
         name: `Signal & Friction — ${product.name}`,
-        description: `Signal & Friction ${product.name}. Async delivery. Results-based guarantee.`,
+        description: `Signal & Friction ${product.name}. Async delivery. Specificity Guarantee: full refund if the finding isn't specific to your product.`,
       });
 
       // 2. Create price

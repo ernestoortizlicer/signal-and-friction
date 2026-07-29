@@ -116,7 +116,7 @@ export default function RootLayout({
               '@type': 'Service',
               name: 'Signal & Friction Diagnostic',
               description:
-                'Clinical B2B SaaS revenue friction diagnostic. 72h async delivery. Results-based guarantee.',
+                'Clinical B2B SaaS revenue friction diagnostic. 72h async delivery. Full refund if the finding isn\'t specific to your product.',
               provider: {
                 '@type': 'Organization',
                 name: 'Signal & Friction',

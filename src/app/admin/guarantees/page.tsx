@@ -126,7 +126,7 @@ export default function AdminGuarantees() {
         },
         body: JSON.stringify({
           guarantee_id: guaranteeId,
-          reason: "S&F conversion lift target missed."
+          reason: "S&F Specificity Guarantee — diagnostic failed the specificity standard (see /legal/guarantee §2)."
         })
       });
 
@@ -173,8 +173,8 @@ export default function AdminGuarantees() {
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#D4A853]/8 pb-8">
           <div>
-            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#B0A89E] block mb-2">Outcomes-Based Risk Gating</span>
-            <h1 className="text-4xl font-serif text-[#F5F0EB] tracking-tight">Performance Guarantees Monitor</h1>
+            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#B0A89E] block mb-2">Specificity Guarantee — Refund Ledger</span>
+            <h1 className="text-4xl font-serif text-[#F5F0EB] tracking-tight">Guarantee Refund Requests</h1>
           </div>
           <div className="flex items-center gap-4 mt-4 md:mt-0">
             <Link
@@ -185,6 +185,19 @@ export default function AdminGuarantees() {
             </Link>
           </div>
         </header>
+
+        {/* The public promise (per /legal/guarantee) is specificity, not a
+            results percentage — refund if a finding isn't specific to the
+            client's product, never a % conversion target. The rows below
+            still carry the legacy %-lift columns this table was originally
+            built around; there's no dedicated tracking yet for the 4 real
+            specificity gates (Generic Figure / Boilerplate / Untiered Claim /
+            Fabricated Data Access — legal/guarantee §2). Until that's built,
+            specificity-refund requests are reviewed manually against those
+            criteria via hello@signal-and-friction.com, per legal/guarantee §3. */}
+        <div className="border border-[#D4A853]/15 bg-[#D4A853]/5 p-4 rounded-xl text-xs text-[#B0A89E] leading-relaxed">
+          <strong className="text-[#D4A853]">What&apos;s actually guaranteed:</strong> a full refund if the diagnostic finding isn&apos;t specific to the client&apos;s product — never a conversion or revenue percentage. See <Link href="/legal/guarantee" className="text-[#D4A853] hover:underline">/legal/guarantee</Link> for the 4 gates that void specificity. The %-lift fields below are legacy data on this table and aren&apos;t the specificity criteria — specificity-refund requests are currently reviewed by hand against those 4 gates, not tracked here yet.
+        </div>
 
         {/* Alerts */}
         <AnimatePresence>
@@ -268,7 +281,7 @@ export default function AdminGuarantees() {
 
                   {/* Middle: Active Gates Checklist */}
                   <div className="md:col-span-5 space-y-3">
-                    <h4 className="text-xs text-[#D4A853]/70 uppercase tracking-wider">Telemetry Gates</h4>
+                    <h4 className="text-xs text-[#D4A853]/70 uppercase tracking-wider">Legacy Delivery Gates (informational — not the specificity criteria)</h4>
                     <div className="grid grid-cols-2 gap-2">
                       {[
                         { name: "Traffic >15k", met: g.traffic_gate_met },
@@ -309,7 +322,7 @@ export default function AdminGuarantees() {
                         </button>
                       )}
                       <span className="text-xs text-[#7A6F65] block leading-relaxed text-left">
-                        Trigger ONLY when telemetry confirms target missed.
+                        Trigger ONLY after confirming the diagnostic actually fails a specificity gate (legal/guarantee §2) — not on a missed %-lift target.
                       </span>
                     </div>
                   </div>

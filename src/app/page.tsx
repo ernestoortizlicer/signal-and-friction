@@ -630,9 +630,6 @@ export default function Home() {
           <span className="hidden md:inline">|</span>
           <Link href="/certified" className="hover:text-white transition-colors uppercase tracking-wider">Certified Licensing</Link>
         </div>
-        <a href="/admin/login" className="hover:text-white transition-colors uppercase tracking-wider">
-          Operator Console →
-        </a>
       </footer>
     </main>
   );
