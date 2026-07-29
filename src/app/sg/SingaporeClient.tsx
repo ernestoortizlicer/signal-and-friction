@@ -63,7 +63,7 @@ const FUNNEL_OPTIONS = [
 ];
 
 const SEGMENT_OPTIONS = [
-  { key: "concierge", label: "Done-For-You Concierge", sub: "S&F executes diagnostic & implementation. Backed by the S&F Specificity Guarantee — full refund if the finding isn't specific to your product." },
+  { key: "concierge", label: "Done-For-You Concierge", sub: "S&F executes diagnostic & implementation. If it isn't specific to your product, you don't pay." },
   { key: "autonomy", label: "Done-With-You Autonomy", sub: "Learn the S&F methodology, build internal capacity, and earn S&F Certified™ credentials." },
   { key: "elite_sg", label: "🏆 Elite Partnership (Singapore)", sub: "White-glove account management + priority support. Optimized for APAC market dynamics." },
 ];
@@ -228,7 +228,7 @@ export default function SingaporeClient() {
         <div className="flex items-center gap-4">
           <Link
             href="/"
-            className="font-mono text-xs text-[#7A6F65] hover:text-[#D4A853] transition-colors tracking-widest uppercase"
+            className="font-mono text-xs sm:text-sm font-semibold text-[#D4A853] border border-[#D4A853]/40 hover:border-[#D4A853] hover:bg-[#D4A853]/10 transition-all tracking-wide uppercase px-3 py-2 sm:px-4 rounded-full"
           >
             ← Global Site
           </Link>
@@ -268,7 +268,7 @@ export default function SingaporeClient() {
 
             <p className="text-sm text-[#B0A89E] leading-relaxed max-w-md font-mono">
               Clinical B2B SaaS diagnostic localized for APAC. 72h async delivery.
-              JCB &amp; PayNow checks. Backed by the S&amp;F Specificity Guarantee.
+              JCB &amp; PayNow checks. If it isn&apos;t specific to your product, you don&apos;t pay.
             </p>
 
             {/* Magnetic pricing CTA — same hook as /pricing's hero, so
@@ -387,7 +387,7 @@ export default function SingaporeClient() {
                   }}
                 >
                   <span style={{ color: "#CBA135" }}>⚑</span>
-                  Full refund if the finding isn&apos;t specific to your product. 72h async. Zero sales calls.
+                  If it isn&apos;t specific to your product, you don&apos;t pay. 72h async. Zero sales calls.
                 </div>
               }
               submitCta="Find My APAC Friction"
@@ -419,7 +419,7 @@ export default function SingaporeClient() {
             Model your <span className="text-[#D4A853] glow-text">conversion revenue range</span>.
           </h2>
           <p className="text-sm text-[#B0A89E] font-mono max-w-lg mx-auto leading-relaxed">
-            Adjust the metrics to see a modeled range for a single, correctly-targeted fix — benchmarked from published single-fix conversion studies, not a measurement of your funnel or a guarantee of your outcome.
+            Adjust the metrics to see a modeled range for a single, correctly-targeted fix — benchmarked from published single-fix conversion studies, not a measurement of your funnel or a promise of your results.
           </p>
         </div>
 
@@ -527,7 +527,7 @@ export default function SingaporeClient() {
             </div>
 
             <div className="border border-[#D4A853]/25 bg-[#0A0908] p-3 rounded text-xs text-[#B0A89E] leading-relaxed">
-              Modeled from published single-fix conversion-lift benchmarks applied to your inputs above — not a measurement of your funnel and not a guarantee of your outcome. What we guarantee is the specificity of the finding itself: full refund if it isn&apos;t specific to your product.
+              Modeled from published single-fix conversion-lift benchmarks applied to your inputs above — not a measurement of your funnel and not a promise of your results. What we guarantee is specificity: if the diagnosis doesn&apos;t surface a friction point specific to your product — something we observed in your actual funnel, not generic advice — you don&apos;t pay.
             </div>
           </div>
         </div>
@@ -543,7 +543,7 @@ export default function SingaporeClient() {
             Why clinical diagnostics <span className="text-[#D4A853] glow-text">beats generic AI</span>.
           </h2>
           <p className="text-sm text-[#B0A89E] font-mono max-w-lg mx-auto leading-relaxed">
-            Stop relying on automated audit scrapers that tell you to change colors. Compare our clinical guarantee parameters.
+            Stop relying on automated audit scrapers that tell you to change colors. Compare our Specificity Promise against generic AI audits.
           </p>
         </div>
 
@@ -559,7 +559,7 @@ export default function SingaporeClient() {
             <tbody className="divide-y divide-white/5 text-[#B0A89E]">
               <tr>
                 <td className="p-4 font-bold text-white uppercase text-xs">Risk Allocation</td>
-                <td className="p-4 text-[#5C9A6B] font-bold">100% Refundable via Stripe in SGD if the finding isn&apos;t specific to your product.</td>
+                <td className="p-4 text-[#5C9A6B] font-bold">If the diagnosis isn&apos;t specific to your product, you don&apos;t pay — 100% refunded via Stripe in SGD.</td>
                 <td className="p-4">Pay upfront with zero performance accountability.</td>
               </tr>
               <tr>
@@ -582,7 +582,7 @@ export default function SingaporeClient() {
         </div>
 
         <div className="text-center font-mono text-xs text-[#7A6F65]">
-          Read the complete legally binding covenant: <Link href="/legal/guarantee" className="text-[#D4A853] hover:underline">S&amp;F Performance Terms &amp; Conditions</Link>.
+          Read the complete legally binding covenant: <Link href="/legal/guarantee" className="text-[#D4A853] hover:underline">S&amp;F Specificity Guarantee Terms</Link>.
         </div>
       </section>
 

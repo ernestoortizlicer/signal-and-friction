@@ -232,7 +232,7 @@ export default function CertifiedClient() {
             </h1>
             <p className="text-sm text-[#B0A89E] leading-relaxed font-mono max-w-lg">
               The only certification where the exam is a real 72-hour client diagnostic — not multiple-choice.
-              License the clinical methodology used by top B2B SaaS founders to charge premium fees backed by the Specificity Guarantee — full refund if a finding isn&apos;t specific to the client&apos;s product.
+              License the clinical methodology used by top B2B SaaS founders to charge premium fees backed by the Specificity Guarantee: if a finding isn&apos;t specific to the client&apos;s product, they don&apos;t pay.
             </p>
           </div>
 

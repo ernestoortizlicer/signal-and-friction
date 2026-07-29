@@ -63,13 +63,13 @@ const FUNNEL_OPTIONS = [
 ];
 
 const SEGMENT_OPTIONS = [
-  { key: "concierge", label: "Done-For-You Concierge", sub: "S&F executes diagnostic & implementation. Backed by the S&F Specificity Guarantee — full refund if the finding isn't specific to your product." },
+  { key: "concierge", label: "Done-For-You Concierge", sub: "S&F executes diagnostic & implementation. If it isn't specific to your product, you don't pay." },
   { key: "autonomy", label: "Done-With-You Autonomy", sub: "Learn the S&F methodology, build internal capacity, and earn S&F Certified™ credentials." },
   { key: "elite_us", label: "🏆 Elite Partnership (USA)", sub: "White-glove account management + priority support. For US-based SaaS only." },
 ];
 
 const SEGMENT_OPTIONS_APAC = [
-  { key: "concierge", label: "Done-For-You Concierge", sub: "S&F executes diagnostic & implementation. Backed by the S&F Specificity Guarantee — full refund if the finding isn't specific to your product." },
+  { key: "concierge", label: "Done-For-You Concierge", sub: "S&F executes diagnostic & implementation. If it isn't specific to your product, you don't pay." },
   { key: "autonomy", label: "Done-With-You Autonomy", sub: "Learn the S&F methodology, build internal capacity, and earn S&F Certified™ credentials." },
   { key: "elite_sg", label: "🏆 Elite Partnership (Singapore)", sub: "White-glove account management + priority support. Optimized for APAC market dynamics." },
 ];
@@ -281,7 +281,7 @@ export default function Home() {
 
             <p className="text-sm text-[#B0A89E] leading-relaxed max-w-md font-mono">
               Clinical B2B SaaS diagnostic. 72h async delivery.
-              One finding. One fix. Backed by the S&F Specificity Guarantee.
+              One finding. One fix. If it isn&apos;t specific to your product, you don&apos;t pay.
             </p>
 
             {/* Magnetic pricing CTA — same hook as /pricing's hero, so
@@ -365,7 +365,7 @@ export default function Home() {
                 >
                   <span className="w-1 h-1 rounded-full" style={{ background: "#CBA135", boxShadow: "0 0 6px rgba(203,161,53,0.6)" }} />
                   <span style={{ fontSize: "0.65rem", letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(203,161,53,.9)" }}>
-                    72h Delivery · Specificity Guaranteed
+                    72h Delivery · Specific — Or You Don&apos;t Pay
                   </span>
                   <span className="w-1 h-1 rounded-full" style={{ background: "#CBA135", boxShadow: "0 0 6px rgba(203,161,53,0.6)" }} />
                 </div>
@@ -405,7 +405,7 @@ export default function Home() {
                   }}
                 >
                   <span style={{ color: "#CBA135" }}>⚑</span>
-                  Full refund if the finding isn&apos;t specific to your product. 72h async. Zero sales calls.
+                  If it isn&apos;t specific to your product, you don&apos;t pay. 72h async. Zero sales calls.
                 </div>
               }
               submitCta="Find My Friction Point"
@@ -437,7 +437,7 @@ export default function Home() {
             Model your <span className="text-[#D4A853] glow-text">conversion revenue range</span>.
           </h2>
           <p className="text-xs text-[#B0A89E] font-mono max-w-lg mx-auto leading-relaxed">
-            Adjust the metrics to see a modeled range for a single, correctly-targeted fix — benchmarked from published single-fix conversion studies, not a measurement of your funnel or a guarantee of your outcome.
+            Adjust the metrics to see a modeled range for a single, correctly-targeted fix — benchmarked from published single-fix conversion studies, not a measurement of your funnel or a promise of your results.
           </p>
         </div>
 
@@ -545,7 +545,7 @@ export default function Home() {
             </div>
 
             <div className="border border-[#D4A853]/25 bg-[#0A0908] p-3 rounded text-xs text-[#B0A89E] leading-relaxed">
-              Modeled from published single-fix conversion-lift benchmarks applied to your inputs above — not a measurement of your funnel and not a guarantee of your outcome. What we guarantee is the specificity of the finding itself: full refund if it isn&apos;t specific to your product.
+              Modeled from published single-fix conversion-lift benchmarks applied to your inputs above — not a measurement of your funnel and not a promise of your results. What we guarantee is specificity: if the diagnosis doesn&apos;t surface a friction point specific to your product — something we observed in your actual funnel, not generic advice — you don&apos;t pay.
             </div>
           </div>
         </div>
@@ -561,7 +561,7 @@ export default function Home() {
             Why clinical diagnostics <span className="text-[#D4A853] glow-text">beats generic AI</span>.
           </h2>
           <p className="text-xs text-[#B0A89E] font-mono max-w-lg mx-auto leading-relaxed">
-            Stop relying on automated audit scrapers that tell you to change colors. Compare our clinical guarantee parameters.
+            Stop relying on automated audit scrapers that tell you to change colors. Compare our Specificity Promise against generic AI audits.
           </p>
         </div>
 
@@ -577,7 +577,7 @@ export default function Home() {
             <tbody className="divide-y divide-white/5 text-[#B0A89E]">
               <tr>
                 <td className="p-4 font-bold text-white uppercase text-xs">Risk Allocation</td>
-                <td className="p-4 text-[#5C9A6B] font-bold">100% Refundable via Stripe if the finding isn&apos;t specific to your product.</td>
+                <td className="p-4 text-[#5C9A6B] font-bold">If the diagnosis isn&apos;t specific to your product, you don&apos;t pay — 100% refunded via Stripe.</td>
                 <td className="p-4">Pay upfront with zero performance accountability.</td>
               </tr>
               <tr>
@@ -600,7 +600,7 @@ export default function Home() {
         </div>
 
         <div className="text-center font-mono text-xs text-[#B0A89E]">
-          Read the complete legally binding covenant: <Link href="/legal/guarantee" className="text-[#D4A853] hover:underline">S&amp;F Performance Terms &amp; Conditions</Link>.
+          Read the complete legally binding covenant: <Link href="/legal/guarantee" className="text-[#D4A853] hover:underline">S&amp;F Specificity Guarantee Terms</Link>.
         </div>
       </section>
 

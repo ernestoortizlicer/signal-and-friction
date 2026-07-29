@@ -45,6 +45,10 @@ export default function GuaranteeTerms() {
           </div>
         </div>
 
+        <p className="text-[#F5F0EB] text-base leading-relaxed border-l-2 border-[#D4A853]/40 pl-4">
+          If the diagnosis doesn&apos;t surface a friction point specific to your product — something we observed in your actual funnel, not generic advice — you don&apos;t pay.
+        </p>
+
         <p className="text-[#B0A89E] leading-relaxed text-sm">
           We don&apos;t promise you a fixed conversion or revenue number. Anyone promising a fixed percentage hasn&apos;t looked at your funnel — we don&apos;t have access to your analytics, session recordings, or checkout data unless you grant it, and no diagnostic firm honestly can from a public scan alone. What we do guarantee is the specificity of the work itself. This document establishes the legally binding framework governing that guarantee.
         </p>

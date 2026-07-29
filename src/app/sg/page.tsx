@@ -4,11 +4,11 @@ import SingaporeClient from "./SingaporeClient";
 export const metadata: Metadata = {
   title: "Signal & Friction — APAC Diagnostic Portal | Singapore & Southeast Asia",
   description:
-    "Clinical B2B SaaS conversion diagnostics localized for APAC. JCB & PayNow checks, SGD pricing, PDPA compliance. 72-hour async delivery. Backed by the S&F Specificity Guarantee™.",
+    "Clinical B2B SaaS conversion diagnostics localized for APAC. JCB & PayNow checks, SGD pricing, PDPA compliance. 72-hour async delivery. If it isn't specific to your product, you don't pay.",
   openGraph: {
     title: "Signal & Friction — APAC Diagnostic Portal | Singapore & SE Asia",
     description:
-      "Isolate Southeast Asia checkout friction killing your APAC revenue. Clinical diagnostic in 72h. JCB & PayNow checks. Backed by the S&F Specificity Guarantee™.",
+      "Isolate Southeast Asia checkout friction killing your APAC revenue. Clinical diagnostic in 72h. JCB & PayNow checks. If it isn't specific to your product, you don't pay.",
     url: "https://signal-and-friction.com/sg",
     siteName: "Signal & Friction",
     images: [
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Signal & Friction — Singapore & APAC Diagnostic Portal",
     description:
-      "Isolate APAC checkout friction in 72h. S&F Specificity Guarantee™.",
+      "Isolate APAC checkout friction in 72h. Specific to your product, or you don't pay.",
     images: ["https://signal-and-friction.com/sf_og_image.png"],
   },
   alternates: {

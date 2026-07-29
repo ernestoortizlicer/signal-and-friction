@@ -123,9 +123,9 @@ export default function PublicPortfolio() {
 
         {/* Global Conquest CTA */}
         <div className="border border-[#D4A853]/15 bg-[#0A0908]/95 p-8 rounded text-center space-y-4">
-          <h3 className="text-xl font-bold font-serif text-white">Backed by the S&amp;F Guarantee</h3>
+          <h3 className="text-xl font-bold font-serif text-white">Backed by the S&amp;F Specificity Guarantee</h3>
           <p className="text-sm text-[#B0A89E] font-mono max-w-md mx-auto leading-relaxed">
-            All enterprise audits are backed by our results-based performance protocols. If we don&apos;t meet our conversion benchmarks, your diagnostic fee is refunded via Stripe.
+            If the diagnosis doesn&apos;t surface a friction point specific to your product — something we observed in your actual funnel, not generic advice — you don&apos;t pay.
           </p>
           <div className="pt-2">
             <Link href="/" className="inline-block py-3 px-6 bg-[#D4A853] text-[#0A0908] font-mono font-bold text-xs uppercase tracking-wider hover:bg-[#E8C97A] transition-all">

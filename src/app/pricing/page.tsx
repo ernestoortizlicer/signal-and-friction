@@ -268,7 +268,7 @@ export default function PricingPage() {
         <div className="flex items-center gap-4">
           <Link
             href="/"
-            className="font-mono text-xs text-[#7A6F65] hover:text-[#D4A853] transition-colors tracking-widest uppercase"
+            className="font-mono text-xs sm:text-sm font-semibold text-[#D4A853] border border-[#D4A853]/40 hover:border-[#D4A853] hover:bg-[#D4A853]/10 transition-all tracking-wide uppercase px-3 py-2 sm:px-4 rounded-full"
           >
             ← Home
           </Link>

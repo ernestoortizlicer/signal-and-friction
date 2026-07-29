@@ -116,7 +116,7 @@ export default function RootLayout({
               '@type': 'Service',
               name: 'Signal & Friction Diagnostic',
               description:
-                'Clinical B2B SaaS revenue friction diagnostic. 72h async delivery. Full refund if the finding isn\'t specific to your product.',
+                'Clinical B2B SaaS revenue friction diagnostic. 72h async delivery. If it isn\'t specific to your product, you don\'t pay.',
               provider: {
                 '@type': 'Organization',
                 name: 'Signal & Friction',
@@ -127,7 +127,7 @@ export default function RootLayout({
                   priceCurrency: 'USD',
                   price: '2000',
                   name: 'Done-For-You Concierge (DFY)',
-                  description: 'S&F executes diagnostic & implementation. Backed by the S&F Specificity Guarantee — full refund if the finding isn\'t specific to your product.',
+                  description: 'S&F executes diagnostic & implementation. If it isn\'t specific to your product, you don\'t pay.',
                   url: 'https://signal-and-friction.com/pricing#dfy-pricing',
                 },
                 {
@@ -202,7 +202,7 @@ export default function RootLayout({
                   name: 'What makes Signal & Friction different from generic AI audits?',
                   acceptedAnswer: {
                     '@type': 'Answer',
-                    text: 'We don\'t promise you 20%. Anyone promising a fixed number hasn\'t looked at your funnel. Each diagnostic ships with a projected range specific to your product and a stated confidence level, backed by the S&F Specificity Guarantee: full refund if the finding isn\'t specific to your product.',
+                    text: 'We don\'t promise you 20%. Anyone promising a fixed number hasn\'t looked at your funnel. Each diagnostic ships with a projected range specific to your product and a stated confidence level. If the diagnosis doesn\'t surface a friction point specific to your product — something we observed in your actual funnel, not generic advice — you don\'t pay.',
                   },
                 },
                 {
@@ -218,7 +218,7 @@ export default function RootLayout({
                   name: 'What if I don\'t see results?',
                   acceptedAnswer: {
                     '@type': 'Answer',
-                    text: 'We guarantee our work\'s specificity, not your business outcome — actual results depend on execution, market conditions, and data we don\'t have access to. If the finding we deliver isn\'t specific to your product, we refund 100% via Stripe.',
+                    text: 'We guarantee our work\'s specificity, not your business outcome — actual results depend on execution, market conditions, and data we don\'t have access to. If the diagnosis doesn\'t surface a friction point specific to your product — something we observed in your actual funnel, not generic advice — you don\'t pay.',
                   },
                 },
                 {
