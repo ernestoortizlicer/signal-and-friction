@@ -373,7 +373,7 @@ export default function Home() {
               url={url}
               onUrlChange={setUrl}
               urlPlaceholder="https://your-product.com"
-              socialProof={<>Join <strong>50+ B2B SaaS founders</strong> who have diagnosed their funnel.</>}
+              socialProof={<>Every finding tagged <strong>measured, modeled, or pending</strong>. No invented numbers — including this one.</>}
               scanCta="Scan My Funnel"
               onScanClick={nextStep}
               funnelPain={funnelPain}

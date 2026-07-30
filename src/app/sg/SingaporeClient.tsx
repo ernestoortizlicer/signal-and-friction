@@ -355,7 +355,7 @@ export default function SingaporeClient() {
               url={url}
               onUrlChange={setUrl}
               urlPlaceholder="https://your-product.sg"
-              socialProof={<>Trusted by <strong>APAC SaaS founders</strong> in SG, AU, and MY.</>}
+              socialProof={<>Every finding tagged <strong>measured, modeled, or pending</strong>. No invented numbers — including this one.</>}
               scanCta="Scan My APAC Funnel"
               onScanClick={nextStep}
               funnelPain={funnelPain}
