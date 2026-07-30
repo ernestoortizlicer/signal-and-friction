@@ -80,6 +80,10 @@ export default function PriorityCommandCenter() {
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [energyFilter, setEnergyFilter] = useState<string>('all');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addingTask, setAddingTask] = useState(false);
+  const [addTaskError, setAddTaskError] = useState<string | null>(null);
+  const [completeTaskError, setCompleteTaskError] = useState<string | null>(null);
 
   const updateTaskQuadrant = async (taskId: string, newQuadrant: PriorityTask['quadrant']) => {
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, quadrant: newQuadrant } : t));
@@ -125,33 +129,119 @@ export default function PriorityCommandCenter() {
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://your-supabase.supabase.co";
 
-  useEffect(() => {
-    async function fetchData() {
-      setFetchError(null);
-      try {
-        const headers = getAuthHeaders();
+  async function fetchData() {
+    setFetchError(null);
+    try {
+      const headers = getAuthHeaders();
 
-        const [resTasks, resLogs] = await Promise.all([
-          fetch(`${supabaseUrl}/rest/v1/priority_tasks?select=*&order=priority_score.desc`, { headers }),
-          fetch(`${supabaseUrl}/rest/v1/priority_scores_log?select=*&order=snapshot_at.desc&limit=200`, { headers }),
-        ]);
+      const [resTasks, resLogs] = await Promise.all([
+        fetch(`${supabaseUrl}/rest/v1/priority_tasks?select=*&order=priority_score.desc`, { headers }),
+        fetch(`${supabaseUrl}/rest/v1/priority_scores_log?select=*&order=snapshot_at.desc&limit=200`, { headers }),
+      ]);
 
-        if (!resTasks.ok) throw new Error(`Failed to load tasks (${resTasks.status}).`);
-        if (!resLogs.ok) throw new Error(`Failed to load score history (${resLogs.status}).`);
+      if (!resTasks.ok) throw new Error(`Failed to load tasks (${resTasks.status}).`);
+      if (!resLogs.ok) throw new Error(`Failed to load score history (${resLogs.status}).`);
 
-        setTasks(await resTasks.json());
-        setScoreLogs(await resLogs.json());
-        setLoading(false);
-      } catch (err) {
-        console.error("Failed to load priority engine data:", err);
-        setFetchError(err instanceof Error ? err.message : "Failed to load priority engine data.");
-        setLoading(false);
-      }
+      setTasks(await resTasks.json());
+      setScoreLogs(await resLogs.json());
+      setLoading(false);
+    } catch (err) {
+      console.error("Failed to load priority engine data:", err);
+      setFetchError(err instanceof Error ? err.message : "Failed to load priority engine data.");
+      setLoading(false);
     }
+  }
 
+  useEffect(() => {
+    // fetchData is hoisted to component scope (not defined inline) so it can
+    // also be called after create/complete actions — the initial mount fetch
+    // is still the standard, correct pattern here.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Manual tasks aren't touched by any of the auto-scoring triggers (those
+  // only fire from the beta_projects/ai_incidents sync paths), so a fresh
+  // manual task would sit at the priority_score column default forever
+  // unless something explicitly calls the real scoring function on it.
+  const scoreTask = async (taskId: string) => {
+    const headers = getAuthHeaders();
+    await fetch(`${supabaseUrl}/rest/v1/rpc/calculate_priority_score`, {
+      method: "POST",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({ p_task_id: taskId }),
+    });
+  };
+
+  const createTask = async (input: {
+    title: string;
+    description: string;
+    effort_minutes: number;
+    energy_required: PriorityTask['energy_required'];
+    deadline: string;
+    revenue_impact_usd: number;
+    learning_multiplier: number;
+  }) => {
+    setAddTaskError(null);
+    if (!input.title.trim()) {
+      setAddTaskError("Title is required.");
+      return false;
+    }
+    setAddingTask(true);
+    try {
+      const headers = getAuthHeaders();
+      const res = await fetch(`${supabaseUrl}/rest/v1/priority_tasks`, {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json", "Prefer": "return=representation" },
+        body: JSON.stringify({
+          title: input.title.trim(),
+          description: input.description.trim() || null,
+          category: "manual",
+          effort_minutes: input.effort_minutes,
+          energy_required: input.energy_required,
+          deadline: input.deadline ? new Date(input.deadline).toISOString() : null,
+          revenue_impact: Math.round(input.revenue_impact_usd * 100),
+          learning_multiplier: input.learning_multiplier,
+          status: "pending",
+          source_table: "manual",
+          auto_generated: false,
+        }),
+      });
+      if (!res.ok) throw new Error(`Failed to create task (${res.status}).`);
+      const [created] = await res.json();
+      if (created?.id) {
+        await scoreTask(created.id);
+      }
+      await fetchData();
+      return true;
+    } catch (err) {
+      console.error("Failed to create task:", err);
+      setAddTaskError(err instanceof Error ? err.message : "Failed to create task.");
+      return false;
+    } finally {
+      setAddingTask(false);
+    }
+  };
+
+  const completeTask = async (taskId: string) => {
+    setCompleteTaskError(null);
+    const prevTasks = tasks;
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: 'done' } : t));
+    try {
+      const headers = getAuthHeaders();
+      const res = await fetch(`${supabaseUrl}/rest/v1/priority_tasks?id=eq.${taskId}`, {
+        method: "PATCH",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ status: 'done' }),
+      });
+      if (!res.ok) throw new Error(`Failed to complete task (${res.status}).`);
+    } catch (err) {
+      console.error("Error completing task:", err);
+      setTasks(prevTasks);
+      setCompleteTaskError(err instanceof Error ? err.message : "Failed to complete task.");
+    }
+  };
 
   const pendingTasks = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress');
   const filteredTasks = pendingTasks.filter(t => {
@@ -227,8 +317,24 @@ export default function PriorityCommandCenter() {
             <span className="font-mono text-xs uppercase tracking-wider text-[#D4A853] border border-[#D4A853]/20 px-3 py-1.5 rounded-full bg-[#D4A853]/5">
               {`${pendingTasks.length} Active · ${completedCount} Done`}
             </span>
+            <button
+              type="button"
+              onClick={() => { setAddTaskError(null); setShowAddModal(true); }}
+              className="font-mono text-xs font-semibold uppercase tracking-wider text-[#0A0908] bg-[#D4A853] hover:bg-[#E8C97A] transition-all px-4 py-1.5 rounded-full"
+            >
+              {"+ Add Task"}
+            </button>
           </div>
         </header>
+
+        {completeTaskError && (
+          <div className="border-2 border-[#C85C5C]/50 bg-[#C85C5C]/10 px-4 py-2.5 rounded flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#C85C5C] animate-pulse shrink-0" />
+            <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#C85C5C]">
+              {"⚠ "}{completeTaskError}
+            </span>
+          </div>
+        )}
 
         {/* Scorecard */}
         <section className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -413,9 +519,15 @@ export default function PriorityCommandCenter() {
                         </button>
                       )}
                       {isFirst && task.status === 'in_progress' && (
-                        <div className="w-full mt-4 font-mono text-xs uppercase text-center border border-[#5C9A6B]/30 text-[#5C9A6B] px-4 py-3 rounded bg-[#5C9A6B]/5">
-                          {"⚡ Task in Progress"}
-                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            completeTask(task.id);
+                          }}
+                          className="w-full mt-4 font-mono text-xs uppercase bg-[#5C9A6B] hover:bg-[#6BAF7A] text-white px-4 py-3 rounded transition-all duration-300"
+                        >
+                          {"✓ Mark Complete"}
+                        </button>
                       )}
                     </motion.div>
                   );
@@ -708,9 +820,12 @@ export default function PriorityCommandCenter() {
                           </button>
                         )}
                         {task.status === 'in_progress' && (
-                          <span className="font-mono text-xs uppercase text-[#5C9A6B] bg-[#5C9A6B]/5 border border-[#5C9A6B]/20 px-2 py-0.5 rounded">
-                            {"In Progress"}
-                          </span>
+                          <button
+                            onClick={() => completeTask(task.id)}
+                            className="font-mono text-xs uppercase border border-[#5C9A6B]/40 hover:bg-[#5C9A6B]/10 text-[#5C9A6B] px-2 py-1 rounded transition-all"
+                          >
+                            {"✓ Complete"}
+                          </button>
                         )}
                       </div>
                     </div>
@@ -728,6 +843,183 @@ export default function PriorityCommandCenter() {
 
         </AnimatePresence>
       </div>
+
+      <AnimatePresence>
+        {showAddModal && (
+          <AddTaskModal
+            onClose={() => setShowAddModal(false)}
+            onCreate={createTask}
+            adding={addingTask}
+            error={addTaskError}
+          />
+        )}
+      </AnimatePresence>
     </main>
+  );
+}
+
+function AddTaskModal({
+  onClose,
+  onCreate,
+  adding,
+  error,
+}: {
+  onClose: () => void;
+  onCreate: (input: {
+    title: string;
+    description: string;
+    effort_minutes: number;
+    energy_required: PriorityTask['energy_required'];
+    deadline: string;
+    revenue_impact_usd: number;
+    learning_multiplier: number;
+  }) => Promise<boolean>;
+  adding: boolean;
+  error: string | null;
+}) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [effortMinutes, setEffortMinutes] = useState(30);
+  const [energyRequired, setEnergyRequired] = useState<PriorityTask['energy_required']>('shallow');
+  const [deadline, setDeadline] = useState("");
+  const [revenueImpactUsd, setRevenueImpactUsd] = useState(0);
+  const [learningMultiplier, setLearningMultiplier] = useState(1);
+
+  const handleSubmit = async () => {
+    const ok = await onCreate({
+      title, description, effort_minutes: effortMinutes, energy_required: energyRequired,
+      deadline, revenue_impact_usd: revenueImpactUsd, learning_multiplier: learningMultiplier,
+    });
+    if (ok) onClose();
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 10, scale: 0.98 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-lg bg-[#0A0908] border border-[#D4A853]/20 rounded-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+      >
+        <div className="flex items-center justify-between border-b border-[#D4A853]/8 pb-3">
+          <h3 className="font-serif text-lg text-[#F5F0EB]">{"Add Task"}</h3>
+          <button onClick={onClose} className="font-mono text-xs text-[#7A6F65] hover:text-white uppercase">{"✕"}</button>
+        </div>
+
+        {error && (
+          <div className="border border-[#C85C5C]/40 bg-[#C85C5C]/10 rounded px-3 py-2 font-mono text-xs text-[#C85C5C]">
+            {"⚠ "}{error}
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <div>
+            <label className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider block mb-1">{"Title *"}</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full bg-black/40 border border-[#D4A853]/15 rounded px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
+              placeholder="What needs doing?"
+            />
+          </div>
+
+          <div>
+            <label className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider block mb-1">{"Description"}</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={2}
+              className="w-full bg-black/40 border border-[#D4A853]/15 rounded px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40 resize-none"
+              placeholder="Optional detail"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider block mb-1">{"Effort (min)"}</label>
+              <input
+                type="number"
+                min={5}
+                value={effortMinutes}
+                onChange={(e) => setEffortMinutes(Number(e.target.value))}
+                className="w-full bg-black/40 border border-[#D4A853]/15 rounded px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
+              />
+            </div>
+            <div>
+              <label className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider block mb-1">{"Energy"}</label>
+              <select
+                value={energyRequired}
+                onChange={(e) => setEnergyRequired(e.target.value as PriorityTask['energy_required'])}
+                className="w-full bg-black/40 border border-[#D4A853]/15 rounded px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
+              >
+                {(['deep', 'shallow', 'creative', 'analytical', 'admin'] as const).map((e) => (
+                  <option key={e} value={e}>{ENERGY_ICONS[e]} {e}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider block mb-1">{"Deadline"}</label>
+              <input
+                type="datetime-local"
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
+                className="w-full bg-black/40 border border-[#D4A853]/15 rounded px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
+              />
+            </div>
+            <div>
+              <label className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider block mb-1">{"Revenue Impact ($)"}</label>
+              <input
+                type="number"
+                min={0}
+                value={revenueImpactUsd}
+                onChange={(e) => setRevenueImpactUsd(Number(e.target.value))}
+                className="w-full bg-black/40 border border-[#D4A853]/15 rounded px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider block mb-1">{"Learning Multiplier (1–10)"}</label>
+            <input
+              type="number"
+              min={1}
+              max={10}
+              value={learningMultiplier}
+              onChange={(e) => setLearningMultiplier(Math.min(10, Math.max(1, Number(e.target.value))))}
+              className="w-full bg-black/40 border border-[#D4A853]/15 rounded px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 border-t border-[#D4A853]/8 pt-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 border border-white/10 hover:text-white uppercase tracking-wider rounded cursor-pointer text-xs font-mono"
+          >
+            {"Cancel"}
+          </button>
+          <button
+            type="button"
+            disabled={adding || !title.trim()}
+            onClick={handleSubmit}
+            className="px-5 py-2 bg-[#D4A853] text-[#0A0908] font-bold uppercase tracking-wider hover:bg-[#E8C97A] transition-all rounded cursor-pointer text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {adding ? "Adding…" : "Add Task"}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
