@@ -28,6 +28,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [stats, setStats] = useState({ activeLeads: 0, netWorth: 0, tasksToday: 0 });
+  const [statsError, setStatsError] = useState(false);
   const [authorized, setAuthorized] = useState(false);
 
   // next.config.ts sets trailingSlash: true, so usePathname() reports
@@ -83,6 +84,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isLoginPage || !authorized) return;
     async function fetchHeaderStats() {
+      setStatsError(false);
       try {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://your-supabase.supabase.co";
         const headers = getAuthHeaders();
@@ -94,10 +96,14 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           fetch(`${supabaseUrl}/rest/v1/transaction_entries?select=amount,account_id`, { headers }),
         ]);
 
-        const projects: ProjectStatus[] = resProjects.ok ? await resProjects.json() : [];
-        const tasks: PriorityTaskStatus[] = resTasks.ok ? await resTasks.json() : [];
-        const accounts: Account[] = resAcc.ok ? await resAcc.json() : [];
-        const entries: TransactionEntry[] = resEntries.ok ? await resEntries.json() : [];
+        for (const res of [resProjects, resTasks, resAcc, resEntries]) {
+          if (!res.ok) throw new Error(`Header stats request failed (${res.status}).`);
+        }
+
+        const projects: ProjectStatus[] = await resProjects.json();
+        const tasks: PriorityTaskStatus[] = await resTasks.json();
+        const accounts: Account[] = await resAcc.json();
+        const entries: TransactionEntry[] = await resEntries.json();
 
         const activeLeadsCount = projects.filter((p) =>
           p.status !== "closed_completed" && p.status !== "closed_lost"
@@ -124,14 +130,16 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
         const computedNetWorth = totalAssets - totalLiabilities;
 
+        // Real numbers only — including real zero. No plausible-looking
+        // substitute when a count or balance genuinely comes back at 0.
         setStats({
-          activeLeads: activeLeadsCount || 3,
-          netWorth: computedNetWorth || 10625,
-          tasksToday: tasksTodayCount || 5,
+          activeLeads: activeLeadsCount,
+          netWorth: computedNetWorth,
+          tasksToday: tasksTodayCount,
         });
       } catch (err) {
-        console.warn("Failed to fetch layout stats, using fallbacks:", err);
-        setStats({ activeLeads: 3, netWorth: 10625, tasksToday: 5 });
+        console.error("Failed to fetch layout stats:", err);
+        setStatsError(true);
       }
     }
 
@@ -193,9 +201,9 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         {/* Center: live telemetry chips */}
         <div className="flex-1 flex items-center justify-center gap-1">
           {[
-            { label: "Active Leads", value: String(stats.activeLeads), color: "text-[#5C9A6B]" },
-            { label: "Net Worth", value: `$${stats.netWorth.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, color: "text-[#D4A853]" },
-            { label: "Pending", value: String(stats.tasksToday), color: "text-amber-400" },
+            { label: "Active Leads", value: statsError ? "—" : String(stats.activeLeads), color: "text-[#5C9A6B]" },
+            { label: "Net Worth", value: statsError ? "—" : `$${stats.netWorth.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, color: "text-[#D4A853]" },
+            { label: "Pending", value: statsError ? "—" : String(stats.tasksToday), color: "text-amber-400" },
           ].map((stat, i) => (
             <div key={stat.label} className="flex items-center">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded border border-[#D4A853]/10 bg-[#D4A853]/[0.03]">

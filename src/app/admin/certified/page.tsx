@@ -27,43 +27,6 @@ interface CertifiedPractitioner {
 
 const springConfig = { type: "spring" as const, stiffness: 100, damping: 18 };
 
-const MOCK_PRACTITIONERS: CertifiedPractitioner[] = [
-  {
-    id: "prac-1",
-    client_id: "c-1",
-    program_id: "p-1",
-    certified_at: new Date(Date.now() - 30 * 24 * 3600000).toISOString(),
-    expires_at: new Date(Date.now() + 335 * 24 * 3600000).toISOString(),
-    satisfaction_score: 95,
-    exam_score: 88,
-    modules_completed: 6,
-    status: "active",
-    clients: {
-      company_name: "Divergent Optimization",
-      contact_name: "Ernesto Ortiz",
-      contact_email: "ernestoortiz@gmail.com",
-    },
-    certification_programs: { name: "Signal & Friction Method™ Certified Practitioner" },
-  },
-  {
-    id: "prac-2",
-    client_id: "c-2",
-    program_id: "p-1",
-    certified_at: new Date(Date.now() - 60 * 24 * 3600000).toISOString(),
-    expires_at: new Date(Date.now() + 305 * 24 * 3600000).toISOString(),
-    satisfaction_score: 72,
-    exam_score: 61,
-    modules_completed: 4,
-    status: "suspended",
-    clients: {
-      company_name: "Frictionless Growth SL",
-      contact_name: "Laura G.",
-      contact_email: "laura@frictionless.es",
-    },
-    certification_programs: { name: "Signal & Friction Method™ Certified Practitioner" },
-  },
-];
-
 const LINKEDIN_TEMPLATES = [
   {
     target: "SaaS Agency Owners",
@@ -118,7 +81,8 @@ The exam brief pool has 12 cases across 4 verticals. No two practitioners get th
 export default function AdminCertifiedManager() {
   const [practitioners, setPractitioners] = useState<CertifiedPractitioner[]>([]);
   const [loading, setLoading] = useState(true);
-  const [usingMockData, setUsingMockData] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [updateError, setUpdateError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editScore, setEditScore] = useState<number>(100);
   const [editStatus, setEditStatus] = useState<"active" | "suspended" | "expired">("active");
@@ -127,6 +91,7 @@ export default function AdminCertifiedManager() {
   const [expandedEmail, setExpandedEmail] = useState<number | null>(null);
 
   const fetchPractitioners = async () => {
+    setFetchError(null);
     try {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tsaarsuuclvkjsgjcmoj.supabase.co";
       const headers = getAuthHeaders();
@@ -134,13 +99,12 @@ export default function AdminCertifiedManager() {
         `${supabaseUrl}/rest/v1/certified_practitioners?select=*,clients(company_name,contact_name,contact_email),certification_programs(name)`,
         { headers }
       );
-      if (!res.ok) throw new Error("Failed to load practitioners");
+      if (!res.ok) throw new Error(`Failed to load practitioners (${res.status}).`);
       const data = await res.json();
       setPractitioners(data);
     } catch (err) {
-      console.warn("API offline. Loading mockup data.", err);
-      setUsingMockData(true);
-      setPractitioners(MOCK_PRACTITIONERS);
+      console.error("Failed to load practitioners:", err);
+      setFetchError(err instanceof Error ? err.message : "Failed to load practitioners.");
     } finally {
       setLoading(false);
     }
@@ -152,6 +116,7 @@ export default function AdminCertifiedManager() {
   }, []);
 
   const handleUpdate = async (id: string) => {
+    setUpdateError(null);
     try {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tsaarsuuclvkjsgjcmoj.supabase.co";
       const headers = getAuthHeaders();
@@ -160,12 +125,14 @@ export default function AdminCertifiedManager() {
         headers: { ...headers, "Content-Type": "application/json" },
         body: JSON.stringify({ satisfaction_score: editScore, status: editStatus, updated_at: new Date().toISOString() }),
       });
-      if (!res.ok) throw new Error("Failed to update");
+      if (!res.ok) throw new Error(`Failed to update (${res.status}).`);
       setEditingId(null);
       fetchPractitioners();
-    } catch {
-      setPractitioners(prev => prev.map(p => p.id === id ? { ...p, satisfaction_score: editScore, status: editStatus } : p));
-      setEditingId(null);
+    } catch (err) {
+      // Never fake a successful save — leave editing open and show the
+      // real failure instead of silently updating local state only.
+      console.error("Failed to update practitioner:", err);
+      setUpdateError(err instanceof Error ? err.message : "Failed to update — the change was not persisted.");
     }
   };
 
@@ -187,11 +154,19 @@ export default function AdminCertifiedManager() {
   return (
     <main className="min-h-screen bg-[#0A0908] text-[#B8B0A8] p-8 md:p-12 grain overflow-x-hidden">
       <div className="max-w-[1200px] mx-auto space-y-12">
-        {usingMockData && (
+        {fetchError && (
           <div className="border-2 border-[#C85C5C]/50 bg-[#C85C5C]/10 px-4 py-2.5 rounded flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#C85C5C] animate-pulse shrink-0" />
             <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#C85C5C]">
-              {"⚠ Showing Mock Data — Live Fetch Failed"}
+              {"⚠ Failed to load practitioners — "}{fetchError}
+            </span>
+          </div>
+        )}
+        {updateError && (
+          <div className="border-2 border-[#C85C5C]/50 bg-[#C85C5C]/10 px-4 py-2.5 rounded flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#C85C5C] animate-pulse shrink-0" />
+            <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#C85C5C]">
+              {"⚠ "}{updateError}
             </span>
           </div>
         )}

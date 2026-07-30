@@ -274,6 +274,8 @@ export default function AdminDashboard() {
   const [promptVersions, setPromptVersions] = useState<PromptVersion[]>([]);
   const [revenueSparkline, setRevenueSparkline] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [arrTotal, setArrTotal] = useState<number>(0);
   const [recentPayments, setRecentPayments] = useState<Array<{
     id: string;
@@ -1006,6 +1008,7 @@ export default function AdminDashboard() {
   const handleSaveClientDetails = async () => {
     if (!selectedClient) return;
     setLoading(true);
+    setSaveError(null);
     try {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tsaarsuuclvkjsgjcmoj.supabase.co";
       const headers = getAuthHeaders();
@@ -1084,45 +1087,16 @@ export default function AdminDashboard() {
       setShowModal(false);
       fetchAllData();
     } catch (err) {
-      console.warn("Failed to save via API, applying local updates:", err);
-      // Fallback state update for offline demo
-      setMetrics(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          pipeline: prev.pipeline.map(p => {
-            if (p.id === selectedClient.id) {
-              return {
-                ...p,
-                private_notes: modalPrivateNotes,
-                is_certified: modalIsCertified,
-                segment: modalSegment,
-                cognitive_fatigue_score: modalCognitiveFatigue,
-                guarantee_active: modalGuaranteeActive,
-                guarantee: modalGuaranteeActive ? {
-                  id: p.guarantee?.id || "guar-new",
-                  target_improvement_pct: modalTargetImprovement,
-                  timeframe_days: modalTimeframeDays,
-                  traffic_gate_met: modalTrafficGate,
-                  sla_gate_met: modalSlaGate,
-                  isolation_gate_met: modalIsolationGate,
-                  telemetry_gate_met: modalTelemetryGate,
-                  baseline_conversion_rate: modalBaselineRate,
-                  current_conversion_rate: modalCurrentRate,
-                  guarantee_status: modalGuaranteeStatus,
-                } : null
-              };
-            }
-            return p;
-          })
-        };
-      });
-      setShowModal(false);
+      // Never fake a successful save — surface the real failure and leave
+      // the modal open so nothing looks persisted when it wasn't.
+      console.error("Failed to save client:", err);
+      setSaveError(err instanceof Error ? err.message : "Failed to save — the change was not persisted.");
       setLoading(false);
     }
   };
 
   async function fetchAllData() {
+    setFetchError(null);
     try {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tsaarsuuclvkjsgjcmoj.supabase.co";
       const headers = getAuthHeaders();
@@ -1335,64 +1309,11 @@ export default function AdminDashboard() {
       });
       setLoading(false);
     } catch (err) {
-      console.error("Supabase API offline. Loading fallback data.", err);
-      // Fallback for visual demonstration when offline
-      setMetrics({
-        totalLeads: 12,
-        outreachSent: 5,
-        diagnosticsDelivered: 3,
-        dealsClosed: 2,
-        conversionRate: 16.7,
-        highTicketCount: 8,
-        microdosingCount: 4,
-        certifiedCount: 3,
-        activeGuaranteesCount: 2,
-        avgCognitiveFatigue: 42,
-        frictionCounts: {
-          cognitive_load: 4,
-          trust_deficit: 3,
-          value_deficit: 2,
-          sequence_order: 3,
-        },
-        pipeline: [
-          { id: "1", company_name: "Formbricks", contact_name: "Johannes Dancker", contact_email: "johannes@formbricks.com", status: "diagnostic_in_progress", payment_status: "uninvoiced", segment: "high_ticket", is_certified: false, cognitive_fatigue_score: 35, guarantee_active: true, expansion_score: 82, projectId: "p-1", private_notes: "High pressure context, pending Series A round", guarantee: { id: "g-1", target_improvement_pct: 20, timeframe_days: 30, traffic_gate_met: true, sla_gate_met: true, isolation_gate_met: true, telemetry_gate_met: true, baseline_conversion_rate: 1.5, current_conversion_rate: 1.8, guarantee_status: "active" } },
-          { id: "2", company_name: "Documenso", contact_name: "Timur Ercan", contact_email: "timur@documenso.com", status: "delivered", payment_status: "invoiced_unpaid", segment: "microdosing", is_certified: true, cognitive_fatigue_score: 55, guarantee_active: false, expansion_score: 64, projectId: "p-2", private_notes: "Wants full autonomy route", guarantee: null },
-          { id: "3", company_name: "Featurebase", contact_name: "Bruno Hiis", contact_email: "bruno@featurebase.app", status: "outreach_sent", payment_status: "uninvoiced", segment: "high_ticket", is_certified: false, cognitive_fatigue_score: 20, guarantee_active: false, expansion_score: 45, projectId: "p-3", private_notes: "Interested in onboarding metrics boost", guarantee: null },
-          { id: "4", company_name: "Documenso Agency", contact_name: "Timur Ercan", contact_email: "timur@documenso.com", status: "closed_completed", payment_status: "paid", segment: "microdosing", is_certified: true, cognitive_fatigue_score: 15, guarantee_active: true, expansion_score: 90, projectId: "p-4", private_notes: "Strong compliance advocate", guarantee: { id: "g-2", target_improvement_pct: 25, timeframe_days: 30, traffic_gate_met: true, sla_gate_met: true, isolation_gate_met: true, telemetry_gate_met: true, baseline_conversion_rate: 2.1, current_conversion_rate: 2.8, guarantee_status: "met" } },
-          { id: "5", company_name: "Cal.com Agency", contact_name: "Peer Richelsen", contact_email: "peer@cal.com", status: "delivered", payment_status: "paid", segment: "high_ticket", is_certified: true, cognitive_fatigue_score: 48, guarantee_active: false, expansion_score: 75, projectId: "p-5", private_notes: "Scaling fast, scheduling latency issues", guarantee: null },
-        ],
-      });
-      setIncidents([
-        {
-          id: "inc-1",
-          incident_type: "process_error",
-          severity: "high",
-          phase: "backend",
-          description: "SQL migration failed silently when executed via Supabase Web SQL Editor. The UI returned 'Success' but no tables were created, causing the script to fail later with PGRST205.",
-          root_cause: "Supabase Web SQL Editor silently truncates or fails on large multi-statement SQL scripts. The CLI method (supabase db push) is the reliable alternative.",
-          resolution: "Switched to Supabase CLI for all future migrations. Added validation step (query information_schema.tables) after every migration.",
-          lesson_learned: "Never trust the Supabase Web SQL Editor for production migrations. Always use CLI and verify.",
-          applied_improvement: "Updated walkthrough.md and agent instructions to mandate CLI-based migrations with post-execution verification.",
-          improvement_type: "validation_added",
-          iteration_version: "v1.0.1",
-          created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
-          resolved_at: new Date(Date.now() - 1 * 3600000).toISOString()
-        },
-        {
-          id: "inc-2",
-          incident_type: "ai_hallucination",
-          severity: "critical",
-          phase: "outreach",
-          description: "Claude generated outreach containing custom feature lists instead of focusing exclusively on the 2-line visual correction hook, lowering engagement.",
-          root_cause: "System prompt allowed broad scope description of consulting solutions, triggering prompt drift toward traditional agency pitches.",
-          created_at: new Date(Date.now() - 6 * 3600000).toISOString()
-        }
-      ]);
-      setPromptVersions([
-        { id: "pv-1", phase: "outreach", prompt_text: "Hey [Name], saw you scaling... only ask for a 2-line visual hook.", iteration_version: "v1.0.1", created_at: new Date(Date.now() - 1 * 3600000).toISOString() },
-        { id: "pv-2", phase: "outreach", prompt_text: "Hey, reviewed [Company] signup. Here is a custom pitch.", iteration_version: "v1.0.0", created_at: new Date(Date.now() - 24 * 3600000).toISOString() },
-        { id: "pv-3", phase: "diagnostic", prompt_text: "Provide B2B SaaS diagnostics with McKinsey-level precision...", iteration_version: "v1.0.0", created_at: new Date(Date.now() - 24 * 3600000).toISOString() }
-      ]);
+      // Never fake a pipeline — a fetch failure is a real error, not an
+      // occasion to show invented clients and invented deal stages.
+      console.error("Failed to load dashboard data:", err);
+      setFetchError(err instanceof Error ? err.message : "Failed to load dashboard data.");
+      setMetrics(null);
       setLoading(false);
     }
   }
@@ -1409,7 +1330,28 @@ export default function AdminDashboard() {
     );
   }
 
-  const m = metrics!;
+  if (fetchError || !metrics) {
+    return (
+      <div className="min-h-screen bg-[#0A0908] flex items-center justify-center p-8">
+        <div className="max-w-md w-full border-2 border-[#C85C5C]/50 bg-[#C85C5C]/10 rounded-lg p-6 space-y-3 text-center">
+          <div className="font-mono text-xs font-bold uppercase tracking-wider text-[#C85C5C]">
+            {"⚠ Failed to load pipeline data"}
+          </div>
+          <p className="font-mono text-xs text-[#B0A89E] leading-relaxed">
+            {fetchError || "Unknown error."}
+          </p>
+          <button
+            onClick={() => { setLoading(true); fetchAllData(); }}
+            className="font-mono text-xs uppercase tracking-wider text-[#D4A853] border border-[#D4A853]/40 hover:border-[#D4A853] hover:bg-[#D4A853]/10 transition-all px-4 py-2 rounded-full"
+          >
+            {"Retry"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const m = metrics;
 
   // Learning OS computed values
   const unresolvedIncidents = incidents.filter(i => !i.resolved_at);
@@ -3213,10 +3155,15 @@ export default function AdminDashboard() {
               </div>
 
               {/* Actions */}
+              {saveError && (
+                <div className="border border-[#C85C5C]/40 bg-[#C85C5C]/10 rounded px-3 py-2 font-mono text-xs text-[#C85C5C]">
+                  {"⚠ "}{saveError}
+                </div>
+              )}
               <div className="flex justify-end gap-3 border-t border-[#D4A853]/8 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => { setSaveError(null); setShowModal(false); }}
                   className="px-4 py-2 border border-white/10 hover:text-white uppercase tracking-wider rounded cursor-pointer text-xs font-mono"
                 >
                   {"Cancel"}

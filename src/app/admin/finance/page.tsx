@@ -118,7 +118,7 @@ export default function PersonalFinanceCenter() {
   const [taxIncome, setTaxIncome] = useState(30000);
   const [taxPension, setTaxPension] = useState(Math.round(700.92 * 14 * 1.10)); // €700,92 × 14 pagas × EUR/USD 1.10 = $10,794
   const [loading, setLoading] = useState(true);
-  const [usingMockData, setUsingMockData] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [expandedArticleId, setExpandedArticleId] = useState<string | null>(null);
 
   // Database States
@@ -132,6 +132,7 @@ export default function PersonalFinanceCenter() {
   // Interactive advice states
   const [advisorQuestion, setAdvisorQuestion] = useState("Should I upgrade my MacBook or buy more AI credits?");
   const [adviceResponse, setAdviceResponse] = useState<string | null>(null);
+  const [adviceError, setAdviceError] = useState<string | null>(null);
   const [adviceLoading, setAdviceLoading] = useState(false);
   const [advisorMeta, setAdvisorMeta] = useState<{ model: string; tier: string; estimatedCostUSD: number } | null>(null);
 
@@ -151,142 +152,40 @@ export default function PersonalFinanceCenter() {
 
   useEffect(() => {
     async function fetchFinanceData() {
+      setFetchError(null);
       try {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://your-supabase.supabase.co";
         const headers = getAuthHeaders();
 
-        // 1. Fetch Accounts
-        const resAcc = await fetch(`${supabaseUrl}/rest/v1/accounts?select=*`, { headers });
-        const dataAcc = resAcc.ok ? await resAcc.json() : [];
-        setAccounts(dataAcc);
+        // Every request is checked for real failure — a non-ok response
+        // throws, a genuinely empty table does not. Empty renders as
+        // empty; only a real fetch failure is an error.
+        const [resAcc, resTx, resEntries, resInv, resEdu, resGoals] = await Promise.all([
+          fetch(`${supabaseUrl}/rest/v1/accounts?select=*`, { headers }),
+          fetch(`${supabaseUrl}/rest/v1/transactions?select=*,transaction_entries(*,accounts(*))&order=date.desc`, { headers }),
+          fetch(`${supabaseUrl}/rest/v1/transaction_entries?select=*,accounts(*)`, { headers }),
+          fetch(`${supabaseUrl}/rest/v1/investments?select=*`, { headers }),
+          fetch(`${supabaseUrl}/rest/v1/education_content?select=*`, { headers }),
+          fetch(`${supabaseUrl}/rest/v1/financial_goals?select=*`, { headers }),
+        ]);
 
-        // 2. Fetch Transactions with entries and account details
-        const resTx = await fetch(`${supabaseUrl}/rest/v1/transactions?select=*,transaction_entries(*,accounts(*))&order=date.desc`, { headers });
-        const dataTx = resTx.ok ? await resTx.json() : [];
-        setTransactions(dataTx);
-
-        // 3. Fetch all entries
-        const resEntries = await fetch(`${supabaseUrl}/rest/v1/transaction_entries?select=*,accounts(*)`, { headers });
-        const dataEntries = resEntries.ok ? await resEntries.json() : [];
-        setEntries(dataEntries);
-
-        // 4. Fetch investments
-        const resInv = await fetch(`${supabaseUrl}/rest/v1/investments?select=*`, { headers });
-        const dataInv = resInv.ok ? await resInv.json() : [];
-        setInvestments(dataInv);
-
-        // 5. Fetch education
-        const resEdu = await fetch(`${supabaseUrl}/rest/v1/education_content?select=*`, { headers });
-        const dataEdu = resEdu.ok ? await resEdu.json() : [];
-        setArticles(dataEdu);
-
-        // 6. Fetch goals
-        const resGoals = await fetch(`${supabaseUrl}/rest/v1/financial_goals?select=*`, { headers });
-        const dataGoals = resGoals.ok ? await resGoals.json() : [];
-        setGoals(dataGoals);
-
-        if (dataAcc.length === 0) {
-          throw new Error("No data returned. Using offline fallback.");
+        for (const [label, res] of [
+          ["accounts", resAcc], ["transactions", resTx], ["transaction entries", resEntries],
+          ["investments", resInv], ["education content", resEdu], ["financial goals", resGoals],
+        ] as const) {
+          if (!res.ok) throw new Error(`Failed to load ${label} (${res.status}).`);
         }
+
+        setAccounts(await resAcc.json());
+        setTransactions(await resTx.json());
+        setEntries(await resEntries.json());
+        setInvestments(await resInv.json());
+        setArticles(await resEdu.json());
+        setGoals(await resGoals.json());
         setLoading(false);
       } catch (err) {
-        console.warn("Using offline fallback data for personal finance.", err);
-        setUsingMockData(true);
-        // Seed visual fallback data matching Ernesto's portfolio
-        setAccounts([
-          { id: "a-1", name: "Signal & Friction Checking", type: "asset", currency: "USD" },
-          { id: "a-2", name: "Investment Account", type: "asset", currency: "USD" },
-          { id: "a-3", name: "Roth IRA Account", type: "asset", currency: "USD" },
-          { id: "a-4", name: "Hardware Assets", type: "asset", currency: "USD" },
-          { id: "a-5", name: "Consulting Revenue", type: "revenue", currency: "USD" },
-          { id: "a-6", name: "Software Subscription Expenses", type: "expense", currency: "USD" },
-          { id: "a-7", name: "AI API & Platform Expenses", type: "expense", currency: "USD" },
-          { id: "a-8", name: "Education Expenses", type: "expense", currency: "USD" }
-        ]);
-
-        const mockTransactions: Transaction[] = [
-          {
-            id: "tx-1",
-            date: new Date(Date.now() - 3600000 * 2).toISOString(),
-            description: "Reconciliation: Payment for project Formbricks",
-            created_at: new Date().toISOString(),
-            transaction_entries: [
-              { id: "e-1", account_id: "a-1", amount: 35000, accounts: { id: "a-1", name: "Signal & Friction Checking", type: "asset", currency: "USD" } },
-              { id: "e-2", account_id: "a-5", amount: -35000, accounts: { id: "a-5", name: "Consulting Revenue", type: "revenue", currency: "USD" } }
-            ]
-          },
-          {
-            id: "tx-2",
-            date: new Date(Date.now() - 3600000 * 24 * 2).toISOString(),
-            description: "Reconciliation: Payment for project Documenso",
-            created_at: new Date().toISOString(),
-            transaction_entries: [
-              { id: "e-3", account_id: "a-1", amount: 35000, accounts: { id: "a-1", name: "Signal & Friction Checking", type: "asset", currency: "USD" } },
-              { id: "e-4", account_id: "a-5", amount: -35000, accounts: { id: "a-5", name: "Consulting Revenue", type: "revenue", currency: "USD" } }
-            ]
-          },
-          {
-            id: "tx-3",
-            date: new Date(Date.now() - 3600000 * 24 * 5).toISOString(),
-            description: "Claude API Usage Bill (May 2026)",
-            created_at: new Date().toISOString(),
-            transaction_entries: [
-              { id: "e-5", account_id: "a-7", amount: 12500, accounts: { id: "a-7", name: "AI API & Platform Expenses", type: "expense", currency: "USD" } },
-              { id: "e-6", account_id: "a-1", amount: -12500, accounts: { id: "a-1", name: "Signal & Friction Checking", type: "asset", currency: "USD" } }
-            ]
-          },
-          {
-            id: "tx-4",
-            date: new Date(Date.now() - 3600000 * 24 * 10).toISOString(),
-            description: "Vercel Enterprise Subscription & Supabase Pro Plan",
-            created_at: new Date().toISOString(),
-            transaction_entries: [
-              { id: "e-7", account_id: "a-6", amount: 8000, accounts: { id: "a-6", name: "Software Subscription Expenses", type: "expense", currency: "USD" } },
-              { id: "e-8", account_id: "a-1", amount: -8000, accounts: { id: "a-1", name: "Signal & Friction Checking", type: "asset", currency: "USD" } }
-            ]
-          },
-          {
-            id: "tx-5",
-            date: new Date(Date.now() - 3600000 * 24 * 15).toISOString(),
-            description: "Monthly Transfer to Roth IRA Portfolio",
-            created_at: new Date().toISOString(),
-            transaction_entries: [
-              { id: "e-9", account_id: "a-3", amount: 50000, accounts: { id: "a-3", name: "Roth IRA Account", type: "asset", currency: "USD" } },
-              { id: "e-10", account_id: "a-1", amount: -50000, accounts: { id: "a-1", name: "Signal & Friction Checking", type: "asset", currency: "USD" } }
-            ]
-          }
-        ];
-        setTransactions(mockTransactions);
-
-        const flatEntries: TransactionEntry[] = [];
-        mockTransactions.forEach(t => {
-          t.transaction_entries?.forEach(e => {
-            flatEntries.push({
-              id: e.id,
-              transaction_id: t.id,
-              account_id: e.account_id,
-              amount: e.amount,
-              created_at: t.date,
-              accounts: e.accounts
-            });
-          });
-        });
-        setEntries(flatEntries);
-
-        setInvestments([
-          { id: "i-1", account_id: "a-2", name: "S&P 500 Index Fund (VOO)", type: "financial_asset", purchase_date: "2025-01-15T00:00:00Z", cost_basis: 500000, current_value: 540000, projected_annual_roi_pct: 8.0 },
-          { id: "i-2", account_id: "a-4", name: "MacBook Pro 16-inch M3 Max", type: "hardware", purchase_date: "2024-11-01T00:00:00Z", cost_basis: 350000, current_value: 262500, depreciation_rate_annual_pct: 25.0 }
-        ]);
-
-        setArticles([
-          { id: "edu-1", title: "The FIRE Movement for Async Solopreneurs", slug: "fire-movement-solopreneur", category: "FIRE Movement", summary: "How to calculate your financial independence number and plan retirement working as a premium async consultant.", body: "The Financial Independence, Retire Early (FIRE) movement is perfectly suited for high-ticket async solopreneurs. Because your consulting model requires zero office overhead and focuses on selling visual briefs for $1,500 - $3,000, your margins are close to 95%. By keeping your burn rate low and routing surplus checking cash directly into broad-market index funds (like S&P 500 ETFs), you can achieve financial freedom within 5-7 years instead of decades. Key formula: Net Worth Target = Annual Burn Rate * 25. Once reached, you can safely withdraw 4% annually without ever touching the principal.", read_time_mins: 6 },
-          { id: "edu-2", title: "Opportunity Cost Analysis: Hardware Upgrades vs. AI Credits", slug: "opportunity-cost-hardware-ai", category: "Investing", summary: "A quantitative model for evaluating whether to upgrade physical computing hardware or redirect capital into API subscriptions.", body: "When managing a async practice, every capital outlay is an investment. Buying a new $3,500 MacBook Pro has a physical depreciation rate of roughly 25% annually, and its return on investment (ROI) is capped by your personal hour-limit. Conversely, investing $3,500 in additional AI API credits or ChatGPT Enterprise seat licenses can automate lead generation and mock-up designs, expanding output bandwidth by 10x. Before upgrading your laptop, verify if your current processor is genuinely throttling render times. If not, redirecting that budget into AI leverage yields a higher economic multiplier.", read_time_mins: 5 }
-        ]);
-
-        setGoals([
-          { id: "g-1", name: "Roth IRA 2026 Cap", target_amount: 700000, current_amount: 500000 },
-          { id: "g-2", name: "Personal Runway Fund", target_amount: 1500000, current_amount: 1250000 }
-        ]);
+        console.error("Failed to load financial data:", err);
+        setFetchError(err instanceof Error ? err.message : "Failed to load financial data.");
         setLoading(false);
       }
     }
@@ -326,8 +225,8 @@ export default function PersonalFinanceCenter() {
     .filter(a => a.type === "expense")
     .reduce((sum, a) => sum + (accountBalances[a.id] || 0), 0) / 100;
 
-  const averageBurnRate = totalExpenses > 0 ? totalExpenses : 205.00; // default average fallback
-  const runwayMonths = averageBurnRate > 0 ? totalAssets / averageBurnRate : 6;
+  const averageBurnRate = totalExpenses;
+  const runwayMonths = averageBurnRate > 0 ? totalAssets / averageBurnRate : 0;
 
   // Retirement compound calculator math
   const p = totalAssets; // start value
@@ -373,9 +272,10 @@ export default function PersonalFinanceCenter() {
 
   // AI Advice Handler
   async function triggerAiAdvice() {
+    setAdviceLoading(true);
+    setAdviceError(null);
+    setAdvisorMeta(null);
     try {
-      setAdviceLoading(true);
-      setAdvisorMeta(null);
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://your-supabase.supabase.co";
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder";
 
@@ -391,38 +291,18 @@ export default function PersonalFinanceCenter() {
         })
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        setAdviceResponse(result.answer);
-        if (result.meta) setAdvisorMeta(result.meta);
-      } else {
-        // Mock Response offline
-        setTimeout(() => {
-          setAdviceResponse(
-            `### 💰 Strategic Recommendation: Redirect MacBook Upgrade to AI API Credits\n\n` +
-            `Ernesto, based on your current liquid reserves ($${totalAssets.toFixed(2)}) and monthly burn rate ($${averageBurnRate.toFixed(2)}), upgrading your MacBook Pro is currently an inefficient use of capital.\n\n` +
-            `**1. Asset Allocation & Opportunity Cost:**\n` +
-            `- **MacBook Pro ($3,500):** Will depreciate to approximately $830 in 5 years (a net loss of $2,670). Its productivity return is linear and capped by your own working hours.\n` +
-            `- **S&P 500 Index Fund ($3,500):** Will yield ~$5,140 in 5 years at an 8% compounding return (+$1,640 net gain).\n` +
-            `- **AI API Credits & Platform Licenses ($3,500):** If scale enables the generation of just **1 extra diagnostic brief per month** ($350/mo), the 12-month return is **$4,200 (120% ROI)**. Over 5 years, this produces **$21,000** in gross revenue.\n\n` +
-            `**2. Conclusion:**\n` +
-            `Unless your current laptop processor is actively choking render/compilation times, defer the hardware upgrade. Expand AI credits to automate prospecting pipelines, driving revenue to feed your index fund portfolios. This decision results in a **+$18,330 wealth delta** over 5 years.`
-          );
-        }, 1500);
+      if (!response.ok) {
+        throw new Error(`Advisor request failed (${response.status}).`);
       }
-    } catch {
-      setTimeout(() => {
-        setAdviceResponse(
-          `### 💰 Strategic Recommendation: Redirect MacBook Upgrade to AI API Credits\n\n` +
-          `Ernesto, based on your current liquid reserves ($${totalAssets.toFixed(2)}) and monthly burn rate ($${averageBurnRate.toFixed(2)}), upgrading your MacBook Pro is currently an inefficient use of capital.\n\n` +
-          `**1. Asset Allocation & Opportunity Cost:**\n` +
-          `- **MacBook Pro ($3,500):** Will depreciate to approximately $830 in 5 years (a net loss of $2,670). Its productivity return is linear and capped by your own working hours.\n` +
-          `- **S&P 500 Index Fund ($3,500):** Will yield ~$5,140 in 5 years at an 8% compounding return (+$1,640 net gain).\n` +
-          `- **AI API Credits & Platform Licenses ($3,500):** If scale enables the generation of just **1 extra diagnostic brief per month** ($350/mo), the 12-month return is **$4,200 (120% ROI)**. Over 5 years, this produces **$21,000** in gross revenue.\n\n` +
-          `**2. Conclusion:**\n` +
-          `Unless your current laptop processor is actively choking render/compilation times, defer the hardware upgrade. Expand AI credits to automate prospecting pipelines, driving revenue to feed your index fund portfolios. This decision results in a **+$18,330 wealth delta** over 5 years.`
-        );
-      }, 1500);
+      const result = await response.json();
+      setAdviceResponse(result.answer);
+      if (result.meta) setAdvisorMeta(result.meta);
+    } catch (err) {
+      // Never fabricate an AI answer — a failed call is a real error, not
+      // an occasion to show a canned response as if the model produced it.
+      console.error("Finance advisor call failed:", err);
+      setAdviceResponse(null);
+      setAdviceError(err instanceof Error ? err.message : "Advisor request failed.");
     } finally {
       setAdviceLoading(false);
     }
@@ -439,11 +319,11 @@ export default function PersonalFinanceCenter() {
   return (
     <main className="min-h-screen bg-[#0A0908] text-[#cbd5e1] p-8 md:p-12 grain overflow-x-hidden">
       <div className="max-w-[1200px] mx-auto space-y-12">
-        {usingMockData && (
+        {fetchError && (
           <div className="border-2 border-[#C85C5C]/50 bg-[#C85C5C]/10 px-4 py-2.5 rounded flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#C85C5C] animate-pulse shrink-0" />
             <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#C85C5C]">
-              {"⚠ Showing Mock Data — Live Fetch Failed"}
+              {"⚠ Failed to load financial data — "}{fetchError}
             </span>
           </div>
         )}
@@ -1123,6 +1003,13 @@ export default function PersonalFinanceCenter() {
                   </button>
                 </div>
               </div>
+
+              {/* AI Advice Error */}
+              {adviceError && (
+                <div className="border border-[#C85C5C]/40 bg-[#C85C5C]/10 rounded px-4 py-3 font-mono text-xs text-[#C85C5C]">
+                  {"⚠ "}{adviceError}
+                </div>
+              )}
 
               {/* AI Advice Response */}
               {adviceResponse && (

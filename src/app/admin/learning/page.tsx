@@ -24,13 +24,15 @@ interface Article {
   read_time_mins: number;
 }
 
+// Honest zeros until real learning-tracking exists — no invented
+// proficiency numbers, per-domain progress is a separate future project.
 const DOMAINS = [
-  { name: "Behavioral Economics", score: 85, color: "#D4A853" },
-  { name: "Conversion Architecture", score: 90, color: "#5C9A6B" },
-  { name: "Copywriting Psychology", score: 75, color: "#3B82F6" },
-  { name: "Technical Systems", score: 80, color: "#A855F7" },
-  { name: "Pricing Logic", score: 95, color: "#F59E0B" },
-  { name: "Tax & Compliance", score: 70, color: "#C85C5C" },
+  { name: "Behavioral Economics", score: 0, color: "#D4A853" },
+  { name: "Conversion Architecture", score: 0, color: "#5C9A6B" },
+  { name: "Copywriting Psychology", score: 0, color: "#3B82F6" },
+  { name: "Technical Systems", score: 0, color: "#A855F7" },
+  { name: "Pricing Logic", score: 0, color: "#F59E0B" },
+  { name: "Tax & Compliance", score: 0, color: "#C85C5C" },
 ];
 
 interface CaseStudy {
@@ -337,7 +339,8 @@ export default function LearningDashboard() {
   const [hlSelectedOptions, setHlSelectedOptions] = useState<number[]>([]);
   const [radarDomains, setRadarDomains] = useState(DOMAINS);
   const [expandedArticle, setExpandedArticle] = useState<number | null>(null);
-  const [conceptsMastered, setConceptsMastered] = useState(14);
+  // Honest zero until real learning-tracking exists — see DOMAINS above.
+  const [conceptsMastered, setConceptsMastered] = useState(0);
 
   // Cognitive Telemetry
   const [typingStartedAt, setTypingStartedAt] = useState<number | null>(null);

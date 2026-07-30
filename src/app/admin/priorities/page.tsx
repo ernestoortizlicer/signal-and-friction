@@ -75,7 +75,7 @@ export default function PriorityCommandCenter() {
   const [tasks, setTasks] = useState<PriorityTask[]>([]);
   const [scoreLogs, setScoreLogs] = useState<PriorityScoreLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [usingMockData, setUsingMockData] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [autopilotMinutes, setAutopilotMinutes] = useState(60);
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -127,6 +127,7 @@ export default function PriorityCommandCenter() {
 
   useEffect(() => {
     async function fetchData() {
+      setFetchError(null);
       try {
         const headers = getAuthHeaders();
 
@@ -135,31 +136,15 @@ export default function PriorityCommandCenter() {
           fetch(`${supabaseUrl}/rest/v1/priority_scores_log?select=*&order=snapshot_at.desc&limit=200`, { headers }),
         ]);
 
-        const dataTasks = resTasks.ok ? await resTasks.json() : [];
-        const dataLogs = resLogs.ok ? await resLogs.json() : [];
+        if (!resTasks.ok) throw new Error(`Failed to load tasks (${resTasks.status}).`);
+        if (!resLogs.ok) throw new Error(`Failed to load score history (${resLogs.status}).`);
 
-        if (dataTasks.length > 0) {
-          setTasks(dataTasks);
-          setScoreLogs(dataLogs);
-        } else {
-          throw new Error("No data returned");
-        }
+        setTasks(await resTasks.json());
+        setScoreLogs(await resLogs.json());
         setLoading(false);
       } catch (err) {
-        console.warn("Offline fallback for priority engine:", err);
-        setUsingMockData(true);
-        setTasks([
-          { id: "t-1", title: "Send outreach to Formbricks", description: "Auto-generated from beta_projects status change", category: "beta_project", effort_minutes: 20, energy_required: "creative", deadline: new Date(Date.now() + 172800000).toISOString(), status: "pending", priority_score: 72.5, quadrant: "do_now", revenue_impact: 35000, learning_multiplier: 4, source_table: "beta_projects", auto_generated: true, created_at: new Date(Date.now() - 86400000).toISOString(), updated_at: new Date().toISOString() },
-          { id: "t-2", title: "Send outreach to Documenso", description: "Auto-generated from beta_projects status change", category: "beta_project", effort_minutes: 20, energy_required: "creative", deadline: new Date(Date.now() + 172800000).toISOString(), status: "pending", priority_score: 68.3, quadrant: "do_now", revenue_impact: 35000, learning_multiplier: 4, source_table: "beta_projects", auto_generated: true, created_at: new Date(Date.now() - 86400000).toISOString(), updated_at: new Date().toISOString() },
-          { id: "t-3", title: "Send outreach to Featurebase", description: "Auto-generated from beta_projects status change", category: "beta_project", effort_minutes: 20, energy_required: "creative", deadline: new Date(Date.now() + 172800000).toISOString(), status: "pending", priority_score: 65.1, quadrant: "do_now", revenue_impact: 35000, learning_multiplier: 4, source_table: "beta_projects", auto_generated: true, created_at: new Date(Date.now() - 86400000).toISOString(), updated_at: new Date().toISOString() },
-          { id: "t-4", title: "[CRITICAL] Resolve ai hallucination in outreach", description: "Auto-generated from ai_incident", category: "incident", effort_minutes: 45, energy_required: "analytical", deadline: new Date(Date.now() + 14400000).toISOString(), status: "pending", priority_score: 82.0, quadrant: "do_now", revenue_impact: 105000, learning_multiplier: 8, source_table: "ai_incidents", auto_generated: true, created_at: new Date(Date.now() - 21600000).toISOString(), updated_at: new Date().toISOString() },
-          { id: "t-5", title: "Review FIRE retirement projections", description: "Quarterly review of compound interest calculator outputs.", category: "learning", effort_minutes: 45, energy_required: "analytical", deadline: new Date(Date.now() + 1209600000).toISOString(), status: "pending", priority_score: 42.0, quadrant: "learn", revenue_impact: 0, learning_multiplier: 9, source_table: "manual", auto_generated: false, created_at: new Date(Date.now() - 86400000).toISOString(), updated_at: new Date().toISOString() },
-          { id: "t-6", title: "Reconcile AI API subscriptions for June", description: "Review Claude, ChatGPT, and Supabase billing statements.", category: "finance", effort_minutes: 30, energy_required: "admin", deadline: new Date(Date.now() + 864000000).toISOString(), status: "pending", priority_score: 28.5, quadrant: "schedule", revenue_impact: 0, learning_multiplier: 2, source_table: "manual", auto_generated: false, created_at: new Date(Date.now() - 86400000).toISOString(), updated_at: new Date().toISOString() },
-        ]);
-        setScoreLogs([
-          { id: "l-1", task_id: "t-4", score: 82.0, quadrant: "do_now", urgency_component: 95, importance_component: 85, learning_component: 80, effort_component: 60, age_component: 30, energy_component: 50, snapshot_at: new Date().toISOString() },
-          { id: "l-2", task_id: "t-1", score: 72.5, quadrant: "do_now", urgency_component: 80, importance_component: 60, learning_component: 40, effort_component: 80, age_component: 50, energy_component: 60, snapshot_at: new Date().toISOString() },
-        ]);
+        console.error("Failed to load priority engine data:", err);
+        setFetchError(err instanceof Error ? err.message : "Failed to load priority engine data.");
         setLoading(false);
       }
     }
@@ -223,11 +208,11 @@ export default function PriorityCommandCenter() {
   return (
     <main className="min-h-screen bg-[#0A0908] text-[#B8B0A8] p-8 md:p-12 grain overflow-x-hidden">
       <div className="max-w-[1400px] mx-auto space-y-10">
-        {usingMockData && (
+        {fetchError && (
           <div className="border-2 border-[#C85C5C]/50 bg-[#C85C5C]/10 px-4 py-2.5 rounded flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#C85C5C] animate-pulse shrink-0" />
             <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#C85C5C]">
-              {"⚠ Showing Mock Data — Live Fetch Failed"}
+              {"⚠ Failed to load priority data — "}{fetchError}
             </span>
           </div>
         )}
