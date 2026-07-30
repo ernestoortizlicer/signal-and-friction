@@ -168,6 +168,63 @@ export const onRequestPost = async ({
 
     console.log(`✅ Payment processed successfully: ${session.id} | Amount: ${session.amount_total} ${session.currency}`);
 
+    // Finance ledger — post a real double-entry transaction so the Finance
+    // module reflects real income the moment it lands, with zero manual
+    // entry. Non-fatal: a ledger-posting failure must never affect the
+    // payment already recorded in `payments` above.
+    //
+    // Both entries are inserted in ONE call, not two separate ones. The
+    // double-entry constraint on transaction_entries is DEFERRABLE
+    // INITIALLY DEFERRED — it checks "this transaction's entries sum to
+    // zero" at the end of the SQL transaction the insert ran in. Each
+    // PostgREST request is its own transaction, so inserting the entries
+    // one at a time would have the constraint reject the first insert on
+    // its own (sum = +amount, not zero) before the second entry existed.
+    // A single insert with both rows keeps them in one transaction.
+    //
+    // Currency-gated: the seeded ledger accounts are USD. Posting a
+    // non-USD amount into them as if it were USD cents would silently
+    // corrupt the books with a units mismatch — safer to skip and flag it
+    // for manual entry than to guess an exchange rate this code doesn't have.
+    if (!insertError && session.amount_total && session.currency === 'usd') {
+      try {
+        const [{ data: checkingAccount }, { data: revenueAccount }, { data: incomeCategory }] = await Promise.all([
+          supabase.from('accounts').select('id').eq('name', 'Signal & Friction Checking').maybeSingle(),
+          supabase.from('accounts').select('id').eq('name', 'Consulting Revenue').maybeSingle(),
+          supabase.from('categories').select('id').eq('name', 'consulting_income').maybeSingle(),
+        ]);
+
+        if (!checkingAccount || !revenueAccount) {
+          console.warn('⚠️ Finance ledger posting skipped — "Signal & Friction Checking" or "Consulting Revenue" account not found.');
+        } else {
+          const { data: transaction, error: txError } = await supabase
+            .from('transactions')
+            .insert({
+              description: `Stripe payment: ${productName || 'Diagnostic'}${email ? ` — ${email}` : ''}`,
+            })
+            .select('id')
+            .single();
+
+          if (txError || !transaction) {
+            throw txError || new Error('Transaction insert returned no row');
+          }
+
+          const { error: entriesError } = await supabase.from('transaction_entries').insert([
+            { transaction_id: transaction.id, account_id: checkingAccount.id, category_id: incomeCategory?.id ?? null, amount: session.amount_total },
+            { transaction_id: transaction.id, account_id: revenueAccount.id, category_id: incomeCategory?.id ?? null, amount: -session.amount_total },
+          ]);
+
+          if (entriesError) throw entriesError;
+
+          console.log(`✅ Finance ledger posted: $${(session.amount_total / 100).toFixed(2)} → transaction ${transaction.id}`);
+        }
+      } catch (err) {
+        console.error(`❌ Finance ledger posting failed (payment still recorded in payments table): ${err instanceof Error ? err.message : 'unknown error'}`);
+      }
+    } else if (!insertError && session.amount_total && session.currency !== 'usd') {
+      console.warn(`⚠️ Finance ledger posting skipped — non-USD payment (${session.currency}). Enter this one manually.`);
+    }
+
     // Referral credit — proportional (20% of what the referred person
     // actually paid, see _referral-credit.ts). This webhook is the only
     // place that authoritatively knows both the real purchase amount and
