@@ -8,42 +8,44 @@ const HexGrid = dynamic(() => import("@/components/HexGrid"), { ssr: false });
 
 // Illustrative SAMPLE diagnostics only — fictional companies (Acme Corp,
 // Growthly, PayFlux, StartupHub), not real clients, not real results.
-// Every field below is pulled directly from the real sample deliverable
-// JSON in public/deliverables/ — the evidence tier counts are computed
-// from each file's actual `evidence` array, not invented. No percentage,
-// no "verified" badge, no named real company anywhere on this page.
+// Every field below traces to the real sample deliverable JSON in
+// public/deliverables/ — the evidence tier counts are computed from each
+// file's actual `evidence` array, and every sharpened "friction"/"decision"
+// line paraphrases that same file's real signal/decision text (the ~48 and
+// ~110 data-point counts are the real numbers stated there, not invented).
+// No percentage, no "verified" badge, no named real company anywhere here.
 const ILLUSTRATIVE_SAMPLES = [
   {
     clientKey: "acme-corp",
     client: "Acme Corp",
     tag: "Pricing Page",
-    mechanism: "Cognitive Overload — Choice Paralysis",
+    friction: "4 plans. ~48 things to compare before anyone can choose. That's not a pricing page, that's a puzzle.",
+    decision: "Cut it to 2 visible tiers. Hide the rest behind a sales conversation.",
     evidenceSummary: "4 measured · 1 modeled · 2 pending",
-    decision: "Collapse pricing from 4 plans to 2 visible tiers.",
   },
   {
     clientKey: "growthly",
     client: "Growthly",
     tag: "Onboarding Flow",
-    mechanism: "Context-Switch Cascade — Pre-Value Integration Gate",
+    friction: "Users have to leave the product, fetch credentials, and come back — before they've seen a single result.",
+    decision: "Let them skip the setup. Show value on borrowed data first, ask for the real integration after.",
     evidenceSummary: "2 measured · 1 modeled · 3 pending",
-    decision: "Add a demo-data bypass at the integration step.",
   },
   {
     clientKey: "payflux",
     client: "PayFlux",
     tag: "Pricing Page",
-    mechanism: "Pricing Paralysis via Feature Overload",
+    friction: "5 plans. ~110 line items. For a payments product, that's a lot to ask someone to trust before they've trusted you with their money.",
+    decision: "3 plans. 5 features each. Enterprise doesn't need to be visible — it needs to be earned.",
     evidenceSummary: "4 measured · 1 modeled · 2 pending",
-    decision: "Collapse to 3 plans with 5 features each.",
   },
   {
     clientKey: "startuphub",
     client: "StartupHub",
     tag: "Checkout Page",
-    mechanism: "Trust Deficit at the Financial Gate",
+    friction: "No refund copy. No security badge. No testimonial. All missing at the exact moment someone's handing over a card number.",
+    decision: "Put the guarantee, the badge, and one real testimonial exactly where the hesitation happens.",
     evidenceSummary: "6 measured · 1 modeled · 2 pending",
-    decision: "Add trust signals above and below the payment button.",
   },
 ];
 
@@ -69,7 +71,7 @@ export default function PublicPortfolio() {
           </span>
         </div>
         <Link href="/" className="font-mono text-xs text-[#7A6F65] hover:text-[#D4A853] transition-colors tracking-widest uppercase">
-          ← Home
+          ← Back home
         </Link>
       </header>
 
@@ -77,19 +79,21 @@ export default function PublicPortfolio() {
       <div className="flex-1 max-w-[1000px] mx-auto w-full px-6 py-16 relative z-10 space-y-8">
         <div className="space-y-4 text-center">
           <span className="text-[#D4A853] text-xs tracking-[0.4em] uppercase border border-[#D4A853]/25 px-2.5 py-1 rounded bg-[#D4A853]/5 inline-block">
-            How It Works
+            The Honest Version
           </span>
-          <h1 className="text-3xl lg:text-5xl font-serif text-white tracking-tight">
-            The method, <span className="text-[#D4A853] glow-text">not a sales pitch</span>.
+          <h1 className="text-2xl lg:text-4xl font-serif text-white tracking-tight leading-snug">
+            Everyone else shows you logos and percentages.
+            <br />
+            <span className="text-[#D4A853] glow-text">Most of them are made up.</span>
           </h1>
           <p className="text-sm text-[#B0A89E] font-mono max-w-lg mx-auto leading-relaxed">
-            Four sample diagnostics showing how we isolate one friction mechanism, tier every claim as measured, modeled, or pending, and land on a single decision — no invented numbers, no client we haven&apos;t actually worked with.
+            We&apos;d rather show you how we actually think.
           </p>
         </div>
 
         <div className="border border-[#D4A853]/25 bg-[#D4A853]/5 rounded-xl px-5 py-4 text-center">
           <p className="text-xs font-mono text-[#D4A853] leading-relaxed">
-            <strong>These are illustrative samples, not client results.</strong> Acme Corp, Growthly, PayFlux, and StartupHub are fictional companies used to demonstrate the method. No percentages below are outcomes — they&apos;re evidence-tier counts, pulled directly from each sample&apos;s own data.
+            <strong>Acme Corp, Growthly, PayFlux, and StartupHub aren&apos;t real clients</strong> — they&apos;re fictional, built to show the method. The numbers below aren&apos;t results. They&apos;re evidence counts: what we measured, what we modeled, what&apos;s still pending your data. That&apos;s the whole point — we don&apos;t skip that part.
           </p>
         </div>
 
@@ -116,8 +120,8 @@ export default function PublicPortfolio() {
               </div>
 
               <div>
-                <span className="text-xs font-mono text-[#7A6F65] uppercase tracking-wider block mb-1">Friction Mechanism</span>
-                <p className="text-sm text-[#F5F0EB] font-mono leading-relaxed">{sample.mechanism}</p>
+                <span className="text-xs font-mono text-[#7A6F65] uppercase tracking-wider block mb-1">The Friction</span>
+                <p className="text-sm text-[#F5F0EB] font-mono leading-relaxed">{sample.friction}</p>
               </div>
 
               <div>
@@ -143,7 +147,7 @@ export default function PublicPortfolio() {
           </p>
           <div className="pt-2">
             <Link href="/" className="inline-block py-3 px-6 bg-[#D4A853] text-[#0A0908] font-mono font-bold text-xs uppercase tracking-wider hover:bg-[#E8C97A] transition-all">
-              Initiate Funnel Diagnostic
+              Get Your Diagnostic →
             </Link>
           </div>
         </div>
@@ -151,7 +155,7 @@ export default function PublicPortfolio() {
 
       {/* Footer */}
       <footer className="border-t border-white/[0.03] py-6 px-6 text-center text-xs font-mono text-[#7A6F65] relative z-10">
-        © 2026 Signal &amp; Friction Method™. All rights reserved.
+        © 2026 Signal &amp; Friction Method. All rights reserved.
       </footer>
     </main>
   );
