@@ -294,7 +294,7 @@ export default function PricingPage() {
           Diagnostic Pricing
         </span>
         <motion.h1
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 1, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="text-[2.2rem] sm:text-[2.8rem] lg:text-[3.4rem] font-bold leading-[1.08] tracking-[-0.03em]"

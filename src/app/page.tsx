@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
 import { SHOW_BANNER_EVENT } from "@/lib/cookieConsent";
 import dynamic from "next/dynamic";
 import ScanFunnelCard from "@/components/ScanFunnelCard";
@@ -129,8 +128,11 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    // Dynamically imported — @supabase/supabase-js has no business being in
+    // the critical hydration bundle just to fetch two quotes below the fold.
     async function fetchTestimonials() {
       try {
+        const { supabase } = await import("@/lib/supabase");
         const { data, error } = await supabase.from("testimonials").select("*").limit(3);
         if (!error && data) setTestimonials(data);
       } catch (err) {
@@ -257,7 +259,7 @@ export default function Home() {
 
           {/* LEFT: Headline + Info */}
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
+            initial={{ opacity: 1, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="w-full max-w-md lg:max-w-lg space-y-6"
@@ -340,7 +342,7 @@ export default function Home() {
 
           {/* RIGHT: Premium Diagnostic Card */}
           <motion.div
-            initial={{ opacity: 0, x: 30 }}
+            initial={{ opacity: 1, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="w-full max-w-md"
