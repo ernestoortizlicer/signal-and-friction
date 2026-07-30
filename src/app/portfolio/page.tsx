@@ -3,6 +3,7 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
+import { SHOW_BANNER_EVENT } from "@/lib/cookieConsent";
 
 const HexGrid = dynamic(() => import("@/components/HexGrid"), { ssr: false });
 
@@ -154,8 +155,23 @@ export default function PublicPortfolio() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.03] py-6 px-6 text-center text-xs font-mono text-[#7A6F65] relative z-10">
-        © 2026 Signal &amp; Friction Method. All rights reserved.
+      <footer className="border-t border-white/[0.03] py-6 px-6 text-center text-xs font-mono text-[#7A6F65] relative z-10 space-y-2">
+        <div>© 2026 Signal &amp; Friction Method. All rights reserved.</div>
+        <div className="flex items-center justify-center gap-3">
+          <Link href="/legal/privacy" className="hover:text-white transition-colors uppercase tracking-wider">Privacy</Link>
+          <span>·</span>
+          <Link href="/legal/terms" className="hover:text-white transition-colors uppercase tracking-wider">Terms</Link>
+          <span>·</span>
+          <Link href="/legal/guarantee" className="hover:text-white transition-colors uppercase tracking-wider">Guarantee</Link>
+          <span>·</span>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent(SHOW_BANNER_EVENT))}
+            className="hover:text-white transition-colors uppercase tracking-wider"
+          >
+            Cookie Settings
+          </button>
+        </div>
       </footer>
     </main>
   );

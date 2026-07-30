@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { SHOW_BANNER_EVENT } from "@/lib/cookieConsent";
 import dynamic from "next/dynamic";
 import ScanFunnelCard from "@/components/ScanFunnelCard";
 
@@ -65,14 +66,9 @@ const FUNNEL_OPTIONS = [
 const SEGMENT_OPTIONS = [
   { key: "concierge", label: "Done-For-You Concierge", sub: "S&F executes diagnostic & implementation. If it isn't specific to your product, you don't pay." },
   { key: "autonomy", label: "Done-With-You Autonomy", sub: "Learn the S&F methodology and build internal capacity to run diagnostics yourself." },
-  { key: "elite_us", label: "🏆 Elite Partnership (USA)", sub: "White-glove account management + priority support. For US-based SaaS only." },
 ];
 
-const SEGMENT_OPTIONS_APAC = [
-  { key: "concierge", label: "Done-For-You Concierge", sub: "S&F executes diagnostic & implementation. If it isn't specific to your product, you don't pay." },
-  { key: "autonomy", label: "Done-With-You Autonomy", sub: "Learn the S&F methodology and build internal capacity to run diagnostics yourself." },
-  { key: "elite_sg", label: "🏆 Elite Partnership (Singapore)", sub: "White-glove account management + priority support. Optimized for APAC market dynamics." },
-];
+const SEGMENT_OPTIONS_APAC = SEGMENT_OPTIONS;
 
 const MRR_OPTIONS = [
   { key: "low", label: "Bootstrapped ($0 - $50k MRR)", sub: "Focus on early conversion efficiency" },
@@ -627,6 +623,21 @@ export default function Home() {
           <span>© {new Date().getFullYear()} Signal &amp; Friction Method™. All rights reserved.</span>
           <span className="hidden md:inline">|</span>
           <Link href="/portfolio" className="hover:text-white transition-colors uppercase tracking-wider">Clinical Portfolio</Link>
+        </div>
+        <div className="flex items-center gap-3 text-[#7A6F65]">
+          <Link href="/legal/privacy" className="hover:text-white transition-colors uppercase tracking-wider">Privacy</Link>
+          <span>·</span>
+          <Link href="/legal/terms" className="hover:text-white transition-colors uppercase tracking-wider">Terms</Link>
+          <span>·</span>
+          <Link href="/legal/guarantee" className="hover:text-white transition-colors uppercase tracking-wider">Guarantee</Link>
+          <span>·</span>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent(SHOW_BANNER_EVENT))}
+            className="hover:text-white transition-colors uppercase tracking-wider"
+          >
+            Cookie Settings
+          </button>
         </div>
       </footer>
     </main>

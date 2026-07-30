@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { SHOW_BANNER_EVENT } from "@/lib/cookieConsent";
 import dynamic from "next/dynamic";
 import ScanFunnelCard from "@/components/ScanFunnelCard";
 
@@ -65,7 +66,6 @@ const FUNNEL_OPTIONS = [
 const SEGMENT_OPTIONS = [
   { key: "concierge", label: "Done-For-You Concierge", sub: "S&F executes diagnostic & implementation. If it isn't specific to your product, you don't pay." },
   { key: "autonomy", label: "Done-With-You Autonomy", sub: "Learn the S&F methodology and build internal capacity to run diagnostics yourself." },
-  { key: "elite_sg", label: "🏆 Elite Partnership (Singapore)", sub: "White-glove account management + priority support. Optimized for APAC market dynamics." },
 ];
 
 const MRR_OPTIONS = [
@@ -290,18 +290,6 @@ export default function SingaporeClient() {
               </div>
             </Link>
 
-            {/* APAC Trust Signals */}
-            <div className="flex flex-wrap gap-2 pt-1">
-              {[
-                { label: "Singapore Regional Office", icon: "🇸🇬" },
-                { label: "PDPA Compliant", icon: null },
-              ].map((chip) => (
-                <span key={chip.label} className="font-mono text-xs text-[#7A6F65] border border-[#D4A853]/10 px-2.5 py-1 rounded-full bg-[#D4A853]/[0.02]">
-                  {chip.icon && <span className="mr-1">{chip.icon}</span>}{chip.label}
-                </span>
-              ))}
-            </div>
-
             {/* Step indicators */}
             <div className="flex gap-1 pt-2">
               {STEPS.map((s) => (
@@ -373,7 +361,7 @@ export default function SingaporeClient() {
               email={email}
               onEmailChange={setEmail}
               emailPlaceholder="you@company.sg"
-              deliveryNote={<span style={{ fontSize: 13, color: "#8C8474" }}>APAC results in 72h. PDPA compliant. No sales calls.</span>}
+              deliveryNote={<span style={{ fontSize: 13, color: "#8C8474" }}>APAC results in 72h. No sales calls.</span>}
               guaranteeNote={
                 <div
                   className="flex items-center gap-2"
@@ -403,7 +391,7 @@ export default function SingaporeClient() {
               onAdvance={nextStep}
               onSubmit={handleSubmit}
               footerEngine="S&F APAC Engine v4.5"
-              footerTrust="PDPA Compliant"
+              footerTrust="E2E Encrypted"
             />
           </motion.div>
         </div>
@@ -601,24 +589,37 @@ export default function SingaporeClient() {
           <div className="pricing-card-scanline" />
           See the diagnostic pricing →
         </Link>
+        <p className="text-center font-mono text-xs text-[#7A6F65] mt-4">
+          By purchasing you agree to our{" "}
+          <Link href="/legal/terms" className="text-[#D4A853] hover:underline">Terms</Link>
+          {" "}and{" "}
+          <Link href="/legal/guarantee" className="text-[#D4A853] hover:underline">Guarantee</Link>.
+        </p>
       </section>
-
-      {/* ── Dual HQ Notice ──────────────────────────────── */}
-      <div className="border-t border-[#D4A853]/10 bg-[#D4A853]/[0.02] px-6 py-3 font-mono text-xs text-[#7A6F65] text-center">
-        <span className="text-[#D4A853]">Global Structure:</span> Signal &amp; Friction · <span className="text-[#B0A89E]">APAC Regional Office: Singapore 🇸🇬</span> &nbsp;·&nbsp; All APAC operations &amp; guarantees continue uninterrupted.
-      </div>
 
       {/* ── Footer ──────────────────────────────────────── */}
       <footer className="w-full border-t border-white/[0.03] py-8 px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-mono text-[#7A6F65] relative z-10 bg-[#0A0908]">
         <div className="flex flex-col md:flex-row items-center gap-4">
-          <span>© {new Date().getFullYear()} Signal &amp; Friction Pte. Ltd. (Singapore) | UEN: 20261906K</span>
+          <span>© {new Date().getFullYear()} Signal &amp; Friction Method™. All rights reserved.</span>
           <span className="hidden md:inline">|</span>
           <Link href="/portfolio" className="hover:text-white transition-colors uppercase tracking-wider">Clinical Portfolio</Link>
           <span className="hidden md:inline">|</span>
           <Link href="/" className="hover:text-white transition-colors uppercase tracking-wider">Global Portal →</Link>
         </div>
-        <div className="text-center text-[#4A4540] text-xs mt-1 md:mt-0">
-          APAC Regional Office: Singapore 🇸🇬
+        <div className="flex items-center gap-3">
+          <Link href="/legal/privacy" className="hover:text-white transition-colors uppercase tracking-wider">Privacy</Link>
+          <span>·</span>
+          <Link href="/legal/terms" className="hover:text-white transition-colors uppercase tracking-wider">Terms</Link>
+          <span>·</span>
+          <Link href="/legal/guarantee" className="hover:text-white transition-colors uppercase tracking-wider">Guarantee</Link>
+          <span>·</span>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent(SHOW_BANNER_EVENT))}
+            className="hover:text-white transition-colors uppercase tracking-wider"
+          >
+            Cookie Settings
+          </button>
         </div>
       </footer>
     </main>

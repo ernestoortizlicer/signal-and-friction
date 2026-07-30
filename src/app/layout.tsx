@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Newsreader, JetBrains_Mono } from "next/font/google";
 import { PHProvider } from "@/components/PostHogProvider";
+import CookieConsentBanner from "@/components/CookieConsentBanner";
 import "./globals.css";
 
 const inter = Inter({
@@ -97,7 +98,7 @@ export default function RootLayout({
               sameAs: [],
               description:
                 'B2B SaaS revenue friction diagnostic platform. Isolate the single friction point killing conversion in 72 hours.',
-              foundingDate: '2024',
+              foundingDate: '2026-03',
               contactPoint: {
                 '@type': 'ContactPoint',
                 contactType: 'Customer Service',
@@ -139,13 +140,6 @@ export default function RootLayout({
                   url: 'https://signal-and-friction.com/pricing#dwy-pricing',
                 },
               ],
-              aggregateRating: {
-                '@type': 'AggregateRating',
-                ratingValue: '4.9',
-                ratingCount: '50',
-                bestRating: '5',
-                worstRating: '1',
-              },
             }),
           }}
         />
@@ -214,6 +208,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col font-sans text-text-body bg-bg">
         <PHProvider>{children}</PHProvider>
+        <CookieConsentBanner />
       </body>
     </html>
   );

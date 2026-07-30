@@ -26,8 +26,11 @@ export default function GuaranteeTerms() {
             S&amp;F Legal Console
           </span>
         </div>
-        <Link href="/" className="font-mono text-xs text-[#7A6F65] hover:text-[#D4A853] transition-colors tracking-widest uppercase">
-          ← Return to Console
+        <Link
+          href="/"
+          className="font-mono text-xs sm:text-sm font-semibold text-[#D4A853] border border-[#D4A853]/40 hover:border-[#D4A853] hover:bg-[#D4A853]/10 transition-all tracking-wide uppercase px-3 py-2 sm:px-4 rounded-full"
+        >
+          ← Back home
         </Link>
       </header>
 
@@ -93,11 +96,15 @@ export default function GuaranteeTerms() {
         <div className="border border-[#D4A853]/15 bg-[#D4A853]/5 p-4 rounded text-xs text-[#D4A853] leading-relaxed">
           <strong>WHAT THIS DOES NOT COVER:</strong> Business outcomes after implementation depend on execution, market conditions, and traffic — factors outside a diagnostic&apos;s control. The Specificity Guarantee covers the quality and honesty of the finding we deliver, not your resulting conversion rate or revenue.
         </div>
+
+        <div className="border border-[#D4A853]/15 bg-[#D4A853]/5 p-4 rounded text-xs text-[#D4A853] leading-relaxed">
+          Related: <Link href="/legal/privacy" className="hover:underline">Privacy Policy</Link> · <Link href="/legal/terms" className="hover:underline">Terms of Service</Link>
+        </div>
       </div>
 
       {/* Footer */}
       <footer className="border-t border-[#D4A853]/[0.06] py-6 px-6 text-center text-xs font-mono text-[#7A6F65] relative z-10">
-        © 2026 Signal &amp; Friction Method™ Certified. All rights reserved.
+        © 2026 Signal &amp; Friction. All rights reserved.
       </footer>
     </main>
   );

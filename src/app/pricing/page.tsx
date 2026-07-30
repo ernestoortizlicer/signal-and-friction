@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { DWY_LADDER, DFY_LADDER, formatPriceUsd, type OfferPhase } from "@/lib/offer-catalog";
+import { SHOW_BANNER_EVENT } from "@/lib/cookieConsent";
 
 const HexGrid = dynamic(() => import("@/components/HexGrid"), { ssr: false });
 const WireframeCanvas = dynamic(() => import("@/components/WireframeCanvas"), { ssr: false });
@@ -208,6 +209,13 @@ function LadderSection({
           );
         })}
       </div>
+
+      <p className="text-center font-mono text-xs text-[#7A6F65]">
+        By purchasing you agree to our{" "}
+        <Link href="/legal/terms" className="text-[#D4A853] hover:underline">Terms</Link>
+        {" "}and{" "}
+        <Link href="/legal/guarantee" className="text-[#D4A853] hover:underline">Guarantee</Link>.
+      </p>
     </section>
   );
 }
@@ -342,6 +350,21 @@ export default function PricingPage() {
           <span>© {new Date().getFullYear()} Signal &amp; Friction Method™. All rights reserved.</span>
           <span className="hidden md:inline">|</span>
           <Link href="/portfolio" className="hover:text-white transition-colors uppercase tracking-wider">Clinical Portfolio</Link>
+        </div>
+        <div className="flex items-center gap-3 text-[#7A6F65]">
+          <Link href="/legal/privacy" className="hover:text-white transition-colors uppercase tracking-wider">Privacy</Link>
+          <span>·</span>
+          <Link href="/legal/terms" className="hover:text-white transition-colors uppercase tracking-wider">Terms</Link>
+          <span>·</span>
+          <Link href="/legal/guarantee" className="hover:text-white transition-colors uppercase tracking-wider">Guarantee</Link>
+          <span>·</span>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent(SHOW_BANNER_EVENT))}
+            className="hover:text-white transition-colors uppercase tracking-wider"
+          >
+            Cookie Settings
+          </button>
         </div>
       </footer>
     </main>
