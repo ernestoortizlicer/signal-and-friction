@@ -10,6 +10,18 @@ const inter = Inter({
   display: "swap",
 });
 
+// Hero H1s only (/, /sg, /pricing) — the LCP element. `optional` means the
+// browser paints with the metrically-matched fallback immediately and only
+// uses the real webfont if it's already cached; it never swaps in later and
+// re-triggers a second, later LCP the way `swap` does on a cold connection.
+// Same family as `inter` above so a same-visit fallback→real-font swap
+// (rare under `optional`) is still invisible.
+const interHero = Inter({
+  variable: "--font-inter-hero",
+  subsets: ["latin"],
+  display: "optional",
+});
+
 const newsreader = Newsreader({
   variable: "--font-newsreader",
   subsets: ["latin"],
@@ -75,7 +87,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${newsreader.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${interHero.variable} ${newsreader.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <head>
         <link

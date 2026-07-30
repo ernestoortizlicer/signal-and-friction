@@ -259,7 +259,7 @@ export default function SingaporeClient() {
               <div className="font-mono text-xs text-[#D4A853]/70 tracking-[0.4em] uppercase">
                 Singapore Diagnostic Portal v4.5
               </div>
-              <h1 className="text-[2.8rem] lg:text-[3.6rem] font-bold leading-[1.0] tracking-[-0.03em]">
+              <h1 className="font-hero text-[2.8rem] lg:text-[3.6rem] font-bold leading-[1.0] tracking-[-0.03em]">
                 Isolate Southeast Asia{" "}
                 <span className="text-[#D4A853] glow-text">
                   checkout friction

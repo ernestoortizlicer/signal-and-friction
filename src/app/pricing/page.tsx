@@ -297,7 +297,7 @@ export default function PricingPage() {
           initial={{ opacity: 1, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="text-[2.2rem] sm:text-[2.8rem] lg:text-[3.4rem] font-bold leading-[1.08] tracking-[-0.03em]"
+          className="font-hero text-[2.2rem] sm:text-[2.8rem] lg:text-[3.4rem] font-bold leading-[1.08] tracking-[-0.03em]"
         >
           Your funnel is leaking revenue at{" "}
           <span className="text-[#D4A853] glow-text">exactly one point.</span>

@@ -4,6 +4,8 @@
   --font-sans: var(--font-inter);
   --font-serif: var(--font-newsreader);
   --font-mono: var(--font-jetbrains-mono);
+  /* LCP-critical hero H1s only (/, /sg, /pricing) — display:optional, see layout.tsx */
+  --font-hero: var(--font-inter-hero);
 
   /* ══ GOLD DIAGNOSTIC SYSTEM — Signal & Friction ══ */
   --color-bg: #0A0908;
