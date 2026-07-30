@@ -24,8 +24,9 @@ interface Article {
   read_time_mins: number;
 }
 
-// Honest zeros until real learning-tracking exists — no invented
-// proficiency numbers, per-domain progress is a separate future project.
+// Honest zeros as the baseline — real scores are now derived entirely
+// from real hyper_leap_sessions history (see applyDomainDeltas below),
+// fetched fresh on every load, never from a flat button press.
 const DOMAINS = [
   { name: "Behavioral Economics", score: 0, color: "#D4A853" },
   { name: "Conversion Architecture", score: 0, color: "#5C9A6B" },
@@ -34,6 +35,39 @@ const DOMAINS = [
   { name: "Pricing Logic", score: 0, color: "#F59E0B" },
   { name: "Tax & Compliance", score: 0, color: "#C85C5C" },
 ];
+
+// Case-study concept titles already name a domain in parentheses (e.g.
+// "Concept 1: ... (Technical Systems)") — real content, not invented.
+// Matching against that text is how a real, AI-assessed session moves the
+// radar: deterministic keyword match, never an AI-hallucinated sub-score.
+const DOMAIN_KEYWORDS: Record<string, string> = {
+  "Behavioral Economics": "Behavioral Economics",
+  "Behavioral Science": "Behavioral Economics",
+  "Technical Systems": "Technical Systems",
+  "Pricing Logic": "Pricing Logic",
+  "Conversion Architecture": "Conversion Architecture",
+  "Copywriting Psychology": "Copywriting Psychology",
+  "Tax & Compliance": "Tax & Compliance",
+};
+
+function applyDomainDeltas(
+  domains: typeof DOMAINS,
+  conceptsDemonstrated: string[],
+  score: number
+): typeof DOMAINS {
+  const bump = Math.round(score / 20); // 0-5, tied directly to the real assessed score
+  if (bump <= 0 || conceptsDemonstrated.length === 0) return domains;
+  const matchedDomainNames = new Set<string>();
+  conceptsDemonstrated.forEach((title) => {
+    for (const [keyword, domainName] of Object.entries(DOMAIN_KEYWORDS)) {
+      if (title.includes(keyword)) matchedDomainNames.add(domainName);
+    }
+  });
+  if (matchedDomainNames.size === 0) return domains;
+  return domains.map((d) =>
+    matchedDomainNames.has(d.name) ? { ...d, score: Math.min(100, d.score + bump) } : d
+  );
+}
 
 interface CaseStudy {
   id: string;
@@ -44,6 +78,7 @@ interface CaseStudy {
   concepts: Array<{ title: string; description: string }>;
   quizQuestion: string;
   quizAnswers: string[];
+  correctAnswerIndex: number;
   quizExplanation: string;
 }
 
@@ -69,6 +104,7 @@ const CASE_STUDIES: CaseStudy[] = [
       "Trust Deficit: Paywall lacks clear SSL / validation parameters",
       "Sequence Order: Billing step occurs before product activation"
     ],
+    correctAnswerIndex: 1,
     quizExplanation: "Trust Deficit is isolated. Users spend 2.2 minutes on the CC input field itself, which implies they want to pay but lack security trust. It is a Trust Deficit."
   },
   {
@@ -91,6 +127,7 @@ const CASE_STUDIES: CaseStudy[] = [
       "Value Deficit: Zero immediate benefits for opting in",
       "Cognitive: Too many button triggers on screen"
     ],
+    correctAnswerIndex: 0,
     quizExplanation: "Trust Deficit is isolated. Users spend 8 minutes (researching, not deciding) which signals they want the product but fear institutional security risk — a Trust Deficit."
   },
   {
@@ -113,6 +150,7 @@ const CASE_STUDIES: CaseStudy[] = [
       "Reciprocal Value Offset is established",
       "Cognitive load is reduced"
     ],
+    correctAnswerIndex: 1,
     quizExplanation: "Reciprocal Value Offset. The user receives a direct performance benefit in exchange for consenting to share usage data."
   },
   {
@@ -136,6 +174,7 @@ const CASE_STUDIES: CaseStudy[] = [
       "Cognitive Load: Too many features overwhelm daily operators",
       "Trust Deficit: Users distrust automated notifications"
     ],
+    correctAnswerIndex: 0,
     quizExplanation: "Value Deficit. Completed onboarding but low engagement by day 18 is the classic sign of surface-level activation without value internalization. The product solved a pain once, not habitually."
   },
   {
@@ -159,6 +198,7 @@ const CASE_STUDIES: CaseStudy[] = [
       "Value Deficit: The offer is not compelling enough",
       "Trust Deficit: The consultant lacks credibility"
     ],
+    correctAnswerIndex: 0,
     quizExplanation: "Sequence Friction. The calendar commitment comes before the prospect has experienced any value. Inserting an async value artifact (Loom teardown, 1-page diagnostic) before the call request removes the barrier and front-loads proof."
   },
   {
@@ -182,6 +222,7 @@ const CASE_STUDIES: CaseStudy[] = [
       "Trust & Cognitive: Lack of local Yen pricing and JCB payment channels",
       "Technical: Slow page loads from US servers"
     ],
+    correctAnswerIndex: 1,
     quizExplanation: "Trust & Cognitive. Japanese B2B users require local payment options (JCB) and absolute pricing clarity (JPY) to authorize corporate spending."
   }
 ];
@@ -351,6 +392,13 @@ export default function LearningDashboard() {
   const [quizScore, setQuizScore] = useState<number | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
 
+  // Real Socratic dialogue state — replaces the old immediate static reveal.
+  const [socraticPhase, setSocraticPhase] = useState<'followup_loading' | 'followup' | 'verdict_loading' | 'verdict' | 'error'>('followup_loading');
+  const [followupQuestion, setFollowupQuestion] = useState("");
+  const [followupResponse, setFollowupResponse] = useState("");
+  const [verdict, setVerdict] = useState<{ score: number; feedback: string; concepts_demonstrated: string[] } | null>(null);
+  const [socraticError, setSocraticError] = useState<string | null>(null);
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tsaarsuuclvkjsgjcmoj.supabase.co";
 
   useEffect(() => {
@@ -376,6 +424,33 @@ export default function LearningDashboard() {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedArticleSlug]);
+
+  // Real "Concepts Mastered" + skill radar — computed once, on load, from
+  // actual hyper_leap_sessions history. Never resets per-session and never
+  // reflects more than what real completed sessions actually earned.
+  useEffect(() => {
+    async function fetchSessionHistory() {
+      try {
+        const headers = getAuthHeaders();
+        const res = await fetch(
+          `${supabaseUrl}/rest/v1/hyper_leap_sessions?select=score,concepts_demonstrated`,
+          { headers }
+        );
+        if (!res.ok) return;
+        const sessions: Array<{ score: number; concepts_demonstrated: string[] }> = await res.json();
+        const totalConcepts = sessions.reduce((sum, s) => sum + (s.concepts_demonstrated?.length || 0), 0);
+        setConceptsMastered(totalConcepts);
+        let domains = DOMAINS;
+        sessions.forEach((s) => {
+          domains = applyDomainDeltas(domains, s.concepts_demonstrated || [], s.score);
+        });
+        setRadarDomains(domains);
+      } catch (err) {
+        console.error("Error loading hyper-leap session history", err);
+      }
+    }
+    fetchSessionHistory();
+  }, [supabaseUrl]);
 
   const activeArticle = articles.find(a => a.slug === selectedArticleSlug) || articles[0];
   const activeDrafts = drafts.filter(d => d.article_slug === selectedArticleSlug);
@@ -413,8 +488,11 @@ export default function LearningDashboard() {
   };
 
   const checkQuiz = (answerIdx: number) => {
+    // Was hardcoded to always treat option index 1 as correct, regardless
+    // of which case study was showing — wrong for half of them. Each case
+    // study now carries its own real correctAnswerIndex.
     setSelectedAnswer(answerIdx);
-    setQuizScore(answerIdx === 1 ? 100 : 0);
+    setQuizScore(answerIdx === activeChallenge.correctAnswerIndex ? 100 : 0);
   };
 
   const resetChallenge = () => {
@@ -426,6 +504,125 @@ export default function LearningDashboard() {
     setDiagnosticVelocity(null);
     setCoverageScore(null);
     setSessionElapsed(null);
+    setSocraticPhase('followup_loading');
+    setFollowupQuestion("");
+    setFollowupResponse("");
+    setVerdict(null);
+    setSocraticError(null);
+  };
+
+  // Only ever invoked from a button onClick, never during render — the
+  // Date.now() call below is timing a real user action, not a render.
+  const submitHypothesis = async () => {
+    if (typingStartedAt) {
+      // eslint-disable-next-line react-hooks/purity
+      const elapsedSecs = (Date.now() - typingStartedAt) / 1000;
+      const wordCount = hlInput.trim().split(/\s+/).filter(Boolean).length;
+      const wpm = wordCount > 0 && elapsedSecs > 0 ? Math.round((wordCount / elapsedSecs) * 60) : 0;
+      setDiagnosticVelocity(wpm);
+      setSessionElapsed(Math.round(elapsedSecs));
+    }
+    setCoverageScore(Math.round((hlSelectedOptions.length / activeChallenge.frictionOptions.length) * 100));
+    setHlActive(true);
+    setSocraticPhase('followup_loading');
+    setSocraticError(null);
+    try {
+      const res = await fetch(`${supabaseUrl}/functions/v1/learning-socratic-tutor`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}`,
+        },
+        body: JSON.stringify({
+          step: 'followup',
+          challenge: {
+            id: activeChallenge.id, title: activeChallenge.title,
+            metrics: activeChallenge.metrics, context: activeChallenge.context,
+            concepts: activeChallenge.concepts,
+          },
+          hypothesis: hlInput,
+          selectedMechanisms: hlSelectedOptions.map(i => activeChallenge.frictionOptions[i]),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || `Socratic tutor request failed (${res.status}).`);
+      setFollowupQuestion(data.question);
+      setSocraticPhase('followup');
+    } catch (err) {
+      console.error("Socratic follow-up failed:", err);
+      setSocraticError(err instanceof Error ? err.message : "Failed to reach the Socratic tutor.");
+      setSocraticPhase('error');
+    }
+  };
+
+  const submitFollowupResponse = async () => {
+    setSocraticPhase('verdict_loading');
+    setSocraticError(null);
+    try {
+      const res = await fetch(`${supabaseUrl}/functions/v1/learning-socratic-tutor`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}`,
+        },
+        body: JSON.stringify({
+          step: 'verdict',
+          challenge: {
+            id: activeChallenge.id, title: activeChallenge.title,
+            metrics: activeChallenge.metrics, context: activeChallenge.context,
+            concepts: activeChallenge.concepts,
+          },
+          hypothesis: hlInput,
+          selectedMechanisms: hlSelectedOptions.map(i => activeChallenge.frictionOptions[i]),
+          followupQuestion,
+          followupResponse,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || `Socratic tutor request failed (${res.status}).`);
+
+      const v = {
+        score: data.score as number,
+        feedback: data.feedback as string,
+        concepts_demonstrated: (data.concepts_demonstrated as string[]) || [],
+      };
+      setVerdict(v);
+      setSocraticPhase('verdict');
+
+      // Persist the real session, then apply real deltas — never a flat
+      // button increment. A persistence failure here is logged but must
+      // not hide the verdict the learner already earned and can see.
+      try {
+        const headers = getAuthHeaders();
+        await fetch(`${supabaseUrl}/rest/v1/hyper_leap_sessions`, {
+          method: 'POST',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            challenge_id: activeChallenge.id,
+            challenge_title: activeChallenge.title,
+            hypothesis: hlInput,
+            selected_mechanisms: hlSelectedOptions.map(i => activeChallenge.frictionOptions[i]),
+            followup_question: followupQuestion,
+            followup_response: followupResponse,
+            score: v.score,
+            feedback: v.feedback,
+            concepts_demonstrated: v.concepts_demonstrated,
+            model: data.meta?.model,
+            tier: data.meta?.tier,
+            estimated_cost_usd: data.meta?.estimatedCostUSD,
+          }),
+        });
+      } catch (persistErr) {
+        console.error("Failed to persist hyper-leap session:", persistErr);
+      }
+
+      setConceptsMastered(prev => prev + v.concepts_demonstrated.length);
+      setRadarDomains(prev => applyDomainDeltas(prev, v.concepts_demonstrated, v.score));
+    } catch (err) {
+      console.error("Socratic verdict failed:", err);
+      setSocraticError(err instanceof Error ? err.message : "Failed to reach the Socratic tutor.");
+      setSocraticPhase('error');
+    }
   };
 
   // Radar math
@@ -627,21 +824,11 @@ export default function LearningDashboard() {
                     <div className="flex justify-end">
                       <button
                         type="button"
-                        onClick={() => {
-                          if (typingStartedAt) {
-                            const elapsedSecs = (Date.now() - typingStartedAt) / 1000;
-                            const wordCount = hlInput.trim().split(/\s+/).filter(Boolean).length;
-                            const wpm = wordCount > 0 && elapsedSecs > 0 ? Math.round((wordCount / elapsedSecs) * 60) : 0;
-                            setDiagnosticVelocity(wpm);
-                            setSessionElapsed(Math.round(elapsedSecs));
-                          }
-                          setCoverageScore(Math.round((hlSelectedOptions.length / activeChallenge.frictionOptions.length) * 100));
-                          setHlActive(true);
-                        }}
+                        onClick={submitHypothesis}
                         disabled={!hlInput.trim() || hlSelectedOptions.length === 0}
                         className="px-5 py-2.5 bg-[#D4A853] text-[#0A0908] text-xs font-mono font-bold uppercase tracking-wider transition-all hover:bg-[#E8C97A] active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-xl"
                       >
-                        {"Execute Socratic Reverse-Reveal →"}
+                        {"Submit to Socratic Tutor →"}
                       </button>
                     </div>
                   </div>
@@ -653,13 +840,84 @@ export default function LearningDashboard() {
                   >
                     {/* Hypothesis recap */}
                     <div>
-                      <h4 className="text-xs text-[#5C9A6B] uppercase tracking-widest font-semibold mb-1">
-                        {"✓ Socratic Reverse-Reveal Complete"}
+                      <h4 className="text-xs text-[#D4A853] uppercase tracking-widest font-semibold mb-1">
+                        {"Your Hypothesis"}
                       </h4>
                       <p className="text-xs text-[#B0A89E] leading-relaxed">
-                        {"Hypothesis: "}<span className="text-white italic">&ldquo;{hlInput}&rdquo;</span>
+                        <span className="text-white italic">&ldquo;{hlInput}&rdquo;</span>
                       </p>
                     </div>
+
+                    {/* ── Real Socratic dialogue ───────────────────────── */}
+                    {socraticPhase === 'followup_loading' && (
+                      <div className="border border-[#D4A853]/15 bg-[#0A0908]/60 p-4 rounded-xl text-xs text-[#B0A89E] font-mono animate-pulse">
+                        {"The Socratic tutor is reading your hypothesis…"}
+                      </div>
+                    )}
+
+                    {socraticPhase === 'error' && (
+                      <div className="border border-[#C85C5C]/40 bg-[#C85C5C]/10 p-4 rounded-xl space-y-3">
+                        <p className="text-xs text-[#C85C5C] font-mono">{"⚠ "}{socraticError}</p>
+                        <button
+                          type="button"
+                          onClick={socraticPhase === 'error' && !verdict ? submitHypothesis : submitFollowupResponse}
+                          className="font-mono text-xs uppercase border border-[#C85C5C]/40 hover:bg-[#C85C5C]/10 text-[#C85C5C] px-3 py-1.5 rounded transition-all"
+                        >
+                          {"Retry"}
+                        </button>
+                      </div>
+                    )}
+
+                    {(socraticPhase === 'followup' || socraticPhase === 'verdict_loading') && (
+                      <div className="border border-[#D4A853]/25 bg-[#D4A853]/[0.03] p-4 rounded-xl space-y-3">
+                        <span className="font-mono text-[10px] text-[#D4A853] uppercase tracking-widest block">
+                          {"Socratic Follow-Up"}
+                        </span>
+                        <p className="text-sm text-[#F5F0EB] font-serif leading-relaxed italic">{followupQuestion}</p>
+                        <textarea
+                          value={followupResponse}
+                          onChange={(e) => setFollowupResponse(e.target.value)}
+                          disabled={socraticPhase === 'verdict_loading'}
+                          placeholder={"Respond to the follow-up — defend, revise, or sharpen your reasoning..."}
+                          className="w-full bg-[#0A0908] border border-[#D4A853]/8 focus:border-[#D4A853] focus:outline-none p-3 text-xs rounded-xl h-20 text-[#F5F0EB] font-mono resize-none disabled:opacity-50"
+                        />
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            onClick={submitFollowupResponse}
+                            disabled={!followupResponse.trim() || socraticPhase === 'verdict_loading'}
+                            className="px-4 py-2 bg-[#D4A853] text-[#0A0908] text-xs font-mono font-bold uppercase tracking-wider transition-all hover:bg-[#E8C97A] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-xl"
+                          >
+                            {socraticPhase === 'verdict_loading' ? "Assessing…" : "Respond →"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {socraticPhase === 'verdict' && verdict && (
+                      <div className="border border-[#D4A853]/25 bg-[#110F0D]/40 p-4 rounded-xl space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-[10px] text-[#D4A853] uppercase tracking-widest">
+                            {"Verdict"}
+                          </span>
+                          <span className={`font-serif text-lg font-bold ${
+                            verdict.score >= 70 ? "text-[#5C9A6B]" : verdict.score >= 40 ? "text-[#D4A853]" : "text-[#C85C5C]"
+                          }`}>
+                            {verdict.score}{"/100"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-[#F5F0EB] leading-relaxed">{verdict.feedback}</p>
+                        {verdict.concepts_demonstrated.length > 0 && (
+                          <div className="pt-2 border-t border-[#D4A853]/8 space-y-1">
+                            <span className="text-[10px] text-[#5C9A6B] uppercase tracking-wider block">{"Concepts you demonstrated:"}</span>
+                            {verdict.concepts_demonstrated.map((c) => (
+                              <div key={c} className="text-xs text-[#B0A89E]">{"✓ "}{c}</div>
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-[10px] text-[#7A6F65] font-mono pt-1">{"✓ Session saved — Concepts Mastered and skill radar updated for real."}</p>
+                      </div>
+                    )}
 
                     {/* Cognitive Telemetry */}
                     {coverageScore !== null && (
@@ -691,15 +949,19 @@ export default function LearningDashboard() {
                       </div>
                     )}
 
-                    {/* Concept reveal */}
-                    <div className="space-y-3 border-l-2 border-[#D4A853]/30 pl-4 py-1">
-                      {activeChallenge.concepts.map((concept, idx) => (
-                        <div key={idx}>
-                          <div className="text-xs text-[#D4A853] uppercase font-bold">{concept.title}</div>
-                          <p className="text-xs text-[#B0A89E] leading-relaxed mt-0.5">{concept.description}</p>
-                        </div>
-                      ))}
-                    </div>
+                    {/* Full concept reveal — only after the Socratic exchange
+                        actually concludes, so the answer key never shows
+                        before the dialogue does its job. */}
+                    {socraticPhase === 'verdict' && (
+                      <div className="space-y-3 border-l-2 border-[#D4A853]/30 pl-4 py-1">
+                        {activeChallenge.concepts.map((concept, idx) => (
+                          <div key={idx}>
+                            <div className="text-xs text-[#D4A853] uppercase font-bold">{concept.title}</div>
+                            <p className="text-xs text-[#B0A89E] leading-relaxed mt-0.5">{concept.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     {/* Elevation Report */}
                     <div className="border border-[#D4A853]/25 bg-[#110F0D]/30 p-5 rounded-2xl space-y-5 relative overflow-hidden">
@@ -823,24 +1085,6 @@ export default function LearningDashboard() {
                         className="px-4 py-2 border border-[#D4A853]/25 text-xs text-[#D4A853] hover:bg-[#D4A853]/5 cursor-pointer uppercase font-mono rounded-xl transition-colors"
                       >
                         {"Export IP Node ↓"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setRadarDomains(prev =>
-                            prev.map(d => {
-                              if (d.name === "Behavioral Economics") return { ...d, score: Math.min(d.score + 10, 100) };
-                              if (d.name === "Technical Systems") return { ...d, score: Math.min(d.score + 12, 100) };
-                              if (d.name === "Tax & Compliance") return { ...d, score: Math.min(d.score + 8, 100) };
-                              return d;
-                            })
-                          );
-                          setConceptsMastered(prev => prev + 3);
-                          alert("✓ Concepts absorbed. Radar updated.");
-                        }}
-                        className="px-4 py-2 bg-[#5C9A6B]/10 border border-[#5C9A6B]/30 text-[#5C9A6B] text-xs font-bold uppercase tracking-wider cursor-pointer font-mono rounded-xl transition-colors hover:bg-[#5C9A6B]/20 ml-auto"
-                      >
-                        {"Absorb Concepts"}
                       </button>
                     </div>
                   </motion.div>
