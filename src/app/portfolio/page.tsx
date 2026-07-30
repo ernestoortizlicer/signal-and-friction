@@ -70,7 +70,10 @@ export default function PublicPortfolio() {
             S&amp;F Method Walkthrough
           </span>
         </div>
-        <Link href="/" className="font-mono text-xs text-[#7A6F65] hover:text-[#D4A853] transition-colors tracking-widest uppercase">
+        <Link
+          href="/"
+          className="font-mono text-xs sm:text-sm font-semibold text-[#D4A853] border border-[#D4A853]/40 hover:border-[#D4A853] hover:bg-[#D4A853]/10 transition-all tracking-wide uppercase px-3 py-2 sm:px-4 rounded-full"
+        >
           ← Back home
         </Link>
       </header>
@@ -78,10 +81,7 @@ export default function PublicPortfolio() {
       {/* Main Content */}
       <div className="flex-1 max-w-[1000px] mx-auto w-full px-6 py-16 relative z-10 space-y-8">
         <div className="space-y-4 text-center">
-          <span className="text-[#D4A853] text-xs tracking-[0.4em] uppercase border border-[#D4A853]/25 px-2.5 py-1 rounded bg-[#D4A853]/5 inline-block">
-            The Honest Version
-          </span>
-          <h1 className="text-2xl lg:text-4xl font-serif text-white tracking-tight leading-snug">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-white tracking-tight leading-[1.1]">
             Everyone else shows you logos and percentages.
             <br />
             <span className="text-[#D4A853] glow-text">Most of them are made up.</span>
