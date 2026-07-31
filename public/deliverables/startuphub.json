@@ -11,6 +11,7 @@
   "daysRemaining": 21,
   "guaranteeStatus": "Specificity Guarantee Active",
   "telemetryStatus": "✓ Public Signal Scan Confirmed (PageSpeed + HTML)",
+  "groundTruthMechanism": "trust_deficit",
   "evidence": [
     { "tier": "measured", "label": "Largest Contentful Paint (mobile)", "value": "4.2s", "source": "Google PageSpeed Insights, mobile, scanned June 2026" },
     { "tier": "measured", "label": "Performance score (mobile)", "value": "54 / 100", "source": "Google PageSpeed Insights, mobile, scanned June 2026" },

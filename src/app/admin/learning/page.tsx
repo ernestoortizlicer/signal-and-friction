@@ -24,9 +24,9 @@ interface Article {
   read_time_mins: number;
 }
 
-// Honest zeros as the baseline — real scores are now derived entirely
-// from real hyper_leap_sessions history (see applyDomainDeltas below),
-// fetched fresh on every load, never from a flat button press.
+// Honest zeros as the baseline for the IP Lab tab's Mastery Index widget
+// (unrelated to Combat Mode below — this static display predates the
+// diagnostic-craft rebuild and is out of scope for it).
 const DOMAINS = [
   { name: "Behavioral Economics", score: 0, color: "#D4A853" },
   { name: "Conversion Architecture", score: 0, color: "#5C9A6B" },
@@ -36,299 +36,175 @@ const DOMAINS = [
   { name: "Tax & Compliance", score: 0, color: "#C85C5C" },
 ];
 
-// Case-study concept titles already name a domain in parentheses (e.g.
-// "Concept 1: ... (Technical Systems)") — real content, not invented.
-// Matching against that text is how a real, AI-assessed session moves the
-// radar: deterministic keyword match, never an AI-hallucinated sub-score.
-const DOMAIN_KEYWORDS: Record<string, string> = {
-  "Behavioral Economics": "Behavioral Economics",
-  "Behavioral Science": "Behavioral Economics",
-  "Technical Systems": "Technical Systems",
-  "Pricing Logic": "Pricing Logic",
-  "Conversion Architecture": "Conversion Architecture",
-  "Copywriting Psychology": "Copywriting Psychology",
-  "Tax & Compliance": "Tax & Compliance",
+// ════════════════════════════════════════════════════════════
+// COMBAT MODE — diagnostic-craft training, rebuilt 2026-08-01
+// ════════════════════════════════════════════════════════════
+//
+// Replaces six fictional case studies (invented companies, invented
+// statistics, graded against invented categories like "Linguistic
+// Architecture" — none of which were Signal & Friction's own six friction
+// mechanisms) with real cases built from real client deliverables. Every
+// case's answer key is the deliverable's own already-written diagnosis —
+// nothing here is invented for training purposes.
+//
+// A deliverable becomes a case automatically the moment it has a
+// groundTruthMechanism field set (src/app/deliverable/fallback.ts) — no
+// code change needed to add a new one. Command-center-guide is
+// deliberately excluded (it's an internal ops manual, not a client
+// friction case) by never having that field set.
+
+type FrictionMechanism =
+  | "cognitive_load"
+  | "trust_deficit"
+  | "commitment_anxiety"
+  | "ordering_error"
+  | "identity_friction"
+  | "value_uncertainty";
+
+const ALL_MECHANISMS: FrictionMechanism[] = [
+  "cognitive_load", "trust_deficit", "commitment_anxiety",
+  "ordering_error", "identity_friction", "value_uncertainty",
+];
+
+const MECHANISM_LABELS: Record<FrictionMechanism, string> = {
+  cognitive_load: "Cognitive Load",
+  trust_deficit: "Trust Deficit",
+  commitment_anxiety: "Commitment Anxiety",
+  ordering_error: "Ordering Error",
+  identity_friction: "Identity Friction",
+  value_uncertainty: "Value Uncertainty",
 };
 
-function applyDomainDeltas(
-  domains: typeof DOMAINS,
-  conceptsDemonstrated: string[],
-  score: number
-): typeof DOMAINS {
-  const bump = Math.round(score / 20); // 0-5, tied directly to the real assessed score
-  if (bump <= 0 || conceptsDemonstrated.length === 0) return domains;
-  const matchedDomainNames = new Set<string>();
-  conceptsDemonstrated.forEach((title) => {
-    for (const [keyword, domainName] of Object.entries(DOMAIN_KEYWORDS)) {
-      if (title.includes(keyword)) matchedDomainNames.add(domainName);
-    }
-  });
-  if (matchedDomainNames.size === 0) return domains;
-  return domains.map((d) =>
-    matchedDomainNames.has(d.name) ? { ...d, score: Math.min(100, d.score + bump) } : d
-  );
+// A pedagogical judgment call, not measured data: which mechanisms a
+// learner is most likely to confuse with which. Used only to pick quiz
+// distractors that are genuinely hard to rule out, not random noise
+// options. Documented here as a design choice, not asserted as fact.
+const CONFUSION_PAIRS: Record<FrictionMechanism, [FrictionMechanism, FrictionMechanism]> = {
+  cognitive_load: ["ordering_error", "value_uncertainty"],
+  trust_deficit: ["identity_friction", "commitment_anxiety"],
+  commitment_anxiety: ["trust_deficit", "value_uncertainty"],
+  ordering_error: ["cognitive_load", "commitment_anxiety"],
+  identity_friction: ["trust_deficit", "value_uncertainty"],
+  value_uncertainty: ["cognitive_load", "commitment_anxiety"],
+};
+
+interface EvidenceRow { tier: string; label: string; value: string; source: string }
+interface AvoidRow { action: string; reason: string }
+
+interface DeliverableForCase {
+  clientKey?: string;
+  clientName: string;
+  groundTruthMechanism?: FrictionMechanism;
+  diagnosis: { signal: string; friction: { mechanism: string; rootCause: string } };
+  evidence?: EvidenceRow[];
+  avoid?: AvoidRow[];
+  confidenceReason?: string;
+  projectedImpact?: { modeledFrom: string; narrowsWith: string };
 }
 
-interface CaseStudy {
+interface Concept { title: string; description: string }
+
+interface Challenge {
   id: string;
   title: string;
   metrics: string;
   context: string;
-  frictionOptions: string[];
-  concepts: Array<{ title: string; description: string }>;
-  quizQuestion: string;
-  quizAnswers: string[];
-  correctAnswerIndex: number;
-  quizExplanation: string;
+  concepts: Concept[];
+  groundTruthMechanism: FrictionMechanism;
+  // Kept for the Study-This-Case worked-example panel — the full real
+  // evidence/avoid list, not just the derived concepts above.
+  evidence: EvidenceRow[];
+  avoid: AvoidRow[];
 }
 
-const CASE_STUDIES: CaseStudy[] = [
-  {
-    id: "tiktok",
-    title: "TikTok India Localized Onboarding Collapse",
-    metrics: "Conversion from install to signup plummeted by 45%. Average time spent on registration form: 4.8 minutes before exit.",
-    context: "Users operate on 3G bandwidth under budget Android devices. Signup flow utilizes localized SMS OTP verification codes.",
-    frictionOptions: [
-      "Technical: Low-bandwidth payload weight",
-      "Cognitive: SMS OTP sequence load",
-      "Trust Deficit: Localization linguistic translation disconnect"
-    ],
-    concepts: [
-      { title: "Concept 1: Low-Bandwidth Latency Tolerance (Technical Systems)", description: "India's 3G network environments have a high packet loss rate. The heavy initialization package loaded on startup caused app crashes." },
-      { title: "Concept 2: SMS OTP Verification Barriers (Behavioral Science)", description: "SMS gateway delays caused users to re-request codes. The Fogg Behavioral Model predicts that high-effort (waiting/switching screens) combined with low motivation (during onboarding) crashes activation." },
-      { title: "Concept 3: Localized Trust Sub-Cultures (Linguistic Architecture)", description: "Literal translations of signup directives felt automated and low-status. True localization requires regional sub-culture phrasing to mitigate registration anxiety." }
-    ],
-    quizQuestion: "SaaS metrics show a 9.2% pricing tier selection rate, but only 0.4% billing confirmation. Users stay on the card details page for 2.2 minutes. Isolate friction mechanism.",
-    quizAnswers: [
-      "Cognitive Load: Pricing options are too complex",
-      "Trust Deficit: Paywall lacks clear SSL / validation parameters",
-      "Sequence Order: Billing step occurs before product activation"
-    ],
-    correctAnswerIndex: 1,
-    quizExplanation: "Trust Deficit is isolated. Users spend 2.2 minutes on the CC input field itself, which implies they want to pay but lack security trust. It is a Trust Deficit."
-  },
-  {
-    id: "figma",
-    title: "Figma Enterprise Paywall Anxiety",
-    metrics: "Enterprise users navigate to payment page but exit within 15 seconds. High click-through on upgrade trigger, but zero purchases.",
-    context: "Self-serve team admins trying to upgrade 10+ designer seats. Stripe billing fields request corporate taxation identification keys.",
-    frictionOptions: [
-      "Cognitive: Massive multi-step inputs field density",
-      "Trust Deficit: Unclear corporate data isolation parameters",
-      "Value Deficit: Unclear seats pricing increments mapping"
-    ],
-    concepts: [
-      { title: "Concept 1: B2B Tax Deferred Checkout (Pricing Logic)", description: "Forcing VAT/EIN data mid-checkout for high-ticket B2B SaaS increases form abandonment by 40%. Post-purchase billing setup converts 22% better." },
-      { title: "Concept 2: Seat Pricing Anxiety (Behavioral Economics)", description: "Ambiguous per-seat cost scaling forces buyers to compute risk in real-time. Interactive invoice simulators reduce seat pricing abandonment by 35%." }
-    ],
-    quizQuestion: "A developer tool shows 78% of enterprise users reach the pricing page but only 2.1% convert. Average session time on pricing: 8 minutes. What is the primary friction?",
-    quizAnswers: [
-      "Trust Deficit: Concerns over source code isolation privacy",
-      "Value Deficit: Zero immediate benefits for opting in",
-      "Cognitive: Too many button triggers on screen"
-    ],
-    correctAnswerIndex: 0,
-    quizExplanation: "Trust Deficit is isolated. Users spend 8 minutes (researching, not deciding) which signals they want the product but fear institutional security risk — a Trust Deficit."
-  },
-  {
-    id: "vercel",
-    title: "Vercel Telemetry Opt-In Collapse",
-    metrics: "Developer telemetry opt-in drops 60% after GDPR banner update. Product telemetry essential for speed improvements.",
-    context: "Technical developers reject opt-in popups. Adding speed dashboard renders 10% faster with telemetry increases opt-in by 35%.",
-    frictionOptions: [
-      "Trust Deficit: Concerns over source code isolation privacy",
-      "Value Deficit: Zero immediate benefits for opting in",
-      "Cognitive: Too many button triggers on screen"
-    ],
-    concepts: [
-      { title: "Concept 1: Value Deficit Offset (Behavioral Economics)", description: "Asking for data telemetry without offering a speed upgrade or discount violates reciprocal economics. Users demand a value offset." },
-      { title: "Concept 2: Privacy Isolation Transparency (Trust Deficit)", description: "Assuring users that all telemetry tokens are hashed and zero code repositories are indexed removes security anxieties." }
-    ],
-    quizQuestion: "Developers reject opt-in popups. Adding 'Speed dashboard renders 10% faster with telemetry cached' increases opt-in by 35%. Why?",
-    quizAnswers: [
-      "Trust Deficit is solved",
-      "Reciprocal Value Offset is established",
-      "Cognitive load is reduced"
-    ],
-    correctAnswerIndex: 1,
-    quizExplanation: "Reciprocal Value Offset. The user receives a direct performance benefit in exchange for consenting to share usage data."
-  },
-  {
-    id: "churn_loop",
-    title: "SaaS Churn Loop: The Silent Revenue Drain",
-    metrics: "Monthly churn rate climbs from 2.1% to 6.8% in 90 days post-launch. Revenue churned: $340K ARR. No spike in support tickets — churn happens silently.",
-    context: "B2B workflow SaaS. Users activate, complete onboarding, then disappear by day 21. No cancellation reasons collected. NPS surveys unsent.",
-    frictionOptions: [
-      "Value Deficit: Users never reach the 'aha moment'",
-      "Cognitive: Feature complexity overwhelms solo operators",
-      "Signal Failure: No behavioral telemetry to detect at-risk users"
-    ],
-    concepts: [
-      { title: "Concept 1: Time-to-Value Compression (Behavioral Science)", description: "The 'aha moment' must occur within the first session. If users don't experience core value in under 7 minutes, churn probability increases by 60%. Onboarding flows must be ruthlessly compressed to the primary use case." },
-      { title: "Concept 2: Silent Churn Detection via Behavioral Signals (Data Science)", description: "Users who churn silently show predictable patterns: login frequency drops below 2x/week in week 2, feature breadth narrows to 1–2 actions, and last-session duration shrinks. Real-time behavioral scoring flags these users before they cancel." },
-      { title: "Concept 3: Proactive Intervention Sequences (CRM Science)", description: "Automated retention sequences triggered by behavioral signals — not time — intercept churn. A personalized outreach at day 14 (when login frequency drops) converts 22% of at-risk users to champions." }
-    ],
-    quizQuestion: "A PLG SaaS shows 78% week-1 retention but 31% week-4 retention. Support tickets are flat. Users complete onboarding but stop logging in by day 18. Isolate the primary friction.",
-    quizAnswers: [
-      "Value Deficit: Users never discovered the core use case that justifies continued use",
-      "Cognitive Load: Too many features overwhelm daily operators",
-      "Trust Deficit: Users distrust automated notifications"
-    ],
-    correctAnswerIndex: 0,
-    quizExplanation: "Value Deficit. Completed onboarding but low engagement by day 18 is the classic sign of surface-level activation without value internalization. The product solved a pain once, not habitually."
-  },
-  {
-    id: "async_close",
-    title: "Async B2B Close: The No-Call Pipeline",
-    metrics: "Pipeline of 14 qualified leads stalls for 6 weeks. Discovery calls scheduled, 60% no-show. Deals go cold after 2 follow-up emails. Zero closed.",
-    context: "High-ticket B2B consulting offer ($2,000–$5,000). Founder-led sales. Prospects are senior operators (CMOs, founders) with zero calendar availability.",
-    frictionOptions: [
-      "Trust Deficit: Lack of social proof and outcome specificity",
-      "Cognitive: Multi-step friction before experiencing value",
-      "Sequence Friction: Discovery call creates calendar barrier for busy executives"
-    ],
-    concepts: [
-      { title: "Concept 1: Value-Before-Call Architecture (Async Sales Design)", description: "Senior operators do not schedule calls to evaluate — they schedule calls to confirm. Sending a personalized 3-minute Loom video diagnostic before any calendar link increases call show rates by 65% and eliminates 80% of unqualified leads." },
-      { title: "Concept 2: Evidence-First Positioning (Trust Science)", description: "The Signal & Friction Zero-Call model front-loads specificity: a named friction point, a quantified outcome projection, and a comparison to a named comparable client. This collapses the trust timeline from weeks to hours." },
-      { title: "Concept 3: Async Deliverable as Sales Tool (Conversion Architecture)", description: "A public-facing async deliverable — a 1-page teardown of the prospect's specific funnel — serves simultaneously as a trust signal, a capability demonstration, and a natural call to action with zero cognitive friction." }
-    ],
-    quizQuestion: "A high-ticket consultant sends 12 cold LinkedIn messages. 9 respond. 6 agree to a discovery call. 4 ghost before the call. 0 close. What is the primary friction mechanism?",
-    quizAnswers: [
-      "Sequence Friction: The call creates a calendar commitment before trust is established",
-      "Value Deficit: The offer is not compelling enough",
-      "Trust Deficit: The consultant lacks credibility"
-    ],
-    correctAnswerIndex: 0,
-    quizExplanation: "Sequence Friction. The calendar commitment comes before the prospect has experienced any value. Inserting an async value artifact (Loom teardown, 1-page diagnostic) before the call request removes the barrier and front-loads proof."
-  },
-  {
-    id: "saas_asia",
-    title: "$50M SaaS Asian Expansion Collapse",
-    metrics: "Conversion drops by 60% on Singapore/Japan local checkouts. User dropoff occurs at pricing plan confirmation (4.2 minutes average latency).",
-    context: "US-based CRM platform. They localized languages but payments are settled in USD with standard US credit card validation structures.",
-    frictionOptions: [
-      "Technical: Payment gateway latency (US routing)",
-      "Cognitive: Foreign Exchange (FX) billing discrepancy",
-      "Trust Deficit: Lack of local payment trust symbols (PayNow / JCB)"
-    ],
-    concepts: [
-      { title: "Concept 1: Cross-Border Card Settlement Latency", description: "Routing local credit card processing through US gateways leads to a 15% transaction decline rate. Local acquirer routing solves this." },
-      { title: "Concept 2: Local Payment Trust Gaps (Trust Deficit)", description: "In Singapore, PayNow holds a 65% market share. Rushing to enter SE Asia without integrating local payment paradigms increases abandonment by 40%." },
-      { title: "Concept 3: Foreign Exchange Transparency (Cognitive)", description: "Showing USD pricing instead of localized SGD/JPY currencies forces users to compute exchange rates manually, leading to checkout fatigue." }
-    ],
-    quizQuestion: "CRM platform expands to Japan. Checkout conversion drops 40%. They only accept Visa/Mastercard in USD, ignoring JCB and Yen pricing. Identify primary friction.",
-    quizAnswers: [
-      "Value Deficit: Japanese users don't see CRM value",
-      "Trust & Cognitive: Lack of local Yen pricing and JCB payment channels",
-      "Technical: Slow page loads from US servers"
-    ],
-    correctAnswerIndex: 1,
-    quizExplanation: "Trust & Cognitive. Japanese B2B users require local payment options (JCB) and absolute pricing clarity (JPY) to authorize corporate spending."
-  }
-];
+// The known deliverable files to check — each is only included as a case
+// if it actually has groundTruthMechanism set (checked at fetch time, not
+// assumed here).
+const CANDIDATE_CASE_KEYS = ["payflux", "acme-corp", "growthly", "startuphub"];
 
-const CHALLENGE_ELEVATIONS: Record<string, {
-  gaps: Array<{ label: string; current: number; target: number; colorClass: string; barColor: string }>;
-  studyPlan: Array<{ step: string; title: string; desc: string }>;
-  articles: Array<{ num: number; category: string; categoryColor: string; title: string; summary: string; body: string }>;
-}> = {
-  tiktok: {
-    gaps: [
-      { label: "Cognitive Load Gap", current: 40, target: 85, colorClass: "text-[#C85C5C]", barColor: "from-[#C85C5C] to-[#D4A853]" },
-      { label: "Behavioral Science Gap", current: 45, target: 90, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" }
-    ],
-    studyPlan: [
-      { step: "01", title: "Mobile Payload Weight Reduction", desc: "Bundle split and lazy load heavy assets to ensure the initial JS chunk is under 150KB for poor 3G connections." },
-      { step: "02", title: "SMS Gateway Delay Mitigations", desc: "Optimize SMS provider routing and integrate a 60-second countdown before re-requests, matching Fogg's effort reduction protocols." },
-      { step: "03", title: "Linguistic Trust Alignment", desc: "Rewrite onboarding instructions using common Hindi/regional colloquialisms rather than cold, machine-translated English." }
-    ],
-    articles: [
-      { num: 1, category: "Cognitive Load", categoryColor: "text-[#C85C5C]", title: "Mobile Form Friction & Fogg Behavioral Optimization", summary: "Reducing task effort in onboarding pages for high-friction mobile environments.", body: "When operating in mobile environments with high latency (e.g., 3G network), any minor task increase (like switching screens or waiting for SMS codes) causes user drop-off. By optimizing form fields, reducing input requirements, and designing simple inline instructions, SaaS platforms can increase their mobile signup completion rates by up to 45%." },
-      { num: 2, category: "Behavior", categoryColor: "text-[#D4A853]", title: "SMS Gateway Resilience Protocols in Developing Markets", summary: "Handling delayed OTP verification codes using local transactional SMS routes.", body: "Delayed OTP codes lead to users clicking 'Resend' repeatedly, compounding gateway queues. Implementing smart client-side countdowns and choosing top-tier regional SMS aggregators (e.g., Twilio local routes) prevents activation failure." },
-      { num: 3, category: "Trust", categoryColor: "text-[#D4A853]", title: "Linguistic Trust Signals & Hyper-Localized Copywriting", summary: "How translation nuances impact perceived security and status in localized apps.", body: "Literal translations lack local authority and breed trust deficits. Collaborating with local copywriters to use regional idioms for critical trust-building actions (like billing permissions) dramatically improves conversion." }
-    ]
-  },
-  figma: {
-    gaps: [
-      { label: "Cognitive Load Gap", current: 55, target: 90, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" },
-      { label: "Pricing Logic Gap", current: 60, target: 95, colorClass: "text-[#5C9A6B]", barColor: "from-[#5C9A6B] to-[#D4A853]" }
-    ],
-    studyPlan: [
-      { step: "01", title: "Deferred Tax Ingestion Flow", desc: "Allow team admins to pay first, and ingest VAT/corporate tax identifiers post-purchase inside the billing portal." },
-      { step: "02", title: "Interactive Invoice Expansion Simulator", desc: "Build an inline interactive slider showing the precise monthly cost per designer seat change before clicking 'Upgrade'." },
-      { step: "03", title: "B2B Payment Form Simplification", desc: "Remove unnecessary Billing Address input fields, relying on Stripe's smart postal-code-only verification where possible." }
-    ],
-    articles: [
-      { num: 1, category: "Cognitive Load", categoryColor: "text-[#D4A853]", title: "B2B Checkout Optimization & Deferring Tax Friction", summary: "Why demanding corporate tax ID numbers during checkout increases cart abandonment.", body: "Demanding VAT/EIN registration numbers mid-checkout forces corporate buyers to search internal documents, increasing checkout time and exit rates. Moving tax profile verification to the post-purchase setup increases immediate conversion by 22%." },
-      { num: 2, category: "Pricing", categoryColor: "text-[#5C9A6B]", title: "Seat-Based Pricing Models & Invoice Simulator Widgets", summary: "Using interactive widgets to clear ambiguity in high-ticket SaaS pricing expansion.", body: "Pricing expansion anxiety occurs when corporate buyers fear hidden charges. Renders of clear, real-time calculations showing price changes per seat addition build confidence and lead to 30% larger average order sizes." },
-      { num: 3, category: "Trust", categoryColor: "text-[#D4A853]", title: "Enterprise Trust Signals & Corporate Card Authorization Rates", summary: "Minimizing bank declines and authorization errors for high-value B2B transactions.", body: "High-value corporate card transactions face aggressive fraud checking. Using Stripe Radar, 3D Secure, and clear merchant category codes prevents false declines and provides an elegant fallback path." }
-    ]
-  },
-  vercel: {
-    gaps: [
-      { label: "Value Deficit Gap", current: 30, target: 85, colorClass: "text-[#C85C5C]", barColor: "from-[#C85C5C] to-[#D4A853]" },
-      { label: "Trust Deficit Gap", current: 50, target: 90, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" }
-    ],
-    studyPlan: [
-      { step: "01", title: "Reciprocal Value Offset Design", desc: "Explicitly reward opting in to telemetry by unlocking a premium dashboard feature (e.g. 10% faster load caching)." },
-      { step: "02", title: "Anonymized Hash Verification", desc: "Publish open source code detailing how client code is hashed locally, proving zero raw repositories are transmitted." },
-      { step: "03", title: "Micro-Copy Consent Redesign", desc: "Change standard 'Allow tracking' to 'Accelerate UI rendering with cloud-cached analytics metrics'." }
-    ],
-    articles: [
-      { num: 1, category: "Value Deficit", categoryColor: "text-[#C85C5C]", title: "Reciprocity Principle & Value Offsets in Opt-in Flows", summary: "Designing mutual-benefit exchanges to bypass user data privacy walls.", body: "Asking for user telemetry without an immediate reciprocal benefit leads to automatic opt-out. Offering clear advantages (such as performance upgrades or localized caching) increases consent rates by up to 35%." },
-      { num: 2, category: "Trust Deficit", categoryColor: "text-[#D4A853]", title: "Privacy-First Analytics Telemetry & Data Sovereignty", summary: "Gaining technical developer trust through cryptographic transparency.", body: "Developers are highly suspicious of telemetry trackers. Demonstrating that all ingested data points are salted and hashed client-side, with full adherence to GDPR, removes corporate liability fears." },
-      { num: 3, category: "Copywriting", categoryColor: "text-[#D4A853]", title: "Micro-Copy Teardown: Designing Frictionless Consent Elements", summary: "How micro-copy adjustments change user perception from 'spying' to 'optimizing'.", body: "Words matter. Shifting consent banner text from passive telemetry-oriented tracking jargon to active user-performance enhancements alters the cognitive frame from defense to cooperation." }
-    ]
-  },
-  churn_loop: {
-    gaps: [
-      { label: "Retention Signal Gap", current: 25, target: 90, colorClass: "text-[#C85C5C]", barColor: "from-[#C85C5C] to-[#D4A853]" },
-      { label: "Behavioral Telemetry Gap", current: 35, target: 88, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" }
-    ],
-    studyPlan: [
-      { step: "01", title: "Time-to-Value Audit", desc: "Map every step from signup to first value event. Remove every step not directly required to reach the core 'aha moment'. Target: under 7 minutes." },
-      { step: "02", title: "Behavioral Churn Scoring Model", desc: "Instrument login frequency, feature breadth, and session duration. Flag users with a churn score above 70 by day 10. Trigger automated intervention." },
-      { step: "03", title: "Day-14 Retention Sequence Design", desc: "Build a 3-message behavioral sequence triggered by drop in engagement — not by calendar date. Personalize with the specific use case the user activated with." }
-    ],
-    articles: [
-      { num: 1, category: "Retention", categoryColor: "text-[#C85C5C]", title: "The Churn Signal Stack: Detecting Silent Exit Before It Happens", summary: "Using behavioral telemetry to intercept at-risk users before they cancel.", body: "Silent churn occurs when users stop logging in without cancelling — a signal failure, not a product failure. By tracking login frequency, feature engagement breadth, and session duration as a composite churn score, SaaS operators can identify at-risk users by day 10 — 11 days before the typical silent exit at day 21." },
-      { num: 2, category: "Onboarding", categoryColor: "text-[#D4A853]", title: "Time-to-Value: The 7-Minute Activation Rule", summary: "Why every minute past 7 in onboarding reduces 30-day retention by measurable degrees.", body: "The 7-minute rule emerges from activation data across 200+ SaaS products: users who experience the primary value event (the 'aha moment') within the first session retain at 4.2x the rate of those who don't. Ruthless onboarding compression — removing educational detours and feature showcases — is the single highest-leverage retention lever." },
-      { num: 3, category: "CRM", categoryColor: "text-[#5C9A6B]", title: "Proactive Retention: Behavioral Triggers vs. Calendar Sequences", summary: "Why time-based email sequences fail and behavioral triggers convert.", body: "Standard 'day 7, day 14, day 30' retention emails ignore individual behavioral signals and produce 2–4% re-engagement rates. Behavioral trigger sequences — fired when login frequency drops below threshold — produce 18–24% re-engagement because they reach users at the exact moment of disengagement, with personalized context." }
-    ]
-  },
-  async_close: {
-    gaps: [
-      { label: "Async Sales Design Gap", current: 20, target: 92, colorClass: "text-[#C85C5C]", barColor: "from-[#C85C5C] to-[#D4A853]" },
-      { label: "Evidence Architecture Gap", current: 30, target: 88, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" }
-    ],
-    studyPlan: [
-      { step: "01", title: "Value-Before-Call Artifact Design", desc: "Build a 3-minute Loom video template for each ICP segment. The Loom must contain: one named friction point, one quantified projection, and one comparable client outcome. Send before any calendar link." },
-      { step: "02", title: "Async Deliverable as Sales Tool", desc: "Convert the standard proposal deck into a 1-page public-facing teardown. The teardown is the sales tool — it demonstrates capability before a call is ever scheduled." },
-      { step: "03", title: "Zero-Call Close Protocol", desc: "Design a proposal that closes without a call: Problem → Signal Evidence → Quantified Projection → Investment → One clear CTA (payment link). Eliminate all decision friction." }
-    ],
-    articles: [
-      { num: 1, category: "Async Sales", categoryColor: "text-[#C85C5C]", title: "The Loom Diagnostic: How to Close Before the Discovery Call", summary: "Using personalized video teardowns to front-load trust and eliminate no-shows.", body: "Senior operators — CMOs, founders, VPs — do not schedule calls to evaluate. They schedule calls to confirm a decision they've already made. The Loom diagnostic inverts the sequence: you demonstrate specific insight about their exact problem before requesting calendar time. Show rate increases by 65%. Close rate increases by 40%. Unqualified leads self-select out." },
-      { num: 2, category: "Pipeline", categoryColor: "text-[#D4A853]", title: "Sequence Friction in High-Ticket B2B Sales", summary: "Why calendar-first pipelines kill warm leads and how to fix the sequence.", body: "Every step added before a prospect experiences value is a compounding drop-off point. The standard sequence (cold outreach → calendar link → discovery call → proposal → close) has 5 friction gates. The Signal & Friction zero-call protocol collapses this to 3: outreach → async artifact → close. Response-to-close time drops from 6 weeks to 8 days." },
-      { num: 3, category: "Positioning", categoryColor: "text-[#5C9A6B]", title: "Evidence-First Positioning: The Specificity Advantage", summary: "How named client outcomes and quantified projections collapse the trust timeline.", body: "Generic positioning ('I help companies grow') forces prospects to do mental work to connect your service to their problem. Evidence-first positioning does that work for them: 'I identified the checkout sequence friction that was losing Formbricks 23% of enterprise trials, and rebuilt the flow. They recovered $18K MRR in 6 weeks.' Specificity collapses the trust timeline from weeks to hours." }
-    ]
-  },
-  saas_asia: {
-    gaps: [
-      { label: "Tax & Compliance Gap", current: 50, target: 95, colorClass: "text-[#C85C5C]", barColor: "from-[#C85C5C] to-[#D4A853]" },
-      { label: "Technical Systems Gap", current: 40, target: 90, colorClass: "text-[#D4A853]", barColor: "from-[#B8900A] to-[#D4A853]" }
-    ],
-    studyPlan: [
-      { step: "01", title: "Sovereign Acquirer Routing Setup", desc: "Establish local acquiring rails in Singapore (e.g., DBS/UOB card processors) to bypass international settlement delays and 15%+ decline rates." },
-      { step: "02", title: "Linguistic and Currency Localization Audit", desc: "Ensure pricing plans resolve immediately in native currency (SGD or JPY) with local tax rates (GST) automatically factored in or deferred post-checkout." },
-      { step: "03", title: "Local Wallet & Bank Transfer Integration", desc: "Configure PayNow (Singapore) and JCB (Japan) endpoints. Verify automatic webhook-based provisioning to capture the 60%+ non-card buyer share." }
-    ],
-    articles: [
-      { num: 1, category: "Tax", categoryColor: "text-[#C85C5C]", title: "Tax-Free Reinvestment & PASS-Through LLCs in SE Asia", summary: "Structuring holding companies under Singapore FSI-S and Section 13(1)(a) tax exemption frameworks for reinvesting SaaS profits.", body: "By establishing a Singapore Private Limited (Pte. Ltd.) holding structure, founders access a single-tier territorial tax system. Under Section 13(1)(a) of the Income Tax Act, foreign-sourced service income received in Singapore is fully tax-exempt if the source country corporate tax rate is at least 15%." },
-      { num: 2, category: "Law", categoryColor: "text-[#D4A853]", title: "SaaS Compliance Protocols under SG MAS Guidelines", summary: "Mastering technology risk management (TRM) and outsourcing directives defined by the Monetary Authority of Singapore.", body: "SaaS architectures operating in Singapore that serve fintechs, financial consultancies, or handle high-frequency payment rails fall within the advisory scope of the Monetary Authority of Singapore (MAS) Guidelines on Outsourcing and Technology Risk Management (TRM)." },
-      { num: 3, category: "Checkout", categoryColor: "text-[#D4A853]", title: "Cross-Border Payment Friction: Optimizing Local Checkout Rates", summary: "Resolving regional gateway latency, currency mismatches, and credit card decline codes by using local acquiring endpoints.", body: "Cross-border credit card settlement is one of the most common causes of silent conversion leakage. Routing transactions through local merchant acquiring banks (e.g. DBS/UOB in Singapore, Sumitomo Mitsui in Japan) achieves a 98%+ authorization rate." }
-    ]
+function deliverableToChallenge(d: DeliverableForCase): Challenge {
+  const measured = (d.evidence ?? []).filter((e) => e.tier === "measured").slice(0, 3);
+  const metrics = measured.length > 0
+    ? measured.map((e) => `${e.label}: ${e.value}`).join(" · ")
+    : "See case context below.";
+  const context = `${d.diagnosis.signal} ${d.diagnosis.friction.rootCause}`.trim();
+
+  const concepts: Concept[] = [
+    { title: "Root cause", description: d.diagnosis.friction.rootCause },
+  ];
+  (d.avoid ?? []).forEach((a) => concepts.push({ title: `Avoid: ${a.action}`, description: a.reason }));
+  if (d.confidenceReason) concepts.push({ title: "Confidence calibration", description: d.confidenceReason });
+  if (d.projectedImpact) {
+    concepts.push({
+      title: "Evidence tiering",
+      description: `${d.projectedImpact.modeledFrom} ${d.projectedImpact.narrowsWith}`,
+    });
   }
-};
+
+  return {
+    id: d.clientKey ?? d.clientName,
+    title: d.clientName,
+    metrics,
+    context,
+    concepts,
+    groundTruthMechanism: d.groundTruthMechanism as FrictionMechanism,
+    evidence: d.evidence ?? [],
+    avoid: d.avoid ?? [],
+  };
+}
+
+// Deterministic — the same case always produces the same quiz on every
+// load, so correctAnswerIndex is computed from real data every time, never
+// hand-typed. This is the structural fix for the bug this replaced (a
+// flat "index 1 is always correct" check that was silently wrong for half
+// the old cases).
+function buildQuiz(challenge: Challenge): { question: string; answers: string[]; correctAnswerIndex: number; explanation: string } {
+  const correct = challenge.groundTruthMechanism;
+  const distractors = CONFUSION_PAIRS[correct];
+  const options: FrictionMechanism[] = [correct, ...distractors];
+  let seed = 0;
+  for (const ch of challenge.id) seed += ch.charCodeAt(0);
+  const rot = seed % options.length;
+  const rotated = [...options.slice(rot), ...options.slice(0, rot)];
+  const correctAnswerIndex = rotated.indexOf(correct);
+  const contextSnippet = challenge.context.length > 180 ? `${challenge.context.slice(0, 180)}…` : challenge.context;
+  return {
+    question: `Given this case's evidence — "${contextSnippet}" — which mechanism is dominant?`,
+    answers: rotated.map((m) => MECHANISM_LABELS[m]),
+    correctAnswerIndex,
+    explanation: `${MECHANISM_LABELS[correct]} is the documented mechanism for this case. ${challenge.concepts[0]?.description ?? ""}`,
+  };
+}
+
+interface PracticeQueueRow {
+  case_key: string;
+  stage: "guided" | "independent";
+  consecutive_correct: number;
+  next_eligible_at: string;
+  last_attempted_at: string | null;
+}
+
+interface MechanismMasteryRow {
+  mechanism: FrictionMechanism;
+  attempts: number;
+  correct: number;
+  accuracy_pct: number | null;
+}
+
+interface RubricScores {
+  evidence_tier_violations: string[];
+  specificity_pass: boolean;
+  confidence_calibrated: boolean;
+}
+
+interface VerdictResult {
+  score: number;
+  feedback: string;
+  concepts_demonstrated: string[];
+  mechanism_claimed: FrictionMechanism;
+  mechanism_correct: boolean;
+  rubric_scores: RubricScores;
+}
 
 function parseInlineMd(text: string): React.ReactNode[] {
   const result: React.ReactNode[] = [];
@@ -374,29 +250,30 @@ export default function LearningDashboard() {
   const [feedbackText, setFeedbackText] = useState("");
   const [ratings, setRatings] = useState<Record<string, number>>({});
 
-  const [selectedChallengeId, setSelectedChallengeId] = useState<string>("tiktok");
+  // ── Combat Mode state ──
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [casesLoading, setCasesLoading] = useState(true);
+  const [selectedChallengeId, setSelectedChallengeId] = useState<string>("");
+  const [practiceQueue, setPracticeQueue] = useState<Record<string, PracticeQueueRow>>({});
+  const [mechanismMastery, setMechanismMastery] = useState<Record<string, MechanismMasteryRow>>({});
+  const [conceptsMastered, setConceptsMastered] = useState(0);
+  const [studyExpanded, setStudyExpanded] = useState(false);
+
   const [hlActive, setHlActive] = useState(false);
   const [hlInput, setHlInput] = useState("");
-  const [hlSelectedOptions, setHlSelectedOptions] = useState<number[]>([]);
-  const [radarDomains, setRadarDomains] = useState(DOMAINS);
-  const [expandedArticle, setExpandedArticle] = useState<number | null>(null);
-  // Honest zero until real learning-tracking exists — see DOMAINS above.
-  const [conceptsMastered, setConceptsMastered] = useState(0);
+  const [mechanismClaimed, setMechanismClaimed] = useState<FrictionMechanism | null>(null);
 
-  // Cognitive Telemetry
   const [typingStartedAt, setTypingStartedAt] = useState<number | null>(null);
   const [diagnosticVelocity, setDiagnosticVelocity] = useState<number | null>(null);
-  const [coverageScore, setCoverageScore] = useState<number | null>(null);
   const [sessionElapsed, setSessionElapsed] = useState<number | null>(null);
 
   const [quizScore, setQuizScore] = useState<number | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
 
-  // Real Socratic dialogue state — replaces the old immediate static reveal.
   const [socraticPhase, setSocraticPhase] = useState<'followup_loading' | 'followup' | 'verdict_loading' | 'verdict' | 'error'>('followup_loading');
   const [followupQuestion, setFollowupQuestion] = useState("");
   const [followupResponse, setFollowupResponse] = useState("");
-  const [verdict, setVerdict] = useState<{ score: number; feedback: string; concepts_demonstrated: string[] } | null>(null);
+  const [verdict, setVerdict] = useState<VerdictResult | null>(null);
   const [socraticError, setSocraticError] = useState<string | null>(null);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tsaarsuuclvkjsgjcmoj.supabase.co";
@@ -425,36 +302,79 @@ export default function LearningDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedArticleSlug]);
 
-  // Real "Concepts Mastered" + skill radar — computed once, on load, from
-  // actual hyper_leap_sessions history. Never resets per-session and never
-  // reflects more than what real completed sessions actually earned.
+  // Case bank — self-extending. Any deliverable JSON in public/deliverables
+  // with groundTruthMechanism set becomes a case; anything without it is
+  // silently excluded, never guessed at.
   useEffect(() => {
-    async function fetchSessionHistory() {
+    async function loadCases() {
+      setCasesLoading(true);
       try {
-        const headers = getAuthHeaders();
-        const res = await fetch(
-          `${supabaseUrl}/rest/v1/hyper_leap_sessions?select=score,concepts_demonstrated`,
-          { headers }
+        const results = await Promise.all(
+          CANDIDATE_CASE_KEYS.map((key) =>
+            fetch(`/deliverables/${key}.json`)
+              .then((r) => (r.ok ? r.json() : null))
+              .catch(() => null)
+          )
         );
-        if (!res.ok) return;
-        const sessions: Array<{ score: number; concepts_demonstrated: string[] }> = await res.json();
-        const totalConcepts = sessions.reduce((sum, s) => sum + (s.concepts_demonstrated?.length || 0), 0);
-        setConceptsMastered(totalConcepts);
-        let domains = DOMAINS;
-        sessions.forEach((s) => {
-          domains = applyDomainDeltas(domains, s.concepts_demonstrated || [], s.score);
-        });
-        setRadarDomains(domains);
+        const valid = results.filter(
+          (d): d is DeliverableForCase => !!d && typeof d.groundTruthMechanism === "string"
+        );
+        const built = valid.map(deliverableToChallenge);
+        setChallenges(built);
+        if (built.length > 0) setSelectedChallengeId((prev) => prev || built[0].id);
       } catch (err) {
-        console.error("Error loading hyper-leap session history", err);
+        console.error("Error loading case bank from deliverables:", err);
+      } finally {
+        setCasesLoading(false);
       }
     }
-    fetchSessionHistory();
+    loadCases();
+  }, []);
+
+  // Real progress — session history for Concepts Mastered, the
+  // mechanism_mastery VIEW (computed server-side from real session
+  // history, never stored as an opinion) for the radar, and practice_queue
+  // for per-case stage/spacing state. Any of the three tables/views not
+  // existing yet (undeployed migration) fails honestly to empty/zero —
+  // never a fake placeholder number.
+  useEffect(() => {
+    async function fetchProgress() {
+      try {
+        const headers = getAuthHeaders();
+        const [resSessions, resMastery, resQueue] = await Promise.all([
+          fetch(`${supabaseUrl}/rest/v1/hyper_leap_sessions?select=concepts_demonstrated`, { headers }),
+          fetch(`${supabaseUrl}/rest/v1/mechanism_mastery?select=*`, { headers }),
+          fetch(`${supabaseUrl}/rest/v1/practice_queue?select=*`, { headers }),
+        ]);
+        if (resSessions.ok) {
+          const sessions: Array<{ concepts_demonstrated: string[] }> = await resSessions.json();
+          setConceptsMastered(sessions.reduce((sum, s) => sum + (s.concepts_demonstrated?.length || 0), 0));
+        }
+        if (resMastery.ok) {
+          const rows: MechanismMasteryRow[] = await resMastery.json();
+          const map: Record<string, MechanismMasteryRow> = {};
+          rows.forEach((r) => { map[r.mechanism] = r; });
+          setMechanismMastery(map);
+        }
+        if (resQueue.ok) {
+          const rows: PracticeQueueRow[] = await resQueue.json();
+          const map: Record<string, PracticeQueueRow> = {};
+          rows.forEach((r) => { map[r.case_key] = r; });
+          setPracticeQueue(map);
+        }
+      } catch (err) {
+        console.error("Error loading Combat Mode progress:", err);
+      }
+    }
+    fetchProgress();
   }, [supabaseUrl]);
 
   const activeArticle = articles.find(a => a.slug === selectedArticleSlug) || articles[0];
   const activeDrafts = drafts.filter(d => d.article_slug === selectedArticleSlug);
-  const activeChallenge = CASE_STUDIES.find(c => c.id === selectedChallengeId) || CASE_STUDIES[0];
+  const activeChallenge = challenges.find(c => c.id === selectedChallengeId) ?? challenges[0];
+  const activeQueueRow = activeChallenge ? practiceQueue[activeChallenge.id] : undefined;
+  const activeStage: "guided" | "independent" = activeQueueRow?.stage ?? "guided";
+  const activeQuiz = activeChallenge ? buildQuiz(activeChallenge) : null;
 
   const handleSelectDraft = (draftNumber: number) => setSelectedDraftId(draftNumber);
 
@@ -488,21 +408,18 @@ export default function LearningDashboard() {
   };
 
   const checkQuiz = (answerIdx: number) => {
-    // Was hardcoded to always treat option index 1 as correct, regardless
-    // of which case study was showing — wrong for half of them. Each case
-    // study now carries its own real correctAnswerIndex.
+    if (!activeQuiz) return;
     setSelectedAnswer(answerIdx);
-    setQuizScore(answerIdx === activeChallenge.correctAnswerIndex ? 100 : 0);
+    setQuizScore(answerIdx === activeQuiz.correctAnswerIndex ? 100 : 0);
   };
 
   const resetChallenge = () => {
     setHlActive(false);
     setHlInput("");
-    setHlSelectedOptions([]);
-    setExpandedArticle(null);
+    setMechanismClaimed(null);
+    setStudyExpanded(false);
     setTypingStartedAt(null);
     setDiagnosticVelocity(null);
-    setCoverageScore(null);
     setSessionElapsed(null);
     setSocraticPhase('followup_loading');
     setFollowupQuestion("");
@@ -511,9 +428,58 @@ export default function LearningDashboard() {
     setSocraticError(null);
   };
 
-  // Only ever invoked from a button onClick, never during render — the
-  // Date.now() call below is timing a real user action, not a render.
+  // Spacing rule: resurface sooner for a mechanism you're weak on, later
+  // for one you're strong on — at least 1 day either way, per the spaced-
+  // retrieval research minimum (approved curriculum doc, §01). Stage
+  // advances to 'independent' (scaffolding withdrawn) once you've cleared
+  // the mechanism correctly, with a passing score, twice in a row.
+  const updatePracticeQueue = async (caseKey: string, correct: boolean, score: number) => {
+    const prev = practiceQueue[caseKey];
+    const passed = correct && score >= 70;
+    const consecutiveCorrect = passed ? (prev?.consecutive_correct ?? 0) + 1 : 0;
+    const stage: "guided" | "independent" = consecutiveCorrect >= 2 ? "independent" : "guided";
+    const acc = mechanismMastery[activeChallenge!.groundTruthMechanism]?.accuracy_pct;
+    const days = acc === null || acc === undefined ? 1 : acc < 50 ? 1 : acc < 80 ? 3 : 7;
+    const nextEligibleAt = new Date(Date.now() + days * 86400000).toISOString();
+    try {
+      const headers = { ...getAuthHeaders(), "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=representation" };
+      const res = await fetch(`${supabaseUrl}/rest/v1/practice_queue?on_conflict=case_key`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          case_key: caseKey,
+          stage,
+          consecutive_correct: consecutiveCorrect,
+          next_eligible_at: nextEligibleAt,
+          last_attempted_at: new Date().toISOString(),
+        }),
+      });
+      if (res.ok) {
+        const [row] = await res.json();
+        if (row) setPracticeQueue((p) => ({ ...p, [caseKey]: row }));
+      }
+    } catch (err) {
+      console.error("Failed to update practice queue:", err);
+    }
+  };
+
+  const refetchMastery = async () => {
+    try {
+      const headers = getAuthHeaders();
+      const res = await fetch(`${supabaseUrl}/rest/v1/mechanism_mastery?select=*`, { headers });
+      if (res.ok) {
+        const rows: MechanismMasteryRow[] = await res.json();
+        const map: Record<string, MechanismMasteryRow> = {};
+        rows.forEach((r) => { map[r.mechanism] = r; });
+        setMechanismMastery(map);
+      }
+    } catch (err) {
+      console.error("Failed to refetch mechanism mastery:", err);
+    }
+  };
+
   const submitHypothesis = async () => {
+    if (!activeChallenge || !mechanismClaimed) return;
     if (typingStartedAt) {
       // eslint-disable-next-line react-hooks/purity
       const elapsedSecs = (Date.now() - typingStartedAt) / 1000;
@@ -522,7 +488,6 @@ export default function LearningDashboard() {
       setDiagnosticVelocity(wpm);
       setSessionElapsed(Math.round(elapsedSecs));
     }
-    setCoverageScore(Math.round((hlSelectedOptions.length / activeChallenge.frictionOptions.length) * 100));
     setHlActive(true);
     setSocraticPhase('followup_loading');
     setSocraticError(null);
@@ -538,10 +503,10 @@ export default function LearningDashboard() {
           challenge: {
             id: activeChallenge.id, title: activeChallenge.title,
             metrics: activeChallenge.metrics, context: activeChallenge.context,
-            concepts: activeChallenge.concepts,
+            concepts: activeChallenge.concepts, groundTruthMechanism: activeChallenge.groundTruthMechanism,
           },
           hypothesis: hlInput,
-          selectedMechanisms: hlSelectedOptions.map(i => activeChallenge.frictionOptions[i]),
+          mechanismClaimed,
         }),
       });
       const data = await res.json();
@@ -556,6 +521,7 @@ export default function LearningDashboard() {
   };
 
   const submitFollowupResponse = async () => {
+    if (!activeChallenge || !mechanismClaimed) return;
     setSocraticPhase('verdict_loading');
     setSocraticError(null);
     try {
@@ -570,10 +536,10 @@ export default function LearningDashboard() {
           challenge: {
             id: activeChallenge.id, title: activeChallenge.title,
             metrics: activeChallenge.metrics, context: activeChallenge.context,
-            concepts: activeChallenge.concepts,
+            concepts: activeChallenge.concepts, groundTruthMechanism: activeChallenge.groundTruthMechanism,
           },
           hypothesis: hlInput,
-          selectedMechanisms: hlSelectedOptions.map(i => activeChallenge.frictionOptions[i]),
+          mechanismClaimed,
           followupQuestion,
           followupResponse,
         }),
@@ -581,10 +547,13 @@ export default function LearningDashboard() {
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || `Socratic tutor request failed (${res.status}).`);
 
-      const v = {
+      const v: VerdictResult = {
         score: data.score as number,
         feedback: data.feedback as string,
         concepts_demonstrated: (data.concepts_demonstrated as string[]) || [],
+        mechanism_claimed: data.mechanism_claimed as FrictionMechanism,
+        mechanism_correct: data.mechanism_correct as boolean,
+        rubric_scores: data.rubric_scores as RubricScores,
       };
       setVerdict(v);
       setSocraticPhase('verdict');
@@ -601,12 +570,16 @@ export default function LearningDashboard() {
             challenge_id: activeChallenge.id,
             challenge_title: activeChallenge.title,
             hypothesis: hlInput,
-            selected_mechanisms: hlSelectedOptions.map(i => activeChallenge.frictionOptions[i]),
+            selected_mechanisms: [mechanismClaimed],
             followup_question: followupQuestion,
             followup_response: followupResponse,
             score: v.score,
             feedback: v.feedback,
             concepts_demonstrated: v.concepts_demonstrated,
+            ground_truth_mechanism: activeChallenge.groundTruthMechanism,
+            mechanism_claimed: v.mechanism_claimed,
+            mechanism_correct: v.mechanism_correct,
+            rubric_scores: v.rubric_scores,
             model: data.meta?.model,
             tier: data.meta?.tier,
             estimated_cost_usd: data.meta?.estimatedCostUSD,
@@ -617,7 +590,8 @@ export default function LearningDashboard() {
       }
 
       setConceptsMastered(prev => prev + v.concepts_demonstrated.length);
-      setRadarDomains(prev => applyDomainDeltas(prev, v.concepts_demonstrated, v.score));
+      await refetchMastery();
+      await updatePracticeQueue(activeChallenge.id, v.mechanism_correct, v.score);
     } catch (err) {
       console.error("Socratic verdict failed:", err);
       setSocraticError(err instanceof Error ? err.message : "Failed to reach the Socratic tutor.");
@@ -625,12 +599,18 @@ export default function LearningDashboard() {
     }
   };
 
-  // Radar math
+  // Radar math — six real mechanisms, real accuracy from mechanism_mastery.
+  // No attempts yet for a mechanism = honest 0, never a placeholder guess.
   const radarW = 240;
   const radarH = 240;
   const cx = radarW / 2;
   const cy = radarH / 2;
   const r = 76;
+
+  const radarDomains = ALL_MECHANISMS.map((m) => ({
+    name: MECHANISM_LABELS[m],
+    score: mechanismMastery[m]?.accuracy_pct ?? 0,
+  }));
 
   const getCoords = (index: number, score: number) => {
     const angle = (index * 2 * Math.PI) / radarDomains.length - Math.PI / 2;
@@ -648,8 +628,6 @@ export default function LearningDashboard() {
     const c = getCoords(i, d.score);
     return `${c.x},${c.y}`;
   }).join(" ");
-
-  const elev = CHALLENGE_ELEVATIONS[activeChallenge.id] || CHALLENGE_ELEVATIONS.saas_asia;
 
   return (
     <div className="min-h-screen bg-[#0A0908] text-[#F5F0EB] p-4 md:p-6 space-y-5 font-mono relative overflow-x-hidden">
@@ -712,6 +690,16 @@ export default function LearningDashboard() {
             exit={{ opacity: 0, y: -8 }}
             className="grid grid-cols-1 xl:grid-cols-12 gap-5 relative z-10"
           >
+            {casesLoading ? (
+              <div className="xl:col-span-12 border border-[#D4A853]/15 bg-[#110F0D] p-8 rounded-2xl text-center text-xs text-[#B0A89E] animate-pulse">
+                {"Loading case bank from real deliverables…"}
+              </div>
+            ) : !activeChallenge ? (
+              <div className="xl:col-span-12 border border-[#C85C5C]/25 bg-[#C85C5C]/5 p-8 rounded-2xl text-center text-xs text-[#C85C5C]">
+                {"No cases available — no deliverable in public/deliverables/ currently has groundTruthMechanism set."}
+              </div>
+            ) : (
+            <>
             {/* LEFT: Challenge engine */}
             <div className="xl:col-span-8 space-y-4">
 
@@ -719,43 +707,62 @@ export default function LearningDashboard() {
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl">
                 <div className="flex items-center justify-between mb-4">
                   <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase">
-                    {"01 — Scenario Selection"}
+                    {"01 — Real Case Selection"}
                   </span>
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#C85C5C] border border-[#C85C5C]/20 px-2 py-0.5 rounded-full bg-[#C85C5C]/5">
-                    {"Divergent Mode"}
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#5C9A6B] border border-[#5C9A6B]/20 px-2 py-0.5 rounded-full bg-[#5C9A6B]/5">
+                    {challenges.length} {"real cases"}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {CASE_STUDIES.map(cs => (
-                    <button
-                      key={cs.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedChallengeId(cs.id);
-                        resetChallenge();
-                        setQuizScore(null);
-                        setSelectedAnswer(null);
-                      }}
-                      className={`p-3 border rounded-xl text-left transition-all cursor-pointer ${
-                        selectedChallengeId === cs.id
-                          ? "border-[#D4A853] bg-[#D4A853]/5 text-white"
-                          : "border-[#D4A853]/8 text-[#B0A89E] hover:border-[#D4A853]/20 hover:text-white"
-                      }`}
-                    >
-                      <div className="text-xs font-bold leading-snug line-clamp-2">{cs.title}</div>
-                      {selectedChallengeId === cs.id && (
-                        <span className="text-[10px] text-[#D4A853] block mt-1 uppercase tracking-wider">{"Active"}</span>
-                      )}
-                    </button>
-                  ))}
+                  {challenges.map(cs => {
+                    const q = practiceQueue[cs.id];
+                    return (
+                      <button
+                        key={cs.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedChallengeId(cs.id);
+                          resetChallenge();
+                          setQuizScore(null);
+                          setSelectedAnswer(null);
+                        }}
+                        className={`p-3 border rounded-xl text-left transition-all cursor-pointer ${
+                          selectedChallengeId === cs.id
+                            ? "border-[#D4A853] bg-[#D4A853]/5 text-white"
+                            : "border-[#D4A853]/8 text-[#B0A89E] hover:border-[#D4A853]/20 hover:text-white"
+                        }`}
+                      >
+                        <div className="text-xs font-bold leading-snug line-clamp-2">{cs.title}</div>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          {selectedChallengeId === cs.id && (
+                            <span className="text-[10px] text-[#D4A853] uppercase tracking-wider">{"Active"}</span>
+                          )}
+                          {q && (
+                            <span className={`text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full border ${
+                              q.stage === 'independent' ? "text-[#5C9A6B] border-[#5C9A6B]/30" : "text-[#D4A853] border-[#D4A853]/30"
+                            }`}>
+                              {q.stage}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* Main Challenge Card */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-4">
-                <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase">
-                  {"02 — Crisis Scenario"}
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase">
+                    {"02 — Crisis Scenario"}
+                  </span>
+                  <span className={`font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                    activeStage === 'independent' ? "text-[#5C9A6B] border-[#5C9A6B]/30 bg-[#5C9A6B]/5" : "text-[#D4A853] border-[#D4A853]/30 bg-[#D4A853]/5"
+                  }`}>
+                    {activeStage === 'independent' ? "Stage 3 — Independent" : "Stage 2 — Guided Socratic"}
+                  </span>
+                </div>
                 <h3 className="text-base font-bold text-white font-serif leading-snug">{activeChallenge.title}</h3>
 
                 <div className="border border-[#D4A853]/10 bg-[#0A0908] p-4 rounded-xl text-xs space-y-3">
@@ -769,37 +776,73 @@ export default function LearningDashboard() {
                   </div>
                 </div>
 
+                {/* Stage 1 — Study This Case (worked example, always available,
+                    not stage-tracked — Sweller worked-example sequencing) */}
+                {!hlActive && (
+                  <div className="border border-[#D4A853]/10 rounded-xl overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setStudyExpanded(!studyExpanded)}
+                      className="w-full flex items-center justify-between p-3 bg-[#0A0908] text-xs text-[#D4A853] uppercase tracking-wider cursor-pointer"
+                    >
+                      <span>{"Stage 1 — Study This Case (worked example)"}</span>
+                      <span>{studyExpanded ? "Collapse ↑" : "Expand ↓"}</span>
+                    </button>
+                    {studyExpanded && (
+                      <div className="p-4 space-y-3 border-t border-[#D4A853]/10">
+                        {activeChallenge.evidence.map((e, idx) => (
+                          <div key={idx} className="text-xs">
+                            <span className={`uppercase text-[9px] tracking-wider mr-2 px-1.5 py-0.5 rounded border ${
+                              e.tier === 'measured' ? "text-[#5C9A6B] border-[#5C9A6B]/30" :
+                              e.tier === 'modeled' ? "text-[#D4A853] border-[#D4A853]/30" :
+                              "text-[#7A6F65] border-[#7A6F65]/30"
+                            }`}>{e.tier}</span>
+                            <span className="text-[#F5F0EB] font-semibold">{e.label}:</span>{" "}
+                            <span className="text-[#B0A89E]">{e.value}</span>
+                          </div>
+                        ))}
+                        {activeChallenge.avoid.length > 0 && (
+                          <div className="pt-2 border-t border-[#D4A853]/8 space-y-1.5">
+                            <span className="text-[10px] text-[#C85C5C] uppercase tracking-wider block">{"What the real deliverable avoided:"}</span>
+                            {activeChallenge.avoid.map((a, idx) => (
+                              <p key={idx} className="text-xs text-[#B0A89E]"><span className="text-[#C85C5C]">✕ </span>{a.action} — <span className="italic">{a.reason}</span></p>
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-[10px] text-[#7A6F65] pt-2 border-t border-[#D4A853]/8">
+                          {"This is the real ground truth — the dominant mechanism is "}
+                          <span className="text-[#D4A853]">{MECHANISM_LABELS[activeChallenge.groundTruthMechanism]}</span>.
+                          {" Reading this before you diagnose is Stage 1; the graded attempt below is Stage 2 or 3."}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {!hlActive ? (
                   <div className="space-y-4">
-                    {/* Friction options — 2 cols max */}
+                    {/* Mechanism claim — single select, not multi. Mechanism
+                        isolation is a MECE question: pick the ONE dominant
+                        mechanism, not several that "also apply a little". */}
                     <div>
                       <label className="text-xs text-[#B0A89E] uppercase tracking-wider block mb-2">
-                        {"Isolate friction mechanisms (select all that apply):"}
+                        {"Claim the ONE dominant friction mechanism:"}
                       </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {activeChallenge.frictionOptions.map((option, idx) => {
-                          const isSel = hlSelectedOptions.includes(idx);
-                          return (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() => {
-                                if (isSel) {
-                                  setHlSelectedOptions(prev => prev.filter(i => i !== idx));
-                                } else {
-                                  setHlSelectedOptions(prev => [...prev, idx]);
-                                }
-                              }}
-                              className={`p-3 text-xs text-left border rounded-xl transition-all cursor-pointer leading-relaxed ${
-                                isSel
-                                  ? "border-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
-                                  : "border-[#D4A853]/8 text-[#B0A89E] hover:border-white/10"
-                              }`}
-                            >
-                              {option}
-                            </button>
-                          );
-                        })}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {ALL_MECHANISMS.map((m) => (
+                          <button
+                            key={m}
+                            type="button"
+                            onClick={() => setMechanismClaimed(m)}
+                            className={`p-2.5 text-xs text-center border rounded-xl transition-all cursor-pointer ${
+                              mechanismClaimed === m
+                                ? "border-[#D4A853] bg-[#D4A853]/5 text-[#F5F0EB]"
+                                : "border-[#D4A853]/8 text-[#B0A89E] hover:border-white/10"
+                            }`}
+                          >
+                            {MECHANISM_LABELS[m]}
+                          </button>
+                        ))}
                       </div>
                     </div>
 
@@ -816,7 +859,7 @@ export default function LearningDashboard() {
                             setTypingStartedAt(Date.now());
                           }
                         }}
-                        placeholder={"Write your diagnostic strategy. Focus on how technical constraints interact with behavioral friction..."}
+                        placeholder={"Defend your mechanism claim. Reference the specific evidence above — why this mechanism, and why not the next most plausible one..."}
                         className="w-full bg-[#0A0908] border border-[#D4A853]/8 focus:border-[#D4A853] focus:outline-none p-3 text-xs rounded-xl h-24 text-[#F5F0EB] font-mono resize-none"
                       />
                     </div>
@@ -825,7 +868,7 @@ export default function LearningDashboard() {
                       <button
                         type="button"
                         onClick={submitHypothesis}
-                        disabled={!hlInput.trim() || hlSelectedOptions.length === 0}
+                        disabled={!hlInput.trim() || !mechanismClaimed}
                         className="px-5 py-2.5 bg-[#D4A853] text-[#0A0908] text-xs font-mono font-bold uppercase tracking-wider transition-all hover:bg-[#E8C97A] active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-xl"
                       >
                         {"Submit to Socratic Tutor →"}
@@ -841,9 +884,11 @@ export default function LearningDashboard() {
                     {/* Hypothesis recap */}
                     <div>
                       <h4 className="text-xs text-[#D4A853] uppercase tracking-widest font-semibold mb-1">
-                        {"Your Hypothesis"}
+                        {"Your Claim"}
                       </h4>
                       <p className="text-xs text-[#B0A89E] leading-relaxed">
+                        <span className="text-[#D4A853] font-bold">{mechanismClaimed && MECHANISM_LABELS[mechanismClaimed]}</span>
+                        {" — "}
                         <span className="text-white italic">&ldquo;{hlInput}&rdquo;</span>
                       </p>
                     </div>
@@ -860,7 +905,7 @@ export default function LearningDashboard() {
                         <p className="text-xs text-[#C85C5C] font-mono">{"⚠ "}{socraticError}</p>
                         <button
                           type="button"
-                          onClick={socraticPhase === 'error' && !verdict ? submitHypothesis : submitFollowupResponse}
+                          onClick={!verdict ? submitHypothesis : submitFollowupResponse}
                           className="font-mono text-xs uppercase border border-[#C85C5C]/40 hover:bg-[#C85C5C]/10 text-[#C85C5C] px-3 py-1.5 rounded transition-all"
                         >
                           {"Retry"}
@@ -906,7 +951,33 @@ export default function LearningDashboard() {
                             {verdict.score}{"/100"}
                           </span>
                         </div>
-                        <p className="text-xs text-[#F5F0EB] leading-relaxed">{verdict.feedback}</p>
+
+                        {/* Four Pareto-skill rubric — every one computed or
+                            model-judged and shown honestly, never averaged
+                            away into just the headline score. */}
+                        <div className="grid grid-cols-2 gap-2 text-[10px]">
+                          <div className={`p-2 rounded border ${verdict.mechanism_correct ? "border-[#5C9A6B]/30 bg-[#5C9A6B]/5 text-[#5C9A6B]" : "border-[#C85C5C]/30 bg-[#C85C5C]/5 text-[#C85C5C]"}`}>
+                            {verdict.mechanism_correct ? "✓" : "✕"} {"Mechanism isolation"}
+                          </div>
+                          <div className={`p-2 rounded border ${verdict.rubric_scores.evidence_tier_violations.length === 0 ? "border-[#5C9A6B]/30 bg-[#5C9A6B]/5 text-[#5C9A6B]" : "border-[#C85C5C]/30 bg-[#C85C5C]/5 text-[#C85C5C]"}`}>
+                            {verdict.rubric_scores.evidence_tier_violations.length === 0 ? "✓" : "✕"} {"Evidence-tier discipline"}
+                          </div>
+                          <div className={`p-2 rounded border ${verdict.rubric_scores.specificity_pass ? "border-[#5C9A6B]/30 bg-[#5C9A6B]/5 text-[#5C9A6B]" : "border-[#C85C5C]/30 bg-[#C85C5C]/5 text-[#C85C5C]"}`}>
+                            {verdict.rubric_scores.specificity_pass ? "✓" : "✕"} {"Specificity test"}
+                          </div>
+                          <div className={`p-2 rounded border ${verdict.rubric_scores.confidence_calibrated ? "border-[#5C9A6B]/30 bg-[#5C9A6B]/5 text-[#5C9A6B]" : "border-[#C85C5C]/30 bg-[#C85C5C]/5 text-[#C85C5C]"}`}>
+                            {verdict.rubric_scores.confidence_calibrated ? "✓" : "✕"} {"Confidence calibration"}
+                          </div>
+                        </div>
+                        {verdict.rubric_scores.evidence_tier_violations.length > 0 && (
+                          <div className="text-[10px] text-[#C85C5C] space-y-0.5">
+                            {verdict.rubric_scores.evidence_tier_violations.map((v, idx) => (
+                              <p key={idx}>{"— "}{v}</p>
+                            ))}
+                          </div>
+                        )}
+
+                        <p className="text-xs text-[#F5F0EB] leading-relaxed pt-2 border-t border-[#D4A853]/8">{verdict.feedback}</p>
                         {verdict.concepts_demonstrated.length > 0 && (
                           <div className="pt-2 border-t border-[#D4A853]/8 space-y-1">
                             <span className="text-[10px] text-[#5C9A6B] uppercase tracking-wider block">{"Concepts you demonstrated:"}</span>
@@ -915,12 +986,12 @@ export default function LearningDashboard() {
                             ))}
                           </div>
                         )}
-                        <p className="text-[10px] text-[#7A6F65] font-mono pt-1">{"✓ Session saved — Concepts Mastered and skill radar updated for real."}</p>
+                        <p className="text-[10px] text-[#7A6F65] font-mono pt-1">{"✓ Session saved — Concepts Mastered, mechanism radar, and this case's stage all updated from this real result."}</p>
                       </div>
                     )}
 
                     {/* Cognitive Telemetry */}
-                    {coverageScore !== null && (
+                    {sessionElapsed !== null && (
                       <div className="border border-[#D4A853]/15 bg-[#0A0908]/60 p-4 rounded-xl">
                         <span className="font-mono text-[10px] text-[#D4A853]/70 uppercase tracking-widest block mb-3">
                           {"Cognitive Telemetry"}
@@ -932,13 +1003,9 @@ export default function LearningDashboard() {
                             <span className="font-mono text-[10px] text-[#7A6F65] block">WPM</span>
                           </div>
                           <div>
-                            <span className="font-mono text-[10px] text-[#B0A89E] uppercase block mb-1">{"Coverage"}</span>
-                            <span className={`font-serif text-xl font-bold ${
-                              coverageScore === 100 ? "text-[#5C9A6B]" :
-                              coverageScore >= 67 ? "text-[#D4A853]" :
-                              "text-[#C85C5C]"
-                            }`}>{coverageScore}%</span>
-                            <span className="font-mono text-[10px] text-[#7A6F65] block">{"Mechanisms"}</span>
+                            <span className="font-mono text-[10px] text-[#B0A89E] uppercase block mb-1">{"Stage"}</span>
+                            <span className="font-serif text-xl font-bold text-[#F5F0EB]">{activeStage === 'independent' ? "3" : "2"}</span>
+                            <span className="font-mono text-[10px] text-[#7A6F65] block">{activeStage}</span>
                           </div>
                           <div>
                             <span className="font-mono text-[10px] text-[#B0A89E] uppercase block mb-1">{"Session"}</span>
@@ -948,95 +1015,6 @@ export default function LearningDashboard() {
                         </div>
                       </div>
                     )}
-
-                    {/* Full concept reveal — only after the Socratic exchange
-                        actually concludes, so the answer key never shows
-                        before the dialogue does its job. */}
-                    {socraticPhase === 'verdict' && (
-                      <div className="space-y-3 border-l-2 border-[#D4A853]/30 pl-4 py-1">
-                        {activeChallenge.concepts.map((concept, idx) => (
-                          <div key={idx}>
-                            <div className="text-xs text-[#D4A853] uppercase font-bold">{concept.title}</div>
-                            <p className="text-xs text-[#B0A89E] leading-relaxed mt-0.5">{concept.description}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Elevation Report */}
-                    <div className="border border-[#D4A853]/25 bg-[#110F0D]/30 p-5 rounded-2xl space-y-5 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-20 h-20 bg-[#D4A853]/5 rounded-full filter blur-xl pointer-events-none" />
-
-                      <div>
-                        <span className="font-mono text-[10px] text-[#D4A853] tracking-widest uppercase block mb-1">
-                          {"Elevation Report — Cognitive Gap Map"}
-                        </span>
-                        <div className="space-y-3">
-                          {elev.gaps.map((g, idx) => (
-                            <div key={idx}>
-                              <div className="flex justify-between text-xs mb-1 flex-wrap gap-1">
-                                <span className="text-[#B0A89E]">{g.label}</span>
-                                <span className={`${g.colorClass} font-bold`}>{g.target - g.current}% Gap</span>
-                              </div>
-                              <div className="w-full bg-white/5 h-1.5 rounded overflow-hidden">
-                                <div className={`bg-gradient-to-r ${g.barColor} h-full`} style={{ width: `${g.current}%` }} />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="border-t border-[#D4A853]/15 pt-4">
-                        <span className="font-mono text-[10px] text-[#D4A853] tracking-widest uppercase block mb-3">
-                          {"Hyper-Leap Study Plan"}
-                        </span>
-                        <div className="space-y-2">
-                          {elev.studyPlan.map((s, idx) => (
-                            <div key={idx} className="flex items-start gap-2.5 p-2.5 bg-white/5 rounded-xl border border-[#D4A853]/8">
-                              <span className="text-[#D4A853] font-bold text-xs flex-shrink-0">{s.step}</span>
-                              <div>
-                                <span className="text-white block font-bold text-xs">{s.title}</span>
-                                <span className="text-xs text-[#B0A89E] leading-relaxed block mt-0.5">{s.desc}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="border-t border-[#D4A853]/15 pt-4">
-                        <span className="font-mono text-[10px] text-[#D4A853] tracking-widest uppercase block mb-3">
-                          {"Priority Articles (Gap Closure)"}
-                        </span>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                          {elev.articles.map((art) => (
-                            <div
-                              key={art.num}
-                              className={`p-3 border rounded-xl flex flex-col justify-between cursor-pointer transition-all ${
-                                expandedArticle === art.num
-                                  ? "border-[#D4A853] bg-[#D4A853]/10"
-                                  : "border-[#D4A853]/8 bg-[#0A0908] hover:border-[#D4A853]/25"
-                              }`}
-                              onClick={() => setExpandedArticle(expandedArticle === art.num ? null : art.num)}
-                            >
-                              <div>
-                                <span className={`font-mono text-[10px] ${art.categoryColor} uppercase block mb-1`}>
-                                  {art.category}
-                                </span>
-                                <h5 className="text-xs font-bold text-white leading-snug">{art.title}</h5>
-                                {expandedArticle === art.num ? (
-                                  <p className="text-xs text-[#F5F0EB] mt-2 leading-relaxed">{art.body}</p>
-                                ) : (
-                                  <p className="text-xs text-[#B0A89E] mt-1 line-clamp-2">{art.summary}</p>
-                                )}
-                              </div>
-                              <span className="text-xs text-[#D4A853] font-bold mt-2">
-                                {expandedArticle === art.num ? "Collapse ↑" : "Read →"}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
 
                     {/* Action buttons */}
                     <div className="flex flex-wrap gap-2 pt-1">
@@ -1051,26 +1029,23 @@ export default function LearningDashboard() {
                         type="button"
                         onClick={() => {
                           const node = {
-                            schema: "sf-ip-node-v1",
+                            schema: "sf-ip-node-v2",
                             generated_at: new Date().toISOString(),
                             challenge: {
                               id: activeChallenge.id,
                               title: activeChallenge.title,
-                              metrics: activeChallenge.metrics,
-                              context: activeChallenge.context,
+                              ground_truth_mechanism: activeChallenge.groundTruthMechanism,
                             },
                             diagnostic_session: {
                               hypothesis: hlInput,
-                              selected_friction_mechanisms: hlSelectedOptions.map(i => activeChallenge.frictionOptions[i]),
-                              coverage_score_pct: coverageScore,
+                              mechanism_claimed: mechanismClaimed,
                               diagnostic_velocity_wpm: diagnosticVelocity,
                               time_to_submit_seconds: sessionElapsed,
                             },
-                            elevation_report: {
-                              gaps: elev.gaps.map(g => ({ label: g.label, current: g.current, target: g.target })),
-                              study_plan: elev.studyPlan,
-                            },
-                            cognitive_radar_snapshot: radarDomains.map(d => ({ domain: d.name, score: d.score })),
+                            verdict,
+                            mechanism_mastery_snapshot: ALL_MECHANISMS.map((m) => ({
+                              mechanism: m, accuracy_pct: mechanismMastery[m]?.accuracy_pct ?? null, attempts: mechanismMastery[m]?.attempts ?? 0,
+                            })),
                           };
                           const blob = new Blob([JSON.stringify(node, null, 2)], { type: "application/json" });
                           const url = URL.createObjectURL(blob);
@@ -1095,10 +1070,10 @@ export default function LearningDashboard() {
             {/* RIGHT: Radar + Quiz */}
             <div className="xl:col-span-4 space-y-4">
 
-              {/* Cognitive Radar */}
+              {/* Mechanism Radar — six real mechanisms, real accuracy */}
               <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl">
                 <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase block mb-4">
-                  {"03 — Cognitive Radar"}
+                  {"03 — Mechanism Radar"}
                 </span>
                 <div className="flex justify-center">
                   <svg width={radarW} height={radarH} className="overflow-visible">
@@ -1145,55 +1120,66 @@ export default function LearningDashboard() {
                     <span className="text-[#D4A853] uppercase tracking-wider font-bold text-[10px]">{"Concepts Mastered"}</span>
                     <span className="text-white font-bold bg-[#D4A853]/10 px-2 py-0.5 rounded-full border border-[#D4A853]/20 text-[10px]">{conceptsMastered}</span>
                   </div>
-                  {radarDomains.map(d => (
-                    <div key={d.name} className="flex justify-between items-center text-xs">
-                      <span className="text-[#B0A89E] truncate mr-2">{d.name}</span>
-                      <span className="text-[#D4A853] flex-shrink-0 font-mono">{d.score}</span>
-                    </div>
-                  ))}
+                  {ALL_MECHANISMS.map((m) => {
+                    const row = mechanismMastery[m];
+                    return (
+                      <div key={m} className="flex justify-between items-center text-xs">
+                        <span className="text-[#B0A89E] truncate mr-2">{MECHANISM_LABELS[m]}</span>
+                        <span className="text-[#D4A853] flex-shrink-0 font-mono">
+                          {row ? `${row.accuracy_pct ?? 0}% (${row.correct}/${row.attempts})` : "—"}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Quick Diagnostic Quiz */}
-              <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-3">
-                <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase">
-                  {"04 — Quick Diagnostic"}
-                </span>
-                <div className="border border-[#D4A853]/8 bg-[#0A0908] p-3 rounded-xl">
-                  <span className="text-[10px] text-[#D4A853] uppercase block mb-1">{"Active Scenario"}</span>
-                  <p className="text-xs text-[#B0A89E] leading-relaxed">{activeChallenge.quizQuestion}</p>
-                </div>
-                <div className="space-y-1.5">
-                  {activeChallenge.quizAnswers.map((ans, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => checkQuiz(idx)}
-                      disabled={selectedAnswer !== null}
-                      className={`w-full text-left p-2.5 text-xs border rounded-xl transition-all cursor-pointer ${
-                        selectedAnswer === idx
-                          ? idx === 1
-                            ? "bg-[#5C9A6B]/10 border-[#5C9A6B]/30 text-[#5C9A6B]"
-                            : "bg-[#C85C5C]/10 border-[#C85C5C]/30 text-[#C85C5C]"
-                          : "border-[#D4A853]/8 text-[#B0A89E] hover:border-[#D4A853]/25 hover:text-white"
-                      } disabled:cursor-not-allowed`}
-                    >
-                      {ans}
-                    </button>
-                  ))}
-                </div>
-                {quizScore !== null && (
-                  <div className={`p-2.5 border text-xs leading-relaxed rounded-xl ${
-                    quizScore === 100
-                      ? "bg-[#5C9A6B]/5 border-[#5C9A6B]/20 text-[#5C9A6B]"
-                      : "bg-[#C85C5C]/5 border-[#C85C5C]/20 text-[#C85C5C]"
-                  }`}>
-                    {quizScore === 100 ? "✓ CORRECT. " : "✗ INCORRECT. "}
-                    {activeChallenge.quizExplanation}
+              {/* Quick Diagnostic Quiz — computed per case, correctAnswerIndex
+                  is always derived from real groundTruthMechanism, never
+                  hand-typed. */}
+              {activeQuiz && (
+                <div className="border border-[#D4A853]/15 bg-[#110F0D] p-5 rounded-2xl space-y-3">
+                  <span className="font-mono text-xs text-[#D4A853]/70 tracking-widest uppercase">
+                    {"04 — Quick Diagnostic"}
+                  </span>
+                  <div className="border border-[#D4A853]/8 bg-[#0A0908] p-3 rounded-xl">
+                    <span className="text-[10px] text-[#D4A853] uppercase block mb-1">{"Active Scenario"}</span>
+                    <p className="text-xs text-[#B0A89E] leading-relaxed">{activeQuiz.question}</p>
                   </div>
-                )}
-              </div>
+                  <div className="space-y-1.5">
+                    {activeQuiz.answers.map((ans, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => checkQuiz(idx)}
+                        disabled={selectedAnswer !== null}
+                        className={`w-full text-left p-2.5 text-xs border rounded-xl transition-all cursor-pointer ${
+                          selectedAnswer === idx
+                            ? idx === activeQuiz.correctAnswerIndex
+                              ? "bg-[#5C9A6B]/10 border-[#5C9A6B]/30 text-[#5C9A6B]"
+                              : "bg-[#C85C5C]/10 border-[#C85C5C]/30 text-[#C85C5C]"
+                            : "border-[#D4A853]/8 text-[#B0A89E] hover:border-[#D4A853]/25 hover:text-white"
+                        } disabled:cursor-not-allowed`}
+                      >
+                        {ans}
+                      </button>
+                    ))}
+                  </div>
+                  {quizScore !== null && (
+                    <div className={`p-2.5 border text-xs leading-relaxed rounded-xl ${
+                      quizScore === 100
+                        ? "bg-[#5C9A6B]/5 border-[#5C9A6B]/20 text-[#5C9A6B]"
+                        : "bg-[#C85C5C]/5 border-[#C85C5C]/20 text-[#C85C5C]"
+                    }`}>
+                      {quizScore === 100 ? "✓ CORRECT. " : "✗ INCORRECT. "}
+                      {activeQuiz.explanation}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+            </>
+            )}
           </motion.div>
         )}
 

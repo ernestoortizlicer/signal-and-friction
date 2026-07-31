@@ -11,6 +11,7 @@
   "daysRemaining": 23,
   "guaranteeStatus": "Specificity Guarantee Active",
   "telemetryStatus": "✓ Public Signal Scan Confirmed (PageSpeed + HTML) — Conversion Data Pending Your Analytics",
+  "groundTruthMechanism": "cognitive_load",
   "evidence": [
     { "tier": "measured", "label": "Pricing page — plan tiers displayed", "value": "4", "source": "Raw HTML scan, structural element count, scanned June 2026" },
     { "tier": "measured", "label": "Pricing page — feature bullet points per plan (average)", "value": "~12", "source": "Raw HTML scan, list-item count per plan card, scanned June 2026" },

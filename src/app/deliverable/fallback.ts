@@ -6,6 +6,20 @@ export interface Decision {
   tradeoff: string;
 }
 
+// The six Signal & Friction friction mechanisms — the fixed taxonomy the
+// whole method is built on. Duplicated (not imported) in
+// supabase/functions/learning-socratic-tutor/index.ts, the same
+// cross-boundary pattern already used for other shared types in this repo
+// (e.g. Presence between functions/api/_scan.ts and the prospecting page) —
+// Deno edge functions can't import from src/.
+export type FrictionMechanism =
+  | 'cognitive_load'
+  | 'trust_deficit'
+  | 'commitment_anxiety'
+  | 'ordering_error'
+  | 'identity_friction'
+  | 'value_uncertainty';
+
 // ── Epistemics — the evidence-tier system ──────────────────────────────────
 // Every figure in a deliverable must be honestly tagged. We can only ever
 // observe a prospect's PUBLIC surface (PageSpeed measurements, raw HTML) —
@@ -92,6 +106,17 @@ export interface DeliverableData {
   confidenceReason?: string;
   // Structured "what NOT to do" — required going forward, not optional prose.
   avoid?: AvoidItem[];
+  // The real, structured answer to "which of the six mechanisms is this" —
+  // distinct from diagnosis.friction.mechanism below, which is free-form
+  // narrative text ("Cognitive Overload — Choice Paralysis...") meant for a
+  // client to read, not a value a training rubric can validate a learner's
+  // answer against. Added 2026-08-01 for the diagnostic-craft training
+  // module: this field is the ground truth a real case is graded against,
+  // so it's only ever set by hand after actually reading the deliverable's
+  // own diagnosis — never inferred from the narrative string. A deliverable
+  // without this field is automatically excluded from the training case
+  // bank (see admin/learning/page.tsx) rather than guessed at.
+  groundTruthMechanism?: FrictionMechanism;
   diagnosis: {
     signal: string;
     friction: {
