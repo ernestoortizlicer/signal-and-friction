@@ -150,6 +150,9 @@ export default function PersonalFinanceCenter() {
   const [viewStats, setViewStats] = useState<Record<string, { count: number; lastViewed: string | null }>>({});
   const [viewStatsLoading, setViewStatsLoading] = useState(true);
 
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   useEffect(() => {
     async function fetchFinanceData() {
       setFetchError(null);
@@ -308,6 +311,62 @@ export default function PersonalFinanceCenter() {
     }
   }
 
+  // ── Delete (hard, admin-gated by RLS — requires an authenticated session) ──
+  async function deleteTransaction(id: string, label: string) {
+    if (!window.confirm(`Permanently delete transaction "${label}"? This also removes its ledger entries and cannot be undone.`)) return;
+    setDeleteError(null);
+    setDeletingId(id);
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://your-supabase.supabase.co";
+      const headers = getAuthHeaders();
+      const res = await fetch(`${supabaseUrl}/rest/v1/transactions?id=eq.${id}`, { method: "DELETE", headers });
+      if (!res.ok) throw new Error(`Failed to delete transaction (${res.status}).`);
+      setTransactions(prev => prev.filter(t => t.id !== id));
+      setEntries(prev => prev.filter(e => e.transaction_id !== id));
+    } catch (err) {
+      console.error("Failed to delete transaction:", err);
+      setDeleteError(err instanceof Error ? err.message : "Failed to delete transaction.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  async function deleteInvestment(id: string, label: string) {
+    if (!window.confirm(`Permanently delete "${label}" from the asset portfolio? This cannot be undone.`)) return;
+    setDeleteError(null);
+    setDeletingId(id);
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://your-supabase.supabase.co";
+      const headers = getAuthHeaders();
+      const res = await fetch(`${supabaseUrl}/rest/v1/investments?id=eq.${id}`, { method: "DELETE", headers });
+      if (!res.ok) throw new Error(`Failed to delete investment (${res.status}).`);
+      setInvestments(prev => prev.filter(i => i.id !== id));
+    } catch (err) {
+      console.error("Failed to delete investment:", err);
+      setDeleteError(err instanceof Error ? err.message : "Failed to delete investment.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  async function deleteGoal(id: string, label: string) {
+    if (!window.confirm(`Permanently delete goal "${label}"? This cannot be undone.`)) return;
+    setDeleteError(null);
+    setDeletingId(id);
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://your-supabase.supabase.co";
+      const headers = getAuthHeaders();
+      const res = await fetch(`${supabaseUrl}/rest/v1/financial_goals?id=eq.${id}`, { method: "DELETE", headers });
+      if (!res.ok) throw new Error(`Failed to delete goal (${res.status}).`);
+      setGoals(prev => prev.filter(g => g.id !== id));
+    } catch (err) {
+      console.error("Failed to delete goal:", err);
+      setDeleteError(err instanceof Error ? err.message : "Failed to delete goal.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0A0908] flex items-center justify-center font-mono text-xs text-[#B0A89E] animate-pulse">
@@ -325,6 +384,18 @@ export default function PersonalFinanceCenter() {
             <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#C85C5C]">
               {"⚠ Failed to load financial data — "}{fetchError}
             </span>
+          </div>
+        )}
+
+        {deleteError && (
+          <div className="border-2 border-[#C85C5C]/50 bg-[#C85C5C]/10 px-4 py-2.5 rounded flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#C85C5C] animate-pulse shrink-0" />
+            <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#C85C5C]">
+              {"⚠ "}{deleteError}
+            </span>
+            <button type="button" onClick={() => setDeleteError(null)} className="underline text-xs font-mono ml-auto cursor-pointer">
+              dismiss
+            </button>
           </div>
         )}
 
@@ -607,9 +678,20 @@ export default function PersonalFinanceCenter() {
                       const pct = (goal.current_amount / goal.target_amount) * 100;
                       return (
                         <div key={goal.id} className="space-y-2">
-                          <div className="flex justify-between text-xs font-mono">
+                          <div className="flex justify-between items-center text-xs font-mono gap-2">
                             <span className="text-[#B0A89E]">{goal.name}</span>
-                            <span className="text-[#F5F0EB]">${(goal.current_amount/100).toFixed(0)} / ${(goal.target_amount/100).toFixed(0)}</span>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-[#F5F0EB]">${(goal.current_amount/100).toFixed(0)} / ${(goal.target_amount/100).toFixed(0)}</span>
+                              <button
+                                type="button"
+                                onClick={() => deleteGoal(goal.id, goal.name)}
+                                disabled={deletingId === goal.id}
+                                title="Delete goal"
+                                className="text-[#C85C5C]/70 hover:text-[#C85C5C] disabled:opacity-40 cursor-pointer"
+                              >
+                                {deletingId === goal.id ? "…" : "✕"}
+                              </button>
+                            </div>
                           </div>
                           <div className="h-1.5 bg-black border border-[#D4A853]/8 rounded-full overflow-hidden">
                             <div className="h-full bg-[#D4A853]" style={{ width: `${pct}%` }} />
@@ -718,6 +800,7 @@ export default function PersonalFinanceCenter() {
                         <th>{"Debit Account"}</th>
                         <th>{"Credit Account"}</th>
                         <th className="text-right">{"Amount"}</th>
+                        <th className="text-right">{"Actions"}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -732,6 +815,16 @@ export default function PersonalFinanceCenter() {
                             <td className="text-[#B0A89E]">{creditEntry?.accounts?.name || 'Unknown'}</td>
                             <td className="text-right text-[#F5F0EB] font-bold">
                               ${(Math.abs(debitEntry?.amount || 0) / 100).toFixed(2)}
+                            </td>
+                            <td className="text-right">
+                              <button
+                                type="button"
+                                onClick={() => deleteTransaction(tx.id, tx.description)}
+                                disabled={deletingId === tx.id}
+                                className="px-2.5 py-1 rounded bg-[#C85C5C]/10 border border-[#C85C5C]/25 text-[#C85C5C] text-[10px] font-mono uppercase tracking-wide hover:bg-[#C85C5C]/15 disabled:opacity-40 cursor-pointer"
+                              >
+                                {deletingId === tx.id ? "Deleting…" : "Delete"}
+                              </button>
                             </td>
                           </tr>
                         );
@@ -891,6 +984,7 @@ export default function PersonalFinanceCenter() {
                           <th className="text-right">{"Cost Basis"}</th>
                           <th className="text-right">{"Current Valuation"}</th>
                           <th className="text-right">{"Annual ROI / Depreciation"}</th>
+                          <th className="text-right">{"Actions"}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -907,6 +1001,16 @@ export default function PersonalFinanceCenter() {
                               ) : (
                                 <span className="text-[#C85C5C]">-{inv.depreciation_rate_annual_pct}% Depr</span>
                               )}
+                            </td>
+                            <td className="text-right">
+                              <button
+                                type="button"
+                                onClick={() => deleteInvestment(inv.id, inv.name)}
+                                disabled={deletingId === inv.id}
+                                className="px-2.5 py-1 rounded bg-[#C85C5C]/10 border border-[#C85C5C]/25 text-[#C85C5C] text-[10px] font-mono uppercase tracking-wide hover:bg-[#C85C5C]/15 disabled:opacity-40 cursor-pointer"
+                              >
+                                {deletingId === inv.id ? "Deleting…" : "Delete"}
+                              </button>
                             </td>
                           </tr>
                         ))}

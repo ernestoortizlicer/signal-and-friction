@@ -276,6 +276,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [deletingClient, setDeletingClient] = useState(false);
   const [arrTotal, setArrTotal] = useState<number>(0);
   const [recentPayments, setRecentPayments] = useState<Array<{
     id: string;
@@ -1092,6 +1093,39 @@ export default function AdminDashboard() {
       console.error("Failed to save client:", err);
       setSaveError(err instanceof Error ? err.message : "Failed to save — the change was not persisted.");
       setLoading(false);
+    }
+  };
+
+  // Hard delete. beta_projects, client_interactions, performance_guarantees,
+  // and diagnostic_scaffolds all reference clients(id) ON DELETE CASCADE (see
+  // the prospection/certified/scaffolds migrations) — deleting a client
+  // correctly removes its whole pipeline record, not just the row itself.
+  const deleteClient = async () => {
+    if (!selectedClient) return;
+    if (
+      !window.confirm(
+        `Permanently delete ${selectedClient.company_name}? This removes the client and its entire pipeline record (project status, interactions, guarantees). This cannot be undone.`
+      )
+    )
+      return;
+    setSaveError(null);
+    setDeletingClient(true);
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://your-supabase.supabase.co";
+      const headers = getAuthHeaders();
+      const res = await fetch(`${supabaseUrl}/rest/v1/clients?id=eq.${selectedClient.id}`, {
+        method: "DELETE",
+        headers,
+      });
+      if (!res.ok) throw new Error(`Failed to delete client (${res.status}).`);
+      setShowModal(false);
+      setSelectedClient(null);
+      await fetchAllData();
+    } catch (err) {
+      console.error("Failed to delete client:", err);
+      setSaveError(err instanceof Error ? err.message : "Failed to delete client.");
+    } finally {
+      setDeletingClient(false);
     }
   };
 
@@ -3160,21 +3194,31 @@ export default function AdminDashboard() {
                   {"⚠ "}{saveError}
                 </div>
               )}
-              <div className="flex justify-end gap-3 border-t border-[#D4A853]/8 pt-4">
+              <div className="flex justify-between items-center gap-3 border-t border-[#D4A853]/8 pt-4">
                 <button
                   type="button"
-                  onClick={() => { setSaveError(null); setShowModal(false); }}
-                  className="px-4 py-2 border border-white/10 hover:text-white uppercase tracking-wider rounded cursor-pointer text-xs font-mono"
+                  onClick={deleteClient}
+                  disabled={deletingClient}
+                  className="px-4 py-2 border border-[#C85C5C]/40 text-[#C85C5C] hover:bg-[#C85C5C]/10 uppercase tracking-wider rounded cursor-pointer text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {"Cancel"}
+                  {deletingClient ? "Deleting…" : "Delete Client"}
                 </button>
-                <button
-                  type="button"
-                  onClick={handleSaveClientDetails}
-                  className="px-5 py-2 bg-[#D4A853] text-[#0A0908] font-bold uppercase tracking-wider hover:bg-[#E8C97A] transition-all rounded cursor-pointer text-xs font-mono"
-                >
-                  {"Save Parameters"}
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setSaveError(null); setShowModal(false); }}
+                    className="px-4 py-2 border border-white/10 hover:text-white uppercase tracking-wider rounded cursor-pointer text-xs font-mono"
+                  >
+                    {"Cancel"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveClientDetails}
+                    className="px-5 py-2 bg-[#D4A853] text-[#0A0908] font-bold uppercase tracking-wider hover:bg-[#E8C97A] transition-all rounded cursor-pointer text-xs font-mono"
+                  >
+                    {"Save Parameters"}
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>

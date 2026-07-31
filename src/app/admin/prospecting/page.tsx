@@ -141,6 +141,7 @@ export default function ProspectingCommandCenter() {
   const [savingEditIds, setSavingEditIds] = useState<Set<string>>(new Set());
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [selectedActionRunning, setSelectedActionRunning] = useState(false);
+  const [clearingAll, setClearingAll] = useState(false);
 
   async function fetchCandidates() {
     try {
@@ -562,6 +563,42 @@ export default function ProspectingCommandCenter() {
     setSelectedActionRunning(false);
   }
 
+  // ── Clear All (hard delete of every candidate, regardless of filter/selection) ──
+  async function clearAllCandidates() {
+    if (candidates.length === 0) return;
+    if (
+      !window.confirm(
+        `Delete ALL ${candidates.length} candidate${candidates.length === 1 ? "" : "s"}? This clears the entire prospecting pipeline back to zero and cannot be undone.`
+      )
+    )
+      return;
+    setClearingAll(true);
+    const ids = candidates.map((c) => c.id);
+    let failures = 0;
+    for (const id of ids) {
+      try {
+        const res = await fetch(`/api/prospecting/candidates/${id}`, {
+          method: "DELETE",
+          headers: getAuthHeaders(),
+        });
+        if (res.ok) {
+          setCandidates((prev) => prev.filter((c) => c.id !== id));
+        } else {
+          failures++;
+        }
+      } catch {
+        failures++;
+      }
+    }
+    setSelectedIds(new Set());
+    setClearingAll(false);
+    setNotice(
+      failures === 0
+        ? { message: "Prospecting pipeline cleared — the table is now empty.", variant: "green" }
+        : { message: `Cleared with ${failures} failure${failures === 1 ? "" : "s"} — check remaining rows.`, variant: "red" }
+    );
+  }
+
   async function rescanSelected() {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
@@ -681,6 +718,14 @@ export default function ProspectingCommandCenter() {
               className="px-3 py-1.5 rounded-lg bg-[#C85C5C]/10 border border-[#C85C5C]/25 text-[#C85C5C] text-xs font-mono uppercase tracking-wide hover:bg-[#C85C5C]/15 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
               {selectedActionRunning ? "Working…" : `Delete Selected (${selectedIds.size})`}
+            </button>
+            <button
+              type="button"
+              onClick={clearAllCandidates}
+              disabled={clearingAll || selectedActionRunning}
+              className="px-3 py-1.5 rounded-lg bg-[#C85C5C]/15 border border-[#C85C5C]/40 text-[#C85C5C] text-xs font-mono uppercase tracking-wide hover:bg-[#C85C5C]/25 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {clearingAll ? "Clearing…" : `Clear All (${candidates.length})`}
             </button>
           </div>
         </div>

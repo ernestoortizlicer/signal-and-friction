@@ -84,6 +84,11 @@ export default function PriorityCommandCenter() {
   const [addingTask, setAddingTask] = useState(false);
   const [addTaskError, setAddTaskError] = useState<string | null>(null);
   const [completeTaskError, setCompleteTaskError] = useState<string | null>(null);
+  const [editingTask, setEditingTask] = useState<PriorityTask | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editTaskError, setEditTaskError] = useState<string | null>(null);
+  const [deleteTaskError, setDeleteTaskError] = useState<string | null>(null);
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
 
   const updateTaskQuadrant = async (taskId: string, newQuadrant: PriorityTask['quadrant']) => {
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, quadrant: newQuadrant } : t));
@@ -243,6 +248,82 @@ export default function PriorityCommandCenter() {
     }
   };
 
+  // Edits can touch any of the scoring inputs (deadline, revenue, effort,
+  // energy, learning multiplier), so every edit re-runs calculate_priority_score
+  // rather than trying to detect which fields actually changed — a title-only
+  // edit re-scoring to the same value is harmless, but silently skipping a
+  // real scoring change is not.
+  const editTask = async (
+    taskId: string,
+    input: {
+      title: string;
+      description: string;
+      category: PriorityTask['category'];
+      effort_minutes: number;
+      energy_required: PriorityTask['energy_required'];
+      deadline: string;
+      revenue_impact_usd: number;
+      learning_multiplier: number;
+    }
+  ) => {
+    setEditTaskError(null);
+    if (!input.title.trim()) {
+      setEditTaskError("Title is required.");
+      return false;
+    }
+    setSavingEdit(true);
+    try {
+      const headers = getAuthHeaders();
+      const res = await fetch(`${supabaseUrl}/rest/v1/priority_tasks?id=eq.${taskId}`, {
+        method: "PATCH",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: input.title.trim(),
+          description: input.description.trim() || null,
+          category: input.category,
+          effort_minutes: input.effort_minutes,
+          energy_required: input.energy_required,
+          deadline: input.deadline ? new Date(input.deadline).toISOString() : null,
+          revenue_impact: Math.round(input.revenue_impact_usd * 100),
+          learning_multiplier: input.learning_multiplier,
+          updated_at: new Date().toISOString(),
+        }),
+      });
+      if (!res.ok) throw new Error(`Failed to update task (${res.status}).`);
+      await scoreTask(taskId);
+      await fetchData();
+      return true;
+    } catch (err) {
+      console.error("Failed to edit task:", err);
+      setEditTaskError(err instanceof Error ? err.message : "Failed to update task.");
+      return false;
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const deleteTask = async (taskId: string, label: string) => {
+    if (!window.confirm(`Permanently delete "${label}"? This cannot be undone.`)) return;
+    setDeleteTaskError(null);
+    setDeletingTaskId(taskId);
+    try {
+      const headers = getAuthHeaders();
+      const res = await fetch(`${supabaseUrl}/rest/v1/priority_tasks?id=eq.${taskId}`, {
+        method: "DELETE",
+        headers,
+      });
+      if (!res.ok) throw new Error(`Failed to delete task (${res.status}).`);
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+      setScoreLogs(prev => prev.filter(l => l.task_id !== taskId));
+      if (selectedTask === taskId) setSelectedTask(null);
+    } catch (err) {
+      console.error("Error deleting task:", err);
+      setDeleteTaskError(err instanceof Error ? err.message : "Failed to delete task.");
+    } finally {
+      setDeletingTaskId(null);
+    }
+  };
+
   const pendingTasks = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress');
   const filteredTasks = pendingTasks.filter(t => {
     if (categoryFilter !== 'all' && t.category !== categoryFilter) return false;
@@ -332,6 +413,15 @@ export default function PriorityCommandCenter() {
             <span className="w-2 h-2 rounded-full bg-[#C85C5C] animate-pulse shrink-0" />
             <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#C85C5C]">
               {"⚠ "}{completeTaskError}
+            </span>
+          </div>
+        )}
+
+        {deleteTaskError && (
+          <div className="border-2 border-[#C85C5C]/50 bg-[#C85C5C]/10 px-4 py-2.5 rounded flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#C85C5C] animate-pulse shrink-0" />
+            <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#C85C5C]">
+              {"⚠ "}{deleteTaskError}
             </span>
           </div>
         )}
@@ -478,6 +568,28 @@ export default function PriorityCommandCenter() {
                                 {"Start Task"}
                               </button>
                             )}
+                            <div className="flex gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditTaskError(null);
+                                  setEditingTask(task);
+                                }}
+                                className="flex-1 font-mono text-xs uppercase border border-white/10 hover:bg-white/5 text-[#B0A89E] px-2 py-1 rounded transition-all"
+                              >
+                                {"Edit"}
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteTask(task.id, task.title);
+                                }}
+                                disabled={deletingTaskId === task.id}
+                                className="flex-1 font-mono text-xs uppercase border border-[#C85C5C]/40 hover:bg-[#C85C5C]/10 text-[#C85C5C] px-2 py-1 rounded transition-all disabled:opacity-40"
+                              >
+                                {deletingTaskId === task.id ? "Deleting…" : "Delete"}
+                              </button>
+                            </div>
                             {log && (
                               <div className="space-y-2">
                                 <span className="font-mono text-xs text-[#B85C38] uppercase">{"Score Breakdown"}</span>
@@ -654,6 +766,28 @@ export default function PriorityCommandCenter() {
                                               </button>
                                             ))}
                                         </div>
+                                      </div>
+                                      <div className="pt-2 flex gap-1">
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setEditTaskError(null);
+                                            setEditingTask(task);
+                                          }}
+                                          className="flex-1 px-2 py-1 text-[9px] font-mono uppercase rounded border border-white/10 text-[#B0A89E] hover:text-[#F5F0EB] hover:bg-white/5 transition-all cursor-pointer"
+                                        >
+                                          {"Edit"}
+                                        </button>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            deleteTask(task.id, task.title);
+                                          }}
+                                          disabled={deletingTaskId === task.id}
+                                          className="flex-1 px-2 py-1 text-[9px] font-mono uppercase rounded border border-[#C85C5C]/40 text-[#C85C5C] hover:bg-[#C85C5C]/10 transition-all cursor-pointer disabled:opacity-40"
+                                        >
+                                          {deletingTaskId === task.id ? "Deleting…" : "Delete"}
+                                        </button>
                                       </div>
                                     </div>
                                   </motion.div>
@@ -853,6 +987,18 @@ export default function PriorityCommandCenter() {
             error={addTaskError}
           />
         )}
+        {editingTask && (
+          <EditTaskModal
+            task={editingTask}
+            onClose={() => { setEditingTask(null); setEditTaskError(null); }}
+            onSave={async (input) => {
+              const ok = await editTask(editingTask.id, input);
+              return ok;
+            }}
+            saving={savingEdit}
+            error={editTaskError}
+          />
+        )}
       </AnimatePresence>
     </main>
   );
@@ -1017,6 +1163,200 @@ function AddTaskModal({
             className="px-5 py-2 bg-[#D4A853] text-[#0A0908] font-bold uppercase tracking-wider hover:bg-[#E8C97A] transition-all rounded cursor-pointer text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {adding ? "Adding…" : "Add Task"}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function toDatetimeLocal(iso?: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+interface EditTaskInput {
+  title: string;
+  description: string;
+  category: PriorityTask['category'];
+  effort_minutes: number;
+  energy_required: PriorityTask['energy_required'];
+  deadline: string;
+  revenue_impact_usd: number;
+  learning_multiplier: number;
+}
+
+function EditTaskModal({
+  task,
+  onClose,
+  onSave,
+  saving,
+  error,
+}: {
+  task: PriorityTask;
+  onClose: () => void;
+  onSave: (input: EditTaskInput) => Promise<boolean>;
+  saving: boolean;
+  error: string | null;
+}) {
+  const [title, setTitle] = useState(task.title);
+  const [description, setDescription] = useState(task.description ?? "");
+  const [category, setCategory] = useState<PriorityTask['category']>(task.category);
+  const [effortMinutes, setEffortMinutes] = useState(task.effort_minutes);
+  const [energyRequired, setEnergyRequired] = useState<PriorityTask['energy_required']>(task.energy_required);
+  const [deadline, setDeadline] = useState(toDatetimeLocal(task.deadline));
+  const [revenueImpactUsd, setRevenueImpactUsd] = useState(task.revenue_impact / 100);
+  const [learningMultiplier, setLearningMultiplier] = useState(task.learning_multiplier);
+
+  const handleSubmit = async () => {
+    const ok = await onSave({
+      title, description, category, effort_minutes: effortMinutes, energy_required: energyRequired,
+      deadline, revenue_impact_usd: revenueImpactUsd, learning_multiplier: learningMultiplier,
+    });
+    if (ok) onClose();
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 10, scale: 0.98 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-lg bg-[#0A0908] border border-[#D4A853]/20 rounded-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+      >
+        <div className="flex items-center justify-between border-b border-[#D4A853]/8 pb-3">
+          <h3 className="font-serif text-lg text-[#F5F0EB]">{"Edit Task"}</h3>
+          <button onClick={onClose} className="font-mono text-xs text-[#7A6F65] hover:text-white uppercase">{"✕"}</button>
+        </div>
+
+        {error && (
+          <div className="border border-[#C85C5C]/40 bg-[#C85C5C]/10 rounded px-3 py-2 font-mono text-xs text-[#C85C5C]">
+            {"⚠ "}{error}
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <div>
+            <label className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider block mb-1">{"Title *"}</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full bg-black/40 border border-[#D4A853]/15 rounded px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
+              placeholder="What needs doing?"
+            />
+          </div>
+
+          <div>
+            <label className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider block mb-1">{"Description"}</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={2}
+              className="w-full bg-black/40 border border-[#D4A853]/15 rounded px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40 resize-none"
+              placeholder="Optional detail"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider block mb-1">{"Category"}</label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value as PriorityTask['category'])}
+                className="w-full bg-black/40 border border-[#D4A853]/15 rounded px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
+              >
+                {(['manual', 'beta_project', 'incident', 'finance', 'learning'] as const).map((c) => (
+                  <option key={c} value={c}>{c.replace('_', ' ')}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider block mb-1">{"Energy"}</label>
+              <select
+                value={energyRequired}
+                onChange={(e) => setEnergyRequired(e.target.value as PriorityTask['energy_required'])}
+                className="w-full bg-black/40 border border-[#D4A853]/15 rounded px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
+              >
+                {(['deep', 'shallow', 'creative', 'analytical', 'admin'] as const).map((e) => (
+                  <option key={e} value={e}>{ENERGY_ICONS[e]} {e}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider block mb-1">{"Effort (min)"}</label>
+              <input
+                type="number"
+                min={5}
+                value={effortMinutes}
+                onChange={(e) => setEffortMinutes(Number(e.target.value))}
+                className="w-full bg-black/40 border border-[#D4A853]/15 rounded px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
+              />
+            </div>
+            <div>
+              <label className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider block mb-1">{"Deadline"}</label>
+              <input
+                type="datetime-local"
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
+                className="w-full bg-black/40 border border-[#D4A853]/15 rounded px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider block mb-1">{"Revenue Impact ($)"}</label>
+              <input
+                type="number"
+                min={0}
+                value={revenueImpactUsd}
+                onChange={(e) => setRevenueImpactUsd(Number(e.target.value))}
+                className="w-full bg-black/40 border border-[#D4A853]/15 rounded px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
+              />
+            </div>
+            <div>
+              <label className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider block mb-1">{"Learning Multiplier (1–10)"}</label>
+              <input
+                type="number"
+                min={1}
+                max={10}
+                value={learningMultiplier}
+                onChange={(e) => setLearningMultiplier(Math.min(10, Math.max(1, Number(e.target.value))))}
+                className="w-full bg-black/40 border border-[#D4A853]/15 rounded px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 border-t border-[#D4A853]/8 pt-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 border border-white/10 hover:text-white uppercase tracking-wider rounded cursor-pointer text-xs font-mono"
+          >
+            {"Cancel"}
+          </button>
+          <button
+            type="button"
+            disabled={saving || !title.trim()}
+            onClick={handleSubmit}
+            className="px-5 py-2 bg-[#D4A853] text-[#0A0908] font-bold uppercase tracking-wider hover:bg-[#E8C97A] transition-all rounded cursor-pointer text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {saving ? "Saving…" : "Save Changes"}
           </button>
         </div>
       </motion.div>
