@@ -118,13 +118,29 @@ function frictionGrade(score: number): 'A' | 'B' | 'C' | 'D' | 'F' {
 // real content" — the concrete, checkable condition behind 'undetermined'
 // for the SaaS-trust-signal checks below. Not a judgment about the site;
 // just an honest limit of what a plain fetch (no JS execution) can see.
-function visibleTextLength(html: string): number {
+//
+// Phrase-based checks (pricingLink's text fallback, primaryCtaPresent) run
+// against this stripped text rather than raw HTML. Root cause of a real
+// false negative found 2026-07-31: matching raw HTML with a `>text<`
+// boundary breaks the instant a CTA has any trailing decoration inside the
+// same tag — e.g. "See the diagnostic pricing &#x27;→</a>" leaves an
+// arrow glyph between the phrase and the closing `<`, so a boundary-
+// anchored regex never matches even though the phrase is right there.
+// Stripped text has no tag boundaries left to trip on.
+function stripToVisibleText(html: string): string {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')
     .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&#x27;|&#39;|&apos;/gi, "'")
     .replace(/\s+/g, ' ')
-    .trim().length;
+    .trim();
+}
+
+function visibleTextLength(html: string): number {
+  return stripToVisibleText(html).length;
 }
 
 function detectPresence(html: string, contentIsRendered: boolean, pattern: RegExp): Presence {
@@ -197,13 +213,32 @@ async function detectHtmlSignals(url: string): Promise<{
   // — a plain-text/regex search can't reliably isolate a nav region, so
   // it checks for a pricing link anywhere on the page, matching what's
   // actually measured rather than overclaiming precision.
-  const contentIsRendered = visibleTextLength(html) >= 500;
+  const visibleText = stripToVisibleText(html);
+  const contentIsRendered = visibleText.length >= 500;
   const privacyPolicyLink = detectPresence(html, contentIsRendered, /href="[^"]*privacy[^"]*"|privacy\s*policy/i);
   const termsOfServiceLink = detectPresence(html, contentIsRendered, /href="[^"]*terms[^"]*"|terms\s*(of\s*(service|use)|and\s*conditions)/i);
   const socialProof = detectPresence(html, contentIsRendered, /testimonial|case\s*stud(y|ies)|trustpilot|g2\.com|capterra/i);
   const securityBadges = detectPresence(html, contentIsRendered, /soc\s?2|gdpr|iso\s?27001/i);
   const liveChatWidget = detectPresence(html, contentIsRendered, /intercom|drift\.com|crisp\.chat|tawk\.to|zendesk|zopim|hubspot|chatwoot|frontapp\.com/i);
-  const pricingLink = detectPresence(html, contentIsRendered, /href="[^"]*pricing[^"]*"|>\s*pricing\s*</i);
+
+  // Root cause of a real false negative (found 2026-07-31, scanning this
+  // site's own homepage): the old pattern only checked the raw href
+  // attribute (`href="...pricing..."`) or a tag-boundary-anchored
+  // `>pricing<` text match. A pricing link whose href doesn't literally
+  // contain "pricing" (client-side routed, a differently-named slug) or
+  // whose visible label sits behind nested markup never matched either
+  // form. Now also checks the stripped visible text for the word
+  // "pricing" — catches a plain-text nav label or button regardless of
+  // its href or surrounding markup, at the cost of also matching editorial
+  // mentions of the word "pricing" that aren't a link (an honest tradeoff:
+  // false positives from body copy vs. false negatives from real pricing
+  // links this used to miss — this scan already accepts the same tradeoff
+  // for the CTA/testimonial/security checks below).
+  const pricingLink = detectPresence(
+    html,
+    contentIsRendered,
+    /href="[^"]*pricing[^"]*"/i
+  ) === 'found' ? 'found' : detectPresence(visibleText, contentIsRendered, /\bpricing\b/i);
 
   // Google's own mobile-friendly criterion (web.dev/Chrome docs): without a
   // valid viewport meta tag, mobile browsers render at desktop width and
@@ -219,11 +254,38 @@ async function detectHtmlSignals(url: string): Promise<{
   // deliberately checks presence anywhere on the page rather than
   // overclaiming "above the fold" or "in the hero" — same honesty pattern
   // already established by pricingLink above.
-  const primaryCtaPresent = detectPresence(
-    html,
-    contentIsRendered,
-    />\s*(get started|start (your |a )?free trial|book a demo|request a demo|sign up free|start now|try (it )?free)\s*</i
-  );
+  //
+  // Root cause of a real false negative (found 2026-07-31, this site's own
+  // CTAs — "Scan My Funnel →" and "See the diagnostic pricing →" — were
+  // both reported not_found): two compounding bugs. First, the old phrase
+  // list only covered one CTA archetype (trial-signup SaaS: "get started",
+  // "start free trial") and had no coverage for the free-scan/audit/
+  // diagnostic-tool archetype this product itself belongs to — a real gap
+  // in the source list, not a matching bug. Second, the match ran against
+  // raw HTML with a `>phrase<` tag-boundary anchor, which breaks the
+  // instant any trailing decoration (an arrow glyph, an icon span) sits
+  // between the phrase and the tag close — exactly what "→" does here.
+  // Fixed by matching the stripped visible text (no tag boundaries to
+  // trip on) against a broadened phrase list spanning the common CTA
+  // archetypes documented in CXL's and Unbounce's CTA-copy research:
+  // trial/signup, demo/sales-contact, and scan/audit/checker tools.
+  const ctaPhrases = [
+    // trial / signup archetype
+    'get started', 'start your free trial', 'start a free trial', 'start free trial',
+    'sign up free', 'sign up for free', 'create your account', 'create free account',
+    'try it free', 'try for free',
+    // demo / sales-contact archetype
+    'book a demo', 'request a demo', 'schedule a demo', 'talk to sales', 'contact sales',
+    'book a call', 'schedule a call', 'get a quote', 'get quote',
+    // scan / audit / diagnostic-tool archetype — the original list had zero
+    // coverage here, which is what missed this site's own primary CTA
+    'scan my', 'run a free scan', 'run my scan', 'analyze my', 'check my site',
+    'audit my', 'get my audit', 'get my report', 'see my results', 'get my diagnostic',
+    // generic low-friction next-step phrasing
+    'start now', 'see pricing', 'view pricing', 'claim your', 'join free', 'join now',
+  ];
+  const ctaPattern = new RegExp(ctaPhrases.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'i');
+  const primaryCtaPresent = detectPresence(visibleText, contentIsRendered, ctaPattern);
 
   // Split from a single combined "socialProof" regex: NN/g's research found
   // users trust testimonials on external review platforms (which the site
