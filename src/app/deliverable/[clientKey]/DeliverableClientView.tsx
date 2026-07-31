@@ -295,20 +295,20 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
 
   const isMicrodosing = d.segment === "microdosing";
 
-  // Dynamic values (previously hardcoded)
-  const founderFocusScore = d.founderFocusScore ?? 85;
-  const daysRemaining = d.daysRemaining ?? 23;
-  const guaranteeStatus = d.guaranteeStatus ?? "Specificity Guarantee Active";
-  const telemetryStatus = d.telemetryStatus ?? "✓ Traffic & Baseline Confirmed";
-  const ba: BeforeAfterData = d.beforeAfter ?? {
-    beforeTitle: "Verify Billing & Setup Server",
-    beforeIssue: "Cognitive Load — multiple decision variables before dashboard access",
-    beforeFields: ["Phone Number", "Company Size", "Industry Type", "CRM Version", "AWS Region", "Billing Email"],
-    beforeBounce: "Bounce Probability: ~88%",
-    afterTitle: "Access Your Workspace",
-    afterDomain: `${urlClientKey}.signal-and-friction.app`,
-    afterGain: "Calculated Conversion Gain: +350%",
-  };
+  // Command Center audit, 2026-07-31: these four fields and beforeAfter used
+  // to fall back to specific, confident-looking fabricated values (85, 23,
+  // "Specificity Guarantee Active", "✓ Traffic & Baseline Confirmed", and a
+  // whole fake before/after example claiming "+350% Calculated Conversion
+  // Gain") whenever a real deliverable's data was incomplete — indistinguishable
+  // from real figures to the client looking at them. All five are optional on
+  // DeliverableData; left undefined here and gated at each render site below
+  // instead, matching the "renders only when present" pattern already used
+  // for the confidence/evidence sections elsewhere in this file.
+  const founderFocusScore = d.founderFocusScore;
+  const daysRemaining = d.daysRemaining;
+  const guaranteeStatus = d.guaranteeStatus;
+  const telemetryStatus = d.telemetryStatus;
+  const ba: BeforeAfterData | undefined = d.beforeAfter;
 
   const [checklist, setChecklist] = useState(d.checklist || []);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(d.learningModules?.[0]?.id || null);
@@ -431,19 +431,21 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                 </div>
               </div>
 
-              {/* Founder Focus Tracker — dynamic */}
-              <div className="bg-[#110F0D] border border-[#C85C5C]/15 p-5 rounded-lg space-y-3 glow-border-red">
-                <div className="flex justify-between items-center font-mono text-xs">
-                  <span className="text-[#B0A89E]">Founder Focus Index</span>
-                  <span className="text-[#5C9A6B] font-bold">{founderFocusScore} / 100</span>
+              {/* Founder Focus Tracker — renders only when real, not a guess */}
+              {founderFocusScore !== undefined && (
+                <div className="bg-[#110F0D] border border-[#C85C5C]/15 p-5 rounded-lg space-y-3 glow-border-red">
+                  <div className="flex justify-between items-center font-mono text-xs">
+                    <span className="text-[#B0A89E]">Founder Focus Index</span>
+                    <span className="text-[#5C9A6B] font-bold">{founderFocusScore} / 100</span>
+                  </div>
+                  <div className="w-full bg-[#2A2218] h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-[#5C9A6B] h-full rounded-full" style={{ width: `${founderFocusScore}%` }} />
+                  </div>
+                  <div className="font-mono text-xs text-[#7A6F65] leading-relaxed">
+                    Cognitive load index: {100 - founderFocusScore}/100 — execution adherence at high-confidence threshold.
+                  </div>
                 </div>
-                <div className="w-full bg-[#2A2218] h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-[#5C9A6B] h-full rounded-full" style={{ width: `${founderFocusScore}%` }} />
-                </div>
-                <div className="font-mono text-xs text-[#7A6F65] leading-relaxed">
-                  Cognitive load index: {100 - founderFocusScore}/100 — execution adherence at high-confidence threshold.
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </motion.section>
@@ -608,23 +610,34 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
             intervention — with every figure tagged by how we know it.
           </motion.p>
 
-          <motion.div
-            variants={itemVariants}
-            className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 border border-[#D4A853]/8 bg-[#110F0D]/60 p-5 rounded select-none"
-          >
-            <div className="space-y-1">
-              <div className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider">Guarantee Status</div>
-              <div className="font-serif text-[#F5F0EB] text-xs font-semibold">{guaranteeStatus}</div>
-            </div>
-            <div className="space-y-1">
-              <div className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider">Telemetry Validation</div>
-              <div className="font-mono text-xs text-[#5C9A6B] font-semibold">{telemetryStatus}</div>
-            </div>
-            <div className="space-y-1">
-              <div className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider">Testing Runway</div>
-              <div className="font-mono text-xs text-[#D4A853] font-bold">{daysRemaining} Days Remaining</div>
-            </div>
-          </motion.div>
+          {/* Status strip — renders only when this deliverable actually has
+              guarantee/telemetry data; a partial or absent record shows
+              nothing here rather than a fabricated "active" claim. */}
+          {(guaranteeStatus !== undefined || telemetryStatus !== undefined || daysRemaining !== undefined) && (
+            <motion.div
+              variants={itemVariants}
+              className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 border border-[#D4A853]/8 bg-[#110F0D]/60 p-5 rounded select-none"
+            >
+              {guaranteeStatus !== undefined && (
+                <div className="space-y-1">
+                  <div className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider">Guarantee Status</div>
+                  <div className="font-serif text-[#F5F0EB] text-xs font-semibold">{guaranteeStatus}</div>
+                </div>
+              )}
+              {telemetryStatus !== undefined && (
+                <div className="space-y-1">
+                  <div className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider">Telemetry Validation</div>
+                  <div className="font-mono text-xs text-[#5C9A6B] font-semibold">{telemetryStatus}</div>
+                </div>
+              )}
+              {daysRemaining !== undefined && (
+                <div className="space-y-1">
+                  <div className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider">Testing Runway</div>
+                  <div className="font-mono text-xs text-[#D4A853] font-bold">{daysRemaining} Days Remaining</div>
+                </div>
+              )}
+            </motion.div>
+          )}
         </div>
       </motion.section>
 
@@ -703,20 +716,26 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
         </div>
       </motion.section>
 
-      {/* Before / After Slider — fully data-driven, no hardcoded copy */}
-      <motion.section
-        className="py-20 px-6 border-b border-[#D4A853]/8 bg-[#0A0908]"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true, margin: "-100px" }}
-      >
-        <div className="max-w-[900px] mx-auto">
-          <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.15em] text-[#B0A89E] mb-8">
-            Visualization — Interface Overhaul (Drag to Compare)
-          </h2>
-          <BeforeAfterSlider data={ba} clientName={d.clientName} />
-        </div>
-      </motion.section>
+      {/* Before / After Slider — renders only when this deliverable has real
+          beforeAfter data. Used to fall back to a fake example (fictional
+          fields, "+350% Calculated Conversion Gain") when absent — that
+          example is gone, not replaced, since there's no honest generic
+          substitute for a client-specific before/after comparison. */}
+      {ba && (
+        <motion.section
+          className="py-20 px-6 border-b border-[#D4A853]/8 bg-[#0A0908]"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+        >
+          <div className="max-w-[900px] mx-auto">
+            <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.15em] text-[#B0A89E] mb-8">
+              Visualization — Interface Overhaul (Drag to Compare)
+            </h2>
+            <BeforeAfterSlider data={ba} clientName={d.clientName} />
+          </div>
+        </motion.section>
+      )}
 
       {/* The Recommendation — ONE synthesized decision, not three */}
       <motion.section
