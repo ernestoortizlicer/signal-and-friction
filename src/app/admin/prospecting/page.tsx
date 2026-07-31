@@ -18,47 +18,57 @@ interface TechnicalSignals {
   lcp: { ms: number; label: string; status: string };
   tbt: { ms: number; label: string; status: string };
   cls: { value: number; status: string };
-  performanceScore: number;
+  performanceScore: number; // informational only — not scored, see ScoreBreakdown
   speedIndex: { ms: number; label: string };
   grade: string;
   platform: string | null;
-  hasStripe: boolean;
-  stripeAsync: boolean;
-  scriptCount: number;
-  missingOgTags: string[];
-  hasCheckoutIndicator: boolean;
-  hasLazyImages: boolean;
-  httpsEnabled: boolean;
+  missingOgTags: string[]; // informational only — not scored
+  httpsEnabled: boolean;   // informational only — not scored
   privacyPolicyLink: Presence;
   termsOfServiceLink: Presence;
-  socialProof: Presence;
   securityBadges: Presence;
-  liveChatWidget: Presence;
+  liveChatWidget: Presence; // informational only — not scored
   pricingLink: Presence;
+  viewportMetaPresent: boolean;
+  primaryCtaPresent: Presence;
+  onSiteTestimonial: Presence;
+  thirdPartyReviewLink: Presence;
   scannedAt: string;
   psError: string | null;
 }
 
-interface TrustSignalBreakdown {
-  missingOgTags: number;
-  checkoutWithoutLazyLoad: number;
-  syncStripe: number;
-  httpsMissing: number;
+interface CoreWebVitalsBreakdown {
+  lcp: number;
+  cls: number;
+  tbt: number;
+}
+
+interface MobileUsabilityBreakdown {
+  viewportMissing: number;
+}
+
+interface TrustDisclosureBreakdown {
+  pricingLinkMissing: number;
+  securityBadgeMissing: number;
+  thirdPartyReviewMissing: number;
+  onSiteTestimonialMissing: number;
   privacyMissing: number;
   termsMissing: number;
-  socialProofMissing: number;
-  securityBadgeMissing: number;
-  liveChatMissing: number;
-  pricingLinkMissing: number;
+}
+
+interface ValueClarityBreakdown {
+  primaryCtaMissing: number;
 }
 
 interface ScoreBreakdown {
-  performance: number;
-  lcp: number;
-  tbt: number;
-  cls: number;
-  trustSignals: TrustSignalBreakdown;
-  trustSignalsTotal: number;
+  coreWebVitals: CoreWebVitalsBreakdown;
+  coreWebVitalsTotal: number;
+  mobileUsability: MobileUsabilityBreakdown;
+  mobileUsabilityTotal: number;
+  trustDisclosure: TrustDisclosureBreakdown;
+  trustDisclosureTotal: number;
+  valueClarity: ValueClarityBreakdown;
+  valueClarityTotal: number;
 }
 
 interface Candidate {
@@ -753,8 +763,8 @@ export default function ProspectingCommandCenter() {
             "LCP",
             "Perf",
             "Platform",
-            "Checkout",
-            "Missing OG",
+            "Viewport",
+            "CTA",
             "Founder Contact",
             "Status",
             "Actions",
@@ -830,13 +840,17 @@ export default function ProspectingCommandCenter() {
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   {c.technical_signals
-                    ? c.technical_signals.hasCheckoutIndicator
-                      ? (c.technical_signals.hasLazyImages ? "Detected" : "Detected, unoptimized")
-                      : "Not detected"
+                    ? (c.technical_signals.viewportMetaPresent ? "Present" : "Missing")
                     : "—"}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
-                  {c.technical_signals ? c.technical_signals.missingOgTags.length : "—"}
+                  {c.technical_signals
+                    ? c.technical_signals.primaryCtaPresent === "found"
+                      ? "Found"
+                      : c.technical_signals.primaryCtaPresent === "not_found"
+                        ? "Missing"
+                        : "—"
+                    : "—"}
                 </td>
                 <td className="px-4 py-3 min-w-[180px]">
                   <input
