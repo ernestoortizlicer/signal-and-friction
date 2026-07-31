@@ -493,14 +493,22 @@ export default function ScanPage() {
           )}
         </AnimatePresence>
 
-        {/* Empty state social proof */}
+        {/* Empty state — cited external research, not this tool's own
+            aggregate data. The three stats here used to be presented with
+            no source at all ("Avg abandonment delta found," "Monthly
+            friction cost per site") — worded exactly like results pulled
+            from this tool's own scan history, when nothing computed them.
+            Replaced with real, checkable numbers instead of removing the
+            section outright, since the underlying persuasive point (speed
+            and trust signals move conversion) is true and sourced — it
+            just was never allowed to be presented as fabricated. */}
         {phase === 'idle' && (
           <div className="space-y-8 border-t border-[#D4A853]/8 pt-8">
             <div className="grid grid-cols-3 gap-4 text-center">
               {[
-                { value: "+47%", label: "Avg abandonment delta found" },
-                { value: "4.2s", label: "Median LCP on e-commerce checkout" },
-                { value: "$1,200+", label: "Monthly friction cost per site" },
+                { value: "+90%", label: "Mobile bounce increase, 1s→5s load" },
+                { value: "53%", label: "Mobile visits abandoned past 3s load" },
+                { value: "15–30%", label: "Avg conversion lift from trust signals" },
               ].map(s => (
                 <div key={s.label}>
                   <div className="font-serif text-2xl font-bold text-[#D4A853]">{s.value}</div>
@@ -509,7 +517,7 @@ export default function ScanPage() {
               ))}
             </div>
             <p className="font-mono text-[10px] text-[#7A6F65] text-center">
-              Powered by Google PageSpeed Insights + Signal &amp; Friction proprietary friction analysis engine.
+              Industry research — Think with Google Mobile Site Speed Playbook; Baymard Institute, 147 sites studied. Not Signal &amp; Friction&apos;s own data. Your scan below is measured, not modeled.
             </p>
           </div>
         )}

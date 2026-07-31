@@ -29,8 +29,6 @@ function ConfirmedContent() {
 
   const [timeLeft, setTimeLeft] = useState(72 * 60 * 60);
   const [refId] = useState(() => Math.random().toString(36).substring(2, 10).toUpperCase());
-  const [referralCopied, setReferralCopied] = useState(false);
-  const referralLink = `https://signal-and-friction.com/?ref=${refId}`;
   // No fallback URL — a fake one is worse than none, since it renders as a
   // clickable button that silently fails at Stripe. null means "not ready
   // yet" or "failed to load," both rendered as a non-broken waiting/error
@@ -291,45 +289,24 @@ function ConfirmedContent() {
             ))}
           </div>
 
-          {/* Referral Engine */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.2, duration: 0.6 }}
-            className="w-full border border-[#D4A853]/10 bg-[#D4A853]/[0.03] p-4"
-          >
-            <div className="flex items-start justify-between gap-4 flex-wrap">
-              <div className="flex-1 min-w-0">
-                <p className="font-mono text-xs text-[#D4A853] tracking-[0.2em] uppercase mb-1">
-                  Referral Protocol
-                </p>
-                <p className="font-mono text-xs text-[#F5F0EB] leading-relaxed mb-0.5">
-                  Refer a founder. Earn a $500 Diagnostic Credit.
-                </p>
-                <p className="font-mono text-xs text-[#B0A89E] leading-relaxed">
-                  Share your link. Credit activates when they complete a paid phase. Valid on orders $750 and above.
-                </p>
-              </div>
-              <div className="flex flex-col items-end gap-2 shrink-0">
-                <div className="flex items-center gap-2 border border-[#D4A853]/15 px-2.5 py-1.5 bg-[#0A0908]">
-                  <span className="font-mono text-xs text-[#B0A89E] truncate max-w-[160px]">
-                    {referralLink}
-                  </span>
-                </div>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(referralLink).then(() => {
-                      setReferralCopied(true);
-                      setTimeout(() => setReferralCopied(false), 2000);
-                    });
-                  }}
-                  className="font-mono text-xs tracking-[0.15em] uppercase px-3 py-1.5 bg-[#D4A853] text-[#0A0908] hover:bg-[#E8C97A] transition-colors duration-150"
-                >
-                  {referralCopied ? "Copied." : "Copy Link"}
-                </button>
-              </div>
-            </div>
-          </motion.div>
+          {/*
+            Referral Engine — removed 2026-07-31, not disabled-and-hidden.
+            This widget promised a specific $500 credit to every lead with a
+            working "Copy Link" button, but nothing behind it could honor
+            that: REFERRALS_LIVE is false (functions/api/_referral-credit.ts)
+            so the webhook never writes to the referrals table, which
+            doesn't exist live anyway (same unapplied-migration pattern as
+            Learning's hyper_leap_sessions). Worse, refId above is a
+            client-side Math.random() string never registered against this
+            lead's identity anywhere — even flipping REFERRALS_LIVE on
+            wouldn't answer "who does $500 actually go to." Re-add only
+            after: (1) the referrals migration is applied and the flag is
+            flipped, and (2) refId (or an equivalent) is persisted
+            server-side against the referring lead, not just embedded in a
+            URL. Inbound-referral capture (buildCheckoutHref above) is
+            unaffected — that's silent attribution tracking, not a promise
+            to anyone, and works today independent of this widget.
+          */}
         </motion.div>
       </div>
     </div>
