@@ -46,14 +46,24 @@ const COST: Record<Tier, { in: number; out: number }> = {
   blade: { in: 15.00, out: 75.00 },
 };
 
-function roughTokens(text: string): number {
-  return Math.ceil(text.length / 4);
+// Takes a character COUNT, not text — callers already have inChars/outChars
+// as numbers (from .length on the real prompt/response strings). Found via
+// live testing 2026-08-01: estimateCost was calling this as
+// roughTokens(inChars.toString()) — turning a number like 998 into the
+// 3-character string "998" and measuring THAT string's length, instead of
+// treating 998 as an actual character count. Every cost this function has
+// ever returned has been near-zero regardless of real prompt/response
+// size — not a rounding error, a full unit-type bug. Fixed at the source
+// (drop the .toString() round-trip below) rather than patched at the call
+// site, since nothing should ever pass a stringified number in here again.
+function roughTokens(charCount: number): number {
+  return Math.ceil(charCount / 4);
 }
 
 function estimateCost(tier: Tier, inChars: number, outChars: number): number {
   const c = COST[tier];
-  return (roughTokens(inChars.toString()) / 1_000_000) * c.in +
-         (roughTokens(outChars.toString()) / 1_000_000) * c.out;
+  return (roughTokens(inChars) / 1_000_000) * c.in +
+         (roughTokens(outChars) / 1_000_000) * c.out;
 }
 
 // ── OpenAI-compatible call (OpenRouter + DeepSeek) ──────────────────────────

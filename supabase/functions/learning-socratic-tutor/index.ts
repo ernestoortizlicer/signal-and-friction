@@ -180,7 +180,15 @@ serve(async (req) => {
         tier: "sharp",
         system: SYSTEM_PROMPT_FOLLOWUP,
         user: userPrompt,
-        maxTokens: 150,
+        // Found via live testing 2026-08-01: deepseek-reasoner (R1) spends
+        // tokens on its own internal reasoning before emitting any final
+        // answer — maxTokens is the ceiling on that combined total, not
+        // just the final text. 150 was sized for the ~60-word answer alone
+        // and left zero room for reasoning; every live call returned an
+        // empty final message. The system prompt already constrains the
+        // final question to under 60 words — this budget is headroom for
+        // R1 to think, not permission to write a longer answer.
+        maxTokens: 2000,
         temperature: 0.6,
       });
 
@@ -229,7 +237,10 @@ serve(async (req) => {
         tier: "sharp",
         system: SYSTEM_PROMPT_VERDICT,
         user: userPrompt,
-        maxTokens: 500,
+        // Same reasoning-budget issue as the followup call above — verdict
+        // additionally has to reason through four separate rubric
+        // dimensions before emitting the JSON, so it gets more headroom.
+        maxTokens: 3000,
         temperature: 0.3,
       });
 
