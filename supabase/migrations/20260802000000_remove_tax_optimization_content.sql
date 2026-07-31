@@ -1,0 +1,27 @@
+-- ════════════════════════════════════════════════════════════
+-- MIGRATION: Remove tax-optimization content and features
+-- Migration ID: 20260802000000_remove_tax_optimization_content
+--
+-- Companion to the Finance "Tax Optimizer" tab removal (same date, in
+-- src/app/admin/finance/page.tsx) and the tax-advice guardrail added to
+-- finance-advisor-prompt's system prompt. A tool that computes or
+-- "optimizes" tax liability is the highest-risk fabrication class in this
+-- project — real money and real legal standing with a real tax authority,
+-- not just credibility. Ernesto's own situation (Spain → Finland
+-- transition, not yet registered autónomo, cross-border income from
+-- US/Singapore clients, a prior insolvency) is far too complex for any of
+-- this to be safely automated. Finance records real income and expenses;
+-- it does not compute what's owed.
+--
+-- Removes the seeded 'tax-optimization-llc' education_content article
+-- (US-specific LLC/SEP-IRA tax advice, not even applicable to Ernesto's
+-- actual jurisdiction) — this was live in the Education tab of the same
+-- Finance module the calculator was removed from. Whether this row was
+-- ever actually applied to the live database couldn't be confirmed from
+-- this environment (RLS correctly blocks anon reads on education_content
+-- entirely, so an empty query result is ambiguous between "never applied"
+-- and "exists but not anon-readable") — this DELETE is safe either way,
+-- a no-op if the row was never there.
+-- ════════════════════════════════════════════════════════════
+
+DELETE FROM public.education_content WHERE slug = 'tax-optimization-llc';
