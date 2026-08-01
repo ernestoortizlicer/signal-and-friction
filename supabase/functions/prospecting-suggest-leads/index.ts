@@ -63,8 +63,13 @@ function corsHeaders(req: Request): Record<string, string> {
 const ICP_QUERIES = [
   "founder-led B2B SaaS startup self-serve signup United States",
   "bootstrapped indie B2B SaaS free trial self-serve pricing",
-  "Singapore B2B SaaS startup self-serve pricing page",
   "small team B2B SaaS product launch self-serve signup",
+  "YC backed B2B SaaS startup self-serve signup",
+  "Product Hunt B2B SaaS launch self-serve pricing 2026",
+  "IndieHackers B2B SaaS founder self-serve product",
+  "Canada B2B SaaS startup self-serve signup founder",
+  "Singapore B2B SaaS startup self-serve pricing page",
+  "Singapore founder-led B2B SaaS self-serve signup startup",
   "new B2B SaaS self-serve trial no sales call",
 ];
 
@@ -76,7 +81,7 @@ You will be given a numbered list of REAL web search results below, each with a 
 HARD RULE: You may only suggest a company if it is explicitly named in the search results below, with a URL from the search results below. Never suggest a company from your own training-data knowledge, never invent a company, never guess a domain that isn't shown in the results. If none of the results are a good ICP fit, return an empty array — do not pad with anything not present in the text below.
 
 ICP — all of these should plausibly hold for each company:
-- Headquartered in the United States or Singapore
+- Headquartered in the United States, Canada, or Singapore (or another mature Asian SaaS hub). Never Europe, even if a search result is otherwise a strong fit.
 - A B2B SaaS product with genuine self-serve signup (a visitor can start using or trialing the product without first talking to a salesperson) — NOT an enterprise-sales-only / demo-gated-only product
 - Founder-led, or run by a small team — not a large or well-funded organization
 - Small enough in scale that a single independent consultant is a realistic fit to work with directly — not a company any informed observer would expect to already have an in-house growth/CRO team
@@ -111,7 +116,7 @@ interface Suggestion {
   fetchError: string | null;
 }
 
-async function tavilySearch(query: string, maxResults = 6): Promise<Array<{ title: string; url: string; content: string }>> {
+async function tavilySearch(query: string, maxResults = 10): Promise<Array<{ title: string; url: string; content: string }>> {
   const apiKey = Deno.env.get("TAVILY_API_KEY") ?? "";
   const res = await fetch("https://api.tavily.com/search", {
     method: "POST",
