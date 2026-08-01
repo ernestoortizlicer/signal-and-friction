@@ -89,6 +89,16 @@ interface Candidate {
   created_at: string;
 }
 
+interface Suggestion {
+  company_name: string;
+  domain: string;
+  url: string;
+  rationale: string;
+  domainResolved: boolean;
+  fetchedTitle: string | null;
+  fetchError: string | null;
+}
+
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tsaarsuuclvkjsgjcmoj.supabase.co";
 
@@ -152,6 +162,12 @@ export default function ProspectingCommandCenter() {
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [selectedActionRunning, setSelectedActionRunning] = useState(false);
   const [clearingAll, setClearingAll] = useState(false);
+
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [suggestLoading, setSuggestLoading] = useState(false);
+  const [suggestError, setSuggestError] = useState<string | null>(null);
+  const [suggestMeta, setSuggestMeta] = useState<{ model: string; searchesUsed: number; estimatedCostUSD: number } | null>(null);
+  const [addingSuggestionDomains, setAddingSuggestionDomains] = useState<Set<string>>(new Set());
 
   async function fetchCandidates() {
     try {
@@ -283,6 +299,84 @@ export default function ProspectingCommandCenter() {
       setNotice({ message: "Failed to add candidates.", variant: "red" });
     } finally {
       setAdding(false);
+    }
+  }
+
+  // ── AI-suggested leads — ephemeral, writes nothing until Add is clicked ──
+  async function fetchSuggestions() {
+    setSuggestLoading(true);
+    setSuggestError(null);
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/prospecting-suggest-leads`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""}`,
+        },
+        body: JSON.stringify({ existingDomains: candidates.map((c) => c.domain) }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok || !body?.suggestions) {
+        setSuggestError(body?.error || `Suggestion request failed (HTTP ${res.status}).`);
+        return;
+      }
+      setSuggestions(body.suggestions);
+      setSuggestMeta(body.meta ?? null);
+    } catch (err) {
+      setSuggestError(err instanceof Error ? err.message : "Suggestion request failed.");
+    } finally {
+      setSuggestLoading(false);
+    }
+  }
+
+  // Inserts exactly like a manually-pasted URL (source differs only in
+  // provenance, never in what gates it), then immediately triggers the same
+  // real scan every candidate has to pass — the suggestion is never treated
+  // as a real prospect until that scan either confirms or fails it.
+  async function addSuggestion(s: Suggestion) {
+    setAddingSuggestionDomains((prev) => new Set(prev).add(s.domain));
+    try {
+      const headers = {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+        Prefer: "resolution=ignore-duplicates,return=representation",
+      };
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/prospect_candidates?on_conflict=domain`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify([{
+          domain: s.domain,
+          url: s.url,
+          company_name: s.company_name,
+          source: "ai_suggested",
+          status: "new",
+        }]),
+      });
+      if (!res.ok) {
+        setNotice({ message: `Failed to add ${s.domain}.`, variant: "red" });
+        return;
+      }
+      const rows: Candidate[] = await res.json();
+      const created = rows[0];
+      setSuggestions((prev) => prev.filter((x) => x.domain !== s.domain));
+      if (created?.id) {
+        setCandidates((prev) => [created, ...prev]);
+        setNotice({ message: `${s.domain} added — scanning now.`, variant: "green" });
+        await scanOne(created.id);
+      } else {
+        // ignore-duplicates means it was already in the pipeline — no
+        // representation row comes back for a skipped conflict.
+        setNotice({ message: `${s.domain} was already in the pipeline.`, variant: "green" });
+        await fetchCandidates();
+      }
+    } catch (err) {
+      setNotice({ message: `Failed to add ${s.domain}: ${err instanceof Error ? err.message : "network error"}`, variant: "red" });
+    } finally {
+      setAddingSuggestionDomains((prev) => {
+        const next = new Set(prev);
+        next.delete(s.domain);
+        return next;
+      });
     }
   }
 
@@ -680,6 +774,90 @@ export default function ProspectingCommandCenter() {
           >
             {bulkScanning ? "Scanning…" : `Scan All Pending (${pendingCount})`}
           </button>
+        </div>
+      </AdminCard>
+
+      <AdminCard>
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <label className="block font-mono text-xs text-[#D4A853]/70 uppercase tracking-[0.15em]">
+            AI-Suggested Leads — unverified until scanned
+          </label>
+          <button
+            type="button"
+            onClick={fetchSuggestions}
+            disabled={suggestLoading}
+            className="px-4 py-2 rounded-lg bg-[#D4A853]/10 border border-[#D4A853]/25 text-[#D4A853] text-sm font-mono uppercase tracking-wide hover:bg-[#D4A853]/15 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          >
+            {suggestLoading ? "Searching…" : "Suggest Leads (AI)"}
+          </button>
+        </div>
+
+        {suggestError && (
+          <p className="text-xs font-mono text-[#C85C5C] mb-3">⚠ {suggestError}</p>
+        )}
+
+        {suggestMeta && (
+          <p className="text-xs font-mono text-[#7A6F65] mb-3">
+            {suggestMeta.model} · {suggestMeta.searchesUsed} searches · ~${suggestMeta.estimatedCostUSD.toFixed(4)} token cost (excludes Anthropic&apos;s per-search fee)
+          </p>
+        )}
+
+        {suggestions.length === 0 && !suggestLoading && (
+          <p className="text-xs font-mono text-[#7A6F65]">
+            Every suggestion here is unverified AI output. Nothing is added to your pipeline, and nothing is treated as real, until you click Add — and it still has to survive a real scan after that.
+          </p>
+        )}
+
+        <div className="space-y-3">
+          {suggestions.map((s) => (
+            <div
+              key={s.domain}
+              className={`border rounded-lg p-4 ${
+                s.domainResolved ? "border-[#D4A853]/15 bg-black/20" : "border-[#C85C5C]/30 bg-[#C85C5C]/5"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-sm text-[#F5F0EB]">{s.company_name}</span>
+                    <span className="font-mono text-xs text-[#7A6F65]">{s.domain}</span>
+                    {s.domainResolved ? (
+                      <AdminBadge variant="green">Domain resolves</AdminBadge>
+                    ) : (
+                      <AdminBadge variant="red">Domain did not resolve — likely hallucinated</AdminBadge>
+                    )}
+                  </div>
+                  <p className="text-xs font-mono text-[#B0A89E] mt-1">{s.rationale}</p>
+                  <p className="text-xs font-mono text-[#7A6F65] mt-1">
+                    AI claimed: <span className="text-[#B0A89E]">{s.company_name}</span>
+                    {" — Real fetched title: "}
+                    {s.fetchedTitle ? (
+                      <span className="text-[#B0A89E]">{s.fetchedTitle}</span>
+                    ) : (
+                      <span className="text-[#C85C5C]">{s.fetchError || "none — fetch failed"}</span>
+                    )}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => addSuggestion(s)}
+                    disabled={!s.domainResolved || addingSuggestionDomains.has(s.domain)}
+                    className="px-3 py-1.5 rounded-lg bg-[#5C9A6B]/10 border border-[#5C9A6B]/25 text-[#5C9A6B] text-xs font-mono uppercase tracking-wide hover:bg-[#5C9A6B]/15 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    {addingSuggestionDomains.has(s.domain) ? "Adding…" : "Add"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSuggestions((prev) => prev.filter((x) => x.domain !== s.domain))}
+                    className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[#7A6F65] text-xs font-mono uppercase tracking-wide hover:bg-white/10 transition-colors cursor-pointer"
+                  >
+                    Skip
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </AdminCard>
 

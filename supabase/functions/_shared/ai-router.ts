@@ -132,6 +132,100 @@ async function callAnthropic(
   return (data.content?.[0]?.text as string) ?? "";
 }
 
+// ── Web-search-grounded call (Anthropic server-side web_search tool) ────────
+// Distinct from the 4 completion tiers above — those never touch the live
+// web, they only complete from training data plus whatever's in the prompt.
+// This exists specifically for AI-suggested prospecting leads, where an
+// unverified company name/domain is only ever a starting point — nothing
+// from this function is treated as fact until the existing scan engine
+// independently confirms the domain resolves (see
+// prospecting-suggest-leads/index.ts, which also does its own lightweight
+// real-fetch check on every suggestion before returning it to the browser).
+//
+// Anthropic's web_search tool is a SERVER tool: Anthropic's own
+// infrastructure executes the actual search and injects results back into
+// the same request/response cycle — no client-side tool-use loop needed
+// here, unlike a typical function-calling flow.
+//
+// Model choice: Sonnet, not Opus/blade. This task is search-result
+// synthesis + ICP judgment, not the brand-voice/strategic-diagnosis work
+// blade is reserved for — Opus pricing (15/75 per M tokens) would be pure
+// overkill here. Not Haiku either: judging whether a company is genuinely
+// founder-led/self-serve/small-enough from search snippets needs more
+// multi-step reasoning than Haiku's tier is built for.
+//
+// Cost note: SEARCH_COST below is token cost only. Anthropic also bills a
+// small per-search-call fee for this tool on top of token cost — that rate
+// isn't hardcoded here because it hasn't been independently verified
+// against a live account from this environment. estimatedCostUSD is a
+// floor, not the real total — check actual Anthropic billing after the
+// first real run.
+//
+// Tool type string and the anthropic-beta header below are based on
+// Anthropic's documented web-search tool naming at the time this was
+// written, not verified against a live call from this environment. If the
+// first real request 400s on the tool definition, check Anthropic's
+// current API docs for the current tool `type` string and whether a beta
+// header is still required — that's the one part of this integration
+// that couldn't be confirmed working before you run it for real.
+const SEARCH_MODEL = "claude-sonnet-5";
+const SEARCH_COST = { in: 3.00, out: 15.00 }; // $/M tokens, Sonnet — separate from the 4-tier COST table above
+
+export interface WebSearchRouteResult {
+  text: string;
+  model: string;
+  searchesUsed: number;
+  estimatedCostUSD: number; // token cost only — see note above
+}
+
+export async function routeWithWebSearch(opts: {
+  system: string;
+  user: string;
+  maxTokens?: number;
+  maxSearches?: number;
+}): Promise<WebSearchRouteResult> {
+  const { system, user, maxTokens = 4000, maxSearches = 8 } = opts;
+  const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": anthropicKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-beta": "web-search-2025-03-05",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: SEARCH_MODEL,
+      max_tokens: maxTokens,
+      system,
+      messages: [{ role: "user", content: user }],
+      tools: [{ type: "web_search_20250305", name: "web_search", max_uses: maxSearches }],
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Anthropic web-search call error ${res.status}: ${err.slice(0, 300)}`);
+  }
+
+  const data = await res.json();
+  const blocks: Array<{ type: string; text?: string }> = data.content ?? [];
+
+  // The final answer is the last text block — search-tool activity produces
+  // its own block types (server_tool_use, web_search_tool_result) interleaved
+  // before it, which are deliberately not treated as output text.
+  const textBlocks = blocks.filter((b) => b.type === "text" && typeof b.text === "string");
+  const text = textBlocks.length > 0 ? textBlocks[textBlocks.length - 1].text! : "";
+  const searchesUsed = blocks.filter((b) => b.type === "server_tool_use").length;
+
+  const estimatedCostUSD =
+    (roughTokens(system.length + user.length) / 1_000_000) * SEARCH_COST.in +
+    (roughTokens(text.length) / 1_000_000) * SEARCH_COST.out;
+
+  return { text, model: SEARCH_MODEL, searchesUsed, estimatedCostUSD };
+}
+
 // ── PostHog capture (fire-and-forget) ────────────────────────────────────────
 async function captureEvent(
   apiKey: string,
