@@ -120,10 +120,18 @@ async function run() {
       };
       const paymentLink = await stripePost("/payment_links", linkBody);
 
-      // 4. Update Supabase
+      // 4. Update Supabase — persists the REAL Stripe price ID (not just
+      // the payment link URL) so the commercial dosing engine's webhook
+      // lookup works immediately for this product, with no separate
+      // backfill step needed. Only helps products created by THIS run —
+      // for products that already existed in Stripe before this line was
+      // added, use scripts/backfill-stripe-price-ids.mjs instead (that
+      // one is read-only against Stripe and matches existing prices by
+      // name+amount; this script would create duplicates if re-run
+      // against already-live products).
       const { error: dbErr } = await supabase
         .from("stripe_payment_links")
-        .update({ payment_link_url: paymentLink.url })
+        .update({ payment_link_url: paymentLink.url, stripe_price_id: stripePrice.id })
         .eq("price_id", product.priceId);
 
       if (dbErr) {
