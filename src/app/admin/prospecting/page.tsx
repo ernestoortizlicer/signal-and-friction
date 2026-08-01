@@ -94,6 +94,7 @@ interface Suggestion {
   domain: string;
   url: string;
   rationale: string;
+  sourceUrl: string;
   domainResolved: boolean;
   fetchedTitle: string | null;
   fetchError: string | null;
@@ -166,7 +167,7 @@ export default function ProspectingCommandCenter() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [suggestError, setSuggestError] = useState<string | null>(null);
-  const [suggestMeta, setSuggestMeta] = useState<{ model: string; searchesUsed: number; estimatedCostUSD: number } | null>(null);
+  const [suggestMeta, setSuggestMeta] = useState<{ model: string; estimatedCostUSD: number; tavilyQueriesRun: number; tavilyResultsFound: number; rejectedByCrossCheckCount: number } | null>(null);
   const [addingSuggestionDomains, setAddingSuggestionDomains] = useState<Set<string>>(new Set());
 
   async function fetchCandidates() {
@@ -798,7 +799,7 @@ export default function ProspectingCommandCenter() {
 
         {suggestMeta && (
           <p className="text-xs font-mono text-[#7A6F65] mb-3">
-            {suggestMeta.model} · {suggestMeta.searchesUsed} searches · ~${suggestMeta.estimatedCostUSD.toFixed(4)} token cost (excludes Anthropic&apos;s per-search fee)
+            {suggestMeta.model} · {suggestMeta.tavilyQueriesRun} Tavily searches · {suggestMeta.tavilyResultsFound} real results found · {suggestMeta.rejectedByCrossCheckCount} rejected (not backed by a real result) · ~${suggestMeta.estimatedCostUSD.toFixed(4)} token cost
           </p>
         )}
 
@@ -836,6 +837,12 @@ export default function ProspectingCommandCenter() {
                     ) : (
                       <span className="text-[#C85C5C]">{s.fetchError || "none — fetch failed"}</span>
                     )}
+                  </p>
+                  <p className="text-xs font-mono text-[#7A6F65] mt-1">
+                    Source (real Tavily result backing this suggestion):{" "}
+                    <a href={s.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-[#D4A853] underline break-all">
+                      {s.sourceUrl}
+                    </a>
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
