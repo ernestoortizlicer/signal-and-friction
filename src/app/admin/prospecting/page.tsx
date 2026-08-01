@@ -167,7 +167,18 @@ export default function ProspectingCommandCenter() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [suggestError, setSuggestError] = useState<string | null>(null);
-  const [suggestMeta, setSuggestMeta] = useState<{ model: string; estimatedCostUSD: number; tavilyQueriesRun: number; tavilyResultsFound: number; rejectedByCrossCheckCount: number } | null>(null);
+  const [suggestMeta, setSuggestMeta] = useState<{
+    model: string;
+    estimatedCostUSD: number;
+    tavilyQueriesRun: number;
+    tavilyResultsFound: number;
+    rawSuggestionCount: number;
+    rejectedByCrossCheckCount: number;
+    rejected: Array<{ company_name: string; domain: string | null; reason: string }>;
+    finalCount: number;
+  } | null>(null);
+  const [suggestRawResponse, setSuggestRawResponse] = useState<string | null>(null);
+  const [showSuggestRaw, setShowSuggestRaw] = useState(false);
   const [addingSuggestionDomains, setAddingSuggestionDomains] = useState<Set<string>>(new Set());
 
   async function fetchCandidates() {
@@ -307,16 +318,33 @@ export default function ProspectingCommandCenter() {
   async function fetchSuggestions() {
     setSuggestLoading(true);
     setSuggestError(null);
+    setSuggestRawResponse(null);
     try {
+      const existingDomains = candidates.map((c) => c.domain);
       const res = await fetch(`${SUPABASE_URL}/functions/v1/prospecting-suggest-leads`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""}`,
         },
-        body: JSON.stringify({ existingDomains: candidates.map((c) => c.domain) }),
+        body: JSON.stringify({ existingDomains }),
       });
-      const body = await res.json().catch(() => null);
+      // Capture the exact raw text this browser received, before any
+      // parsing — this is what lets a future mismatch (or a "why is this
+      // browser's result different from a curl test" question) be
+      // answered from what actually happened here, not from a guess or a
+      // separate request run from somewhere else.
+      const rawText = await res.text();
+      setSuggestRawResponse(
+        `REQUEST existingDomains (${existingDomains.length}): ${JSON.stringify(existingDomains)}\n\nRESPONSE (HTTP ${res.status}):\n${rawText}`
+      );
+      let body: { suggestions?: Suggestion[]; meta?: typeof suggestMeta; error?: string } | null = null;
+      try {
+        body = rawText ? JSON.parse(rawText) : null;
+      } catch {
+        setSuggestError("Response was not valid JSON — see raw response below.");
+        return;
+      }
       if (!res.ok || !body?.suggestions) {
         setSuggestError(body?.error || `Suggestion request failed (HTTP ${res.status}).`);
         return;
@@ -798,9 +826,37 @@ export default function ProspectingCommandCenter() {
         )}
 
         {suggestMeta && (
-          <p className="text-xs font-mono text-[#7A6F65] mb-3">
-            {suggestMeta.model} · {suggestMeta.tavilyQueriesRun} Tavily searches · {suggestMeta.tavilyResultsFound} real results found · {suggestMeta.rejectedByCrossCheckCount} rejected (not backed by a real result) · ~${suggestMeta.estimatedCostUSD.toFixed(4)} token cost
-          </p>
+          <div className="text-xs font-mono text-[#7A6F65] mb-3 space-y-1">
+            <p>
+              {suggestMeta.model} · {suggestMeta.tavilyQueriesRun} Tavily searches · {suggestMeta.tavilyResultsFound} real results found · DeepSeek proposed {suggestMeta.rawSuggestionCount} · {suggestMeta.rejectedByCrossCheckCount} rejected (not backed by a real result) · {suggestMeta.finalCount} shown below · ~${suggestMeta.estimatedCostUSD.toFixed(4)} token cost
+            </p>
+            {suggestMeta.rejected.length > 0 && (
+              <ul className="pl-4 list-disc space-y-0.5">
+                {suggestMeta.rejected.map((r, i) => (
+                  <li key={i} className="text-[#C85C5C]">
+                    {r.company_name} ({r.domain ?? "no domain"}) — {r.reason}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {suggestRawResponse && (
+          <div className="mb-3">
+            <button
+              type="button"
+              onClick={() => setShowSuggestRaw((v) => !v)}
+              className="text-xs font-mono text-[#D4A853] underline cursor-pointer"
+            >
+              {showSuggestRaw ? "Hide raw request/response" : "Show raw request/response"}
+            </button>
+            {showSuggestRaw && (
+              <pre className="mt-2 p-3 rounded-lg bg-black/40 border border-[#D4A853]/15 text-[10px] font-mono text-[#B0A89E] whitespace-pre-wrap break-all max-h-96 overflow-y-auto">
+                {suggestRawResponse}
+              </pre>
+            )}
+          </div>
         )}
 
         {suggestions.length === 0 && !suggestLoading && (
