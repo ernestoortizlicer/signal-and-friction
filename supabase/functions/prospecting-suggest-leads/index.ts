@@ -130,9 +130,27 @@ async function tavilySearch(query: string, maxResults = 6): Promise<Array<{ titl
   }));
 }
 
-// The hard backstop: DeepSeek's claim only survives if a real Tavily
-// result URL actually matches the domain it named. Not a prompt-trust
-// check — a check against real fetched data.
+// The hard backstop: DeepSeek's claim only survives if real fetched text
+// actually backs the domain it named. Not a prompt-trust check — a check
+// against real fetched data, in one of two forms.
+//
+// FOUND LIVE (2026-08-01, first real run): requiring the search result's
+// OWN url host to equal the domain rejected 1 of 1 real suggestions
+// despite 28 real Tavily results — because founder-led/indie SaaS
+// companies are usually found via THIRD-PARTY coverage (a Product Hunt
+// listing, an IndieHackers post, a directory entry), not their own site
+// ranking for a broad ICP query. DeepSeek correctly read "Acme — CRM for
+// solopreneurs" on producthunt.com/posts/acme and correctly extracted
+// acme.com; the strict host-match rejected it anyway, since
+// producthunt.com != acme.com. That's the near-universal case, not an
+// edge case — the original check was structurally guaranteed to reject
+// almost everything.
+//
+// Fixed by also accepting a domain that appears as a literal substring in
+// a real result's title/content text — still 100% tied to real fetched
+// text, just no longer requiring that text to be the company's own site.
+// The exact-host-match case is tried first and preferred (it's the
+// stronger signal) before falling back to the text-substring case.
 function findMatchingResultUrl(domain: string, results: TavilyResult[]): string | null {
   for (const r of results) {
     try {
@@ -141,6 +159,11 @@ function findMatchingResultUrl(domain: string, results: TavilyResult[]): string 
     } catch {
       // malformed URL in a search result — skip it, never match on it
     }
+  }
+  const needle = domain.toLowerCase();
+  for (const r of results) {
+    const haystack = `${r.title} ${r.content}`.toLowerCase();
+    if (haystack.includes(needle)) return r.url;
   }
   return null;
 }
@@ -255,14 +278,27 @@ serve(async (req) => {
     const existingSet = new Set(existingDomains.map((d) => d.toLowerCase()));
     const seen = new Set<string>();
     const candidates: Array<{ company_name: string; domain: string; rationale: string; sourceUrl: string }> = [];
+    // Kept small and returned in meta below — without this, diagnosing why
+    // a real suggestion got dropped required a manual direct curl to this
+    // function, which is how the host-match-only bug above was found.
+    const rejected: Array<{ company_name: string; domain: string | null; reason: string }> = [];
     for (const item of raw) {
       const domain = item.domain ? normalizeDomain(item.domain) : null;
       const company_name = (item.company_name ?? "").trim();
       const rationale = (item.rationale ?? "").trim();
-      if (!domain || !company_name) continue;
-      if (existingSet.has(domain) || seen.has(domain)) continue;
+      if (!domain || !company_name) {
+        rejected.push({ company_name: company_name || "(none)", domain, reason: "missing/unparseable domain or company_name" });
+        continue;
+      }
+      if (existingSet.has(domain) || seen.has(domain)) {
+        rejected.push({ company_name, domain, reason: "already in pipeline or duplicate within this batch" });
+        continue;
+      }
       const sourceUrl = findMatchingResultUrl(domain, aggregatedResults);
-      if (!sourceUrl) continue; // DeepSeek claimed it, but no real search result backs it — reject
+      if (!sourceUrl) {
+        rejected.push({ company_name, domain, reason: "not backed by any real Tavily result" });
+        continue;
+      }
       seen.add(domain);
       candidates.push({ company_name, domain, rationale, sourceUrl });
     }
@@ -293,6 +329,7 @@ serve(async (req) => {
           tavilyResultsFound: aggregatedResults.length,
           rawSuggestionCount: raw.length,
           rejectedByCrossCheckCount: raw.length - candidates.length,
+          rejected,
           finalCount: verified.length,
         },
       }),
