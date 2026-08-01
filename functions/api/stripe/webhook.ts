@@ -11,6 +11,12 @@ interface Env {
   RESEND_API_KEY?: string;
 }
 
+// Fallback only — used when the reliable stripe_payment_links lookup below
+// finds no match (e.g. a Certified-program purchase, or a price not yet
+// backfilled with its real Stripe price ID). Matching on the product's
+// human-readable NAME is inherently fragile: a Stripe dashboard rename
+// silently breaks it. Kept only as a degrade-gracefully path, never the
+// primary mechanism.
 function inferSegment(productName: string | null): 'DFY' | 'DWY' | null {
   if (!productName) return null;
   const n = productName.toLowerCase();
@@ -18,6 +24,9 @@ function inferSegment(productName: string | null): 'DFY' | 'DWY' | null {
   if (n.includes('dwy')) return 'DWY';
   return null;
 }
+
+type DosingLine = 'dwy' | 'dfy';
+type DosingTier = 'beta_diagnostic' | 'intervention' | 'monitoring' | 'expansion' | 'autonomy_kit';
 
 export const onRequestPost = async ({
   request,
@@ -99,12 +108,40 @@ export const onRequestPost = async ({
     }
 
     let productName: string | null = null;
+    let stripePriceId: string | null = null;
     try {
       const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 1 });
-      productName = lineItems.data[0]?.description ?? null;
+      const item = lineItems.data[0];
+      productName = item?.description ?? null;
+      // Checkout session line items return `price` as an expanded object,
+      // not just an ID reference — but code defensively in case a future
+      // Stripe API version changes that.
+      const price = item?.price;
+      stripePriceId = typeof price === 'string' ? price : price?.id ?? null;
     } catch (err) {
       console.warn(`⚠️ Failed to fetch line items: ${err instanceof Error ? err.message : 'unknown error'}`);
       // Non-fatal: payment is recorded anyway
+    }
+
+    // Reliable dosing-tier resolution — keyed on Stripe's own stable price
+    // ID via stripe_payment_links, not the fragile name-string-matching
+    // inferSegment() above. Looked up here (before the payment insert)
+    // so both the payment's segment AND the dosing-engine flag below can
+    // use the same reliable result.
+    let dosingLine: DosingLine | null = null;
+    let dosingTier: DosingTier | null = null;
+    if (stripePriceId) {
+      try {
+        const { data: linkRow } = await supabase
+          .from('stripe_payment_links')
+          .select('line, tier')
+          .eq('stripe_price_id', stripePriceId)
+          .maybeSingle();
+        dosingLine = (linkRow?.line as DosingLine | undefined) ?? null;
+        dosingTier = (linkRow?.tier as DosingTier | undefined) ?? null;
+      } catch (err) {
+        console.warn(`⚠️ stripe_payment_links lookup failed (non-fatal, falls back to name matching): ${err instanceof Error ? err.message : 'unknown error'}`);
+      }
     }
 
     const email = session.customer_details?.email ?? session.customer_email ?? null;
@@ -150,7 +187,7 @@ export const onRequestPost = async ({
       amount_total: session.amount_total,
       currency: session.currency,
       product_name: productName,
-      segment: inferSegment(productName),
+      segment: dosingLine ? (dosingLine.toUpperCase() as 'DFY' | 'DWY') : inferSegment(productName),
       referral_code: referralCode,
       raw_event: event as unknown as Record<string, unknown>,
       lead_id: leadId,
@@ -167,6 +204,39 @@ export const onRequestPost = async ({
     }
 
     console.log(`✅ Payment processed successfully: ${session.id} | Amount: ${session.amount_total} ${session.currency}`);
+
+    // Commercial dosing engine — flags the client's existing scaffold as
+    // "a purchase landed, dosed content ready for your review," it never
+    // creates or touches a `deliverables` row. That table has no draft
+    // state of its own (the moment a row exists there, it's live-readable
+    // via the client's capability token), so auto-publishing from here
+    // would mean zero human review before a client sees anything. The
+    // actual dosed-content computation happens in the admin scaffolds UI
+    // when it renders this flag (src/lib/dosing.ts) — kept out of this
+    // Cloudflare Function because cross-directory imports from
+    // supabase/functions/_shared aren't resolvable by Cloudflare's
+    // esbuild at function compile time (same constraint already
+    // documented in functions/api/diagnose.ts). Non-fatal: a flagging
+    // failure must never affect the payment already recorded above.
+    if (dosingLine && dosingTier && leadId) {
+      try {
+        const { error: flagError } = await supabase
+          .from('diagnostic_scaffolds')
+          .update({
+            pending_dosing_line: dosingLine,
+            pending_dosing_tier: dosingTier,
+            pending_dosing_triggered_at: new Date().toISOString(),
+          })
+          .eq('client_id', leadId);
+
+        if (flagError) throw flagError;
+        console.log(`✅ Scaffold flagged for review: client ${leadId} → ${dosingLine}/${dosingTier}`);
+      } catch (err) {
+        console.warn(`⚠️ Dosing-engine scaffold flagging failed (payment still recorded): ${err instanceof Error ? err.message : 'unknown error'}`);
+      }
+    } else if (dosingLine && dosingTier && !leadId) {
+      console.warn(`⚠️ Purchase matched to ${dosingLine}/${dosingTier} but no client record found for ${email ?? '(no email)'} — nothing to flag yet. Create the client/scaffold, then flag manually.`);
+    }
 
     // Finance ledger — post a real double-entry transaction so the Finance
     // module reflects real income the moment it lands, with zero manual

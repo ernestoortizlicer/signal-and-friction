@@ -11,6 +11,13 @@ import {
   AdminBadge,
   AdminEmptyState,
 } from "@/components/admin/AdminComponents";
+import {
+  applyDosing,
+  type FrictionMechanism,
+  type FunnelStage,
+  type MagnitudeLevel,
+  type ConfidenceLevel,
+} from "@/lib/dosing";
 
 /**
  * QUERY-STRING SHELL — not a [id] dynamic route.
@@ -49,6 +56,15 @@ interface Scaffold {
   status: "draft" | "pushed_to_deliverable";
   created_at: string;
   updated_at: string;
+  funnel_stage: FunnelStage | null;
+  projected_impact_magnitude: MagnitudeLevel | null;
+  confidence_level: ConfidenceLevel | null;
+  dfy_execution_summary: string | null;
+  dfy_monitoring_findings: string | null;
+  dfy_handoff_documentation: string | null;
+  pending_dosing_line: "dwy" | "dfy" | null;
+  pending_dosing_tier: "beta_diagnostic" | "intervention" | "monitoring" | "expansion" | "autonomy_kit" | null;
+  pending_dosing_triggered_at: string | null;
 }
 
 const SUPABASE_URL =
@@ -344,6 +360,62 @@ function ScaffoldEditor() {
         Private draft — never visible to the client. Evidence below is auto-filled and read-only, straight from the scan.
         The 7 fields underneath are yours to fill in; nothing here is generated for you.
       </AdminAlert>
+
+      {scaffold.pending_dosing_tier && scaffold.pending_dosing_line && (
+        <AdminCard>
+          <div className="flex items-center justify-between mb-3">
+            <span className="font-mono text-xs text-[#D4A853] uppercase tracking-[0.15em]">
+              ⚠ Purchase received — {scaffold.pending_dosing_line.toUpperCase()} {scaffold.pending_dosing_tier.replace(/_/g, " ")}
+            </span>
+            <span className="font-mono text-[10px] text-[#7A6F65]">
+              {scaffold.pending_dosing_triggered_at ? formatDate(scaffold.pending_dosing_triggered_at) : ""}
+            </span>
+          </div>
+          <p className="text-xs font-mono text-[#B0A89E] mb-3">
+            Nothing has been sent to the client. Below is the dosed content this tier would show, computed from your 7 fields above — review it, then use the normal push-to-deliverable action when you're ready. This flag stays here until you do.
+          </p>
+          {(() => {
+            const dosed = applyDosing(
+              {
+                friction_mechanism: scaffold.friction_mechanism as FrictionMechanism | null,
+                specific_friction_point: scaffold.specific_friction_point,
+                why_blocks_conversion: scaffold.why_blocks_conversion,
+                projected_impact: scaffold.projected_impact,
+                the_decision: scaffold.the_decision,
+                what_to_avoid: scaffold.what_to_avoid,
+                confidence_and_why: scaffold.confidence_and_why,
+                funnel_stage: scaffold.funnel_stage,
+                projected_impact_magnitude: scaffold.projected_impact_magnitude,
+                confidence_level: scaffold.confidence_level,
+                dfy_execution_summary: scaffold.dfy_execution_summary,
+                dfy_monitoring_findings: scaffold.dfy_monitoring_findings,
+                dfy_handoff_documentation: scaffold.dfy_handoff_documentation,
+              },
+              scaffold.pending_dosing_line!,
+              scaffold.pending_dosing_tier!
+            );
+            const entries = Object.entries(dosed.fields).filter(([, v]) => v);
+            return (
+              <div className="space-y-2 text-xs font-mono border-t border-[#D4A853]/8 pt-3">
+                {entries.length === 0 && <p className="text-[#7A6F65] italic">Fill in the 7 fields above to see the dosed preview.</p>}
+                {entries.map(([key, value]) => (
+                  <div key={key}>
+                    <span className="text-[#7A6F65] uppercase">{key.replace(/_/g, " ")}: </span>
+                    <span className="text-[#F5F0EB]">{value}</span>
+                  </div>
+                ))}
+                {dosed.dfyDelivery && (
+                  <>
+                    <div><span className="text-[#7A6F65] uppercase">execution summary: </span><span className="text-[#F5F0EB]">{dosed.dfyDelivery.execution_summary}</span></div>
+                    <div><span className="text-[#7A6F65] uppercase">monitoring findings: </span><span className="text-[#F5F0EB]">{dosed.dfyDelivery.monitoring_findings}</span></div>
+                    <div><span className="text-[#7A6F65] uppercase">handoff documentation: </span><span className="text-[#F5F0EB]">{dosed.dfyDelivery.handoff_documentation}</span></div>
+                  </>
+                )}
+              </div>
+            );
+          })()}
+        </AdminCard>
+      )}
 
       {notice && (
         <AdminAlert variant={notice.variant}>
