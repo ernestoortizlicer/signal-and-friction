@@ -1,2 +1,5 @@
 name = "signal-and-friction"
 pages_build_output_dir = "out"
+
+# Test commit for Cloudflare Pages Git integration — confirms auto-deploy
+# triggers on push to main. Comment only, no behavior change.
