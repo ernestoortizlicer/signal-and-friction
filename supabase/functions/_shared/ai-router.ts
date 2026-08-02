@@ -50,6 +50,11 @@ export interface RouteResult {
   model: string;
   tier: Tier;
   estimatedCostUSD: number;
+  // "length" means max_tokens was hit before the model finished — for a
+  // thinking-mode model this can mean text came back empty because the
+  // whole budget went to reasoning. Callers that can't tolerate a silent
+  // empty/truncated result should check this rather than only `text`.
+  finishReason: string | null;
 }
 
 // ── Cost table (USD per 1M tokens) ──────────────────────────────────────────
@@ -81,6 +86,11 @@ function estimateCost(tier: Tier, inChars: number, outChars: number): number {
 }
 
 // ── OpenAI-compatible call (OpenRouter + DeepSeek) ──────────────────────────
+interface CompletionResult {
+  text: string;
+  finishReason: string | null;
+}
+
 async function callOpenAI(
   baseUrl: string,
   apiKey: string,
@@ -90,7 +100,7 @@ async function callOpenAI(
   maxTokens: number,
   temperature: number,
   extraHeaders: Record<string, string> = {},
-): Promise<string> {
+): Promise<CompletionResult> {
   const res = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
@@ -113,7 +123,17 @@ async function callOpenAI(
     throw new Error(`${model} error ${res.status}: ${err.slice(0, 200)}`);
   }
   const data = await res.json();
-  return (data.choices?.[0]?.message?.content as string) ?? "";
+  const choice = data.choices?.[0];
+  return {
+    text: (choice?.message?.content as string) ?? "",
+    // "length" means max_tokens was hit — for a thinking-mode model
+    // (deepseek-v4-pro's default), that can mean the whole budget was
+    // spent on reasoning before any final answer was written, returning
+    // text: "" with no other signal something went wrong. Surfacing this
+    // lets a caller tell "the model legitimately said nothing" apart from
+    // "it ran out of room" instead of treating both the same.
+    finishReason: (choice?.finish_reason as string) ?? null,
+  };
 }
 
 // ── Anthropic native call (blade) ────────────────────────────────────────────
@@ -123,7 +143,7 @@ async function callAnthropic(
   system: string,
   user: string,
   maxTokens: number,
-): Promise<string> {
+): Promise<CompletionResult> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -143,7 +163,10 @@ async function callAnthropic(
     throw new Error(`Anthropic error ${res.status}: ${err.slice(0, 200)}`);
   }
   const data = await res.json();
-  return (data.content?.[0]?.text as string) ?? "";
+  return {
+    text: (data.content?.[0]?.text as string) ?? "",
+    finishReason: (data.stop_reason as string) ?? null,
+  };
 }
 
 // ── Web-search-grounded call (Anthropic server-side web_search tool) ────────
@@ -277,12 +300,13 @@ export async function route(opts: RouteOptions): Promise<RouteResult> {
   const posthogKey    = Deno.env.get("POSTHOG_API_KEY")    ?? "";
 
   let text: string;
+  let finishReason: string | null;
   let model: string;
 
   switch (tier) {
     case "micro": {
       model = "google/gemini-2.5-flash-preview-05-20";
-      text = await callOpenAI(
+      ({ text, finishReason } = await callOpenAI(
         "https://openrouter.ai/api/v1",
         openrouterKey,
         model,
@@ -291,12 +315,12 @@ export async function route(opts: RouteOptions): Promise<RouteResult> {
         maxTokens,
         temperature,
         { "HTTP-Referer": "https://signal-and-friction.com", "X-Title": "S&F AI Router" },
-      );
+      ));
       break;
     }
     case "core": {
       model = "deepseek-v4-flash";
-      text = await callOpenAI(
+      ({ text, finishReason } = await callOpenAI(
         "https://api.deepseek.com/v1",
         deepseekKey,
         model,
@@ -304,17 +328,17 @@ export async function route(opts: RouteOptions): Promise<RouteResult> {
         user,
         maxTokens,
         temperature,
-      );
+      ));
       break;
     }
     case "sharp": {
       model = "deepseek-v4-pro";
-      // The old deepseek-reasoner (R1) ignored temperature entirely, hence
-      // the hardcoded 0 this used to pass. v4-pro is a different model and
-      // that quirk isn't documented as carrying over — passing the
-      // caller's real temperature rather than assuming it's still
-      // ignored. If sharp-tier output looks off, check this first.
-      text = await callOpenAI(
+      // Thinking mode is on by default for v4-pro (DeepSeek's docs:
+      // "enabled by default, with the default effort being high") and
+      // ignores temperature/top_p entirely (accepted, but has no effect)
+      // — passing it through anyway so this behaves normally if a caller
+      // ever runs sharp against a non-thinking model instead.
+      ({ text, finishReason } = await callOpenAI(
         "https://api.deepseek.com/v1",
         deepseekKey,
         model,
@@ -322,12 +346,12 @@ export async function route(opts: RouteOptions): Promise<RouteResult> {
         user,
         maxTokens,
         temperature,
-      );
+      ));
       break;
     }
     case "blade": {
       model = "claude-opus-4-8";
-      text = await callAnthropic(anthropicKey, model, system, user, maxTokens);
+      ({ text, finishReason } = await callAnthropic(anthropicKey, model, system, user, maxTokens));
       break;
     }
   }
@@ -344,5 +368,5 @@ export async function route(opts: RouteOptions): Promise<RouteResult> {
     });
   }
 
-  return { text, model, tier, estimatedCostUSD };
+  return { text, model, tier, estimatedCostUSD, finishReason };
 }

@@ -39,13 +39,22 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { route, type Tier } from "../_shared/ai-router.ts";
 
 // Single lever for this tutor's model — flip this one line, not the two
-// route() calls below, to change it. "core" (deepseek-v4-flash) is the
-// default: fast and responsive for a real-time back-and-forth, and cheap
-// enough to run per-exchange. "sharp" (deepseek-v4-pro) was tried first
-// and caused real problems live (see the maxTokens comment below) — worth
-// revisiting only if flash reads as too shallow once there's real
-// training volume to judge it against.
-const TUTOR_TIER: Tier = "core";
+// route() calls below, to change it. Set to "sharp" (deepseek-v4-pro) for
+// the best question quality, accepting slower/costlier responses. "core"
+// (deepseek-v4-flash) is faster and cheap enough to run per-exchange, at
+// some depth cost — worth trying if pro reads as overkill once there's
+// real training volume to judge it against.
+//
+// Note on "sharp" specifically: deepseek-v4-pro has thinking mode ON by
+// default (DeepSeek's own docs: "Thinking mode is enabled by default,
+// with the default effort being high") — reasoning tokens are generated
+// before the final answer and share the same maxTokens ceiling with it,
+// per DeepSeek's docs. This is the same shape of risk that broke this
+// tutor before under deepseek-reasoner (R1) — NOT the same tested model
+// (v4-pro is new, never live-tested here), but the same failure mode is
+// plausible for the same structural reason. See the maxTokens comments
+// on both route() calls below.
+const TUTOR_TIER: Tier = "sharp";
 
 const ALLOWED_ORIGINS = [
   "https://signal-and-friction.com",
@@ -189,17 +198,43 @@ serve(async (req) => {
         tier: TUTOR_TIER,
         system: SYSTEM_PROMPT_FOLLOWUP,
         user: userPrompt,
-        // Left at 2000 from when this ran on deepseek-reasoner (R1): R1
-        // spent tokens on its own internal reasoning before the final
-        // answer, and maxTokens was the ceiling on that combined total —
-        // 150 (sized for the ~60-word answer alone) left no room for it
-        // and every call returned empty. TUTOR_TIER's current default
-        // (flash) doesn't have that hidden-reasoning cost, so this is now
-        // just generous headroom, not a required minimum — but keep it
-        // this high if TUTOR_TIER is ever switched back to "sharp".
-        maxTokens: 2000,
+        // TUTOR_TIER is "sharp" (deepseek-v4-pro), which has thinking mode
+        // on by default (default effort "high") — reasoning tokens are
+        // generated before the final answer and DeepSeek's docs describe
+        // them as sharing this same maxTokens ceiling. This is the exact
+        // failure this tutor already hit once, under deepseek-reasoner
+        // (R1): 150 (sized for the ~60-word answer alone) left no room for
+        // reasoning and every call returned empty. 8000 here is a sized-up
+        // estimate, not empirically calibrated against v4-pro specifically
+        // (no live account access to test it from this environment) —
+        // "high" effort is presumably lighter than DeepSeek's separate
+        // "Think Max" mode (which they recommend a 384K-token ceiling
+        // for), but there's no vendor number for "high" to size against.
+        // Watch the FIRST few real runs closely for an empty question —
+        // that's this same bug recurring, and means this needs raising
+        // further, not silently retrying.
+        maxTokens: 8000,
+        // Thinking mode ignores temperature/top_p entirely per DeepSeek's
+        // docs (accepted without erroring, but has no effect) — left here
+        // only so this still behaves normally if TUTOR_TIER switches back
+        // to "core" (deepseek-v4-flash), which does use it.
         temperature: 0.6,
       });
+
+      // finishReason "length" means maxTokens was hit before the model
+      // finished — the exact silent-failure this tutor hit before under
+      // deepseek-reasoner, where the whole budget went to hidden
+      // reasoning and question came back "". Surface it as an explicit
+      // error instead of returning an empty/truncated question with no
+      // explanation.
+      if (result.finishReason === "length") {
+        return new Response(
+          JSON.stringify({
+            error: `Tutor response truncated — hit the token budget (maxTokens: 8000, tier: ${result.tier}, model: ${result.model}) before finishing. Raise maxTokens on this route() call.`,
+          }),
+          { status: 502, headers: { ...cors, "Content-Type": "application/json" } },
+        );
+      }
 
       return new Response(
         JSON.stringify({
@@ -246,12 +281,31 @@ serve(async (req) => {
         tier: TUTOR_TIER,
         system: SYSTEM_PROMPT_VERDICT,
         user: userPrompt,
-        // Same historical R1 headroom note as the followup call above —
+        // Same thinking-mode headroom note as the followup call above —
         // verdict additionally reasons through four separate rubric
-        // dimensions before emitting the JSON, so it keeps more of it.
-        maxTokens: 3000,
+        // dimensions before emitting the JSON, so it gets more of it.
+        // Same caveat: 12000 is a sized-up estimate, not empirically
+        // calibrated against v4-pro. Watch the first few real runs for an
+        // empty/truncated verdict.
+        maxTokens: 12000,
+        // Ignored in thinking mode (see the followup call's comment) —
+        // kept for correct behavior if TUTOR_TIER switches to "core".
         temperature: 0.3,
       });
+
+      // Same truncation check as the followup call above — worth catching
+      // explicitly here even though a truncated response would likely
+      // also fail the JSON.parse below anyway, since this gives a much
+      // clearer error than "Model returned non-JSON verdict" for what is
+      // actually a token-budget problem, not a formatting one.
+      if (result.finishReason === "length") {
+        return new Response(
+          JSON.stringify({
+            error: `Tutor verdict truncated — hit the token budget (maxTokens: 12000, tier: ${result.tier}, model: ${result.model}) before finishing. Raise maxTokens on this route() call.`,
+          }),
+          { status: 502, headers: { ...cors, "Content-Type": "application/json" } },
+        );
+      }
 
       let parsed: {
         score: number;
