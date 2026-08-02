@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getAuthHeaders } from "@/lib/supabase";
+import { getAuthHeaders, supabase } from "@/lib/supabase";
 import {
   AdminSectionHeader,
   AdminAlert,
@@ -152,6 +152,8 @@ export default function ProspectingCommandCenter() {
   const [scanningIds, setScanningIds] = useState<Set<string>>(new Set());
   const [bulkScanning, setBulkScanning] = useState(false);
   const [contactDrafts, setContactDrafts] = useState<Record<string, string>>({});
+  const [savingContactIds, setSavingContactIds] = useState<Set<string>>(new Set());
+  const [contactErrors, setContactErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState<{ message: string; variant: "green" | "red" } | null>(null);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -462,19 +464,64 @@ export default function ProspectingCommandCenter() {
   async function saveFounderContact(id: string) {
     const value = contactDrafts[id];
     if (value === undefined) return;
+    setSavingContactIds((prev) => new Set(prev).add(id));
+    setContactErrors((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
     try {
-      const headers = { ...getAuthHeaders(), "Content-Type": "application/json", Prefer: "return=representation" };
+      // getAuthHeaders() reads whatever's currently in the sf-admin-session
+      // cookie — normally kept fresh by admin/layout.tsx's
+      // onAuthStateChange listener, but this save was failing silently
+      // with zero diagnostic (see below), so pulling the session directly
+      // from the Supabase client here removes any doubt about a stale
+      // cookie being the cause, rather than trusting the cookie snapshot.
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers = {
+        apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+        Authorization: `Bearer ${session?.access_token ?? ""}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      };
       const res = await fetch(`${SUPABASE_URL}/rest/v1/prospect_candidates?id=eq.${id}`, {
         method: "PATCH",
         headers,
         body: JSON.stringify({ founder_contact: value }),
       });
-      if (res.ok) {
-        const [updated] = await res.json();
-        if (updated) setCandidates((prev) => prev.map((c) => (c.id === id ? updated : c)));
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        setContactErrors((prev) => ({
+          ...prev,
+          [id]: body?.message || body?.hint || `Save failed (HTTP ${res.status}) — not persisted.`,
+        }));
+        return;
       }
-    } catch {
-      /* non-fatal — the draft stays in local state either way */
+      const rows = await res.json();
+      const updated = rows[0];
+      if (!updated) {
+        // 200/204 with zero rows back means the row exists but RLS (or a
+        // stale/invalid session) silently blocked the write — this is
+        // exactly the class of failure the old code couldn't distinguish
+        // from success. Surface it instead of pretending it saved.
+        setContactErrors((prev) => ({
+          ...prev,
+          [id]: "Save request succeeded but no row was updated — likely a permissions issue. Try logging out and back in.",
+        }));
+        return;
+      }
+      setCandidates((prev) => prev.map((c) => (c.id === id ? updated : c)));
+    } catch (err) {
+      setContactErrors((prev) => ({
+        ...prev,
+        [id]: `Save request failed: ${err instanceof Error ? err.message : "network error"} — not persisted.`,
+      }));
+    } finally {
+      setSavingContactIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   }
 
@@ -1054,6 +1101,8 @@ export default function ProspectingCommandCenter() {
             const isEditing = editingIds.has(c.id);
             const draft = contactDrafts[c.id] ?? c.founder_contact ?? "";
             const editDraft = editDrafts[c.id] ?? { company_name: c.company_name ?? "", url: c.url };
+            const isSavingContact = savingContactIds.has(c.id);
+            const contactError = contactErrors[c.id];
             return (
               <tr key={c.id} className="hover:bg-[#D4A853]/[0.02] transition-colors align-top">
                 <td className="px-4 py-3">
@@ -1140,8 +1189,16 @@ export default function ProspectingCommandCenter() {
                     onBlur={() => saveFounderContact(c.id)}
                     placeholder="Name / email / LinkedIn"
                     disabled={c.status === "promoted" || c.status === "dismissed"}
-                    className="w-full bg-black/30 border border-white/10 rounded px-2 py-1.5 text-xs font-mono text-[#F5F0EB] placeholder:text-[#7A6F65] focus:outline-none focus:border-[#D4A853]/40 disabled:opacity-50"
+                    className={`w-full bg-black/30 border rounded px-2 py-1.5 text-xs font-mono text-[#F5F0EB] placeholder:text-[#7A6F65] focus:outline-none focus:border-[#D4A853]/40 disabled:opacity-50 ${
+                      contactError ? "border-[#C85C5C]/50" : "border-white/10"
+                    }`}
                   />
+                  {isSavingContact && (
+                    <span className="text-[10px] text-[#7A6F65] font-mono block mt-1">Saving…</span>
+                  )}
+                  {contactError && !isSavingContact && (
+                    <span className="text-[10px] text-[#C85C5C] font-mono block mt-1">{contactError}</span>
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   <AdminBadge variant={STATUS_BADGE[c.status].variant}>{STATUS_BADGE[c.status].label}</AdminBadge>
