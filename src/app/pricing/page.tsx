@@ -423,6 +423,11 @@ export default function PricingPage() {
           <span className="text-[#D4A853]/40">→</span> Expand{" "}
           <span className="text-[#D4A853]/40">→</span> Own it
         </p>
+        <p className="text-sm font-serif text-[#F5F0EB]/80 leading-relaxed max-w-xl mx-auto pt-4">
+          A long list of findings is someone else&apos;s backlog and doubt about what
+          matters first. One dominant friction, evidence-ranked, is something you
+          can act on this week.
+        </p>
       </section>
 
       {/* ── DWY vs DFY — one glance, before either ladder ─── */}
