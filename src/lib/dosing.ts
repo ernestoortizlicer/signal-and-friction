@@ -277,3 +277,58 @@ export function applyDosing(scaffold: ScaffoldJudgment, line: Line, tier: DwyTie
     },
   };
 }
+
+// ── Publish-path integration (Next.js only — the actual publish button
+// lives in src/app/admin/dashboard/page.tsx, a separate, older pipeline
+// from the scaffold/dosing system). This is the fix for a real gap found
+// 2026-08-02: handlePublishDelivery previously built its payload
+// entirely from manually-typed dashboard form fields, with zero
+// awareness of the dosing engine — nothing stopped the_decision/
+// what_to_avoid from being typed into a Beta Diagnostic delivery by
+// hand. This function is the ONLY place that maps a dosed scaffold into
+// the DeliverableData shape the dashboard/public deliverable page uses,
+// and it's a pure function specifically so the regression test can call
+// the exact same logic the publish button calls — not a reimplementation
+// that could silently drift from what actually ships.
+export interface DosedDeliveryFields {
+  friction: { mechanism: string; rootCause: string };
+  // null, not an empty-but-present object — omitted entirely when the
+  // tier withholds it, so validateDeliveryPayload can tell the
+  // difference between "withheld by design" and "forgot to fill it in."
+  finalDecision: { type: "A"; label: string; action: string; reasoning: string; tradeoff: string } | null;
+  avoid: Array<{ action: string; reason: string }>;
+  confidenceLevel: ConfidenceLevel | null;
+  confidenceReason: string | null;
+  projectedImpactNote: string | null;
+}
+
+export function mapDosedScaffoldToDelivery(
+  scaffold: ScaffoldJudgment,
+  line: Line,
+  tier: DwyTier | DfyTier
+): DosedDeliveryFields {
+  const dosed = applyDosing(scaffold, line, tier);
+  return {
+    friction: {
+      mechanism: dosed.fields.friction_mechanism ?? "",
+      rootCause: dosed.fields.why_blocks_conversion ?? "",
+    },
+    finalDecision: dosed.fields.the_decision
+      ? {
+          type: "A",
+          label: "Recommended Fix",
+          action: dosed.fields.the_decision,
+          reasoning: dosed.fields.why_blocks_conversion ?? "",
+          // The scaffold's 7 fields have no distinct "tradeoff" concept
+          // separate from what_to_avoid (which is already carried in its
+          // own `avoid` array below) — left honestly blank rather than
+          // repurposing a different field into this slot.
+          tradeoff: "",
+        }
+      : null,
+    avoid: dosed.fields.what_to_avoid ? [{ action: dosed.fields.what_to_avoid, reason: "" }] : [],
+    confidenceLevel: scaffold.confidence_level,
+    confidenceReason: dosed.fields.confidence_and_why ?? null,
+    projectedImpactNote: dosed.fields.projected_impact ?? null,
+  };
+}

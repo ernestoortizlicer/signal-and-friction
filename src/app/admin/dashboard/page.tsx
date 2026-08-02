@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAuthHeaders } from "@/lib/supabase";
 import { AdminStatCard, RevenueProgressBar } from "@/components/admin/AdminComponents";
+import { mapDosedScaffoldToDelivery, DWY_DOSING, type ScaffoldJudgment, type Line, type DwyTier } from "@/lib/dosing";
 
 interface DashboardMetrics {
   totalLeads: number;
@@ -313,6 +314,12 @@ export default function AdminDashboard() {
   // Diagnostic scaffold — private draft, generated from the same scanUrl
   // used by the AI Diagnostic Engine above. Never auto-visible to a client.
   const [existingScaffoldId, setExistingScaffoldId] = useState<string | null>(null);
+  // The scaffold's full judgment fields + any pending purchase flag, used
+  // to make buildDeliveryPayload dosing-aware — see mapDosedScaffoldToDelivery
+  // in src/lib/dosing.ts. null until a scaffold with a pending purchase is
+  // found for the selected client; when null, publishing falls back to the
+  // pre-existing manual-form behavior unchanged.
+  const [dosedScaffold, setDosedScaffold] = useState<(ScaffoldJudgment & { pending_dosing_line: Line | null; pending_dosing_tier: DwyTier | null }) | null>(null);
   const [scaffoldGenerating, setScaffoldGenerating] = useState(false);
   const [scaffoldError, setScaffoldError] = useState("");
 
@@ -516,6 +523,7 @@ export default function AdminDashboard() {
     setDryRunPayload(null);
     setDryRunErrors([]);
     setExistingScaffoldId(null);
+    setDosedScaffold(null);
     setScaffoldError("");
 
     if (client.guarantee) {
@@ -560,10 +568,18 @@ export default function AdminDashboard() {
         const interactionsData = await resInteractions.json();
         setSelectedClientInteractions(interactionsData);
       }
-      const resScaffold = await fetch(`${supabaseUrl}/rest/v1/diagnostic_scaffolds?client_id=eq.${client.id}&select=id&order=updated_at.desc&limit=1`, { headers });
+      const resScaffold = await fetch(
+        `${supabaseUrl}/rest/v1/diagnostic_scaffolds?client_id=eq.${client.id}&select=id,friction_mechanism,specific_friction_point,why_blocks_conversion,projected_impact,the_decision,what_to_avoid,confidence_and_why,funnel_stage,projected_impact_magnitude,confidence_level,dfy_execution_summary,dfy_monitoring_findings,dfy_handoff_documentation,pending_dosing_line,pending_dosing_tier&order=updated_at.desc&limit=1`,
+        { headers }
+      );
       if (resScaffold.ok) {
         const [scaffold] = await resScaffold.json();
         setExistingScaffoldId(scaffold?.id ?? null);
+        // Only treated as "dosed" when there's an actual pending purchase
+        // to dose for — a scaffold that exists but was never flagged by
+        // the webhook (no purchase yet) should not silently change what
+        // publish does today.
+        setDosedScaffold(scaffold?.pending_dosing_tier ? scaffold : null);
       }
     } catch (e) {
       console.warn("Could not load client details:", e);
@@ -714,10 +730,23 @@ export default function AdminDashboard() {
   const buildDeliveryPayload = () => {
     const clientKey = (selectedClient.company_name || selectedClient.company || "client")
       .toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-    const cleanAvoid = deliverAvoid.filter((a) => a.action.trim() && a.reason.trim());
     const cleanChecklist = deliverChecklist.filter((c) => c.task.trim());
     const cleanModules = deliverLearningModules.filter((m) => m.title.trim());
     const cleanBeforeFields = deliverBeforeFields.filter((f) => f.trim());
+
+    // Dosing-aware branch — a real purchase is pending dosing for this
+    // client's scaffold, so the diagnosis content comes from
+    // mapDosedScaffoldToDelivery (the exact function the regression test
+    // exercises), not from the manual form fields below. This is the fix
+    // for the gap found 2026-08-02: previously this function always used
+    // the manual fields regardless of which tier was purchased, so
+    // nothing stopped the_decision/what_to_avoid from reaching a Beta
+    // Diagnostic customer if someone typed them into the form by habit.
+    const dosed = dosedScaffold?.pending_dosing_line && dosedScaffold?.pending_dosing_tier
+      ? mapDosedScaffoldToDelivery(dosedScaffold, dosedScaffold.pending_dosing_line, dosedScaffold.pending_dosing_tier)
+      : null;
+
+    const cleanAvoid = dosed ? dosed.avoid : deliverAvoid.filter((a) => a.action.trim() && a.reason.trim());
 
     return {
       clientKey,
@@ -732,7 +761,16 @@ export default function AdminDashboard() {
       guaranteeStatus: "Specificity Guarantee Active",
       telemetryStatus: scanResult ? "✓ Public Signal Scan Confirmed (PageSpeed + HTML)" : "✓ Traffic & Baseline Confirmed",
       evidence: diagEvidence.length ? diagEvidence : undefined,
-      projectedImpact: deliverImpactStep.trim()
+      // Dosed deliveries carry the scaffold's free-text projected_impact
+      // as a note rather than the manual numeric low/high range — that
+      // structured range has no equivalent in the 7-field scaffold model,
+      // and fabricating low/high numbers from free text would be exactly
+      // the kind of invented-number problem this whole engine exists to
+      // prevent. The public deliverable page simply won't render that
+      // section when this is null, same as any other optional field here.
+      projectedImpact: dosed
+        ? null
+        : deliverImpactStep.trim()
         ? {
             low: Number(deliverImpactLow),
             high: Number(deliverImpactHigh),
@@ -742,8 +780,9 @@ export default function AdminDashboard() {
             narrowsWith: deliverImpactNarrowsWith.trim(),
           }
         : null,
-      confidenceLevel: diagConfidenceLevel ?? undefined,
-      confidenceReason: diagConfidenceReason || undefined,
+      projectedImpactNote: dosed?.projectedImpactNote ?? undefined,
+      confidenceLevel: dosed ? (dosed.confidenceLevel ?? undefined) : (diagConfidenceLevel ?? undefined),
+      confidenceReason: dosed ? (dosed.confidenceReason ?? undefined) : (diagConfidenceReason || undefined),
       avoid: cleanAvoid,
       beforeAfter: deliverBeforeTitle.trim()
         ? {
@@ -767,17 +806,24 @@ export default function AdminDashboard() {
         : undefined,
       diagnosis: {
         signal: diagSignal || "See Loom video for complete funnel signal breakdown.",
-        friction: {
-          mechanism: diagMechanism || "Cognitive Load",
-          rootCause: diagRootCause || "See Loom video for complete root cause analysis and recommended intervention stack.",
-        },
-        finalDecision: {
-          type: "A",
-          label: deliverDecisionLabel.trim(),
-          action: deliverDecisionAction.trim(),
-          reasoning: deliverDecisionReasoning.trim(),
-          tradeoff: deliverDecisionTradeoff.trim(),
-        },
+        friction: dosed
+          ? dosed.friction
+          : {
+              mechanism: diagMechanism || "Cognitive Load",
+              rootCause: diagRootCause || "See Loom video for complete root cause analysis and recommended intervention stack.",
+            },
+        // Genuinely null when dosing withholds it at this tier — not an
+        // object with empty strings, which could still render as a blank
+        // "Recommended Fix" section rather than nothing at all.
+        finalDecision: dosed
+          ? dosed.finalDecision
+          : {
+              type: "A",
+              label: deliverDecisionLabel.trim(),
+              action: deliverDecisionAction.trim(),
+              reasoning: deliverDecisionReasoning.trim(),
+              tradeoff: deliverDecisionTradeoff.trim(),
+            },
         decisions: [],
       },
     };
@@ -787,20 +833,42 @@ export default function AdminDashboard() {
   // avoid[] are never model-generated: if any of them is incomplete, or
   // any measured claim has no traceable source, or the Loom URL is
   // missing/placeholder, publishing is refused outright.
+  //
+  // Dosing-aware since 2026-08-02: a dosed delivery legitimately omits
+  // finalDecision/avoid/the numeric projectedImpact range below
+  // Intervention tier on DWY — that's the entire point of the dosing
+  // engine, not an incomplete form. Requiring them unconditionally would
+  // make it IMPOSSIBLE to ever publish a correctly-dosed Beta Diagnostic.
+  // The manual (non-dosed, legacy) path keeps the original hard
+  // requirement exactly as before.
   const validateDeliveryPayload = (payload: ReturnType<typeof buildDeliveryPayload>): string[] => {
     const errors: string[] = [];
     if (!loomUrl || !loomUrl.includes("loom.com/") || loomUrl.toLowerCase().includes("placeholder")) {
       errors.push('Loom URL is missing, invalid, or contains "placeholder".');
     }
-    const pi = payload.projectedImpact;
-    if (!pi || !pi.step || !pi.modeledFrom || !pi.narrowsWith || Number.isNaN(pi.low) || Number.isNaN(pi.high)) {
-      errors.push("Projected Impact is required and must be fully filled in — this is never model-generated.");
+
+    const line = dosedScaffold?.pending_dosing_line;
+    const tier = dosedScaffold?.pending_dosing_tier;
+    const isDosed = !!(line && tier);
+    const decisionExpected = !isDosed || line === "dfy" || DWY_DOSING[tier!].the_decision === "full";
+    const avoidExpected = !isDosed || line === "dfy" || DWY_DOSING[tier!].what_to_avoid === "full";
+
+    if (isDosed) {
+      if (!payload.diagnosis.friction.mechanism.trim() || !payload.diagnosis.friction.rootCause.trim()) {
+        errors.push("The scaffold's friction_mechanism / why_blocks_conversion fields are empty — fill in the 7 judgment fields on the scaffold before publishing a dosed delivery.");
+      }
+    } else {
+      const pi = payload.projectedImpact;
+      if (!pi || !pi.step || !pi.modeledFrom || !pi.narrowsWith || Number.isNaN(pi.low) || Number.isNaN(pi.high)) {
+        errors.push("Projected Impact is required and must be fully filled in — this is never model-generated.");
+      }
     }
+
     const fd = payload.diagnosis.finalDecision;
-    if (!fd.label || !fd.action || !fd.reasoning || !fd.tradeoff) {
+    if (decisionExpected && (!fd || !fd.label || !fd.action || !fd.reasoning || (!isDosed && !fd.tradeoff))) {
       errors.push("Final Decision is required and must be fully filled in — this is never model-generated.");
     }
-    if (!payload.avoid || payload.avoid.length === 0) {
+    if (avoidExpected && (!payload.avoid || payload.avoid.length === 0)) {
       errors.push("At least one complete Avoid item is required — this is never model-generated.");
     }
     const unsourced = (payload.evidence || []).filter((e) => e.tier === "measured" && !e.source?.trim());
@@ -2886,6 +2954,21 @@ export default function AdminDashboard() {
                     {showDryRun && dryRunPayload && (
                       <div className="border-2 border-[#D4A853]/40 p-4 rounded bg-black/60 space-y-4 mt-3">
                         <span className="font-mono text-xs text-[#D4A853] uppercase block">{"Dry Run — Review Before Publish"}</span>
+
+                        {dosedScaffold?.pending_dosing_line && dosedScaffold?.pending_dosing_tier ? (
+                          <div className="border border-[#D4A853]/30 bg-[#D4A853]/5 p-3 rounded">
+                            <p className="font-mono text-xs text-[#D4A853]">
+                              {"⚡ Dosed delivery — "}{dosedScaffold.pending_dosing_line.toUpperCase()}{" "}{dosedScaffold.pending_dosing_tier.replace(/_/g, " ")}
+                              {". Diagnosis content below comes from the scaffold's 7 fields, filtered by this tier's disclosure rules — not from the manual form fields."}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="border border-white/10 bg-white/[0.02] p-3 rounded">
+                            <p className="font-mono text-xs text-[#7A6F65]">
+                              {"No pending purchase for this client's scaffold — publishing from the manual form fields (legacy path), unchanged."}
+                            </p>
+                          </div>
+                        )}
 
                         {dryRunErrors.length > 0 ? (
                           <div className="border border-[#C85C5C]/40 bg-[#C85C5C]/10 p-3 rounded space-y-1">
