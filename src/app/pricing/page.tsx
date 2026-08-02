@@ -621,6 +621,71 @@ export default function PricingPage() {
         </div>
       </section>
 
+      {/* ── What we don't do / who it's for ─────────────────── */}
+      <section className="w-full max-w-3xl mx-auto px-6 pb-16 relative z-10 border-t border-[#D4A853]/8 pt-16">
+        <div className="grid sm:grid-cols-2 gap-10">
+          <div className="space-y-3">
+            <span className="font-mono text-[10px] text-[#7A6F65] tracking-[0.3em] uppercase block">
+              What we don&apos;t do
+            </span>
+            <ul className="space-y-2.5 text-xs text-[#B0A89E] font-mono leading-relaxed">
+              <li>— Promise a revenue or conversion number</li>
+              <li>— Run a generic CRO checklist — one dominant friction, not twenty minor notes</li>
+              <li>— Manufacture a finding to justify the fee</li>
+              <li>— Claim access to data we don&apos;t have unless you grant it</li>
+              <li>— Lock you into a retainer — every step after Diagnostic is opt-in</li>
+            </ul>
+          </div>
+          <div className="space-y-3">
+            <span className="font-mono text-[10px] text-[#7A6F65] tracking-[0.3em] uppercase block">
+              Who this is for — and isn&apos;t
+            </span>
+            <p className="text-xs text-[#B0A89E] font-mono leading-relaxed">
+              <span className="text-[#5C9A6B]">For:</span> B2B SaaS founders with real
+              traffic who want to know why conversion isn&apos;t higher — not generic
+              advice, one evidence-backed answer.
+            </p>
+            <p className="text-xs text-[#B0A89E] font-mono leading-relaxed">
+              <span className="text-[#C85C5C]">Not for:</span> pre-launch products with
+              no traffic yet to observe, or anyone expecting a guaranteed revenue
+              outcome.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Guarantee — quality and scope, never revenue ────── */}
+      <section className="w-full max-w-3xl mx-auto px-6 pb-16 relative z-10">
+        <div className="border border-[#D4A853]/20 bg-[#D4A853]/[0.03] rounded-lg p-6 sm:p-8 space-y-3">
+          <span className="font-mono text-[10px] text-[#D4A853] tracking-[0.3em] uppercase block">
+            Specificity Guarantee
+          </span>
+          <p className="text-sm text-[#F5F0EB] font-serif leading-relaxed">
+            If the diagnosis doesn&apos;t surface a friction point specific to your
+            product — something observed in your actual funnel, not generic advice —
+            you don&apos;t pay. Full refund of the diagnostic fee, no forms.
+          </p>
+          <p className="text-xs text-[#7A6F65] font-mono leading-relaxed">
+            This covers the quality and honesty of the finding — never your resulting
+            conversion rate or revenue, which depend on execution and market
+            conditions we don&apos;t control.{" "}
+            <Link href="/legal/guarantee" className="text-[#D4A853] hover:underline">
+              Full terms
+            </Link>
+            .
+          </p>
+        </div>
+      </section>
+
+      {/* ── If no sufficient friction is found ──────────────── */}
+      <section className="w-full max-w-3xl mx-auto px-6 pb-16 relative z-10 text-center">
+        <p className="text-sm text-[#B0A89E] font-mono leading-relaxed max-w-xl mx-auto">
+          If the evidence doesn&apos;t support a clear, specific friction — we say so.
+          You get an honest &ldquo;not enough signal yet&rdquo; and a refund, not a
+          manufactured finding.
+        </p>
+      </section>
+
       {/* ── Honest close ──────────────────────────────────── */}
       <section className="w-full max-w-3xl mx-auto px-6 pb-24 relative z-10 pt-4 text-center">
         <p className="text-lg sm:text-xl font-serif text-white leading-relaxed">
