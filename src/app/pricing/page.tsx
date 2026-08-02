@@ -357,8 +357,12 @@ export default function PricingPage() {
     })();
   }, []);
 
+  const dwyPrices = DWY_LADDER.map((p) => p.priceUsd);
+  const dwyRange = `$${Math.min(...dwyPrices).toLocaleString("en-US")}–$${Math.max(...dwyPrices).toLocaleString("en-US")}`;
   const dfyPrices = DFY_LADDER.map((p) => p.priceUsd);
   const dfyRange = `$${Math.min(...dfyPrices).toLocaleString("en-US")}–$${Math.max(...dfyPrices).toLocaleString("en-US")}`;
+  const dwyDiagnosticPrice = formatPriceUsd(DWY_LADDER.find((p) => p.order === 1)!);
+  const dfyDiagnosticPrice = formatPriceUsd(DFY_LADDER.find((p) => p.order === 1)!);
 
   return (
     <main className="min-h-screen w-screen bg-[#0A0908] text-[#F5F0EB] overflow-y-auto relative crt-lines flex flex-col justify-start">
@@ -419,6 +423,53 @@ export default function PricingPage() {
           <span className="text-[#D4A853]/40">→</span> Expand{" "}
           <span className="text-[#D4A853]/40">→</span> Own it
         </p>
+      </section>
+
+      {/* ── DWY vs DFY — one glance, before either ladder ─── */}
+      <section className="w-full max-w-2xl mx-auto px-6 pb-16 relative z-10">
+        <div className="border border-[#D4A853]/15 rounded-lg overflow-hidden">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-[#D4A853]/15">
+                <th className="p-4 font-mono text-[10px] text-[#7A6F65] tracking-[0.2em] uppercase font-normal w-1/3">
+                  &nbsp;
+                </th>
+                <th className="p-4 font-mono text-xs text-[#D4A853] tracking-[0.2em] uppercase font-semibold">
+                  Done-With-You
+                </th>
+                <th className="p-4 font-mono text-xs text-[#D4A853] tracking-[0.2em] uppercase font-semibold">
+                  Done-For-You
+                </th>
+              </tr>
+            </thead>
+            <tbody className="font-mono text-sm text-[#F5F0EB]">
+              <tr className="border-b border-[#D4A853]/8">
+                <td className="p-4 text-[#7A6F65] text-xs uppercase tracking-wider">Who executes</td>
+                <td className="p-4">You</td>
+                <td className="p-4">We do</td>
+              </tr>
+              <tr className="border-b border-[#D4A853]/8">
+                <td className="p-4 text-[#7A6F65] text-xs uppercase tracking-wider">Best for</td>
+                <td className="p-4 text-[#B0A89E] text-xs leading-relaxed">
+                  Teams with the bandwidth to build the fix themselves
+                </td>
+                <td className="p-4 text-[#B0A89E] text-xs leading-relaxed">
+                  Founders who want it handled, not another project
+                </td>
+              </tr>
+              <tr className="border-b border-[#D4A853]/8">
+                <td className="p-4 text-[#7A6F65] text-xs uppercase tracking-wider">Entry price</td>
+                <td className="p-4 tabular-nums">{dwyDiagnosticPrice}</td>
+                <td className="p-4 tabular-nums">{dfyDiagnosticPrice}</td>
+              </tr>
+              <tr>
+                <td className="p-4 text-[#7A6F65] text-xs uppercase tracking-wider">Full path</td>
+                <td className="p-4 tabular-nums text-[#B0A89E]">{dwyRange}</td>
+                <td className="p-4 tabular-nums text-[#B0A89E]">{dfyRange}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       {/* ── DWY — the hero ladder, your path ──────────────── */}
