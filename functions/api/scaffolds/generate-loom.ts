@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { requireAdmin } from '../_admin-auth';
 import { getSupabaseUrl, getServiceRoleKey } from '../_env';
-import { CLAUDE_MODEL, LOOM_SCRIPT_MAX_TOKENS } from '../_models';
+import { LOOM_SCRIPT_MAX_TOKENS } from '../_models';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -128,58 +128,66 @@ export const onRequestPost = async ({
     );
   }
 
-  const { data: anthropicKey, error: vaultError } = await supabase.rpc('get_anthropic_key');
-  if (vaultError || !anthropicKey) {
+  // This is rhetorical restyling of sentences a human already wrote (see
+  // the SYSTEM_PROMPT note above), not the fact-finding/structured-JSON
+  // work diagnose.ts does — it doesn't need blade-tier reasoning, and
+  // routing it through DeepSeek ('core' tier, same model prospecting's
+  // AI-suggested-leads and the Learning tutor already run on) keeps it
+  // working without Anthropic credits. Read directly from env, like every
+  // other Cloudflare secret in this directory (Stripe, PostHog, PageSpeed,
+  // Resend) — unlike diagnose.ts's Supabase-vault RPC, which this file
+  // used to copy verbatim despite doing a different job.
+  const deepseekKey = env.DEEPSEEK_API_KEY?.trim();
+  if (!deepseekKey) {
     return Response.json(
-      { error: 'Vault retrieval failed — ANTHROPIC_API_KEY not initialized. Run vault.create_secret() in Supabase dashboard.' },
+      { error: 'Loom script generation is unavailable right now — no AI provider is configured for this feature yet.' },
       { status: 503, headers: CORS }
     );
   }
 
   const userContent = buildUserContent(scaffold);
 
-  let anthropicResponse: Response;
+  let deepseekResponse: Response;
   try {
-    anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
+    deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'x-api-key': anthropicKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'prompt-caching-2024-07-31',
-        'content-type': 'application/json',
+        Authorization: `Bearer ${deepseekKey}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: CLAUDE_MODEL,
+        model: 'deepseek-chat',
         max_tokens: LOOM_SCRIPT_MAX_TOKENS,
-        system: [
-          { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
+        temperature: 0.7,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: userContent },
         ],
-        messages: [{ role: 'user', content: userContent }],
       }),
       signal: AbortSignal.timeout(30000),
     });
   } catch (fetchErr) {
-    return Response.json({ error: `Anthropic API unreachable: ${String(fetchErr)}` }, { status: 502, headers: CORS });
+    return Response.json({ error: `AI provider unreachable: ${String(fetchErr)}` }, { status: 502, headers: CORS });
   }
 
-  if (!anthropicResponse.ok) {
-    const errBody = await anthropicResponse.text().catch(() => '');
-    return Response.json({ error: `Anthropic API error ${anthropicResponse.status}`, detail: errBody }, { status: 502, headers: CORS });
+  if (!deepseekResponse.ok) {
+    const errBody = await deepseekResponse.text().catch(() => '');
+    return Response.json({ error: `AI provider error ${deepseekResponse.status}`, detail: errBody }, { status: 502, headers: CORS });
   }
 
-  const anthropicData = await anthropicResponse.json() as {
-    content: Array<{ type: string; text: string }>;
-    stop_reason?: string;
+  const deepseekData = await deepseekResponse.json() as {
+    choices?: Array<{ message?: { content?: string }; finish_reason?: string }>;
   };
+  const choice = deepseekData.choices?.[0];
 
-  if (anthropicData.stop_reason === 'max_tokens') {
+  if (choice?.finish_reason === 'length') {
     return Response.json(
       { error: 'Script output was truncated at the token ceiling. Raise LOOM_SCRIPT_MAX_TOKENS.' },
       { status: 422, headers: CORS }
     );
   }
 
-  const script = (anthropicData.content?.find(b => b.type === 'text')?.text ?? '').trim();
+  const script = (choice?.message?.content ?? '').trim();
   if (!script) {
     return Response.json({ error: 'Model returned an empty script' }, { status: 422, headers: CORS });
   }

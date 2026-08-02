@@ -1070,6 +1070,8 @@ export default function ProspectingCommandCenter() {
                     <div className="space-y-1.5">
                       <input
                         type="text"
+                        name={`company-name-${c.id}`}
+                        autoComplete="off"
                         value={editDraft.company_name}
                         onChange={(e) =>
                           setEditDrafts((prev) => ({ ...prev, [c.id]: { ...editDraft, company_name: e.target.value } }))
@@ -1079,6 +1081,8 @@ export default function ProspectingCommandCenter() {
                       />
                       <input
                         type="text"
+                        name={`company-url-${c.id}`}
+                        autoComplete="off"
                         value={editDraft.url}
                         onChange={(e) =>
                           setEditDrafts((prev) => ({ ...prev, [c.id]: { ...editDraft, url: e.target.value } }))
@@ -1127,6 +1131,10 @@ export default function ProspectingCommandCenter() {
                 <td className="px-4 py-3 min-w-[180px]">
                   <input
                     type="text"
+                    name={`founder-contact-${c.id}`}
+                    autoComplete="off"
+                    data-1p-ignore
+                    data-lpignore="true"
                     value={draft}
                     onChange={(e) => setContactDrafts((prev) => ({ ...prev, [c.id]: e.target.value }))}
                     onBlur={() => saveFounderContact(c.id)}
