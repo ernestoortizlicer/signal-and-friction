@@ -10,10 +10,24 @@
  * │ Tier │ Model                  │ $/M tok  │ When                                  │
  * ├──────┼────────────────────────┼──────────┼───────────────────────────────────────┤
  * │micro │ gemini-2.5-flash       │ 0.15 in  │ Clasificación, extracción, boilerplate │
- * │core  │ deepseek-chat (V3)     │ 0.27 in  │ Análisis, código, lógica interna       │
- * │sharp │ deepseek-reasoner (R1) │ 0.55 in  │ Razonamiento complejo multi-paso       │
+ * │core  │ deepseek-v4-flash      │ 0.14 in  │ Análisis, código, lógica interna       │
+ * │sharp │ deepseek-v4-pro        │ 0.44 in  │ Razonamiento complejo multi-paso       │
  * │blade │ claude-opus-4-8        │ 15.00 in │ Outputs B2B, diagnósticos, voz marca   │
  * └──────┴────────────────────────┴──────────┴───────────────────────────────────────┘
+ *
+ * core/sharp updated 2026-08-02: DeepSeek discontinued the deepseek-chat
+ * and deepseek-reasoner model IDs on 2026-07-24 (announced in their
+ * changelog 2026-04-24), replacing them with deepseek-v4-flash and
+ * deepseek-v4-pro — confirmed against api-docs.deepseek.com directly, not
+ * assumed. These are NOT simply renamed — v4-pro is a larger, separately-
+ * sized model (1.6T total/49B active params vs v4-flash's 284B/13B), not
+ * "deepseek-reasoner's thinking mode" (DeepSeek's own transition-period
+ * docs mapped the old reasoner name to a thinking MODE of v4-flash, not
+ * to v4-pro at all) — sharp→v4-pro here is the closest faithful match to
+ * "heavier reasoning tier" in this router's own terms, not a rediscovered
+ * equivalence. Pricing above is the standard (cache-miss) input rate from
+ * DeepSeek's pricing page; both models also have a much cheaper cache-hit
+ * input rate not reflected in this table.
  *
  * Required secrets (Supabase Dashboard → Edge Functions → Secrets):
  *   OPENROUTER_API_KEY  — micro (Gemini Flash)
@@ -41,8 +55,8 @@ export interface RouteResult {
 // ── Cost table (USD per 1M tokens) ──────────────────────────────────────────
 const COST: Record<Tier, { in: number; out: number }> = {
   micro: { in: 0.15,  out: 0.60  },
-  core:  { in: 0.27,  out: 1.10  },
-  sharp: { in: 0.55,  out: 2.19  },
+  core:  { in: 0.14,  out: 0.28  }, // deepseek-v4-flash, cache-miss rate
+  sharp: { in: 0.435, out: 0.87  }, // deepseek-v4-pro, cache-miss rate
   blade: { in: 15.00, out: 75.00 },
 };
 
@@ -281,7 +295,7 @@ export async function route(opts: RouteOptions): Promise<RouteResult> {
       break;
     }
     case "core": {
-      model = "deepseek-chat";
+      model = "deepseek-v4-flash";
       text = await callOpenAI(
         "https://api.deepseek.com/v1",
         deepseekKey,
@@ -294,7 +308,12 @@ export async function route(opts: RouteOptions): Promise<RouteResult> {
       break;
     }
     case "sharp": {
-      model = "deepseek-reasoner";
+      model = "deepseek-v4-pro";
+      // The old deepseek-reasoner (R1) ignored temperature entirely, hence
+      // the hardcoded 0 this used to pass. v4-pro is a different model and
+      // that quirk isn't documented as carrying over — passing the
+      // caller's real temperature rather than assuming it's still
+      // ignored. If sharp-tier output looks off, check this first.
       text = await callOpenAI(
         "https://api.deepseek.com/v1",
         deepseekKey,
@@ -302,7 +321,7 @@ export async function route(opts: RouteOptions): Promise<RouteResult> {
         system,
         user,
         maxTokens,
-        0, // R1 ignores temperature
+        temperature,
       );
       break;
     }

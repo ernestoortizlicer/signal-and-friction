@@ -156,7 +156,7 @@ export const onRequestPost = async ({
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
+        model: 'deepseek-v4-flash',
         max_tokens: LOOM_SCRIPT_MAX_TOKENS,
         temperature: 0.7,
         messages: [

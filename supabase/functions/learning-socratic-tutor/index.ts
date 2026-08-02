@@ -1,8 +1,8 @@
 // ════════════════════════════════════════════════════════════
 // SUPABASE EDGE FUNCTION: LEARNING SOCRATIC TUTOR
 // Path: supabase/functions/learning-socratic-tutor/index.ts
-// Tier: sharp (DeepSeek Reasoner) — genuine multi-step reasoning needed
-//       to engage with a specific hypothesis, not boilerplate generation.
+// Tier: see TUTOR_TIER below — this is real-time conversational tutoring,
+//       not a batch job, so response latency matters as much as depth.
 //
 // Rebuilt 2026-08-01 for the diagnostic-craft training module (approved
 // design: research + curriculum doc, same session). Two changes from the
@@ -36,7 +36,16 @@
 // ════════════════════════════════════════════════════════════
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { route } from "../_shared/ai-router.ts";
+import { route, type Tier } from "../_shared/ai-router.ts";
+
+// Single lever for this tutor's model — flip this one line, not the two
+// route() calls below, to change it. "core" (deepseek-v4-flash) is the
+// default: fast and responsive for a real-time back-and-forth, and cheap
+// enough to run per-exchange. "sharp" (deepseek-v4-pro) was tried first
+// and caused real problems live (see the maxTokens comment below) — worth
+// revisiting only if flash reads as too shallow once there's real
+// training volume to judge it against.
+const TUTOR_TIER: Tier = "core";
 
 const ALLOWED_ORIGINS = [
   "https://signal-and-friction.com",
@@ -177,17 +186,17 @@ serve(async (req) => {
         `Ask your one Socratic follow-up question now.`;
 
       const result = await route({
-        tier: "sharp",
+        tier: TUTOR_TIER,
         system: SYSTEM_PROMPT_FOLLOWUP,
         user: userPrompt,
-        // Found via live testing 2026-08-01: deepseek-reasoner (R1) spends
-        // tokens on its own internal reasoning before emitting any final
-        // answer — maxTokens is the ceiling on that combined total, not
-        // just the final text. 150 was sized for the ~60-word answer alone
-        // and left zero room for reasoning; every live call returned an
-        // empty final message. The system prompt already constrains the
-        // final question to under 60 words — this budget is headroom for
-        // R1 to think, not permission to write a longer answer.
+        // Left at 2000 from when this ran on deepseek-reasoner (R1): R1
+        // spent tokens on its own internal reasoning before the final
+        // answer, and maxTokens was the ceiling on that combined total —
+        // 150 (sized for the ~60-word answer alone) left no room for it
+        // and every call returned empty. TUTOR_TIER's current default
+        // (flash) doesn't have that hidden-reasoning cost, so this is now
+        // just generous headroom, not a required minimum — but keep it
+        // this high if TUTOR_TIER is ever switched back to "sharp".
         maxTokens: 2000,
         temperature: 0.6,
       });
@@ -234,12 +243,12 @@ serve(async (req) => {
         `Return the JSON verdict now — score, feedback, concepts_demonstrated, evidence_tier_violations, specificity_pass, confidence_calibrated. Do not include a mechanism-correctness judgment; that's handled separately.`;
 
       const result = await route({
-        tier: "sharp",
+        tier: TUTOR_TIER,
         system: SYSTEM_PROMPT_VERDICT,
         user: userPrompt,
-        // Same reasoning-budget issue as the followup call above — verdict
-        // additionally has to reason through four separate rubric
-        // dimensions before emitting the JSON, so it gets more headroom.
+        // Same historical R1 headroom note as the followup call above —
+        // verdict additionally reasons through four separate rubric
+        // dimensions before emitting the JSON, so it keeps more of it.
         maxTokens: 3000,
         temperature: 0.3,
       });
