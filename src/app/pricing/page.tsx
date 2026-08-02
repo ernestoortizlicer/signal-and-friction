@@ -41,77 +41,182 @@ function UtcClock() {
   );
 }
 
-// Journey verb + one-line desire hook per phase — marketing copy, deliberately
+// Journey verb + concrete-action CTA per phase — marketing copy, deliberately
 // kept out of offer-catalog.ts (that file is pricing/scope only). Keyed by
 // the same priceId offer-catalog.ts already uses, so a missing entry here
-// is a build-time TypeScript error, not a silent blank card. Two separate
-// maps (not one shared one) because the hook itself differs by who's doing
-// the work — same 5-step journey, different voice.
-const JOURNEY_DWY: Record<string, { verb: string; hook: string }> = {
-  price_dwy_beta_diagnostic: { verb: "Diagnose", hook: "We find it. Then you'll want it fixed." },
-  price_dwy_intervention: { verb: "Fix", hook: "The fix, mapped step by step." },
-  price_dwy_monitoring: { verb: "Monitor", hook: "Proof it worked — and what's next." },
-  price_dwy_expansion: { verb: "Expand", hook: "Now the next leak." },
-  price_dwy_autonomy: { verb: "Own it", hook: "Run the whole method yourself." },
+// is a build-time TypeScript error, not a silent blank card. Diagnostic
+// (order 1) is deliberately absent from both — it's rendered by
+// DiagnosticCard/DIAGNOSTIC_COPY below instead, since it's the single
+// visible entry point and carries far more copy than Fix/Monitor/Expand/
+// Autonomy, which stay compact so they don't compete with it.
+const JOURNEY_DWY: Record<string, { verb: string; cta: string }> = {
+  price_dwy_intervention: { verb: "Fix", cta: "Get the fix plan" },
+  price_dwy_monitoring: { verb: "Monitor", cta: "Start monitoring" },
+  price_dwy_expansion: { verb: "Expand", cta: "Expand the diagnostic" },
+  price_dwy_autonomy: { verb: "Own it", cta: "Get the Autonomy Kit" },
 };
 
-const JOURNEY_DFY: Record<string, { verb: string; hook: string }> = {
-  price_dfy_beta_diagnostic: { verb: "Diagnose", hook: "We find it. You don't lift a finger." },
-  price_dfy_intervention: { verb: "Fix", hook: "We build the fix. You watch it ship." },
-  price_dfy_monitoring: { verb: "Monitor", hook: "Proof it worked — we keep watching." },
-  price_dfy_expansion: { verb: "Expand", hook: "Now the next leak. We handle that too." },
-  price_dfy_autonomy: { verb: "Own it", hook: "Hand the method to your team." },
+const JOURNEY_DFY: Record<string, { verb: string; cta: string }> = {
+  price_dfy_intervention: { verb: "Fix", cta: "Build the fix" },
+  price_dfy_monitoring: { verb: "Monitor", cta: "Start monitoring" },
+  price_dfy_expansion: { verb: "Expand", cta: "Expand the diagnostic" },
+  price_dfy_autonomy: { verb: "Own it", cta: "Hand off the method" },
 };
+
+// Full outcome / included / who-for / next-step copy — Diagnostic only,
+// per the task's "single visible entry point" decision. dwy vs dfy differ
+// in whoFor/nextStep/cta (who executes), same evidence-ranked diagnosis
+// otherwise.
+const DIAGNOSTIC_COPY: Record<"dwy" | "dfy", {
+  outcome: string;
+  included: string[];
+  whoFor: string;
+  nextStep: string;
+  cta: string;
+}> = {
+  dwy: {
+    outcome: "Know exactly which friction is costing you conversions — and the specific decision to fix it.",
+    included: [
+      "One dominant friction, isolated and evidence-ranked — measured, modeled, or marked unknown, never guessed",
+      "The recommended decision: the specific action to take, not generic advice",
+      "Delivered as a private deliverable page plus a short Loom walkthrough",
+      "72 hours, fully async — no calls",
+    ],
+    whoFor: "Founders who want the diagnosis now and will execute the fix themselves.",
+    nextStep: "Want it built, not just specified? Move to Intervention.",
+    cta: "Diagnose my funnel",
+  },
+  dfy: {
+    outcome: "Know exactly which friction is costing you conversions — we find it, and we're ready to build the fix.",
+    included: [
+      "One dominant friction, isolated and evidence-ranked — measured, modeled, or marked unknown, never guessed",
+      "The recommended decision: the specific action to take, not generic advice",
+      "Delivered as a private deliverable page plus a short Loom walkthrough",
+      "72 hours, fully async — no calls",
+    ],
+    whoFor: "Founders who want the diagnosis and the execution, without adding it to their own team's plate.",
+    nextStep: "Ready for us to build the fix too? Move to Intervention — we implement directly.",
+    cta: "Diagnose my funnel — done for you",
+  },
+};
+
+function DiagnosticCard({
+  phase,
+  copy,
+  link,
+  linksLoaded,
+}: {
+  phase: OfferPhase;
+  copy: (typeof DIAGNOSTIC_COPY)["dwy"];
+  link: string | null;
+  linksLoaded: boolean;
+}) {
+  return (
+    <div className="border border-[#D4A853]/25 bg-[#0A0908]/95 rounded-lg p-6 sm:p-8 relative overflow-hidden group hover:border-[#D4A853]/45 transition-colors">
+      <div className="pricing-card-scanline" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#D4A853]/50 to-transparent" />
+      <div className="grid md:grid-cols-[1.1fr_1fr] gap-8">
+        <div className="space-y-4">
+          <span className="font-mono text-[10px] text-[#D4A853] tracking-[0.3em] uppercase border border-[#D4A853]/30 px-2 py-0.5 rounded bg-[#D4A853]/5 inline-block">
+            Start here
+          </span>
+          <h3 className="font-serif text-2xl sm:text-3xl text-white font-bold tracking-tight leading-tight">
+            {phase.name}
+          </h3>
+          <div className="font-mono text-3xl font-bold text-[#D4A853] glow-text tabular-nums">
+            {formatPriceUsd(phase)}
+          </div>
+          <p className="text-sm text-[#F5F0EB] leading-relaxed font-serif">
+            {copy.outcome}
+          </p>
+          <p className="text-xs text-[#B0A89E] font-mono leading-relaxed">
+            <span className="text-[#D4A853]/80 uppercase tracking-wider">Who it&apos;s for — </span>
+            {copy.whoFor}
+          </p>
+        </div>
+        <div className="space-y-4 border-t md:border-t-0 md:border-l border-[#D4A853]/10 pt-6 md:pt-0 md:pl-8">
+          <span className="font-mono text-[10px] text-[#D4A853]/70 tracking-[0.3em] uppercase block">
+            What&apos;s included
+          </span>
+          <ul className="space-y-2.5">
+            {copy.included.map((line) => (
+              <li key={line} className="text-xs text-[#B0A89E] font-mono leading-relaxed flex gap-2">
+                <span className="text-[#D4A853] shrink-0">—</span>
+                {line}
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-[#7A6F65] font-mono leading-relaxed border-t border-[#D4A853]/8 pt-3">
+            <span className="text-[#D4A853]/80 uppercase tracking-wider">Next — </span>
+            {copy.nextStep}
+          </p>
+        </div>
+      </div>
+      {linksLoaded && link ? (
+        <a
+          href={link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-6 w-full block text-center py-3.5 border border-[#D4A853]/40 text-[#D4A853] font-mono text-sm uppercase tracking-[0.15em] hover:bg-[#D4A853] hover:text-[#0A0908] transition-all rounded"
+        >
+          {copy.cta} — {formatPriceUsd(phase)} →
+        </a>
+      ) : linksLoaded ? (
+        <span className="mt-6 w-full block text-center py-3.5 border border-white/10 text-[#6A5F55] font-mono text-sm uppercase tracking-[0.15em] rounded cursor-not-allowed">
+          Link unavailable
+        </span>
+      ) : (
+        <span className="mt-6 w-full block text-center py-3.5 border border-white/5 text-[#6A5F55] font-mono text-sm uppercase tracking-[0.15em] rounded">
+          Loading…
+        </span>
+      )}
+    </div>
+  );
+}
 
 function PhaseCard({
   phase,
   verb,
-  hook,
+  cta,
   link,
   linksLoaded,
 }: {
   phase: OfferPhase;
   verb: string;
-  hook: string;
+  cta: string;
   link: string | null;
   linksLoaded: boolean;
 }) {
   return (
-    <div className="flex-1 border border-[#D4A853]/15 bg-[#0A0908]/95 rounded p-5 flex flex-col gap-3 relative overflow-hidden group hover:border-[#D4A853]/35 transition-colors">
+    <div className="flex-1 border border-[#D4A853]/12 bg-[#0A0908]/95 rounded p-5 flex flex-col gap-3 relative overflow-hidden group hover:border-[#D4A853]/30 transition-colors">
       <div className="pricing-card-scanline" style={{ animationDelay: `${(phase.order - 1) * 0.6}s` }} />
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#D4A853]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-      <div className="flex items-center justify-between">
-        <span className="font-mono text-[10px] text-[#D4A853]/70 tracking-[0.3em] uppercase">
-          Step {phase.order} · {verb}
-        </span>
-      </div>
-      <h3 className="font-serif text-lg text-white font-bold tracking-tight leading-tight">
+      <span className="font-mono text-[10px] text-[#D4A853]/70 tracking-[0.3em] uppercase">
+        Step {phase.order} · {verb}
+      </span>
+      <h3 className="font-serif text-base text-white font-bold tracking-tight leading-tight">
         {phase.name}
       </h3>
-      <div className="font-mono text-2xl font-bold text-[#D4A853] glow-text tabular-nums">
+      <div className="font-mono text-lg font-bold text-[#D4A853] tabular-nums">
         {formatPriceUsd(phase)}
       </div>
       <p className="text-xs text-[#B0A89E] font-mono leading-relaxed flex-1">
         {phase.scope}
-      </p>
-      <p className="text-xs italic text-[#D4A853]/80 font-mono border-t border-[#D4A853]/8 pt-3">
-        &ldquo;{hook}&rdquo;
       </p>
       {linksLoaded && link ? (
         <a
           href={link}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-1 w-full text-center py-2.5 border border-[#D4A853]/40 text-[#D4A853] font-mono text-xs uppercase tracking-[0.15em] hover:bg-[#D4A853] hover:text-[#0A0908] transition-all rounded"
+          className="mt-1 w-full text-center py-2 border border-[#D4A853]/30 text-[#D4A853] font-mono text-[11px] uppercase tracking-[0.1em] hover:bg-[#D4A853] hover:text-[#0A0908] transition-all rounded"
         >
-          Start — {formatPriceUsd(phase)} →
+          {cta} →
         </a>
       ) : linksLoaded ? (
-        <span className="mt-1 w-full text-center py-2.5 border border-white/10 text-[#6A5F55] font-mono text-xs uppercase tracking-[0.15em] rounded cursor-not-allowed">
+        <span className="mt-1 w-full text-center py-2 border border-white/10 text-[#6A5F55] font-mono text-[11px] uppercase tracking-[0.1em] rounded cursor-not-allowed">
           Link unavailable
         </span>
       ) : (
-        <span className="mt-1 w-full text-center py-2.5 border border-white/5 text-[#6A5F55] font-mono text-xs uppercase tracking-[0.15em] rounded">
+        <span className="mt-1 w-full text-center py-2 border border-white/5 text-[#6A5F55] font-mono text-[11px] uppercase tracking-[0.1em] rounded">
           Loading…
         </span>
       )}
@@ -139,6 +244,7 @@ function LadderSection({
   badge,
   ladder,
   journey,
+  diagnosticCopy,
   links,
   linksLoaded,
   divider,
@@ -148,16 +254,19 @@ function LadderSection({
   headline?: string;
   badge?: string;
   ladder: OfferPhase[];
-  journey: Record<string, { verb: string; hook: string }>;
+  journey: Record<string, { verb: string; cta: string }>;
+  diagnosticCopy: (typeof DIAGNOSTIC_COPY)["dwy"];
   links: Record<string, string>;
   linksLoaded: boolean;
   divider?: boolean;
 }) {
   const sorted = ladder.slice().sort((a, b) => a.order - b.order);
+  const diagnostic = sorted.find((p) => p.order === 1)!;
+  const rest = sorted.filter((p) => p.order !== 1);
   return (
     <section
       id={id}
-      className={`w-full max-w-6xl mx-auto px-6 py-16 relative z-10 space-y-8 ${divider ? "border-t border-[#D4A853]/8" : ""}`}
+      className={`w-full max-w-6xl mx-auto px-6 py-16 relative z-10 space-y-10 ${divider ? "border-t border-[#D4A853]/8" : ""}`}
     >
       <div className="text-center space-y-3">
         <div className="flex items-center justify-center gap-3 flex-wrap">
@@ -170,44 +279,41 @@ function LadderSection({
             </span>
           )}
         </div>
-        {headline ? (
-          <>
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-serif text-white tracking-tight max-w-2xl mx-auto leading-snug">
-              {headline}
-            </h2>
-            <p className="font-mono text-sm text-[#B0A89E]/70">
-              Diagnose <span className="text-[#D4A853]/40">→</span> Fix{" "}
-              <span className="text-[#D4A853]/40">→</span> Monitor{" "}
-              <span className="text-[#D4A853]/40">→</span> Expand{" "}
-              <span className="text-[#D4A853]/40">→</span> Own it
-            </p>
-          </>
-        ) : (
-          <h2 className="text-xl sm:text-2xl font-serif text-white tracking-tight">
-            Diagnose <span className="text-[#D4A853]/40">→</span> Fix{" "}
-            <span className="text-[#D4A853]/40">→</span> Monitor{" "}
-            <span className="text-[#D4A853]/40">→</span> Expand{" "}
-            <span className="text-[#D4A853]/40">→</span> Own it
+        {headline && (
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-serif text-white tracking-tight max-w-2xl mx-auto leading-snug">
+            {headline}
           </h2>
         )}
       </div>
 
-      <div className="flex flex-col lg:flex-row items-stretch">
-        {sorted.map((phase, i, arr) => {
-          const j = journey[phase.priceId];
-          return (
-            <div key={phase.priceId} className="flex flex-col lg:flex-row flex-1">
-              <PhaseCard
-                phase={phase}
-                verb={j?.verb ?? phase.name}
-                hook={j?.hook ?? ""}
-                link={links[phase.priceId] ?? null}
-                linksLoaded={linksLoaded}
-              />
-              {i < arr.length - 1 && <Connector />}
-            </div>
-          );
-        })}
+      <DiagnosticCard
+        phase={diagnostic}
+        copy={diagnosticCopy}
+        link={links[diagnostic.priceId] ?? null}
+        linksLoaded={linksLoaded}
+      />
+
+      <div className="space-y-4">
+        <span className="font-mono text-[10px] text-[#7A6F65] tracking-[0.3em] uppercase block text-center">
+          The path after Diagnostic
+        </span>
+        <div className="flex flex-col lg:flex-row items-stretch">
+          {rest.map((phase, i, arr) => {
+            const j = journey[phase.priceId];
+            return (
+              <div key={phase.priceId} className="flex flex-col lg:flex-row flex-1">
+                <PhaseCard
+                  phase={phase}
+                  verb={j?.verb ?? phase.name}
+                  cta={j?.cta ?? "Learn more"}
+                  link={links[phase.priceId] ?? null}
+                  linksLoaded={linksLoaded}
+                />
+                {i < arr.length - 1 && <Connector />}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       <p className="text-center font-mono text-xs text-[#7A6F65]">
@@ -299,22 +405,29 @@ export default function PricingPage() {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="font-hero text-[2.2rem] sm:text-[2.8rem] lg:text-[3.4rem] font-bold leading-[1.08] tracking-[-0.03em]"
         >
-          Your funnel is leaking revenue at{" "}
-          <span className="text-[#D4A853] glow-text">exactly one point.</span>
+          One friction is costing you revenue.{" "}
+          <span className="text-[#D4A853] glow-text">We find it.</span>
           <br />
-          You feel it every month. You can&apos;t name it.
+          You fix it, or we do.
         </motion.h1>
         <p className="text-sm sm:text-base text-[#B0A89E] leading-relaxed font-mono max-w-2xl mx-auto">
-          We find the one friction. Then we help you fix it — or fix it for you.
+          One friction. One decision. New clients start with a Diagnostic.
+        </p>
+        <p className="font-mono text-sm text-[#B0A89E]/70 pt-2">
+          Diagnose <span className="text-[#D4A853]/40">→</span> Fix{" "}
+          <span className="text-[#D4A853]/40">→</span> Monitor{" "}
+          <span className="text-[#D4A853]/40">→</span> Expand{" "}
+          <span className="text-[#D4A853]/40">→</span> Own it
         </p>
       </section>
 
       {/* ── DWY — the hero ladder, your path ──────────────── */}
       <LadderSection
         id="dwy-pricing"
-        eyebrow="Done-With-You — the path"
+        eyebrow="Done-With-You — you execute"
         ladder={DWY_LADDER}
         journey={JOURNEY_DWY}
+        diagnosticCopy={DIAGNOSTIC_COPY.dwy}
         links={links}
         linksLoaded={linksLoaded}
       />
@@ -322,11 +435,12 @@ export default function PricingPage() {
       {/* ── DFY — its own full, premium section, sequenced after DWY ── */}
       <LadderSection
         id="dfy-pricing"
-        eyebrow="Done-For-You — the path"
+        eyebrow="Done-For-You — we execute"
         badge={`${dfyRange} · high-ticket`}
         headline="No time to do it yourself? We become your conversion team."
         ladder={DFY_LADDER}
         journey={JOURNEY_DFY}
+        diagnosticCopy={DIAGNOSTIC_COPY.dfy}
         links={links}
         linksLoaded={linksLoaded}
         divider

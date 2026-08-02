@@ -47,7 +47,7 @@ export interface PendingPriceChange {
 // ── DWY (Done-With-You) — founder executes, S&F diagnoses and guides ──
 export const DWY_LADDER: OfferPhase[] = [
   {
-    priceId: 'price_dwy_beta_diagnostic', order: 1, name: 'Beta Diagnostic', segment: 'dwy',
+    priceId: 'price_dwy_beta_diagnostic', order: 1, name: 'Diagnostic', segment: 'dwy',
     priceUsd: 350, billing: 'one_time',
     scope: 'Full diagnosis of ONE dominant friction: evidence tiered measured/modeled/pending, why it blocks conversion, and the recommended decision. Delivered as a web page plus a short Loom walkthrough.',
   },
@@ -76,7 +76,7 @@ export const DWY_LADDER: OfferPhase[] = [
 // ── DFY (Done-For-You) — same 5 scopes, S&F executes everything ──
 export const DFY_LADDER: OfferPhase[] = [
   {
-    priceId: 'price_dfy_beta_diagnostic', order: 1, name: 'Beta Diagnostic', segment: 'dfy',
+    priceId: 'price_dfy_beta_diagnostic', order: 1, name: 'Diagnostic', segment: 'dfy',
     priceUsd: 2000, billing: 'one_time',
     scope: 'Full diagnosis of ONE dominant friction: evidence tiered measured/modeled/pending, why it blocks conversion, and the recommended decision. Delivered as a web page plus a short Loom walkthrough.',
   },
