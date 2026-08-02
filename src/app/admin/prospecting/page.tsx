@@ -484,6 +484,21 @@ export default function ProspectingCommandCenter() {
       setNotice({ message: "Add a founder contact before promoting — that's the manual step that keeps this from auto-contacting anyone.", variant: "red" });
       return;
     }
+    // A future Stripe payment is matched to a client purely by email
+    // (functions/api/stripe/webhook.ts looks up clients.contact_email) —
+    // founder_contact is free text (name, LinkedIn URL, or email) and
+    // can't be trusted as one. Ask explicitly rather than guess.
+    const emailLooking = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const contactEmail = (
+      window.prompt(
+        "Contact email for this client — this is how a future Stripe payment gets matched back to them:",
+        emailLooking.test(founderContact) ? founderContact : ""
+      ) ?? ""
+    ).trim();
+    if (!emailLooking.test(contactEmail)) {
+      setNotice({ message: "Promotion cancelled — a valid contact email is required so a future payment can be matched to this client.", variant: "red" });
+      return;
+    }
     try {
       const headers = { ...getAuthHeaders(), "Content-Type": "application/json", Prefer: "return=representation" };
       const clientRes = await fetch(`${SUPABASE_URL}/rest/v1/clients`, {
@@ -492,6 +507,7 @@ export default function ProspectingCommandCenter() {
         body: JSON.stringify({
           company_name: candidate.company_name || candidate.domain,
           contact_name: founderContact,
+          contact_email: contactEmail,
           contact_profile_url: candidate.url,
           industry: "Unknown",
           estimated_mrr: 0,
@@ -503,6 +519,21 @@ export default function ProspectingCommandCenter() {
         return;
       }
       const [newClient] = await clientRes.json();
+
+      // beta_projects starts at its default status ('prospecting') — the
+      // same real UI stage as any other client, with a real transition
+      // path (⚡ Send Outreach on the Pipeline dashboard). Without this
+      // row the client can never leave Prospecting: no "Deliver
+      // Diagnostic" button, no status at all, since the dashboard reads
+      // pipeline state from beta_projects, not clients.
+      const projectRes = await fetch(`${SUPABASE_URL}/rest/v1/beta_projects`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ client_id: newClient.id }),
+      });
+      if (!projectRes.ok) {
+        setNotice({ message: `${candidate.domain} promoted, but its pipeline record failed to create — open Pipeline and check ${candidate.company_name || candidate.domain} manually.`, variant: "red" });
+      }
 
       const candRes = await fetch(`${SUPABASE_URL}/rest/v1/prospect_candidates?id=eq.${candidate.id}`, {
         method: "PATCH",

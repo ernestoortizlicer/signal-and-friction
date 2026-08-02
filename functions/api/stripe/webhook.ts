@@ -220,17 +220,26 @@ export const onRequestPost = async ({
     // failure must never affect the payment already recorded above.
     if (dosingLine && dosingTier && leadId) {
       try {
-        const { error: flagError } = await supabase
+        // .select() so we can tell "0 rows matched" (no scaffold exists
+        // yet for this client) apart from a real error — an UPDATE that
+        // matches nothing is not a PostgREST error, so without this the
+        // log below would falsely claim success while flagging nothing.
+        const { data: flaggedRows, error: flagError } = await supabase
           .from('diagnostic_scaffolds')
           .update({
             pending_dosing_line: dosingLine,
             pending_dosing_tier: dosingTier,
             pending_dosing_triggered_at: new Date().toISOString(),
           })
-          .eq('client_id', leadId);
+          .eq('client_id', leadId)
+          .select('id');
 
         if (flagError) throw flagError;
-        console.log(`✅ Scaffold flagged for review: client ${leadId} → ${dosingLine}/${dosingTier}`);
+        if (flaggedRows && flaggedRows.length > 0) {
+          console.log(`✅ Scaffold flagged for review: client ${leadId} → ${dosingLine}/${dosingTier}`);
+        } else {
+          console.warn(`⚠️ Client ${leadId} matched to ${dosingLine}/${dosingTier}, but no scaffold exists to flag yet — nothing was updated. Generate the scaffold, then flag manually.`);
+        }
       } catch (err) {
         console.warn(`⚠️ Dosing-engine scaffold flagging failed (payment still recorded): ${err instanceof Error ? err.message : 'unknown error'}`);
       }

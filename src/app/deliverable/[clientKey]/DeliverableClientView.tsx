@@ -158,6 +158,25 @@ function AvoidSection({ items }: { items: AvoidItem[] }) {
   );
 }
 
+// Rendered in place of the recommendation when this tier withholds
+// the_decision/what_to_avoid (e.g. Beta Diagnostic) — an intentional,
+// designed boundary, never a blank section that reads as broken.
+function RecommendationWithheldCard({ mechanism }: { mechanism?: string }) {
+  return (
+    <div className="border border-[#D4A853]/20 bg-[#D4A853]/[0.03] p-8 md:p-10 rounded space-y-4">
+      <span className="font-mono text-xs uppercase tracking-wider text-[#D4A853]">Included in Intervention</span>
+      <h3 className="text-xl font-serif text-[#F5F0EB] font-medium leading-snug">
+        The fix is one tier away.
+      </h3>
+      <p className="text-base text-[#B0A89E] leading-relaxed max-w-[65ch]">
+        This diagnostic identifies exactly where{mechanism ? ` the ${mechanism.toLowerCase()} occurs and` : ""} why
+        it&apos;s blocking conversion. The specific recommendation, the exact action to take, and what to avoid
+        while you fix it are delivered with the Intervention tier.
+      </p>
+    </div>
+  );
+}
+
 function FinalDecisionCard({ decision }: { decision: Decision }) {
   return (
     <div className="border border-[#D4A853]/8 bg-[#110F0D]/20 p-8 md:p-10 rounded">
@@ -755,8 +774,10 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
           <motion.div variants={itemVariants}>
             {d.diagnosis?.finalDecision ? (
               <FinalDecisionCard decision={d.diagnosis.finalDecision} />
+            ) : d.diagnosis?.decisions?.length ? (
+              <LegacyDecisionsGrid decisions={d.diagnosis.decisions} />
             ) : (
-              d.diagnosis?.decisions?.length ? <LegacyDecisionsGrid decisions={d.diagnosis.decisions} /> : null
+              <RecommendationWithheldCard mechanism={d.diagnosis?.friction?.mechanism} />
             )}
           </motion.div>
           {d.projectedImpact && (

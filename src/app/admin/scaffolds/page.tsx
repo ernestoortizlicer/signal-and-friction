@@ -13,6 +13,7 @@ import {
 } from "@/components/admin/AdminComponents";
 import {
   applyDosing,
+  generateTeaser,
   type FrictionMechanism,
   type FunnelStage,
   type MagnitudeLevel,
@@ -121,6 +122,36 @@ const JUDGMENT_FIELDS: Array<{
   },
 ];
 
+// friction_mechanism must be one of these exact tokens — generateTeaser()
+// and applyDosing() both index a label map keyed on them
+// (src/lib/dosing.ts). The column itself is a free TEXT column with no DB
+// CHECK constraint, and the field used to render as a free-text textarea;
+// any real prose answer here (rather than the exact token) silently
+// produced "undefined" text in the teaser and a silently-dropped field in
+// the dosed preview, never a visible error.
+const FRICTION_MECHANISM_OPTIONS: Array<{ value: FrictionMechanism; label: string }> = [
+  { value: "cognitive_load", label: "Cognitive Load" },
+  { value: "trust_deficit", label: "Trust Deficit" },
+  { value: "commitment_anxiety", label: "Commitment Anxiety" },
+  { value: "ordering_error", label: "Ordering Error" },
+  { value: "identity_friction", label: "Identity Friction" },
+  { value: "value_uncertainty", label: "Value Uncertainty" },
+];
+
+const FUNNEL_STAGE_OPTIONS: Array<{ value: FunnelStage; label: string }> = [
+  { value: "landing", label: "Landing / Homepage" },
+  { value: "pricing", label: "Pricing Page" },
+  { value: "signup", label: "Signup Flow" },
+  { value: "checkout", label: "Checkout" },
+  { value: "activation", label: "Post-Signup Activation" },
+];
+
+const LEVEL_OPTIONS: Array<{ value: MagnitudeLevel | ConfidenceLevel; label: string }> = [
+  { value: "low", label: "Low" },
+  { value: "moderate", label: "Moderate" },
+  { value: "high", label: "High" },
+];
+
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
     year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
@@ -142,6 +173,8 @@ function ScaffoldEditor() {
   const [loomScriptDraft, setLoomScriptDraft] = useState("");
   const [generatingLoom, setGeneratingLoom] = useState(false);
   const [savingLoom, setSavingLoom] = useState(false);
+  const [teaserDraft, setTeaserDraft] = useState("");
+  const [teaserError, setTeaserError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -170,6 +203,9 @@ function ScaffoldEditor() {
           the_decision: row.the_decision ?? "",
           what_to_avoid: row.what_to_avoid ?? "",
           confidence_and_why: row.confidence_and_why ?? "",
+          funnel_stage: row.funnel_stage ?? "",
+          projected_impact_magnitude: row.projected_impact_magnitude ?? "",
+          confidence_level: row.confidence_level ?? "",
         });
         setLoomScriptDraft(row.loom_script ?? "");
 
@@ -198,18 +234,26 @@ function ScaffoldEditor() {
 
   async function persistJudgmentFields(): Promise<Scaffold | null> {
     if (!scaffold) return null;
+    const requestBody: Record<string, string> = {
+      friction_mechanism: drafts.friction_mechanism,
+      specific_friction_point: drafts.specific_friction_point,
+      why_blocks_conversion: drafts.why_blocks_conversion,
+      projected_impact: drafts.projected_impact,
+      the_decision: drafts.the_decision,
+      what_to_avoid: drafts.what_to_avoid,
+      confidence_and_why: drafts.confidence_and_why,
+    };
+    // The 3 classifiers are DB-CHECK-constrained to specific enum values —
+    // only send them once a real option is picked, never an empty string,
+    // or the PATCH would 400 against the constraint.
+    if (drafts.funnel_stage) requestBody.funnel_stage = drafts.funnel_stage;
+    if (drafts.projected_impact_magnitude) requestBody.projected_impact_magnitude = drafts.projected_impact_magnitude;
+    if (drafts.confidence_level) requestBody.confidence_level = drafts.confidence_level;
+
     const res = await fetch(`/api/scaffolds/${scaffold.id}`, {
       method: "PATCH",
       headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify({
-        friction_mechanism: drafts.friction_mechanism,
-        specific_friction_point: drafts.specific_friction_point,
-        why_blocks_conversion: drafts.why_blocks_conversion,
-        projected_impact: drafts.projected_impact,
-        the_decision: drafts.the_decision,
-        what_to_avoid: drafts.what_to_avoid,
-        confidence_and_why: drafts.confidence_and_why,
-      }),
+      body: JSON.stringify(requestBody),
     });
     const body = await res.json().catch(() => null);
     if (res.ok && body) {
@@ -294,6 +338,32 @@ function ScaffoldEditor() {
       setNotice({ message: `Save request failed: ${err instanceof Error ? err.message : "network error"}`, variant: "red" });
     } finally {
       setSavingLoom(false);
+    }
+  }
+
+  function generateTeaserDraft() {
+    if (!scaffold) return;
+    setTeaserError(null);
+    try {
+      const text = generateTeaser({
+        friction_mechanism: (drafts.friction_mechanism || null) as FrictionMechanism | null,
+        specific_friction_point: drafts.specific_friction_point || null,
+        why_blocks_conversion: drafts.why_blocks_conversion || null,
+        projected_impact: drafts.projected_impact || null,
+        the_decision: drafts.the_decision || null,
+        what_to_avoid: drafts.what_to_avoid || null,
+        confidence_and_why: drafts.confidence_and_why || null,
+        funnel_stage: (drafts.funnel_stage || null) as FunnelStage | null,
+        projected_impact_magnitude: (drafts.projected_impact_magnitude || null) as MagnitudeLevel | null,
+        confidence_level: (drafts.confidence_level || null) as ConfidenceLevel | null,
+        dfy_execution_summary: scaffold.dfy_execution_summary,
+        dfy_monitoring_findings: scaffold.dfy_monitoring_findings,
+        dfy_handoff_documentation: scaffold.dfy_handoff_documentation,
+      });
+      setTeaserDraft(text);
+    } catch (err) {
+      setTeaserError(err instanceof Error ? err.message : "Could not generate a teaser.");
+      setTeaserDraft("");
     }
   }
 
@@ -462,20 +532,85 @@ function ScaffoldEditor() {
           Judgment — your read, in your words
         </span>
         <div className="space-y-5">
-          {JUDGMENT_FIELDS.map((f) => (
-            <div key={f.key} className="space-y-1.5">
-              <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">{f.label}</label>
-              <p className="text-xs text-[#7A6F65] font-mono">{f.question}</p>
-              <textarea
-                value={drafts[f.key] ?? ""}
-                onChange={(e) => setDrafts((prev) => ({ ...prev, [f.key]: e.target.value }))}
-                rows={3}
-                className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] placeholder:text-[#7A6F65] focus:outline-none focus:border-[#D4A853]/40"
-                placeholder="—"
-              />
-            </div>
-          ))}
+          {JUDGMENT_FIELDS.map((f) =>
+            f.key === "friction_mechanism" ? (
+              <div key={f.key} className="space-y-1.5">
+                <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">{f.label}</label>
+                <p className="text-xs text-[#7A6F65] font-mono">{f.question}</p>
+                <select
+                  value={drafts[f.key] ?? ""}
+                  onChange={(e) => setDrafts((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                  className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
+                >
+                  <option value="">— Select —</option>
+                  {FRICTION_MECHANISM_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div key={f.key} className="space-y-1.5">
+                <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">{f.label}</label>
+                <p className="text-xs text-[#7A6F65] font-mono">{f.question}</p>
+                <textarea
+                  value={drafts[f.key] ?? ""}
+                  onChange={(e) => setDrafts((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                  rows={3}
+                  className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] placeholder:text-[#7A6F65] focus:outline-none focus:border-[#D4A853]/40"
+                  placeholder="—"
+                />
+              </div>
+            )
+          )}
         </div>
+
+        <div className="mt-6 pt-5 border-t border-[#D4A853]/8 space-y-4">
+          <span className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-[0.15em] block">
+            Classifiers — power the free teaser &amp; dosed disclosure
+          </span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-1.5">
+              <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">Funnel Stage</label>
+              <select
+                value={drafts.funnel_stage ?? ""}
+                onChange={(e) => setDrafts((prev) => ({ ...prev, funnel_stage: e.target.value }))}
+                className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
+              >
+                <option value="">— Unset —</option>
+                {FUNNEL_STAGE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">Impact Magnitude</label>
+              <select
+                value={drafts.projected_impact_magnitude ?? ""}
+                onChange={(e) => setDrafts((prev) => ({ ...prev, projected_impact_magnitude: e.target.value }))}
+                className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
+              >
+                <option value="">— Unset —</option>
+                {LEVEL_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">Confidence Level</label>
+              <select
+                value={drafts.confidence_level ?? ""}
+                onChange={(e) => setDrafts((prev) => ({ ...prev, confidence_level: e.target.value }))}
+                className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
+              >
+                <option value="">— Unset —</option>
+                {LEVEL_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
         <div className="flex items-center gap-3 mt-5 pt-4 border-t border-[#D4A853]/8">
           <button
             type="button"
@@ -487,6 +622,52 @@ function ScaffoldEditor() {
           </button>
           <span className="text-xs font-mono text-[#7A6F65]">Updated {formatDate(scaffold.updated_at)}</span>
         </div>
+      </AdminCard>
+
+      <AdminCard>
+        <span className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-[0.15em] block mb-1">
+          Free Teaser — the first thing this prospect sees
+        </span>
+        <p className="text-xs text-[#7A6F65] font-mono mb-4">
+          Deterministic, zero-AI text generated from the fields above — never reveals The Decision or What to Avoid.
+          Generated from whatever is currently on screen, saved or not.
+        </p>
+
+        {!drafts.friction_mechanism && (
+          <AdminAlert variant="gold">
+            Set Friction Mechanism above first — the teaser can&apos;t be generated without it.
+          </AdminAlert>
+        )}
+        {teaserError && <AdminAlert variant="red">{teaserError}</AdminAlert>}
+
+        <div className="flex items-center gap-3 mt-3 mb-4">
+          <button
+            type="button"
+            onClick={generateTeaserDraft}
+            disabled={!drafts.friction_mechanism}
+            className="px-4 py-2 rounded-lg bg-[#D4A853]/10 border border-[#D4A853]/25 text-[#D4A853] text-sm font-mono uppercase tracking-wide hover:bg-[#D4A853]/15 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          >
+            {teaserDraft ? "Regenerate Teaser" : "Generate Teaser"}
+          </button>
+          {teaserDraft && (
+            <button
+              type="button"
+              onClick={() => navigator.clipboard.writeText(teaserDraft)}
+              className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-[#B0A89E] text-sm font-mono uppercase tracking-wide hover:bg-white/10 transition-colors cursor-pointer"
+            >
+              Copy
+            </button>
+          )}
+        </div>
+
+        {teaserDraft && (
+          <textarea
+            readOnly
+            value={teaserDraft}
+            rows={9}
+            className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] leading-relaxed focus:outline-none focus:border-[#D4A853]/40"
+          />
+        )}
       </AdminCard>
 
       <AdminCard>
