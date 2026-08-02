@@ -497,8 +497,132 @@ export default function PricingPage() {
         divider
       />
 
+      {/* ── Example Decision Card — the deliverable made tangible ── */}
+      <section className="w-full max-w-3xl mx-auto px-6 pb-16 relative z-10 border-t border-[#D4A853]/8 pt-16">
+        <div className="text-center space-y-2 mb-8">
+          <span className="font-mono text-[10px] text-[#7A6F65] tracking-[0.4em] uppercase">
+            What you actually receive
+          </span>
+          <h2 className="text-xl sm:text-2xl font-serif text-white tracking-tight">
+            One page. One decision.
+          </h2>
+        </div>
+
+        <div className="border border-[#D4A853]/20 rounded-lg overflow-hidden">
+          <div className="bg-[#D4A853]/8 border-b border-[#D4A853]/20 px-6 py-3 flex items-center justify-between flex-wrap gap-2">
+            <span className="font-mono text-xs text-[#D4A853] tracking-[0.15em] uppercase font-semibold">
+              Example deliverable — anonymized sample, not a real client finding
+            </span>
+          </div>
+          <div className="p-6 sm:p-8 space-y-6 font-mono text-sm">
+            <div>
+              <span className="text-[10px] text-[#7A6F65] tracking-[0.2em] uppercase block mb-1.5">
+                Dominant friction
+              </span>
+              <p className="text-[#F5F0EB] font-serif text-base leading-relaxed">
+                Trust deficit at the pricing page — no visible security or compliance
+                signal before the checkout CTA.
+              </p>
+            </div>
+
+            <div>
+              <span className="text-[10px] text-[#7A6F65] tracking-[0.2em] uppercase block mb-1.5">
+                Why it blocks conversion
+              </span>
+              <p className="text-[#B0A89E] text-xs leading-relaxed">
+                Visitors hit the pricing decision at exactly the moment trust matters
+                most — and see nothing there to resolve it. The doubt isn&apos;t answered,
+                so the default answer becomes no.
+              </p>
+            </div>
+
+            <div className="grid sm:grid-cols-3 gap-4 border-t border-[#D4A853]/8 pt-5">
+              <div>
+                <span className="text-[10px] text-[#7A6F65] tracking-[0.2em] uppercase block mb-1.5">
+                  Friction location
+                </span>
+                <span className="text-[#5C9A6B] text-xs">● measured</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-[#7A6F65] tracking-[0.2em] uppercase block mb-1.5">
+                  Impact size
+                </span>
+                <span className="text-[#D4A853] text-xs">● modeled</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-[#7A6F65] tracking-[0.2em] uppercase block mb-1.5">
+                  Post-fix lift
+                </span>
+                <span className="text-[#7A6F65] text-xs">● pending</span>
+              </div>
+            </div>
+
+            <div className="border-t border-[#D4A853]/8 pt-5">
+              <span className="text-[10px] text-[#7A6F65] tracking-[0.2em] uppercase block mb-1.5">
+                Confidence
+              </span>
+              <p className="text-[#B0A89E] text-xs leading-relaxed">
+                Moderate — the location is directly observed; the size of the effect is
+                a benchmark estimate, not yet a measured one.
+              </p>
+            </div>
+
+            <div className="border-t border-[#D4A853]/8 pt-5">
+              <span className="text-[10px] text-[#D4A853]/80 tracking-[0.2em] uppercase block mb-1.5">
+                The decision
+              </span>
+              <p className="text-[#F5F0EB] text-xs leading-relaxed">
+                Add a compliance/security badge row directly above the CTA — not in the
+                footer, where it currently sits unseen at the decision moment.
+              </p>
+            </div>
+
+            <div>
+              <span className="text-[10px] text-[#C85C5C]/80 tracking-[0.2em] uppercase block mb-1.5">
+                What not to do
+              </span>
+              <p className="text-[#B0A89E] text-xs leading-relaxed">
+                Don&apos;t add more testimonials here — the gap isn&apos;t social proof, it&apos;s
+                security proof. Stacking more of the wrong reassurance adds clutter
+                without resolving the actual doubt.
+              </p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4 border-t border-[#D4A853]/8 pt-5">
+              <div>
+                <span className="text-[10px] text-[#7A6F65] tracking-[0.2em] uppercase block mb-1.5">
+                  Expected signal
+                </span>
+                <p className="text-[#B0A89E] text-xs leading-relaxed">
+                  Pricing-to-checkout rate moves; Monitoring confirms direction before
+                  magnitude.
+                </p>
+              </div>
+              <div>
+                <span className="text-[10px] text-[#7A6F65] tracking-[0.2em] uppercase block mb-1.5">
+                  Measurement window
+                </span>
+                <p className="text-[#B0A89E] text-xs leading-relaxed">
+                  One full monthly cycle of real session data.
+                </p>
+              </div>
+            </div>
+
+            <div className="border-t border-[#D4A853]/8 pt-5">
+              <span className="text-[10px] text-[#7A6F65] tracking-[0.2em] uppercase block mb-1.5">
+                What we don&apos;t know yet
+              </span>
+              <p className="text-[#7A6F65] text-xs leading-relaxed">
+                Whether this is the only friction at this stage, or the dominant one
+                among several — that&apos;s what Expansion tests on adjacent pages.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Honest close ──────────────────────────────────── */}
-      <section className="w-full max-w-3xl mx-auto px-6 pb-24 relative z-10 border-t border-[#D4A853]/8 pt-16 text-center">
+      <section className="w-full max-w-3xl mx-auto px-6 pb-24 relative z-10 pt-4 text-center">
         <p className="text-lg sm:text-xl font-serif text-white leading-relaxed">
           We don&apos;t promise you a number.
           <br />
