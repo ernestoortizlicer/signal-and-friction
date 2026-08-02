@@ -319,7 +319,7 @@ export default function AdminDashboard() {
   // in src/lib/dosing.ts. null until a scaffold with a pending purchase is
   // found for the selected client; when null, publishing falls back to the
   // pre-existing manual-form behavior unchanged.
-  const [dosedScaffold, setDosedScaffold] = useState<(ScaffoldJudgment & { pending_dosing_line: Line | null; pending_dosing_tier: DwyTier | null }) | null>(null);
+  const [dosedScaffold, setDosedScaffold] = useState<(ScaffoldJudgment & { id: string; pending_dosing_line: Line | null; pending_dosing_tier: DwyTier | null }) | null>(null);
   const [scaffoldGenerating, setScaffoldGenerating] = useState(false);
   const [scaffoldError, setScaffoldError] = useState("");
 
@@ -2444,6 +2444,32 @@ export default function AdminDashboard() {
                   ×
                 </button>
               </div>
+
+              {/* The direct, obvious path from "a purchase landed" to reviewing
+                  it — deliberately placed first, above every other section,
+                  so it's not something you have to know to scroll for. Only
+                  appears when the webhook actually flagged this client's
+                  scaffold; otherwise this whole block renders nothing. */}
+              {dosedScaffold?.pending_dosing_line && dosedScaffold?.pending_dosing_tier && (
+                <div className="border-2 border-[#D4A853]/50 bg-[#D4A853]/10 p-4 rounded-xl flex items-center justify-between gap-3">
+                  <div>
+                    <span className="font-mono text-xs text-[#D4A853] uppercase tracking-widest block">
+                      {"⚡ Purchase pending review"}
+                    </span>
+                    <span className="font-mono text-[10px] text-[#B0A89E]">
+                      {dosedScaffold.pending_dosing_line.toUpperCase()}{" "}{dosedScaffold.pending_dosing_tier.replace(/_/g, " ")}
+                      {" — nothing has been sent to this client yet."}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/admin/scaffolds?id=${dosedScaffold.id}`)}
+                    className="shrink-0 px-4 py-2 bg-[#D4A853] text-[#0A0908] font-bold rounded-lg font-mono text-xs uppercase tracking-wider hover:bg-[#E8C97A] transition-all cursor-pointer"
+                  >
+                    {"Review Dosed Scaffold →"}
+                  </button>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Left Column: Form & Actions (col-span-7) */}
