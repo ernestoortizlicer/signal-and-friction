@@ -54,14 +54,9 @@ export const metadata: Metadata = {
       "One Signal. One Friction. One Decision. Clinical B2B SaaS revenue diagnostic delivered in 72 hours.",
     url: "https://signal-and-friction.com",
     siteName: "Signal & Friction",
-    images: [
-      {
-        url: "https://signal-and-friction.com/sf_og_image.png",
-        width: 1200,
-        height: 630,
-        alt: "Signal & Friction — Revenue Friction Diagnostic for B2B SaaS",
-      },
-    ],
+    // No `images` here — resolved automatically from opengraph-image.tsx
+    // (this same directory), which every page without its own override
+    // inherits. Was pointing at the now-dead public/sf_og_image.png.
     type: "website",
     locale: "en_US",
   },
@@ -70,7 +65,6 @@ export const metadata: Metadata = {
     title: "Signal & Friction — Revenue Friction Diagnostic",
     description:
       "I find where revenue breaks in your B2B SaaS product. Clinical diagnostic in 72 hours. 100% async.",
-    images: ["https://signal-and-friction.com/sf_og_image.png"],
   },
   metadataBase: new URL("https://signal-and-friction.com"),
   robots: {

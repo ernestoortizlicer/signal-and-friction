@@ -11,14 +11,9 @@ export const metadata: Metadata = {
       "Isolate Southeast Asia checkout friction killing your APAC revenue. Clinical diagnostic in 72h. JCB & PayNow checks. If it isn't specific to your product, you don't pay.",
     url: "https://signal-and-friction.com/sg",
     siteName: "Signal & Friction",
-    images: [
-      {
-        url: "https://signal-and-friction.com/sf_og_image.png",
-        width: 1200,
-        height: 630,
-        alt: "Signal & Friction APAC — Singapore & Southeast Asia Diagnostic Portal",
-      },
-    ],
+    // No `images` here — falls through to the global opengraph-image.tsx
+    // (src/app/opengraph-image.tsx), same card as every other page. Was
+    // pointing at the now-dead public/sf_og_image.png.
     type: "website",
     locale: "en_US",
   },
@@ -27,7 +22,6 @@ export const metadata: Metadata = {
     title: "Signal & Friction — Singapore & APAC Diagnostic Portal",
     description:
       "Isolate APAC checkout friction in 72h. Specific to your product, or you don't pay.",
-    images: ["https://signal-and-friction.com/sf_og_image.png"],
   },
   alternates: {
     canonical: "https://signal-and-friction.com/sg",
