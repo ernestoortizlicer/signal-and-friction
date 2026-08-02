@@ -3043,8 +3043,14 @@ export default function AdminDashboard() {
 
                           <div className="pt-2 border-t border-[#D4A853]/8">
                             <span className="text-[#7A6F65] uppercase block mb-1">{"Final Decision"}</span>
-                            <p className="text-[#F5F0EB]">{dryRunPayload.diagnosis.finalDecision.label || "(missing)"}</p>
-                            <p className="text-[#B0A89E] text-[10px] mt-1">{dryRunPayload.diagnosis.finalDecision.action}</p>
+                            {dryRunPayload.diagnosis.finalDecision ? (
+                              <>
+                                <p className="text-[#F5F0EB]">{dryRunPayload.diagnosis.finalDecision.label || "(missing)"}</p>
+                                <p className="text-[#B0A89E] text-[10px] mt-1">{dryRunPayload.diagnosis.finalDecision.action}</p>
+                              </>
+                            ) : (
+                              <p className="text-[#7A6F65] italic">{"(withheld at this tier — not revealed to this customer)"}</p>
+                            )}
                           </div>
 
                           <div className="pt-2 border-t border-[#D4A853]/8">
