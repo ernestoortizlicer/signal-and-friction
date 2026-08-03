@@ -15,7 +15,14 @@ import path from "node:path";
 // for circles/curves through plain flexbox divs. All text stays as real
 // Satori text nodes using the embedded fonts, not part of that SVG — keeps
 // it crisp and lets each line use its real font/weight/color independently.
-export const alt = "Signal & Friction — Cognitive Conversion Diagnostics";
+// Phase 6.1 — "Cognitive Conversion Diagnostics" named only one of the
+// six canonical friction mechanisms (cognitive load) as if it were the
+// whole category; trust deficit, commitment anxiety, ordering error,
+// identity friction, and value uncertainty aren't "cognitive" at all.
+// "Applied Behavioral Diagnostics" is the actual category name (Founding
+// Constitution, Part I) and is now consistent with the homepage eyebrow
+// and root <title> fixed in the same pass.
+export const alt = "Signal & Friction — Applied Behavioral Diagnostics";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 // Required for output: "export" (static export) — without this, Next treats
@@ -131,7 +138,7 @@ export default async function Image() {
               marginBottom: 26,
             }}
           >
-            Cognitive Conversion Diagnostics
+            Applied Behavioral Diagnostics
           </div>
           <div
             style={{

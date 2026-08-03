@@ -35,8 +35,14 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+// Phase 6.1 — "Revenue Friction Diagnostic" -> "Behavioral Diagnostic" in
+// the title, matching the same eyebrow fix already made on the homepage
+// (src/app/page.tsx) and /sg. This is the canonical <title> most search
+// results and untagged shares fall back to; leaving it saying something
+// different from what the homepage itself now says would be exactly the
+// cross-touchpoint inconsistency Phase 6 exists to close.
 export const metadata: Metadata = {
-  title: "Signal & Friction — Revenue Friction Diagnostic for B2B SaaS",
+  title: "Signal & Friction — Behavioral Diagnostic for B2B SaaS",
   description:
     "I find where revenue breaks in your B2B SaaS product and give you exactly one defensible action to fix it. Clinical diagnostic delivered in 72 hours. 100% async. No calls.",
   keywords: [
@@ -49,9 +55,9 @@ export const metadata: Metadata = {
     "pricing page optimization",
   ],
   openGraph: {
-    title: "Signal & Friction — Revenue Friction Diagnostic",
+    title: "Signal & Friction — Behavioral Diagnostic",
     description:
-      "One Signal. One Friction. One Decision. Clinical B2B SaaS revenue diagnostic delivered in 72 hours.",
+      "One Signal. One Friction. One Decision. Clinical B2B SaaS behavioral diagnostic delivered in 72 hours.",
     url: "https://signal-and-friction.com",
     siteName: "Signal & Friction",
     // No `images` here — resolved automatically from opengraph-image.tsx
@@ -62,7 +68,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Signal & Friction — Revenue Friction Diagnostic",
+    title: "Signal & Friction — Behavioral Diagnostic",
     description:
       "I find where revenue breaks in your B2B SaaS product. Clinical diagnostic in 72 hours. 100% async.",
   },
@@ -102,8 +108,15 @@ export default function RootLayout({
               url: 'https://signal-and-friction.com',
               logo: 'https://signal-and-friction.com/sf_logo.png',
               sameAs: [],
+              // Phase 6.1 — "platform" implied self-serve software; this
+              // is a practice with an accountable human analyst at the
+              // center, not a tool a visitor operates alone. That
+              // distinction is the entire long-term positioning bet (see
+              // the Founding Constitution's defensibility argument), so
+              // it belongs in the one description search engines
+              // actually parse structurally.
               description:
-                'B2B SaaS revenue friction diagnostic platform. Isolate the single friction point killing conversion in 72 hours.',
+                'B2B SaaS behavioral diagnostic practice. Isolates the single dominant friction mechanism blocking conversion, evidence-ranked and confidence-graded, in 72 hours.',
               foundingDate: '2026-03',
               contactPoint: {
                 '@type': 'ContactPoint',
@@ -114,7 +127,19 @@ export default function RootLayout({
           }}
         />
 
-        {/* Product Schema */}
+        {/* Product Schema — Phase 6.1 fix: this previously labeled the
+            $350 price "Done-With-You Autonomy (DWY)" with the Autonomy
+            Kit's own description ("build internal capacity to run
+            diagnostics yourself"), when $350 is actually the DWY
+            Diagnostic — the entry tier, five steps and $1,150 away from
+            Autonomy on the real ladder (src/lib/offer-catalog.ts). Every
+            page on this site serves this same script in its <head>
+            unconditionally, so this exact mislabel was being handed to
+            every crawler indexing the site, not just the homepage. Both
+            offers below now correctly describe the Diagnostic — the only
+            thing either $350 or $2,000 actually buys — differing only in
+            who executes the eventual fix, matching pricing/page.tsx's
+            own DIAGNOSTIC_COPY. */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -123,7 +148,7 @@ export default function RootLayout({
               '@type': 'Service',
               name: 'Signal & Friction Diagnostic',
               description:
-                'Clinical B2B SaaS revenue friction diagnostic. 72h async delivery. If it isn\'t specific to your product, you don\'t pay.',
+                'Clinical B2B SaaS behavioral diagnostic. One dominant friction, evidence-ranked. 72h async delivery. If it isn\'t specific to your product, you don\'t pay.',
               provider: {
                 '@type': 'Organization',
                 name: 'Signal & Friction',
@@ -133,16 +158,16 @@ export default function RootLayout({
                   '@type': 'Offer',
                   priceCurrency: 'USD',
                   price: '2000',
-                  name: 'Done-For-You Concierge (DFY)',
-                  description: 'S&F executes diagnostic & implementation. If it isn\'t specific to your product, you don\'t pay.',
+                  name: 'Diagnostic — Done-For-You',
+                  description: 'S&F finds the one dominant friction and is ready to build the fix directly. If it isn\'t specific to your product, you don\'t pay.',
                   url: 'https://signal-and-friction.com/pricing#dfy-pricing',
                 },
                 {
                   '@type': 'Offer',
                   priceCurrency: 'USD',
                   price: '350',
-                  name: 'Done-With-You Autonomy (DWY)',
-                  description: 'Learn S&F methodology and build internal capacity to run diagnostics yourself.',
+                  name: 'Diagnostic — Done-With-You',
+                  description: 'S&F finds the one dominant friction and the decision to fix it; you execute. If it isn\'t specific to your product, you don\'t pay.',
                   url: 'https://signal-and-friction.com/pricing#dwy-pricing',
                 },
               ],
@@ -150,7 +175,11 @@ export default function RootLayout({
           }}
         />
 
-        {/* BreadcrumbList Schema */}
+        {/* BreadcrumbList Schema — Phase 6.1: was labeling /scan (the
+            free technical scanner) "Diagnostic," conflating it with the
+            paid behavioral diagnosis in the exact same structured data
+            Google reads. Added the real Diagnostic entry point as its
+            own breadcrumb instead of overloading the scanner's. */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -167,8 +196,14 @@ export default function RootLayout({
                 {
                   '@type': 'ListItem',
                   position: 2,
-                  name: 'Diagnostic',
+                  name: 'Free Scan',
                   item: 'https://signal-and-friction.com/scan',
+                },
+                {
+                  '@type': 'ListItem',
+                  position: 3,
+                  name: 'Diagnostic Pricing',
+                  item: 'https://signal-and-friction.com/pricing',
                 },
               ],
             }),
