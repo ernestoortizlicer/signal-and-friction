@@ -767,10 +767,36 @@ export default function AdminDashboard() {
       offerPriceId: dosedScaffold?.pending_dosing_line && dosedScaffold?.pending_dosing_tier
         ? priceIdForLineTier(dosedScaffold.pending_dosing_line, dosedScaffold.pending_dosing_tier)
         : undefined,
-      founderFocusScore: 85,
-      daysRemaining: 30,
-      guaranteeStatus: "Specificity Guarantee Active",
-      telemetryStatus: scanResult ? "✓ Public Signal Scan Confirmed (PageSpeed + HTML)" : "✓ Traffic & Baseline Confirmed",
+      // Phase 4.4 — these 4 fields used to be hardcoded literals sent
+      // identically on every publish, regardless of tier or reality (a
+      // live instance of exactly the fabrication problem the rest of this
+      // engine exists to prevent). Fixed by removing the fake values, not
+      // replacing them with different fake ones:
+      //   - founderFocusScore / daysRemaining: no real data source for
+      //     either exists anywhere in this codebase — omitted entirely,
+      //     never guessed. A future real source (e.g. a genuine guarantee
+      //     expiry countdown) can populate this later; nothing here
+      //     pretends one exists today.
+      //   - guaranteeStatus: selectedClient.guarantee?.guarantee_status is
+      //     a real, already-used enum (see the modal fields above) —
+      //     mapped honestly; a client with no guarantee record gets no
+      //     guaranteeStatus at all, not a fabricated "active" default.
+      //   - telemetryStatus: the real branch (scanResult exists — an
+      //     actual PageSpeed+HTML scan ran) is kept; the previous fake
+      //     fallback claiming "✓ Traffic & Baseline Confirmed" when no
+      //     scan happened is now omitted instead.
+      guaranteeStatus: (() => {
+        const status = selectedClient.guarantee?.guarantee_status as
+          | "active" | "met" | "failed_refunded" | "voided" | undefined;
+        if (!status) return undefined;
+        return {
+          active: "Guarantee Active",
+          met: "Guarantee Met",
+          failed_refunded: "Guarantee Failed — Refunded",
+          voided: "Guarantee Voided",
+        }[status];
+      })(),
+      telemetryStatus: scanResult ? "✓ Public Signal Scan Confirmed (PageSpeed + HTML)" : undefined,
       evidence: diagEvidence.length ? diagEvidence : undefined,
       // Dosed deliveries carry the scaffold's free-text projected_impact
       // as a note rather than the manual numeric low/high range — that
