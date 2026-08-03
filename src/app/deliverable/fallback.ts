@@ -120,6 +120,18 @@ export interface DeliverableData {
   confidenceReason?: string;
   // Structured "what NOT to do" — required going forward, not optional prose.
   avoid?: AvoidItem[];
+  // Phase 4.2 — the client-safe translation of at most one dominant
+  // registry hypothesis and at most one ruled-out alternative, produced
+  // ONLY by src/lib/hypothesis-translation.ts. Never contains a mechanism
+  // id, analyst rationale, evidence-strength badge, diagnostic question,
+  // or any other internal reasoning_links field — see that file's own
+  // header for the structural (not just conventional) guarantee. Absent
+  // whenever there's no unambiguous dominant match, which is the common
+  // case — most deliverables simply won't have this key.
+  behavioralInterpretation?: {
+    dominant: { label: string; sentence: string } | null;
+    ruledOutAlternative: { label: string; sentence: string } | null;
+  };
   // Phase 4.1 — analyst-authored only (diagnostic_scaffolds.unknowns),
   // never generated or inferred here or anywhere upstream. Exposed in
   // every service tier by product policy — uncertainty is trust

@@ -30,6 +30,31 @@ import { DeliverableData, BeforeAfterData, Decision, EvidenceItem, EvidenceTier,
 // Phase 4.1 — analyst-authored uncertainty, shown in every service tier.
 // Deliberately plain and un-alarming: this is a trust signal ("we're
 // telling you what we don't know"), not an apology or a defect report.
+// Phase 4.2 — at most one dominant interpretation, at most one ruled-out
+// alternative, both already fully client-safe by the time they reach
+// here (see src/lib/hypothesis-translation.ts). This component has no
+// access to a mechanism id, a rationale, or an evidence badge — there is
+// nothing here that COULD leak internal reasoning, not just a rule not to.
+function BehavioralInterpretationSection({
+  dominant,
+  ruledOutAlternative,
+}: {
+  dominant: { label: string; sentence: string };
+  ruledOutAlternative?: { label: string; sentence: string } | null;
+}) {
+  return (
+    <div className="space-y-3">
+      <p className="text-base text-[#B0A89E] leading-relaxed max-w-[65ch] font-light">{dominant.sentence}</p>
+      {ruledOutAlternative && (
+        <p className="text-sm text-[#7A6F65] leading-relaxed max-w-[65ch] italic">
+          We also considered {ruledOutAlternative.label.toLowerCase()}, but the evidence points more specifically
+          to {dominant.label.toLowerCase()}.
+        </p>
+      )}
+    </div>
+  );
+}
+
 function UnknownsSection({ text }: { text: string }) {
   return (
     <div className="border border-[#7A6F65]/20 bg-[#7A6F65]/[0.03] p-6 md:p-8 rounded space-y-3">
@@ -496,6 +521,12 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
                   confidenceReason={d.confidenceReason}
                 />
               )}
+              {d.behavioralInterpretation?.dominant && (
+                <BehavioralInterpretationSection
+                  dominant={d.behavioralInterpretation.dominant}
+                  ruledOutAlternative={d.behavioralInterpretation.ruledOutAlternative}
+                />
+              )}
             </div>
           </section>
         )}
@@ -752,6 +783,14 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
             <p className="text-base text-[#B0A89E] leading-relaxed max-w-[60ch] font-light">
               {d.diagnosis?.friction?.rootCause}
             </p>
+            {d.behavioralInterpretation?.dominant && (
+              <div className="mt-6 pt-6 border-t border-[#D4A853]/8">
+                <BehavioralInterpretationSection
+                  dominant={d.behavioralInterpretation.dominant}
+                  ruledOutAlternative={d.behavioralInterpretation.ruledOutAlternative}
+                />
+              </div>
+            )}
           </motion.div>
         </div>
       </motion.section>

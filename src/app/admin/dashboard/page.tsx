@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getAuthHeaders } from "@/lib/supabase";
 import { AdminStatCard, RevenueProgressBar } from "@/components/admin/AdminComponents";
 import { mapDosedScaffoldToDelivery, DWY_DOSING, type ScaffoldJudgment, type Line, type DwyTier } from "@/lib/dosing";
+import { translateHypothesesForClient } from "@/lib/hypothesis-translation";
+import type { DiagnosisHypothesis } from "@/domain/reasoning";
 
 interface DashboardMetrics {
   totalLeads: number;
@@ -319,7 +321,7 @@ export default function AdminDashboard() {
   // in src/lib/dosing.ts. null until a scaffold with a pending purchase is
   // found for the selected client; when null, publishing falls back to the
   // pre-existing manual-form behavior unchanged.
-  const [dosedScaffold, setDosedScaffold] = useState<(ScaffoldJudgment & { id: string; unknowns: string | null; pending_dosing_line: Line | null; pending_dosing_tier: DwyTier | null }) | null>(null);
+  const [dosedScaffold, setDosedScaffold] = useState<(ScaffoldJudgment & { id: string; unknowns: string | null; reasoning_links: DiagnosisHypothesis[] | null; pending_dosing_line: Line | null; pending_dosing_tier: DwyTier | null }) | null>(null);
   const [scaffoldGenerating, setScaffoldGenerating] = useState(false);
   const [scaffoldError, setScaffoldError] = useState("");
 
@@ -569,7 +571,7 @@ export default function AdminDashboard() {
         setSelectedClientInteractions(interactionsData);
       }
       const resScaffold = await fetch(
-        `${supabaseUrl}/rest/v1/diagnostic_scaffolds?client_id=eq.${client.id}&select=id,friction_mechanism,specific_friction_point,why_blocks_conversion,projected_impact,the_decision,what_to_avoid,confidence_and_why,funnel_stage,projected_impact_magnitude,confidence_level,dfy_execution_summary,dfy_monitoring_findings,dfy_handoff_documentation,unknowns,pending_dosing_line,pending_dosing_tier&order=updated_at.desc&limit=1`,
+        `${supabaseUrl}/rest/v1/diagnostic_scaffolds?client_id=eq.${client.id}&select=id,friction_mechanism,specific_friction_point,why_blocks_conversion,projected_impact,the_decision,what_to_avoid,confidence_and_why,funnel_stage,projected_impact_magnitude,confidence_level,dfy_execution_summary,dfy_monitoring_findings,dfy_handoff_documentation,unknowns,reasoning_links,pending_dosing_line,pending_dosing_tier&order=updated_at.desc&limit=1`,
         { headers }
       );
       if (resScaffold.ok) {
@@ -795,6 +797,20 @@ export default function AdminDashboard() {
       // when blank so the client page's "render only if present" pattern
       // omits the section entirely rather than showing an empty one.
       unknowns: dosedScaffold?.unknowns?.trim() || undefined,
+      // Phase 4.2 — the ONLY call site allowed to turn internal
+      // reasoning_links into client-facing content; see
+      // hypothesis-translation.ts for every structural guarantee this
+      // relies on. dominant/ruledOutAlternative are already null (not
+      // undefined) when there's nothing to show, but this payload only
+      // sets the key at all when there's a real dominant interpretation —
+      // an all-null object would just be dead JSON on every delivery.
+      behavioralInterpretation: (() => {
+        const t = translateHypothesesForClient(
+          dosedScaffold?.reasoning_links ?? [],
+          dosedScaffold?.friction_mechanism ?? null
+        );
+        return t.dominant ? t : undefined;
+      })(),
       avoid: cleanAvoid,
       beforeAfter: deliverBeforeTitle.trim()
         ? {
