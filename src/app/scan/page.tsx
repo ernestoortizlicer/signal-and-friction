@@ -67,6 +67,27 @@ const SEVERITY_COLOR: Record<string, string> = {
   low: "border-[#D4A853]/15 bg-[#D4A853]/[0.03] text-[#D4A853]",
 };
 
+// Phase 6.1 — functions/api/_scan.ts's own frictionMechanisms labeler
+// derives these type strings straight from a technical threshold (e.g.
+// LCP > 4s -> "Cognitive Load"), with no analyst evidence or judgment
+// behind them. That's exactly why this same labeler was deliberately
+// firewalled from ever reaching the paid scaffold/diagnosis pipeline
+// (see src/domain/reasoning/ and the "no 7th mechanism" decision) — a
+// technical signal alone is never allowed to stand in for a behavioral
+// diagnosis anywhere else in this system. The free scanner was the one
+// place still presenting it as if it were one. Relabeled here as an
+// honest possibility, not a finding, matching the standard the rest of
+// the product actually holds itself to. This does not change what
+// _scan.ts computes — only how the same data is described.
+const SIGNAL_DISPLAY_LABEL: Record<string, string> = {
+  "Cognitive Load": "Possible Cognitive Load Signal",
+  "Trust Deficit": "Possible Trust Deficit Signal",
+  "Technical Friction": "Technical Performance Issue",
+};
+function signalDisplayLabel(type: string): string {
+  return SIGNAL_DISPLAY_LABEL[type] ?? type;
+}
+
 export default function ScanPage() {
   const [url, setUrl] = useState("");
   const [phase, setPhase] = useState<ScanPhase>('idle');
@@ -166,10 +187,12 @@ export default function ScanPage() {
             ← Signal &amp; Friction
           </Link>
           <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight text-white leading-tight">
-            Checkout Friction Audit
+            Checkout Friction Scan
           </h1>
           <p className="text-sm text-[#B0A89E] leading-relaxed max-w-[560px]">
-            Enter your store URL. Get a clinical breakdown of where revenue is leaking — LCP score, script bloat, layout instability, and the primary friction mechanism killing your conversion rate.
+            Enter your store URL. Get a clinical read of what was actually measured — LCP score, script
+            bloat, layout instability — and the technical signals most likely feeding into a real
+            conversion problem. This scan observes. It doesn&apos;t diagnose; that&apos;s the paid step.
           </p>
           <div className="flex flex-wrap gap-2 pt-1">
             {["Shopify", "WooCommerce", "BigCommerce", "Next.js", "Any stack"].map(p => (
@@ -339,11 +362,13 @@ export default function ScanPage() {
                 </div>
               )}
 
-              {/* Friction mechanisms — always visible */}
+              {/* Technical signals — always visible. Deliberately not
+                  called "friction mechanisms" here — see
+                  SIGNAL_DISPLAY_LABEL above for why. */}
               {report.frictionMechanisms.length > 0 && (
                 <div>
                   <p className="font-mono text-[10px] text-[#D4A853]/70 uppercase tracking-widest mb-3">
-                    Friction Mechanisms Detected ({report.frictionMechanisms.length})
+                    Technical Signals Observed ({report.frictionMechanisms.length})
                   </p>
                   <div className="space-y-2">
                     {report.frictionMechanisms.map((m, idx) => (
@@ -355,7 +380,7 @@ export default function ScanPage() {
                         className={`border p-4 rounded-xl ${SEVERITY_COLOR[m.severity]}`}
                       >
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-mono text-[10px] uppercase font-bold">{m.type}</span>
+                          <span className="font-mono text-[10px] uppercase font-bold">{signalDisplayLabel(m.type)}</span>
                           <span className={`font-mono text-[9px] uppercase px-1.5 py-0.5 rounded border border-current opacity-60`}>
                             {m.severity}
                           </span>
@@ -364,12 +389,20 @@ export default function ScanPage() {
                       </motion.div>
                     ))}
                   </div>
+                  <div className="border border-[#D4A853]/15 bg-[#D4A853]/[0.03] p-4 rounded-xl mt-3">
+                    <p className="text-xs text-[#B0A89E] leading-relaxed">
+                      <span className="text-[#D4A853] font-semibold">This is what was measured.</span> The
+                      behavioral cause still requires diagnosis — a real analyst weighing this evidence
+                      against what else could explain it. An automated scan can flag a pattern; it can&apos;t
+                      own the call.
+                    </p>
+                  </div>
                 </div>
               )}
 
               {report.frictionMechanisms.length === 0 && !report.psError && (
                 <div className="border border-[#5C9A6B]/20 bg-[#5C9A6B]/[0.04] p-4 rounded-xl text-xs text-[#5C9A6B] font-mono">
-                  No critical friction mechanisms detected. Your checkout performance is above baseline.
+                  No critical technical signals detected. Your checkout performance is above baseline.
                 </div>
               )}
 
