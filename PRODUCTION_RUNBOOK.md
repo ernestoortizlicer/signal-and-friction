@@ -65,7 +65,11 @@ Checked precisely against git history for this session's work (not assumed):
   ```
 - **`_shared/reasoning/*.ts`** — changed this session, but confirmed via direct grep that **no currently-existing Edge Function imports these files**. They exist for future use. No redeploy is triggered by this change; nothing to do today, but note it for whenever a function first starts importing them.
 - **`_shared/dosing.ts`** — confirmed via `git show --stat` on every Phase 4 commit that this file was **not touched** this session (all Phase 4.0–4.4 work lived in the Next.js-only, non-mirrored section of `src/lib/dosing.ts`). No redeploy needed for this reason.
-- All other Edge Functions (`certification-onboarding`, `finance-advisor-prompt`, `learning-socratic-tutor`, `outreach-scanner`, `prospecting-suggest-leads`, `stripe-invoice`, `stripe-refund`) — **unchanged this session**, no redeploy required.
+- **`prospecting-suggest-leads`** — updated during Phase 6.1 (identity migration): one word changed in its synthesis system prompt ("conversion/friction diagnostics" -> "behavioral conversion diagnostics"), purely a self-description consistency fix, no behavior change. **Now also needs redeploy**, in addition to `prospecting-discover-contact` above:
+  ```
+  supabase functions deploy prospecting-suggest-leads
+  ```
+- All other Edge Functions (`certification-onboarding`, `finance-advisor-prompt`, `learning-socratic-tutor`, `outreach-scanner`, `stripe-invoice`, `stripe-refund`) — **unchanged this session**, no redeploy required.
 
 This CLI (`supabase` v2.107.0) is installed in the build environment but **not authenticated** — deploys must be run from a machine with `supabase login` completed or `SUPABASE_ACCESS_TOKEN` set.
 

@@ -34,7 +34,7 @@ interface ScaffoldRow {
 // what_to_avoid and confidence_and_why: this is a cold-outreach teaser, and
 // those two fields are exactly the "give away the fix" and "internal
 // confidence framing" content that must NOT reach a prospect before they pay.
-const SYSTEM_PROMPT = `You write short spoken scripts for cold-outreach Loom videos for Signal & Friction, a B2B conversion-diagnostics practice. You receive a human analyst's own findings about ONE company's website. You never invent findings — you only turn the analyst's real content into a natural spoken script.
+const SYSTEM_PROMPT = `You write short spoken scripts for cold-outreach Loom videos for Signal & Friction, a B2B behavioral-diagnostics practice. You receive a human analyst's own findings about ONE company's website. You never invent findings — you only turn the analyst's real content into a natural spoken script.
 
 HARD RULES:
 - Use ONLY the facts given to you in the input. Never invent a number, a statistic, a finding, or a detail that is not present in the input. If no number is given, do not say a number.

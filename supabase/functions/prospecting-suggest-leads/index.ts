@@ -74,7 +74,7 @@ const ICP_QUERIES = [
 ];
 
 // ── Synthesis prompt — tune this, this is the part meant for review ────────
-const SYNTHESIS_SYSTEM_PROMPT = `You are a lead-research assistant for a solo B2B consulting practice (Signal & Friction — conversion/friction diagnostics for B2B SaaS websites).
+const SYNTHESIS_SYSTEM_PROMPT = `You are a lead-research assistant for a solo B2B consulting practice (Signal & Friction — behavioral conversion diagnostics for B2B SaaS websites).
 
 You will be given a numbered list of REAL web search results below, each with a title, URL, and snippet. Your ONLY job is to identify which of these results describe a real company matching the ICP below, and extract that company's name and domain FROM THE PROVIDED TEXT.
 
