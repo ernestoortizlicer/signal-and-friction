@@ -178,6 +178,16 @@ export interface DeliverableData {
   // every deliverable published before this field existed; not rendered
   // anywhere yet (Phase 4.3 adds the actual client-facing module).
   dfyDelivery?: DfyDeliveryData | null;
+  // Phase 6.3 — Monitoring launch-state fix. Real RawTechnicalSignals
+  // JSON from functions/api/_scan.ts, passed through loosely typed (same
+  // convention as technical_signals elsewhere in this app) since this
+  // file has no dependency on that Cloudflare-Function-only type.
+  // technicalSignalsBaseline undefined/null means "no baseline captured
+  // yet" — a real, honest state the client-facing module must render
+  // distinctly, never silently as if nothing changed.
+  technicalSignalsCurrent?: Record<string, unknown> | null;
+  technicalSignalsBaseline?: Record<string, unknown> | null;
+  baselineCapturedAt?: string | null;
   diagnosis: {
     signal: string;
     friction: {

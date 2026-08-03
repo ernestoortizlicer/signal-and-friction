@@ -322,7 +322,17 @@ export default function AdminDashboard() {
   // in src/lib/dosing.ts. null until a scaffold with a pending purchase is
   // found for the selected client; when null, publishing falls back to the
   // pre-existing manual-form behavior unchanged.
-  const [dosedScaffold, setDosedScaffold] = useState<(ScaffoldJudgment & { id: string; unknowns: string | null; reasoning_links: DiagnosisHypothesis[] | null; pending_dosing_line: Line | null; pending_dosing_tier: DwyTier | null }) | null>(null);
+  const [dosedScaffold, setDosedScaffold] = useState<(ScaffoldJudgment & {
+    id: string;
+    unknowns: string | null;
+    reasoning_links: DiagnosisHypothesis[] | null;
+    // Phase 6.3 — Monitoring launch-state fix.
+    technical_signals: Record<string, unknown> | null;
+    baseline_technical_signals: Record<string, unknown> | null;
+    baseline_captured_at: string | null;
+    pending_dosing_line: Line | null;
+    pending_dosing_tier: DwyTier | null;
+  }) | null>(null);
   const [scaffoldGenerating, setScaffoldGenerating] = useState(false);
   const [scaffoldError, setScaffoldError] = useState("");
 
@@ -573,7 +583,7 @@ export default function AdminDashboard() {
         setSelectedClientInteractions(interactionsData);
       }
       const resScaffold = await fetch(
-        `${supabaseUrl}/rest/v1/diagnostic_scaffolds?client_id=eq.${client.id}&select=id,friction_mechanism,specific_friction_point,why_blocks_conversion,projected_impact,the_decision,what_to_avoid,confidence_and_why,funnel_stage,projected_impact_magnitude,confidence_level,dfy_execution_summary,dfy_monitoring_findings,dfy_handoff_documentation,unknowns,reasoning_links,pending_dosing_line,pending_dosing_tier&order=updated_at.desc&limit=1`,
+        `${supabaseUrl}/rest/v1/diagnostic_scaffolds?client_id=eq.${client.id}&select=id,friction_mechanism,specific_friction_point,why_blocks_conversion,projected_impact,the_decision,what_to_avoid,confidence_and_why,funnel_stage,projected_impact_magnitude,confidence_level,dfy_execution_summary,dfy_monitoring_findings,dfy_handoff_documentation,unknowns,reasoning_links,technical_signals,baseline_technical_signals,baseline_captured_at,pending_dosing_line,pending_dosing_tier&order=updated_at.desc&limit=1`,
         { headers }
       );
       if (resScaffold.ok) {
@@ -825,6 +835,14 @@ export default function AdminDashboard() {
       // (not null) for a non-dosed/legacy manual delivery or a DWY line,
       // matching every other optional field's "omit the key" convention.
       dfyDelivery: dosed?.dfyDelivery ?? undefined,
+      // Phase 6.3 — Monitoring launch-state fix. Both real scanner
+      // output, passed through as-is; the client-facing module (see
+      // PolicyComposedDeliverable.tsx's MonitoringFindingsModule) does
+      // the comparison and renders the honest "no baseline yet" state
+      // when baseline is absent — never fabricated here or there.
+      technicalSignalsCurrent: dosedScaffold?.technical_signals ?? undefined,
+      technicalSignalsBaseline: dosedScaffold?.baseline_technical_signals ?? undefined,
+      baselineCapturedAt: dosedScaffold?.baseline_captured_at ?? undefined,
       // Phase 4.1 — analyst-authored only, never generated here. Exposed
       // in every service tier per product policy (uncertainty isn't a
       // premium feature) — so this is a straight passthrough of whatever

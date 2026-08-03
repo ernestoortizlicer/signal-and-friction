@@ -79,6 +79,10 @@ interface Scaffold {
   reasoning_links: DiagnosisHypothesis[];
   unknowns: string | null;
   technical_signals: Record<string, unknown> | null;
+  // Phase 6.3 — Monitoring baseline. Frozen once via captureBaseline(),
+  // never overwritten by Rescan.
+  baseline_technical_signals: Record<string, unknown> | null;
+  baseline_captured_at: string | null;
 }
 
 const SUPABASE_URL =
@@ -186,6 +190,7 @@ function ScaffoldEditor() {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [rescanning, setRescanning] = useState(false);
+  const [capturingBaseline, setCapturingBaseline] = useState(false);
   const [notice, setNotice] = useState<{ message: string; variant: "green" | "red" } | null>(null);
   const [loomScriptDraft, setLoomScriptDraft] = useState("");
   const [generatingLoom, setGeneratingLoom] = useState(false);
@@ -412,6 +417,35 @@ function ScaffoldEditor() {
     }
   }
 
+  // Phase 6.3 — Monitoring launch-state fix. Deliberately a separate,
+  // explicit action from Rescan — freezing "technical_signals as they
+  // stand right now" as the Monitoring baseline is a decision the
+  // analyst makes once, at the moment the fix is confirmed live, never
+  // something a routine Rescan should silently trigger or overwrite.
+  async function captureBaseline() {
+    if (!scaffold) return;
+    setCapturingBaseline(true);
+    setNotice(null);
+    try {
+      const res = await fetch("/api/scaffolds/capture-baseline", {
+        method: "POST",
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ scaffoldId: scaffold.id }),
+      });
+      const body = await res.json().catch(() => null);
+      if (res.ok && body) {
+        setScaffold((prev) => (prev ? { ...prev, ...body } : body));
+        setNotice({ message: "Monitoring baseline captured — future rescans will compare against this snapshot.", variant: "green" });
+      } else {
+        setNotice({ message: body?.error || `Baseline capture failed (HTTP ${res.status}).`, variant: "red" });
+      }
+    } catch (err) {
+      setNotice({ message: `Baseline capture request failed: ${err instanceof Error ? err.message : "network error"}`, variant: "red" });
+    } finally {
+      setCapturingBaseline(false);
+    }
+  }
+
   if (!id) {
     return (
       <div className="p-6 md:p-8 max-w-4xl mx-auto">
@@ -520,15 +554,32 @@ function ScaffoldEditor() {
           <span className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-[0.15em]">
             Measured Evidence ({scaffold.evidence.length})
           </span>
-          <button
-            type="button"
-            onClick={rescan}
-            disabled={rescanning}
-            className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[#B0A89E] text-xs font-mono uppercase tracking-wide hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-          >
-            {rescanning ? "Rescanning…" : "Rescan"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={rescan}
+              disabled={rescanning}
+              className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[#B0A89E] text-xs font-mono uppercase tracking-wide hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {rescanning ? "Rescanning…" : "Rescan"}
+            </button>
+            <button
+              type="button"
+              onClick={captureBaseline}
+              disabled={capturingBaseline || !scaffold.technical_signals}
+              title="Freezes today's technical signals as the Monitoring before-state. Do this once, when the diagnosed fix is confirmed live."
+              className="px-3 py-1.5 rounded-lg bg-[#D4A853]/10 border border-[#D4A853]/25 text-[#D4A853] text-xs font-mono uppercase tracking-wide hover:bg-[#D4A853]/15 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {capturingBaseline ? "Capturing…" : "Set as Monitoring Baseline"}
+            </button>
+          </div>
         </div>
+        {scaffold.baseline_captured_at && (
+          <p className="font-mono text-[10px] text-[#7A6F65] mb-3">
+            Monitoring baseline captured {formatDate(scaffold.baseline_captured_at)}. Later rescans compare
+            against this snapshot — capturing again replaces it.
+          </p>
+        )}
         <div className="space-y-1.5">
           {scaffold.evidence.map((row, i) => (
             <div key={i} className="bg-black/30 border border-white/5 p-2.5 rounded flex items-start justify-between gap-3">

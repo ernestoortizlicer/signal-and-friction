@@ -20,6 +20,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import type { DeliverableData } from "../fallback";
 import type { ServiceDeliveryPolicy, DeliverableModulePolicy } from "@/lib/delivery-policy";
+import { computeTechnicalMovement } from "@/lib/monitoring-comparison";
 import {
   EvidenceSection,
   ConfidenceBadge,
@@ -107,22 +108,101 @@ function ExecutionSummaryModule({ text }: { text: string }) {
   );
 }
 
-// DFY Monitoring's defining module — same honest-string principle as
-// ExecutionSummaryModule for DFY. For DWY, there is currently no
-// measurement pipeline or scaffold field of any kind behind this concept
-// — dwyText is always null here, and the honest thing is to say so
-// plainly rather than render a page that implies data exists.
-function MonitoringFindingsModule({ dfyText }: { dfyText: string | null }) {
+// Phase 6.3 — the Monitoring launch-state decision. Rather than build a
+// funnel/analytics pipeline nobody grants access to by default (or sell
+// a promise with nothing behind it, or pull the service), Monitoring is
+// reframed around what the existing scan engine already, honestly
+// measures: real technical evidence, before vs. after, using the same
+// PageSpeed/HTML scanner that has produced every "measured" evidence row
+// since Phase 1. See supabase/migrations/20260812000000_scaffold_
+// monitoring_baseline.sql and the "Set as Monitoring Baseline" admin
+// action (src/app/admin/scaffolds/page.tsx) for where technicalBaseline
+// actually gets captured — never automatically, only on a deliberate
+// analyst action once the diagnosed fix is confirmed live.
+// Pure comparison logic lives in src/lib/monitoring-comparison.ts (a
+// plain .ts file, testable via node — see monitoring-comparison.test.mjs)
+// — this component only renders whatever it returns.
+function TechnicalMovementComparison({
+  baseline,
+  current,
+  capturedAt,
+}: {
+  baseline: Record<string, unknown>;
+  current: Record<string, unknown>;
+  capturedAt?: string | null;
+}) {
+  const rows = computeTechnicalMovement(baseline, current);
+  if (rows.length === 0) return null;
+
   return (
-    <div className="border border-[#D4A853]/12 bg-[#110F0D]/40 p-6 md:p-8 rounded space-y-2">
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border text-[#5C9A6B] border-[#5C9A6B]/40 bg-[#5C9A6B]/8">
+          measured
+        </span>
+        {capturedAt && (
+          <span className="font-mono text-[10px] text-[#7A6F65]">
+            Baseline captured {new Date(capturedAt).toLocaleDateString()}
+          </span>
+        )}
+      </div>
+      <div className="border border-[#D4A853]/10 rounded overflow-x-auto">
+        <table className="w-full text-xs font-mono">
+          <thead>
+            <tr className="border-b border-[#D4A853]/10 text-[#7A6F65] uppercase text-[10px]">
+              <th className="text-left p-2">Signal</th>
+              <th className="text-left p-2">Before</th>
+              <th className="text-left p-2">Now</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.label} className="border-b border-white/5 last:border-b-0">
+                <td className="p-2 text-[#B0A89E]">{r.label}</td>
+                <td className="p-2 text-[#7A6F65]">{r.before}</td>
+                <td className={`p-2 ${r.moved ? "text-[#5C9A6B] font-bold" : "text-[#F5F0EB]"}`}>{r.after}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-xs text-[#7A6F65] leading-relaxed max-w-[60ch]">
+        This confirms whether the technical conditions behind the original diagnosis have changed — not a
+        direct measurement of your conversion rate, which requires access to your funnel data we don&apos;t
+        have unless you grant it.
+      </p>
+    </div>
+  );
+}
+
+function MonitoringFindingsModule({
+  dfyText,
+  technicalBaseline,
+  technicalCurrent,
+  baselineCapturedAt,
+}: {
+  dfyText: string | null;
+  technicalBaseline?: Record<string, unknown> | null;
+  technicalCurrent?: Record<string, unknown> | null;
+  baselineCapturedAt?: string | null;
+}) {
+  const hasComparison = !!(technicalBaseline && technicalCurrent);
+  return (
+    <div className="border border-[#D4A853]/12 bg-[#110F0D]/40 p-6 md:p-8 rounded space-y-4">
       <span className="font-mono text-xs uppercase tracking-wider text-[#D4A853]">What We Found</span>
-      {dfyText ? (
-        <p className="text-base text-[#B0A89E] leading-relaxed max-w-[65ch]">{dfyText}</p>
-      ) : (
+      {dfyText && <p className="text-base text-[#B0A89E] leading-relaxed max-w-[65ch]">{dfyText}</p>}
+      {hasComparison && (
+        <TechnicalMovementComparison
+          baseline={technicalBaseline!}
+          current={technicalCurrent!}
+          capturedAt={baselineCapturedAt}
+        />
+      )}
+      {!dfyText && !hasComparison && (
         <p className="text-sm text-[#7A6F65] leading-relaxed max-w-[60ch] italic">
-          No automated measurement pipeline is connected for this service yet — this section will report real,
-          measured signal movement once one is. This is a stated infrastructure gap, not a claim that nothing
-          changed.
+          Monitoring baseline not yet captured — this begins once the diagnosed fix is confirmed live and the
+          analyst captures a before-state to compare against. Not a claim that nothing changed; a stated timing
+          gap.
         </p>
       )}
     </div>
@@ -364,7 +444,12 @@ export default function PolicyComposedDeliverable({
       {m.monitoringFindings === "required" || (m.monitoringFindings === "allowed" && data.dfyDelivery) ? (
         <section className="py-16 px-6 border-b border-[#D4A853]/8">
           <div className="max-w-[900px] mx-auto">
-            <MonitoringFindingsModule dfyText={data.dfyDelivery ? data.dfyDelivery.monitoring_findings : null} />
+            <MonitoringFindingsModule
+              dfyText={data.dfyDelivery ? data.dfyDelivery.monitoring_findings : null}
+              technicalBaseline={data.technicalSignalsBaseline}
+              technicalCurrent={data.technicalSignalsCurrent}
+              baselineCapturedAt={data.baselineCapturedAt}
+            />
           </div>
         </section>
       ) : null}
