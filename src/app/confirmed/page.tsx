@@ -121,11 +121,15 @@ function ConfirmedContent() {
           <div className="font-mono text-xs text-[#F5F0EB] tracking-wide break-all">{email}</div>
         </div>
 
-        {/* Protocol */}
+        {/* Protocol — Phase 6.1: was "MICRODOSING DWY" / "HIGH-TICKET DFY",
+            leaking an internal-only label ("microdosing") onto a
+            customer-facing page. Both lines start with the identical
+            Diagnostic; the only real difference at this exact purchase is
+            who executes the eventual fix. */}
         <div className="mb-6">
           <div className="font-mono text-xs text-[#7A6F65] tracking-[0.2em] uppercase mb-1">Protocol</div>
           <div className="font-mono text-xs text-[#D4A853]">
-            {isMicrodosing ? "MICRODOSING DWY" : "HIGH-TICKET DFY"}
+            {isMicrodosing ? "DWY — YOU EXECUTE" : "DFY — WE EXECUTE"}
           </div>
         </div>
 
@@ -187,16 +191,15 @@ function ConfirmedContent() {
             <div className="font-mono text-xs text-[#5C9A6B] tracking-[0.3em] uppercase glow-text-green">
               {isMicrodosing ? "Intake Completed" : "Protocol Active"}
             </div>
+            {/* Phase 6.1 — this page fires for the first purchase on
+                either line (price_dwy_beta_diagnostic /
+                price_dfy_beta_diagnostic, see fetchLink below): always a
+                Diagnostic. The DWY branch previously said "Autonomy
+                Portal Pending Activation," describing a completely
+                different, later, $1,500 purchase — factually wrong for
+                what was just bought. */}
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-              {isMicrodosing ? (
-                <>
-                  Autonomy Portal <span className="text-[#D4A853] glow-text">Pending Activation</span>
-                </>
-              ) : (
-                <>
-                  Diagnostic <span className="text-[#D4A853] glow-text">Initiated</span>
-                </>
-              )}
+              Diagnostic <span className="text-[#D4A853] glow-text">Initiated</span>
             </h1>
           </div>
 
@@ -213,11 +216,21 @@ function ConfirmedContent() {
             <div className="font-mono text-xs text-[#B0A89E] tracking-[0.2em] uppercase">
               Secure Payment Pending
             </div>
+            {/* Phase 6.1 — two real contradictions fixed here:
+                (1) the DWY branch described "full conversion framework —
+                interactive modules, self-paced checklists," which is the
+                Autonomy Kit's scope (a later, $1,500 purchase), not what
+                a $350 Diagnostic delivers.
+                (2) the DFY branch promised "three specific friction
+                points," directly contradicting the actual product and
+                guarantee — one dominant friction, not several — stated
+                everywhere else (pricing page, offer-catalog.ts scope
+                text, the Specificity Guarantee itself). */}
             <p className="text-sm text-[#B0A89E] font-mono leading-relaxed">
-              {isMicrodosing
-                ? "The diagnostic fee unlocks your full conversion framework — interactive modules, self-paced checklists, and a Loom walkthrough. Completely async, starting immediately."
-                : "The diagnostic fee activates your 72-hour clinical window. You receive a precision friction report and Loom walkthrough — no calls, no meetings. If we don’t identify three specific friction points, you pay nothing."
-              }
+              The diagnostic fee activates your 72-hour clinical window. You receive one
+              evidence-ranked dominant friction, the recommended decision if your tier includes it,
+              and a Loom walkthrough — no calls, no meetings. If the finding isn&apos;t specific to
+              your product, you pay nothing.
             </p>
             <div className="pt-2">
               {paymentLink ? (
@@ -240,7 +253,7 @@ function ConfirmedContent() {
                   <a href="mailto:hello@signal-and-friction.com" className="underline">
                     hello@signal-and-friction.com
                   </a>{" "}
-                  and we'll send it directly.
+                  and we&apos;ll send it directly.
                 </div>
               ) : (
                 <div className="w-full py-3 bg-[#D4A853]/20 text-[#D4A853]/60 font-mono text-xs font-bold uppercase tracking-[0.25em] text-center">
@@ -276,12 +289,16 @@ function ConfirmedContent() {
             </div>
           )}
 
-          {/* Protocol details */}
+          {/* Protocol details — Phase 6.1: the DWY branch previously
+              claimed "Full conversion modules." / "Complete self-serve
+              autonomy.", both Autonomy Kit scope, not Diagnostic. Both
+              lines get the same three facts now — accurate for either,
+              since Diagnostic's scope doesn't differ by line. */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
             {[
-              isMicrodosing ? "Interactive checklist." : "Zero calls. Zero meetings. Fully async.",
-              isMicrodosing ? "Full conversion modules." : "Manual funnel audit: landing → checkout.",
-              isMicrodosing ? "Complete self-serve autonomy." : "Clinical report + Loom in your inbox.",
+              "Zero calls. Zero meetings. Fully async.",
+              "One evidence-ranked dominant friction, not a checklist.",
+              "Clinical report + Loom in your inbox.",
             ].map((item, i) => (
               <div key={i} className="border border-[#D4A853]/5 px-3 py-2.5 font-mono text-xs text-[#B0A89E] leading-relaxed">
                 <span className="text-[#5C9A6B] mr-1.5">●</span>{item}
