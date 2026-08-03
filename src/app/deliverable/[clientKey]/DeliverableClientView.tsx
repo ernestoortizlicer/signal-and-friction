@@ -27,6 +27,18 @@ import { useRef, useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { DeliverableData, BeforeAfterData, Decision, EvidenceItem, EvidenceTier, ImpactRange, AvoidItem } from "../fallback";
 
+// Phase 4.1 — analyst-authored uncertainty, shown in every service tier.
+// Deliberately plain and un-alarming: this is a trust signal ("we're
+// telling you what we don't know"), not an apology or a defect report.
+function UnknownsSection({ text }: { text: string }) {
+  return (
+    <div className="border border-[#7A6F65]/20 bg-[#7A6F65]/[0.03] p-6 md:p-8 rounded space-y-3">
+      <span className="font-mono text-xs uppercase tracking-wider text-[#7A6F65]">Remaining Uncertainty</span>
+      <p className="text-base text-[#B0A89E] leading-relaxed max-w-[65ch] whitespace-pre-line">{text}</p>
+    </div>
+  );
+}
+
 const containerVariants = {
   hidden: { opacity: 0 },
   show: {
@@ -575,6 +587,15 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
           </section>
         ) : null}
 
+        {/* Remaining Uncertainty — renders only when the analyst wrote something */}
+        {d.unknowns?.trim() ? (
+          <section className="py-12 px-6 border-t border-[#D4A853]/5">
+            <div className="max-w-[1000px] mx-auto">
+              <UnknownsSection text={d.unknowns.trim()} />
+            </div>
+          </section>
+        ) : null}
+
         <footer className="py-12 border-t border-[#D4A853]/10 text-center bg-[#0A0908] mt-16">
           <p className="font-mono text-xs tracking-[0.15em] text-[#7A6F65]">
             {d.consultant} · CONFIDENTIAL CLIENT PORTAL · ALL RIGHTS RESERVED
@@ -805,6 +826,20 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
               04 — What Not To Do
             </h2>
             <AvoidSection items={d.avoid} />
+          </div>
+        </motion.section>
+      ) : null}
+
+      {/* Remaining Uncertainty — renders only when the analyst wrote something */}
+      {d.unknowns?.trim() ? (
+        <motion.section
+          className="py-16 px-6 border-b border-[#D4A853]/8"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+        >
+          <div className="max-w-[900px] mx-auto">
+            <UnknownsSection text={d.unknowns.trim()} />
           </div>
         </motion.section>
       ) : null}

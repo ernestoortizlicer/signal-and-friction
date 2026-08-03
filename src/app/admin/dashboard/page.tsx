@@ -319,7 +319,7 @@ export default function AdminDashboard() {
   // in src/lib/dosing.ts. null until a scaffold with a pending purchase is
   // found for the selected client; when null, publishing falls back to the
   // pre-existing manual-form behavior unchanged.
-  const [dosedScaffold, setDosedScaffold] = useState<(ScaffoldJudgment & { id: string; pending_dosing_line: Line | null; pending_dosing_tier: DwyTier | null }) | null>(null);
+  const [dosedScaffold, setDosedScaffold] = useState<(ScaffoldJudgment & { id: string; unknowns: string | null; pending_dosing_line: Line | null; pending_dosing_tier: DwyTier | null }) | null>(null);
   const [scaffoldGenerating, setScaffoldGenerating] = useState(false);
   const [scaffoldError, setScaffoldError] = useState("");
 
@@ -569,7 +569,7 @@ export default function AdminDashboard() {
         setSelectedClientInteractions(interactionsData);
       }
       const resScaffold = await fetch(
-        `${supabaseUrl}/rest/v1/diagnostic_scaffolds?client_id=eq.${client.id}&select=id,friction_mechanism,specific_friction_point,why_blocks_conversion,projected_impact,the_decision,what_to_avoid,confidence_and_why,funnel_stage,projected_impact_magnitude,confidence_level,dfy_execution_summary,dfy_monitoring_findings,dfy_handoff_documentation,pending_dosing_line,pending_dosing_tier&order=updated_at.desc&limit=1`,
+        `${supabaseUrl}/rest/v1/diagnostic_scaffolds?client_id=eq.${client.id}&select=id,friction_mechanism,specific_friction_point,why_blocks_conversion,projected_impact,the_decision,what_to_avoid,confidence_and_why,funnel_stage,projected_impact_magnitude,confidence_level,dfy_execution_summary,dfy_monitoring_findings,dfy_handoff_documentation,unknowns,pending_dosing_line,pending_dosing_tier&order=updated_at.desc&limit=1`,
         { headers }
       );
       if (resScaffold.ok) {
@@ -788,6 +788,13 @@ export default function AdminDashboard() {
       // (not null) for a non-dosed/legacy manual delivery or a DWY line,
       // matching every other optional field's "omit the key" convention.
       dfyDelivery: dosed?.dfyDelivery ?? undefined,
+      // Phase 4.1 — analyst-authored only, never generated here. Exposed
+      // in every service tier per product policy (uncertainty isn't a
+      // premium feature) — so this is a straight passthrough of whatever
+      // the analyst wrote on the scaffold, with no tier gate. undefined
+      // when blank so the client page's "render only if present" pattern
+      // omits the section entirely rather than showing an empty one.
+      unknowns: dosedScaffold?.unknowns?.trim() || undefined,
       avoid: cleanAvoid,
       beforeAfter: deliverBeforeTitle.trim()
         ? {

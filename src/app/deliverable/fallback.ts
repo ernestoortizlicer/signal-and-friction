@@ -120,6 +120,14 @@ export interface DeliverableData {
   confidenceReason?: string;
   // Structured "what NOT to do" — required going forward, not optional prose.
   avoid?: AvoidItem[];
+  // Phase 4.1 — analyst-authored only (diagnostic_scaffolds.unknowns),
+  // never generated or inferred here or anywhere upstream. Exposed in
+  // every service tier by product policy — uncertainty is trust
+  // architecture, not something a higher tier unlocks. Undefined (not an
+  // empty string) for every deliverable published before this field
+  // existed, and for any tier where the analyst hasn't written anything —
+  // both render as "no section", never a blank one.
+  unknowns?: string;
   // The real, structured answer to "which of the six mechanisms is this" —
   // distinct from diagnosis.friction.mechanism below, which is free-form
   // narrative text ("Cognitive Overload — Choice Paralysis...") meant for a
