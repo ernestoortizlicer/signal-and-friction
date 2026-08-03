@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAuthHeaders } from "@/lib/supabase";
+import ReasoningManual from "./ReasoningManual";
 
 interface Draft {
   id: string;
@@ -241,7 +242,7 @@ function InlineMarkdown({ text, className }: { text: string; className?: string 
 }
 
 export default function LearningDashboard() {
-  const [activeTab, setActiveTab] = useState<'socratic' | 'hyper_leap'>('hyper_leap');
+  const [activeTab, setActiveTab] = useState<'socratic' | 'hyper_leap' | 'manual'>('hyper_leap');
   const [articles, setArticles] = useState<Article[]>([]);
   const [selectedArticleSlug, setSelectedArticleSlug] = useState<string>("socratic-funnel-diagnostics");
   const [drafts, setDrafts] = useState<Draft[]>([]);
@@ -663,6 +664,7 @@ export default function LearningDashboard() {
         {([
           { key: 'hyper_leap', label: 'Combat Mode' },
           { key: 'socratic',   label: 'IP Lab' },
+          { key: 'manual',     label: 'Reasoning Manual' },
         ] as const).map(tab => (
           <button
             key={tab.key}
@@ -1442,6 +1444,19 @@ export default function LearningDashboard() {
                 ))}
               </div>
             </div>
+          </motion.div>
+        )}
+
+        {/* ── REASONING MANUAL ─────────────────────────────────────── */}
+        {activeTab === 'manual' && (
+          <motion.div
+            key="manual"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="relative z-10"
+          >
+            <ReasoningManual />
           </motion.div>
         )}
       </AnimatePresence>
