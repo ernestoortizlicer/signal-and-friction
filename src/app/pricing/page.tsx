@@ -541,6 +541,18 @@ export default function PricingPage() {
               </p>
             </div>
 
+            <div>
+              <span className="text-[10px] text-[#7A6F65] tracking-[0.2em] uppercase block mb-1.5">
+                How we read it
+              </span>
+              <p className="text-[#B0A89E] text-xs leading-relaxed">
+                This reads as a case of trust deficit: visitors weigh an unfamiliar
+                source&apos;s claims against the absence of any independent confirmation,
+                and default to caution when nothing at the decision moment resolves
+                that gap.
+              </p>
+            </div>
+
             <div className="grid sm:grid-cols-3 gap-4 border-t border-[#D4A853]/8 pt-5">
               <div>
                 <span className="text-[10px] text-[#7A6F65] tracking-[0.2em] uppercase block mb-1.5">
@@ -626,6 +638,23 @@ export default function PricingPage() {
         </div>
       </section>
 
+      {/* ── How we get to one finding — Phase 6.1: the reasoning-engine
+          story, without exposing the internal registry or prompts. ── */}
+      <section className="w-full max-w-3xl mx-auto px-6 pb-16 relative z-10 border-t border-[#D4A853]/8 pt-16">
+        <div className="text-center space-y-2 mb-6">
+          <span className="font-mono text-[10px] text-[#7A6F65] tracking-[0.4em] uppercase">
+            The process, briefly
+          </span>
+        </div>
+        <p className="text-sm font-serif text-[#F5F0EB]/85 leading-relaxed max-w-xl mx-auto text-center">
+          Evidence comes first, always — a behavioral pattern only gets named once it&apos;s grounded
+          in what we actually observed. Before we commit to one reading, we use AI to stress-test it:
+          what else could explain this, what are we missing, does the evidence really support this.
+          The AI proposes and challenges. The analyst decides. When two readings are both genuinely
+          plausible, we say so instead of picking one to look more decisive than it is.
+        </p>
+      </section>
+
       {/* ── What we don't do / who it's for ─────────────────── */}
       <section className="w-full max-w-3xl mx-auto px-6 pb-16 relative z-10 border-t border-[#D4A853]/8 pt-16">
         <div className="grid sm:grid-cols-2 gap-10">
@@ -639,6 +668,7 @@ export default function PricingPage() {
               <li>— Manufacture a finding to justify the fee</li>
               <li>— Claim access to data we don&apos;t have unless you grant it</li>
               <li>— Lock you into a retainer — every step after Diagnostic is opt-in</li>
+              <li>— Let an AI system pick the diagnosis — a named analyst always makes the final call</li>
             </ul>
           </div>
           <div className="space-y-3">
