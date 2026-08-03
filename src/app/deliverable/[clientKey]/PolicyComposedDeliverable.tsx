@@ -22,6 +22,14 @@ import type { DeliverableData } from "../fallback";
 import type { ServiceDeliveryPolicy, DeliverableModulePolicy } from "@/lib/delivery-policy";
 import { computeTechnicalMovement } from "@/lib/monitoring-comparison";
 import {
+  DWY_AUTONOMY_CURRICULUM,
+  DFY_AUTONOMY_CURRICULUM,
+  curriculumToChecklistItems,
+  curriculumToLearningModules,
+  curriculumToRunbookText,
+} from "@/lib/autonomy-curriculum";
+import { NOT_YET_DELIVERED } from "@/lib/dosing";
+import {
   EvidenceSection,
   ConfidenceBadge,
   ImpactRangeBlock,
@@ -211,33 +219,55 @@ function MonitoringFindingsModule({
 
 // DFY Autonomy's defining module — an institutional runbook, deliberately
 // not styled like the DWY founder checklist (different job: a team
-// artifact, not a self-serve training UI).
+// artifact, not a self-serve training UI). Falls back to the standard
+// Signal & Friction DFY curriculum (autonomy-curriculum.ts) when the
+// analyst hasn't yet hand-written handoff_documentation for this client —
+// dosing.ts's NOT_YET_DELIVERED sentinel is an honest "not yet", not a
+// reason to leave a paid capability-transfer tier empty.
 function TeamRunbookModule({ text }: { text: string }) {
+  const usingStandardCurriculum = !text.trim() || text === NOT_YET_DELIVERED;
+  const body = usingStandardCurriculum ? curriculumToRunbookText(DFY_AUTONOMY_CURRICULUM) : text;
   return (
     <div className="border border-[#D4A853]/15 bg-[#0A0908] p-6 md:p-10 rounded-lg space-y-4">
       <div className="flex items-center gap-2">
         <span className="w-1.5 h-1.5 rounded-full bg-[#D4A853]" />
         <span className="font-mono text-xs uppercase tracking-[0.15em] text-[#D4A853]">Operating Runbook — Internal Handoff</span>
       </div>
-      <p className="text-base text-[#B0A89E] leading-relaxed max-w-[70ch] whitespace-pre-line">{text}</p>
+      {usingStandardCurriculum && (
+        <p className="font-mono text-xs uppercase tracking-wider text-[#7A6F65]">
+          Standard Signal &amp; Friction Framework — not yet customized for this client
+        </p>
+      )}
+      <p className="text-base text-[#B0A89E] leading-relaxed max-w-[70ch] whitespace-pre-line">{body}</p>
     </div>
   );
 }
 
 // DWY Autonomy's defining module — the existing checklist/learningModules
-// UI, now gated by policy rather than rendered purely on presence.
+// UI, now gated by policy rather than rendered purely on presence. When no
+// per-client checklist/learningModules have been hand-authored yet, this
+// renders the standard Signal & Friction curriculum (autonomy-curriculum.ts)
+// instead of a pending state — per-client content still wins whenever it
+// exists, but "not yet added" is no longer the honest default for a paid
+// tier whose entire promise is capability transfer.
 function FounderLearningModule({ data }: { data: DeliverableData }) {
-  const [checklist, setChecklist] = useState(data.checklist ?? []);
-  const [selectedId, setSelectedId] = useState<string | null>(data.learningModules?.[0]?.id ?? null);
-  const active = data.learningModules?.find((m) => m.id === selectedId);
+  const usingStandardCurriculum = !data.checklist?.length && !data.learningModules?.length;
+  const [checklist, setChecklist] = useState(
+    data.checklist?.length ? data.checklist : curriculumToChecklistItems(DWY_AUTONOMY_CURRICULUM)
+  );
+  const learningModules = data.learningModules?.length ? data.learningModules : curriculumToLearningModules(DWY_AUTONOMY_CURRICULUM);
+  const [selectedId, setSelectedId] = useState<string | null>(learningModules[0]?.id ?? null);
+  const active = learningModules.find((m) => m.id === selectedId);
   const toggle = (id: string) => setChecklist((prev) => prev.map((c) => (c.id === id ? { ...c, done: !c.done } : c)));
 
-  if (!checklist.length && !data.learningModules?.length) {
-    return <PendingModule label="Self-Diagnosis Framework" note="Framework materials for this client haven't been added yet." />;
-  }
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+    <div className="space-y-6">
+      {usingStandardCurriculum && (
+        <p className="font-mono text-xs uppercase tracking-wider text-[#7A6F65]">
+          Standard Signal &amp; Friction Framework — not yet customized for this client
+        </p>
+      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
       {checklist.length > 0 && (
         <div className="space-y-4">
           <span className="font-mono text-xs uppercase tracking-wider text-[#D4A853]">Self-Diagnosis Checklist</span>
@@ -260,11 +290,11 @@ function FounderLearningModule({ data }: { data: DeliverableData }) {
           </div>
         </div>
       )}
-      {data.learningModules?.length ? (
+      {learningModules.length ? (
         <div className="space-y-4">
           <span className="font-mono text-xs uppercase tracking-wider text-[#D4A853]">Framework & Templates</span>
           <div className="space-y-2">
-            {data.learningModules.map((mod) => (
+            {learningModules.map((mod) => (
               <div
                 key={mod.id}
                 onClick={() => setSelectedId(mod.id)}
@@ -283,6 +313,7 @@ function FounderLearningModule({ data }: { data: DeliverableData }) {
           )}
         </div>
       ) : null}
+      </div>
     </div>
   );
 }
