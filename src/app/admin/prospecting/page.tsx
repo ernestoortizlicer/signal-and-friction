@@ -11,6 +11,7 @@ import {
   AdminCard,
   AdminEmptyState,
 } from "@/components/admin/AdminComponents";
+import ContactDiscoveryCell, { type ContactDiscoveryResult } from "./ContactDiscoveryCell";
 
 type Presence = "found" | "not_found" | "undetermined";
 
@@ -82,6 +83,7 @@ interface Candidate {
   technical_score: number | null;
   score_breakdown: ScoreBreakdown | null;
   founder_contact: string | null;
+  contact_discovery: ContactDiscoveryResult | null;
   scan_error: string | null;
   scanned_at: string | null;
   promoted_client_id: string | null;
@@ -1085,6 +1087,7 @@ export default function ProspectingCommandCenter() {
             "Viewport",
             "CTA",
             "Founder Contact",
+            "Contact Discovery",
             "Status",
             "Actions",
           ]}
@@ -1199,6 +1202,17 @@ export default function ProspectingCommandCenter() {
                   {contactError && !isSavingContact && (
                     <span className="text-[10px] text-[#C85C5C] font-mono block mt-1">{contactError}</span>
                   )}
+                </td>
+                <td className="px-4 py-3">
+                  <ContactDiscoveryCell
+                    candidateId={c.id}
+                    domain={c.domain}
+                    companyName={c.company_name}
+                    contactDiscovery={c.contact_discovery}
+                    onUpdated={(result) =>
+                      setCandidates((prev) => prev.map((x) => (x.id === c.id ? { ...x, contact_discovery: result } : x)))
+                    }
+                  />
                 </td>
                 <td className="px-4 py-3">
                   <AdminBadge variant={STATUS_BADGE[c.status].variant}>{STATUS_BADGE[c.status].label}</AdminBadge>
