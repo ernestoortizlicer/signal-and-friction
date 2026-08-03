@@ -9,6 +9,15 @@
  * in sync by hand if the dosing rules ever change — there are exactly
  * two canonical copies, not more.
  *
+ * The region below, up to the matching closing marker further down this
+ * file, is checked against the paired markers in
+ * supabase/functions/_shared/dosing.ts by scripts/check-domain-drift.mjs,
+ * which fails the build on any difference. Everything after that closing
+ * marker is Next.js-only (the publish-path integration), deliberately
+ * excluded from that check — the Deno copy has no equivalent of that
+ * section and isn't supposed to.
+ * MIRROR-SYNC-START
+ *
  * Single source of truth for "which of the 7 scaffold judgment fields does
  * a given service level see, and how." A scaffold's 7 fields are filled
  * ONCE by a human; every output (free teaser, DWY tier, DFY tier) is a
@@ -277,6 +286,8 @@ export function applyDosing(scaffold: ScaffoldJudgment, line: Line, tier: DwyTie
     },
   };
 }
+
+// MIRROR-SYNC-END
 
 // ── Publish-path integration (Next.js only — the actual publish button
 // lives in src/app/admin/dashboard/page.tsx, a separate, older pipeline

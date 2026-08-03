@@ -1,6 +1,9 @@
 /**
  * Commercial Dosing Engine — Signal & Friction
  *
+ * See src/lib/dosing.ts for what the marker below is for.
+ * MIRROR-SYNC-START
+ *
  * Single source of truth for "which of the 7 scaffold judgment fields does
  * a given service level see, and how." A scaffold's 7 fields are filled
  * ONCE by a human; every output (free teaser, DWY tier, DFY tier) is a
@@ -269,3 +272,5 @@ export function applyDosing(scaffold: ScaffoldJudgment, line: Line, tier: DwyTie
     },
   };
 }
+
+// MIRROR-SYNC-END

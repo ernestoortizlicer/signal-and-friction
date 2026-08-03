@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAuthHeaders } from "@/lib/supabase";
-import ReasoningManual from "./ReasoningManual";
+import ReasoningActivities from "./ReasoningActivities";
 
 interface Draft {
   id: string;
@@ -664,7 +664,7 @@ export default function LearningDashboard() {
         {([
           { key: 'hyper_leap', label: 'Combat Mode' },
           { key: 'socratic',   label: 'IP Lab' },
-          { key: 'manual',     label: 'Reasoning Manual' },
+          { key: 'manual',     label: 'Reasoning Engine' },
         ] as const).map(tab => (
           <button
             key={tab.key}
@@ -1456,7 +1456,7 @@ export default function LearningDashboard() {
             exit={{ opacity: 0, y: -8 }}
             className="relative z-10"
           >
-            <ReasoningManual />
+            <ReasoningActivities />
           </motion.div>
         )}
       </AnimatePresence>
