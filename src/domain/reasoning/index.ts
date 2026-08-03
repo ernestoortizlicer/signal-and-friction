@@ -1,6 +1,6 @@
-export * from "./types";
-export { FAMILIES } from "./families";
-export { MECHANISMS } from "./mechanisms";
+export * from "./types.ts";
+export { FAMILIES } from "./families.ts";
+export { MECHANISMS } from "./mechanisms.ts";
 export {
   getMechanism,
   getFamily,
@@ -9,6 +9,6 @@ export {
   getWeakEvidenceMechanisms,
   suggestMechanisms,
   buildHypothesisDraft,
-} from "./selectors";
-export { scaffoldToDiagnosis, type ScaffoldLike } from "./diagnosis";
-export { LEARNING_PROMPTS, getPromptsForMechanism, getPromptsByType } from "./learning-prompts";
+} from "./selectors.ts";
+export { scaffoldToDiagnosis, type ScaffoldLike } from "./diagnosis.ts";
+export { LEARNING_PROMPTS, getPromptsForMechanism, getPromptsByType } from "./learning-prompts.ts";

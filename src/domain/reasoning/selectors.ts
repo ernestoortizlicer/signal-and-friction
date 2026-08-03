@@ -1,11 +1,11 @@
-import { MECHANISMS } from "./mechanisms";
-import { FAMILIES } from "./families";
+import { MECHANISMS } from "./mechanisms.ts";
+import { FAMILIES } from "./families.ts";
 import type {
   ReasoningMechanism,
   FrictionMechanismId,
   PerformanceSignalId,
   DiagnosisHypothesis,
-} from "./types";
+} from "./types.ts";
 
 /**
  * Pure functions only — no I/O, no side effects. These generate CANDIDATE

@@ -7,7 +7,7 @@ import type {
   FrictionMechanismId,
   ConfidenceLevel,
   MagnitudeLevel,
-} from "./types";
+} from "./types.ts";
 
 /**
  * scaffoldToDiagnosis — the Evidence/Decision Engine boundary adapter.

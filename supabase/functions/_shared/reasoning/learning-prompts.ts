@@ -1,5 +1,5 @@
-import { MECHANISMS } from "./mechanisms";
-import type { LearningPrompt } from "./types";
+import { MECHANISMS } from "./mechanisms.ts";
+import type { LearningPrompt } from "./types.ts";
 
 /**
  * Learning prompts derived programmatically from the mechanism registry —

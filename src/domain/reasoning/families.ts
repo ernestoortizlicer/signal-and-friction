@@ -1,4 +1,4 @@
-import type { ReasoningFamily } from "./types";
+import type { ReasoningFamily } from "./types.ts";
 
 export const FAMILIES: ReasoningFamily[] = [
   {

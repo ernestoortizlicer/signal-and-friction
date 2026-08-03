@@ -1,4 +1,4 @@
-import type { ReasoningMechanism } from "./types";
+import type { ReasoningMechanism } from "./types.ts";
 
 /**
  * The 21-mechanism registry — canonical copy. Mirrored verbatim into
