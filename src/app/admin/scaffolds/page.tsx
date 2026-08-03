@@ -19,6 +19,8 @@ import {
   type MagnitudeLevel,
   type ConfidenceLevel,
 } from "@/lib/dosing";
+import ReasoningPanel from "./ReasoningPanel";
+import type { DiagnosisHypothesis } from "@/domain/reasoning";
 
 /**
  * QUERY-STRING SHELL — not a [id] dynamic route.
@@ -66,6 +68,16 @@ interface Scaffold {
   pending_dosing_line: "dwy" | "dfy" | null;
   pending_dosing_tier: "beta_diagnostic" | "intervention" | "monitoring" | "expansion" | "autonomy_kit" | null;
   pending_dosing_triggered_at: string | null;
+  // Phase 3 — reasoning engine integration. reasoning_links defaults to
+  // [] at the DB level (never undefined on a real row); unknowns is
+  // nullable, analyst-authored, never auto-generated. technical_signals
+  // is the raw RawTechnicalSignals object (functions/api/_scan.ts) —
+  // loosely typed here since ReasoningPanel only reads a few fields off
+  // it and this file already has its own separate human-readable
+  // `evidence` rows for display.
+  reasoning_links: DiagnosisHypothesis[];
+  unknowns: string | null;
+  technical_signals: Record<string, unknown> | null;
 }
 
 const SUPABASE_URL =
@@ -206,6 +218,7 @@ function ScaffoldEditor() {
           funnel_stage: row.funnel_stage ?? "",
           projected_impact_magnitude: row.projected_impact_magnitude ?? "",
           confidence_level: row.confidence_level ?? "",
+          unknowns: row.unknowns ?? "",
         });
         setLoomScriptDraft(row.loom_script ?? "");
 
@@ -242,6 +255,7 @@ function ScaffoldEditor() {
       the_decision: drafts.the_decision,
       what_to_avoid: drafts.what_to_avoid,
       confidence_and_why: drafts.confidence_and_why,
+      unknowns: drafts.unknowns ?? "",
     };
     // The 3 classifiers are DB-CHECK-constrained to specific enum values —
     // only send them once a real option is picked, never an empty string,
@@ -611,6 +625,20 @@ function ScaffoldEditor() {
           </div>
         </div>
 
+        <div className="space-y-1.5 mt-6 pt-4 border-t border-[#D4A853]/8">
+          <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">What remains unknown</label>
+          <p className="text-xs text-[#7A6F65] font-mono">
+            Never auto-generated — this is your own honest statement of what this diagnosis can&apos;t yet establish. Blank is a real answer only if you&apos;ve actually confirmed there&apos;s nothing worth flagging, not a default.
+          </p>
+          <textarea
+            value={drafts.unknowns ?? ""}
+            onChange={(e) => setDrafts((prev) => ({ ...prev, unknowns: e.target.value }))}
+            rows={3}
+            className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] placeholder:text-[#7A6F65] focus:outline-none focus:border-[#D4A853]/40"
+            placeholder="—"
+          />
+        </div>
+
         <div className="flex items-center gap-3 mt-5 pt-4 border-t border-[#D4A853]/8">
           <button
             type="button"
@@ -623,6 +651,14 @@ function ScaffoldEditor() {
           <span className="text-xs font-mono text-[#7A6F65]">Updated {formatDate(scaffold.updated_at)}</span>
         </div>
       </AdminCard>
+
+      <ReasoningPanel
+        scaffoldId={scaffold.id}
+        frictionMechanism={scaffold.friction_mechanism}
+        technicalSignals={scaffold.technical_signals}
+        reasoningLinks={scaffold.reasoning_links ?? []}
+        onSaved={(links) => setScaffold((prev) => (prev ? { ...prev, reasoning_links: links } : prev))}
+      />
 
       <AdminCard>
         <span className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-[0.15em] block mb-1">

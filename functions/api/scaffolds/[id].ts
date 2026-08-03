@@ -34,9 +34,47 @@ const EDITABLE_FIELDS = [
   'funnel_stage',
   'projected_impact_magnitude',
   'confidence_level',
+  'unknowns',
 ] as const;
 
 type EditableField = (typeof EDITABLE_FIELDS)[number];
+
+// reasoning_links is validated separately from EDITABLE_FIELDS above
+// because it's a JSONB array, not a string like every other field — the
+// generic string-typed loop below can't handle it. Phase 3 constraint,
+// enforced server-side (not just in the admin UI, which is trivially
+// bypassable): every attached mechanism MUST carry a real, non-empty
+// analyst-authored rationale. A suggested mechanism with no rationale is
+// rejected outright — this is the boundary that makes "a suggestion
+// never counts as evidence" actually true rather than a UI convention.
+interface ReasoningLinkInput {
+  id: unknown;
+  mechanismId: unknown;
+  frictionMechanism: unknown;
+  status: unknown;
+  evidenceStrength: unknown;
+  analystRationale: unknown;
+  linkedObservationIds: unknown;
+}
+
+function validateReasoningLinks(value: unknown): { ok: true; links: ReasoningLinkInput[] } | { ok: false; error: string } {
+  if (!Array.isArray(value)) {
+    return { ok: false, error: 'reasoning_links must be an array' };
+  }
+  for (const [i, raw] of value.entries()) {
+    const link = raw as Partial<ReasoningLinkInput>;
+    if (typeof link.mechanismId !== 'string' || !link.mechanismId) {
+      return { ok: false, error: `reasoning_links[${i}]: mechanismId is required` };
+    }
+    if (typeof link.analystRationale !== 'string' || link.analystRationale.trim().length === 0) {
+      return { ok: false, error: `reasoning_links[${i}]: analystRationale is required — an attached mechanism with no stated reason is not allowed. A suggestion is not evidence until an analyst explains why it applies here.` };
+    }
+    if (link.status !== 'modeled' && link.status !== 'pending') {
+      return { ok: false, error: `reasoning_links[${i}]: status must be "modeled" or "pending" — never "measured", a hypothesis is not itself a measurement` };
+    }
+  }
+  return { ok: true, links: value as ReasoningLinkInput[] };
+}
 
 export const onRequestPatch = async ({
   params,
@@ -62,10 +100,11 @@ export const onRequestPatch = async ({
     return Response.json({ error: 'Invalid request body' }, { status: 400, headers: CORS });
   }
 
-  const disallowedKeys = Object.keys(payload).filter((k) => !EDITABLE_FIELDS.includes(k as EditableField));
+  const allKeys: string[] = [...EDITABLE_FIELDS, 'reasoning_links'];
+  const disallowedKeys = Object.keys(payload).filter((k) => !allKeys.includes(k));
   if (disallowedKeys.length > 0) {
     return Response.json(
-      { error: `Not editable via this endpoint: ${disallowedKeys.join(', ')}. Only the 7 judgment fields can be saved here.` },
+      { error: `Not editable via this endpoint: ${disallowedKeys.join(', ')}.` },
       { status: 400, headers: CORS }
     );
   }
@@ -78,6 +117,14 @@ export const onRequestPatch = async ({
       }
       update[field] = payload[field];
     }
+  }
+
+  if (payload.reasoning_links !== undefined) {
+    const result = validateReasoningLinks(payload.reasoning_links);
+    if (!result.ok) {
+      return Response.json({ error: result.error }, { status: 400, headers: CORS });
+    }
+    update.reasoning_links = result.links;
   }
 
   if (Object.keys(update).length === 1) {

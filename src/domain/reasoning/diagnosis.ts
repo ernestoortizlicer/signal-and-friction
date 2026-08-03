@@ -1,6 +1,7 @@
 import type {
   Diagnosis,
   DiagnosisEvidence,
+  DiagnosisHypothesis,
   DiagnosisJudgment,
   DiagnosisRecommendation,
   DiagnosisUncertainty,
@@ -12,19 +13,24 @@ import type {
 /**
  * scaffoldToDiagnosis — the Evidence/Decision Engine boundary adapter.
  * ════════════════════════════════════════════════════════════════════════════
- * Maps the EXISTING diagnostic_scaffolds row shape (7 judgment fields +
- * evidence + technical_signals — unchanged by this file) into the canonical
- * Diagnosis object. This is Phase 1/2 work: a read-only projection, no
- * schema change, no new columns required to use it. `observations` and
- * `hypotheses` are always empty until Phase 3 adds real `reasoning_links`
- * storage — that's a deliberate, honest default (no fabricated data),
- * not a placeholder pretending to be real.
+ * Maps the diagnostic_scaffolds row shape (7 judgment fields + evidence +
+ * technical_signals, unchanged since Phase 1, plus Phase 3's additive
+ * reasoning_links/unknowns columns) into the canonical Diagnosis object.
  *
- * `uncertainty.unknowns` reads confidence_and_why today ONLY as a stopgap
- * display value, clearly not the same thing as a dedicated unknowns field —
- * Phase 3 replaces this with the real analyst-authored column. Marking this
- * explicitly rather than silently treating confidence_and_why as if it were
- * always about uncertainty, which it isn't.
+ * `hypotheses` reads the real `reasoning_links` column. A scaffold created
+ * before that column existed simply has an empty array by default (the
+ * migration is additive with DEFAULT '[]'::jsonb) — an honest, correct
+ * state, not something requiring backfill. `observations` stays empty:
+ * there is no UI yet for authoring a standalone observation independent
+ * of a mechanism hypothesis, so returning fabricated ones would be worse
+ * than returning none — a real gap, left honest rather than papered over.
+ *
+ * `uncertainty.unknowns` reads the real, analyst-authored `unknowns`
+ * column. Never derived from confidence_and_why or anything else —
+ * conflating "confidence in what was found" with "what remains unknown"
+ * is exactly the kind of layer-collapsing this architecture exists to
+ * prevent. Empty string for scaffolds where the analyst hasn't written
+ * anything yet, distinct from "no uncertainty exists."
  */
 
 export interface ScaffoldLike {
@@ -43,6 +49,10 @@ export interface ScaffoldLike {
   confidence_and_why: string | null;
   confidence_level: ConfidenceLevel | null;
   status: "draft" | "pushed_to_deliverable";
+  /** Phase 3. Defaults to [] at the DB level — always a real array, never undefined, on any row created after the migration. Optional here only so pre-Phase-3 callers/fixtures that don't set it still type-check. */
+  reasoning_links?: DiagnosisHypothesis[];
+  /** Phase 3. Nullable at the DB level — analyst hasn't necessarily written anything. */
+  unknowns?: string | null;
 }
 
 function mapEvidence(rows: ScaffoldLike["evidence"]): DiagnosisEvidence[] {
@@ -76,13 +86,12 @@ function mapRecommendation(s: ScaffoldLike): DiagnosisRecommendation | null {
   };
 }
 
-function mapUncertainty(_s: ScaffoldLike): DiagnosisUncertainty {
-  // Deliberately NOT reading confidence_and_why here — that field is about
-  // confidence in what WAS found, not what remains unknown; conflating the
-  // two would be exactly the kind of layer-collapsing the architecture is
-  // supposed to prevent. Returns genuinely empty until Phase 3's dedicated
-  // `unknowns` column exists — an honest gap, not a stopgap guess.
-  return { unknowns: "", suggestedUnknowns: [] };
+function mapUncertainty(s: ScaffoldLike): DiagnosisUncertainty {
+  return { unknowns: s.unknowns ?? "", suggestedUnknowns: [] };
+}
+
+function mapHypotheses(s: ScaffoldLike): DiagnosisHypothesis[] {
+  return s.reasoning_links ?? [];
 }
 
 export function scaffoldToDiagnosis(s: ScaffoldLike): Diagnosis {
@@ -92,8 +101,8 @@ export function scaffoldToDiagnosis(s: ScaffoldLike): Diagnosis {
     domain: s.domain,
     scannedAt: s.scanned_at,
     evidence: mapEvidence(s.evidence),
-    observations: [], // Phase 3: populated from reasoning_links
-    hypotheses: [],   // Phase 3: populated from reasoning_links
+    observations: [],
+    hypotheses: mapHypotheses(s),
     judgment: mapJudgment(s),
     recommendation: mapRecommendation(s),
     uncertainty: mapUncertainty(s),
