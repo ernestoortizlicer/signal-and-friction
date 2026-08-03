@@ -415,7 +415,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
         <div className="max-w-[900px] mx-auto">
           <motion.div variants={itemVariants} className="flex items-center gap-3 mb-6">
             <span className="font-mono text-xs uppercase tracking-[0.15em] text-[#B0A89E]">
-              Revenue Friction Diagnostic
+              Behavioral Diagnostic
             </span>
             <span className="w-1 h-1 rounded-full bg-white/10" />
             <span className="font-mono text-xs uppercase tracking-[0.15em] text-[#7A6F65]">{d.date}</span>
@@ -428,13 +428,26 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
             {d.clientName}
           </motion.h1>
 
+          {/* Phase 6.1 — this legacy template renders for every historical
+              deliverable and any future non-dosed manual publish (see
+              DeliverableClientView's own offerPriceId routing above) —
+              pure static text, no data/structure change, so fixing it
+              doesn't touch the backward-compatibility guarantee. Two real
+              errors corrected: "dashboard" read as generic admin-tool
+              language (Strategic Audit, Part 5); "the dominant cognitive
+              friction mechanism" named only one of six mechanism
+              families as if it were the whole taxonomy — the client's
+              real mechanism (rendered dynamically below) could just as
+              easily be a trust deficit or an ordering error. "Recommended
+              intervention" -> "recommended decision", the actual term
+              used everywhere else in this system. */}
           <motion.p
             variants={itemVariants}
             className="text-lg text-[#B0A89E] max-w-[60ch] leading-relaxed font-serif font-light"
           >
-            This dashboard displays your custom Signal &amp; Friction diagnostic brief. Below is the clinical
-            breakdown of your funnel signal, the dominant cognitive friction mechanism, and the recommended
-            intervention — with every figure tagged by how we know it.
+            This is your private Signal &amp; Friction diagnosis. Below is the clinical breakdown of what
+            we observed, the dominant friction mechanism behind it, and the recommended decision — with
+            every figure tagged by how we know it.
           </motion.p>
 
           {/* Status strip — renders only when this deliverable actually has
