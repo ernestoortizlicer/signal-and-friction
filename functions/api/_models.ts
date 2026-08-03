@@ -27,3 +27,11 @@ export const DIAGNOSTIC_MAX_TOKENS = 4096;
  * the model to run long.
  */
 export const LOOM_SCRIPT_MAX_TOKENS = 2048;
+
+/**
+ * Output ceiling for the reasoning-challenge critique (Phase 3.1) — five
+ * short JSON arrays of one-to-two-sentence items plus one question, not
+ * prose. 1024 is generous headroom for that without inviting a rambling
+ * critique that becomes a chore to read between diagnoses.
+ */
+export const REASONING_CHALLENGE_MAX_TOKENS = 1024;

@@ -20,6 +20,7 @@ import {
   type ConfidenceLevel,
 } from "@/lib/dosing";
 import ReasoningPanel from "./ReasoningPanel";
+import ReasoningChallenge from "./ReasoningChallenge";
 import type { DiagnosisHypothesis } from "@/domain/reasoning";
 
 /**
@@ -168,6 +169,10 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
     year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
   });
+}
+
+function fieldMeta(key: (typeof JUDGMENT_FIELDS)[number]["key"]) {
+  return JUDGMENT_FIELDS.find((f) => f.key === key)!;
 }
 
 function ScaffoldEditor() {
@@ -542,47 +547,139 @@ function ScaffoldEditor() {
       </AdminCard>
 
       <AdminCard>
-        <span className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-[0.15em] block mb-4">
+        <span className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-[0.15em] block mb-1">
           Judgment — your read, in your words
         </span>
-        <div className="space-y-5">
-          {JUDGMENT_FIELDS.map((f) =>
-            f.key === "friction_mechanism" ? (
-              <div key={f.key} className="space-y-1.5">
-                <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">{f.label}</label>
-                <p className="text-xs text-[#7A6F65] font-mono">{f.question}</p>
-                <select
-                  value={drafts[f.key] ?? ""}
-                  onChange={(e) => setDrafts((prev) => ({ ...prev, [f.key]: e.target.value }))}
-                  className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
-                >
-                  <option value="">— Select —</option>
-                  {FRICTION_MECHANISM_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              <div key={f.key} className="space-y-1.5">
-                <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">{f.label}</label>
-                <p className="text-xs text-[#7A6F65] font-mono">{f.question}</p>
-                <textarea
-                  value={drafts[f.key] ?? ""}
-                  onChange={(e) => setDrafts((prev) => ({ ...prev, [f.key]: e.target.value }))}
-                  rows={3}
-                  className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] placeholder:text-[#7A6F65] focus:outline-none focus:border-[#D4A853]/40"
-                  placeholder="—"
-                />
-              </div>
-            )
-          )}
+        <p className="text-xs text-[#7A6F65] font-mono mb-5">
+          Measured evidence above → what you observed → your behavioral hypothesis → your judgment → your recommendation → what remains unknown. Each layer below is distinct — nothing here is inferred from the one before it.
+        </p>
+
+        {/* OBSERVATION — where, specifically, does this happen. */}
+        <div className="space-y-4">
+          <span className="font-mono text-[10px] text-[#D4A853]/50 uppercase tracking-[0.2em] block">Observation</span>
+          <div className="space-y-1.5">
+            <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">{fieldMeta("friction_mechanism").label}</label>
+            <p className="text-xs text-[#7A6F65] font-mono">{fieldMeta("friction_mechanism").question}</p>
+            <select
+              value={drafts.friction_mechanism ?? ""}
+              onChange={(e) => setDrafts((prev) => ({ ...prev, friction_mechanism: e.target.value }))}
+              className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
+            >
+              <option value="">— Select —</option>
+              {FRICTION_MECHANISM_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">{fieldMeta("specific_friction_point").label}</label>
+            <p className="text-xs text-[#7A6F65] font-mono">{fieldMeta("specific_friction_point").question}</p>
+            <textarea
+              value={drafts.specific_friction_point ?? ""}
+              onChange={(e) => setDrafts((prev) => ({ ...prev, specific_friction_point: e.target.value }))}
+              rows={3}
+              className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] placeholder:text-[#7A6F65] focus:outline-none focus:border-[#D4A853]/40"
+              placeholder="—"
+            />
+          </div>
         </div>
 
+        {/* BEHAVIORAL HYPOTHESIS — the causal explanation, plus an optional,
+            deliberately restrained cross-check against the reasoning
+            registry. Grouped in one bordered cluster because they are the
+            same conceptual layer: your own words first, a named mechanism
+            second, never the other way around. */}
         <div className="mt-6 pt-5 border-t border-[#D4A853]/8 space-y-4">
-          <span className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-[0.15em] block">
-            Classifiers — power the free teaser &amp; dosed disclosure
-          </span>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <span className="font-mono text-[10px] text-[#D4A853]/50 uppercase tracking-[0.2em] block">Behavioral Hypothesis</span>
+          <div className="rounded-lg border border-[#D4A853]/10 bg-black/10 p-3 space-y-3">
+            <div className="space-y-1.5">
+              <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">{fieldMeta("why_blocks_conversion").label}</label>
+              <p className="text-xs text-[#7A6F65] font-mono">{fieldMeta("why_blocks_conversion").question}</p>
+              <textarea
+                value={drafts.why_blocks_conversion ?? ""}
+                onChange={(e) => setDrafts((prev) => ({ ...prev, why_blocks_conversion: e.target.value }))}
+                rows={3}
+                className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] placeholder:text-[#7A6F65] focus:outline-none focus:border-[#D4A853]/40"
+                placeholder="—"
+              />
+            </div>
+            <ReasoningPanel
+              scaffoldId={scaffold.id}
+              frictionMechanism={scaffold.friction_mechanism}
+              technicalSignals={scaffold.technical_signals}
+              reasoningLinks={scaffold.reasoning_links ?? []}
+              onSaved={(links) => setScaffold((prev) => (prev ? { ...prev, reasoning_links: links } : prev))}
+            />
+          </div>
+        </div>
+
+        {/* JUDGMENT — how sure are you, and why. */}
+        <div className="mt-6 pt-5 border-t border-[#D4A853]/8 space-y-4">
+          <span className="font-mono text-[10px] text-[#D4A853]/50 uppercase tracking-[0.2em] block">Judgment</span>
+          <div className="space-y-1.5">
+            <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">Confidence Level</label>
+            <select
+              value={drafts.confidence_level ?? ""}
+              onChange={(e) => setDrafts((prev) => ({ ...prev, confidence_level: e.target.value }))}
+              className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
+            >
+              <option value="">— Unset —</option>
+              {LEVEL_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">{fieldMeta("confidence_and_why").label}</label>
+            <p className="text-xs text-[#7A6F65] font-mono">{fieldMeta("confidence_and_why").question}</p>
+            <textarea
+              value={drafts.confidence_and_why ?? ""}
+              onChange={(e) => setDrafts((prev) => ({ ...prev, confidence_and_why: e.target.value }))}
+              rows={3}
+              className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] placeholder:text-[#7A6F65] focus:outline-none focus:border-[#D4A853]/40"
+              placeholder="—"
+            />
+          </div>
+        </div>
+
+        {/* RECOMMENDATION — what should happen, what to avoid, and the
+            classifiers that power the free teaser & dosed disclosure. */}
+        <div className="mt-6 pt-5 border-t border-[#D4A853]/8 space-y-4">
+          <span className="font-mono text-[10px] text-[#D4A853]/50 uppercase tracking-[0.2em] block">Recommendation</span>
+          <div className="space-y-1.5">
+            <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">{fieldMeta("projected_impact").label}</label>
+            <p className="text-xs text-[#7A6F65] font-mono">{fieldMeta("projected_impact").question}</p>
+            <textarea
+              value={drafts.projected_impact ?? ""}
+              onChange={(e) => setDrafts((prev) => ({ ...prev, projected_impact: e.target.value }))}
+              rows={3}
+              className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] placeholder:text-[#7A6F65] focus:outline-none focus:border-[#D4A853]/40"
+              placeholder="—"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">{fieldMeta("the_decision").label}</label>
+            <p className="text-xs text-[#7A6F65] font-mono">{fieldMeta("the_decision").question}</p>
+            <textarea
+              value={drafts.the_decision ?? ""}
+              onChange={(e) => setDrafts((prev) => ({ ...prev, the_decision: e.target.value }))}
+              rows={3}
+              className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] placeholder:text-[#7A6F65] focus:outline-none focus:border-[#D4A853]/40"
+              placeholder="—"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">{fieldMeta("what_to_avoid").label}</label>
+            <p className="text-xs text-[#7A6F65] font-mono">{fieldMeta("what_to_avoid").question}</p>
+            <textarea
+              value={drafts.what_to_avoid ?? ""}
+              onChange={(e) => setDrafts((prev) => ({ ...prev, what_to_avoid: e.target.value }))}
+              rows={3}
+              className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] placeholder:text-[#7A6F65] focus:outline-none focus:border-[#D4A853]/40"
+              placeholder="—"
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">Funnel Stage</label>
               <select
@@ -609,23 +706,12 @@ function ScaffoldEditor() {
                 ))}
               </select>
             </div>
-            <div className="space-y-1.5">
-              <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">Confidence Level</label>
-              <select
-                value={drafts.confidence_level ?? ""}
-                onChange={(e) => setDrafts((prev) => ({ ...prev, confidence_level: e.target.value }))}
-                className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40"
-              >
-                <option value="">— Unset —</option>
-                {LEVEL_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-            </div>
           </div>
         </div>
 
-        <div className="space-y-1.5 mt-6 pt-4 border-t border-[#D4A853]/8">
+        {/* UNKNOWNS — the last layer, deliberately last. */}
+        <div className="space-y-1.5 mt-6 pt-5 border-t border-[#D4A853]/8">
+          <span className="font-mono text-[10px] text-[#D4A853]/50 uppercase tracking-[0.2em] block mb-2">Unknowns</span>
           <label className="block font-mono text-xs text-[#F5F0EB] uppercase tracking-wide">What remains unknown</label>
           <p className="text-xs text-[#7A6F65] font-mono">
             Never auto-generated — this is your own honest statement of what this diagnosis can&apos;t yet establish. Blank is a real answer only if you&apos;ve actually confirmed there&apos;s nothing worth flagging, not a default.
@@ -636,6 +722,23 @@ function ScaffoldEditor() {
             rows={3}
             className="w-full bg-black/40 border border-[#D4A853]/15 rounded-lg px-3 py-2 text-sm font-mono text-[#F5F0EB] placeholder:text-[#7A6F65] focus:outline-none focus:border-[#D4A853]/40"
             placeholder="—"
+          />
+        </div>
+
+        <div className="mt-6 pt-5 border-t border-[#D4A853]/8">
+          <ReasoningChallenge
+            domain={scaffold.domain}
+            targetUrl={scaffold.target_url}
+            evidence={scaffold.evidence}
+            frictionMechanism={drafts.friction_mechanism ?? ""}
+            specificFrictionPoint={drafts.specific_friction_point ?? ""}
+            whyBlocksConversion={drafts.why_blocks_conversion ?? ""}
+            projectedImpact={drafts.projected_impact ?? ""}
+            theDecision={drafts.the_decision ?? ""}
+            whatToAvoid={drafts.what_to_avoid ?? ""}
+            confidenceAndWhy={drafts.confidence_and_why ?? ""}
+            unknowns={drafts.unknowns ?? ""}
+            attachedHypotheses={scaffold.reasoning_links ?? []}
           />
         </div>
 
@@ -651,14 +754,6 @@ function ScaffoldEditor() {
           <span className="text-xs font-mono text-[#7A6F65]">Updated {formatDate(scaffold.updated_at)}</span>
         </div>
       </AdminCard>
-
-      <ReasoningPanel
-        scaffoldId={scaffold.id}
-        frictionMechanism={scaffold.friction_mechanism}
-        technicalSignals={scaffold.technical_signals}
-        reasoningLinks={scaffold.reasoning_links ?? []}
-        onSaved={(links) => setScaffold((prev) => (prev ? { ...prev, reasoning_links: links } : prev))}
-      />
 
       <AdminCard>
         <span className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-[0.15em] block mb-1">
