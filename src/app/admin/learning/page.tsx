@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAuthHeaders } from "@/lib/supabase";
 import ReasoningActivities from "./ReasoningActivities";
+import DiagnosticCalibration from "./DiagnosticCalibration";
 
 interface Draft {
   id: string;
@@ -242,7 +243,7 @@ function InlineMarkdown({ text, className }: { text: string; className?: string 
 }
 
 export default function LearningDashboard() {
-  const [activeTab, setActiveTab] = useState<'socratic' | 'hyper_leap' | 'manual'>('hyper_leap');
+  const [activeTab, setActiveTab] = useState<'socratic' | 'hyper_leap' | 'manual' | 'calibration'>('calibration');
   const [articles, setArticles] = useState<Article[]>([]);
   const [selectedArticleSlug, setSelectedArticleSlug] = useState<string>("socratic-funnel-diagnostics");
   const [drafts, setDrafts] = useState<Draft[]>([]);
@@ -662,9 +663,10 @@ export default function LearningDashboard() {
       {/* Tabs */}
       <div className="flex border-b border-[#D4A853]/10 gap-6 relative z-10">
         {([
-          { key: 'hyper_leap', label: 'Combat Mode' },
-          { key: 'socratic',   label: 'IP Lab' },
-          { key: 'manual',     label: 'Reasoning Engine' },
+          { key: 'calibration', label: 'Diagnostic Calibration' },
+          { key: 'hyper_leap',  label: 'Combat Mode (legacy)' },
+          { key: 'socratic',    label: 'IP Lab' },
+          { key: 'manual',      label: 'Reasoning Engine' },
         ] as const).map(tab => (
           <button
             key={tab.key}
@@ -682,6 +684,19 @@ export default function LearningDashboard() {
       </div>
 
       <AnimatePresence mode="wait">
+
+        {/* ── DIAGNOSTIC CALIBRATION SYSTEM v3 ─────────────────────── */}
+        {activeTab === 'calibration' && (
+          <motion.div
+            key="calibration"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="relative z-10"
+          >
+            <DiagnosticCalibration />
+          </motion.div>
+        )}
 
         {/* ── COMBAT MODE (Hyper-Leap) ─────────────────────────────── */}
         {activeTab === 'hyper_leap' && (
