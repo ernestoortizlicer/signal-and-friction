@@ -783,6 +783,11 @@ export default function AdminDashboard() {
       projectedImpactNote: dosed?.projectedImpactNote ?? undefined,
       confidenceLevel: dosed ? (dosed.confidenceLevel ?? undefined) : (diagConfidenceLevel ?? undefined),
       confidenceReason: dosed ? (dosed.confidenceReason ?? undefined) : (diagConfidenceReason || undefined),
+      // Phase 4.0 — previously computed by mapDosedScaffoldToDelivery()
+      // and dropped here without ever reaching the payload. undefined
+      // (not null) for a non-dosed/legacy manual delivery or a DWY line,
+      // matching every other optional field's "omit the key" convention.
+      dfyDelivery: dosed?.dfyDelivery ?? undefined,
       avoid: cleanAvoid,
       beforeAfter: deliverBeforeTitle.trim()
         ? {

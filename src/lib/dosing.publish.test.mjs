@@ -49,5 +49,39 @@ check("DWY intervention: avoid array reveals the real avoid text", interventionD
 const dfyBetaDelivery = mapDosedScaffoldToDelivery(SAMPLE, "dfy", "beta_diagnostic");
 check("DFY beta: finalDecision revealed immediately (DFY has no disclosure withholding)", dfyBetaDelivery.finalDecision?.action === SAMPLE.the_decision);
 
+// Phase 4.0 — dfyDelivery must no longer be silently dropped between
+// applyDosing() and the delivery payload.
+check("DWY beta: dfyDelivery is null (DWY has no execution/monitoring/handoff concept)", betaDelivery.dfyDelivery === null);
+check("DFY beta: dfyDelivery is present (not dropped)", dfyBetaDelivery.dfyDelivery !== null);
+check(
+  "DFY beta: execution_summary honestly labeled NOT_YET_DELIVERED (Beta scope excludes it, scaffold has none)",
+  dfyBetaDelivery.dfyDelivery?.execution_summary === "Not yet delivered."
+);
+
+const scaffoldWithRealExecution = { ...SAMPLE, dfy_execution_summary: "Rebuilt the pricing page trial-end messaging directly." };
+const dfyInterventionDelivery = mapDosedScaffoldToDelivery(scaffoldWithRealExecution, "dfy", "intervention");
+check(
+  "DFY intervention: real execution_summary survives the mapping (DFY_TIER_SCOPE.intervention.includesExecutionSummary)",
+  dfyInterventionDelivery.dfyDelivery?.execution_summary === "Rebuilt the pricing page trial-end messaging directly."
+);
+check(
+  "DFY intervention: monitoring_findings still honestly NOT_YET_DELIVERED (out of scope at this tier)",
+  dfyInterventionDelivery.dfyDelivery?.monitoring_findings === "Not yet delivered."
+);
+
+const scaffoldWithFullDfyWork = {
+  ...SAMPLE,
+  dfy_execution_summary: "Rebuilt the pricing page trial-end messaging directly.",
+  dfy_monitoring_findings: "Trial-to-paid conversion up 4.2pts over 30 days, measured via Stripe.",
+  dfy_handoff_documentation: "Runbook: review trial messaging quarterly against churn cohort data.",
+};
+const dfyAutonomyDelivery = mapDosedScaffoldToDelivery(scaffoldWithFullDfyWork, "dfy", "autonomy_kit");
+check(
+  "DFY autonomy_kit: all 3 dfyDelivery fields carry real content (full DFY_TIER_SCOPE)",
+  dfyAutonomyDelivery.dfyDelivery?.execution_summary === scaffoldWithFullDfyWork.dfy_execution_summary &&
+  dfyAutonomyDelivery.dfyDelivery?.monitoring_findings === scaffoldWithFullDfyWork.dfy_monitoring_findings &&
+  dfyAutonomyDelivery.dfyDelivery?.handoff_documentation === scaffoldWithFullDfyWork.dfy_handoff_documentation
+);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail > 0 ? 1 : 0);

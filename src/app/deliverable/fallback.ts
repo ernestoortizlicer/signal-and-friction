@@ -49,6 +49,20 @@ export interface AvoidItem {
   reason: string; // why it backfires
 }
 
+// Phase 4.0 — the DFY execution/monitoring/handoff axis, restored from
+// src/lib/dosing.ts's DfyDeliveryFields (mapDosedScaffoldToDelivery()).
+// Each sub-field is either real delivered content or the literal string
+// NOT_YET_DELIVERED ("Not yet delivered.") from dosing.ts — an honest
+// label, not an omission, so a DFY client sees a stated absence rather
+// than a missing section that reads as broken. Optional/nullable here
+// only so DWY deliveries and historical JSON without this key keep
+// working unchanged — nothing renders from this yet (see Phase 4.3).
+export interface DfyDeliveryData {
+  execution_summary: string;
+  monitoring_findings: string;
+  handoff_documentation: string;
+}
+
 export interface LearningModule {
   id: string;
   title: string;
@@ -117,6 +131,10 @@ export interface DeliverableData {
   // without this field is automatically excluded from the training case
   // bank (see admin/learning/page.tsx) rather than guessed at.
   groundTruthMechanism?: FrictionMechanism;
+  // Phase 4.0 — see DfyDeliveryData above. null/undefined for DWY and for
+  // every deliverable published before this field existed; not rendered
+  // anywhere yet (Phase 4.3 adds the actual client-facing module).
+  dfyDelivery?: DfyDeliveryData | null;
   diagnosis: {
     signal: string;
     friction: {

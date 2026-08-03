@@ -301,6 +301,21 @@ export function applyDosing(scaffold: ScaffoldJudgment, line: Line, tier: DwyTie
 // and it's a pure function specifically so the regression test can call
 // the exact same logic the publish button calls — not a reimplementation
 // that could silently drift from what actually ships.
+// Phase 4.0 (2026-08-11 audit fix): dfyDelivery was computed by
+// applyDosing() on every DFY call but this function never read it —
+// meaning DFY_TIER_SCOPE's entire execution_summary/monitoring_findings/
+// handoff_documentation upsell axis was silently discarded between
+// applyDosing() and the delivery payload, for every DFY publish that has
+// ever gone out. This is the fix: carry it through, unchanged in meaning.
+// Only ever non-null for line === "dfy" — DWY has no execution/
+// monitoring/handoff concept, matching applyDosing()'s own DosedOutput
+// shape (dfyDelivery is optional there and only set on the DFY branch).
+export interface DfyDeliveryFields {
+  execution_summary: string;
+  monitoring_findings: string;
+  handoff_documentation: string;
+}
+
 export interface DosedDeliveryFields {
   friction: { mechanism: string; rootCause: string };
   // null, not an empty-but-present object — omitted entirely when the
@@ -311,6 +326,7 @@ export interface DosedDeliveryFields {
   confidenceLevel: ConfidenceLevel | null;
   confidenceReason: string | null;
   projectedImpactNote: string | null;
+  dfyDelivery: DfyDeliveryFields | null;
 }
 
 export function mapDosedScaffoldToDelivery(
@@ -341,5 +357,6 @@ export function mapDosedScaffoldToDelivery(
     confidenceLevel: scaffold.confidence_level,
     confidenceReason: dosed.fields.confidence_and_why ?? null,
     projectedImpactNote: dosed.fields.projected_impact ?? null,
+    dfyDelivery: dosed.dfyDelivery ?? null,
   };
 }
