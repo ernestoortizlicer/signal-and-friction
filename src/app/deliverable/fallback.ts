@@ -91,6 +91,14 @@ export interface BeforeAfterData {
   afterConfirmation?: string; // e.g. "No credit card required."
   afterDescription?: string; // the "what changed" paragraph
   afterGain: string;
+  // Phase 4.3 — "before/after claims must distinguish expected, observed,
+  // and measured states." Defaults to "expected" when absent (the safe
+  // default — never silently implies something was measured without an
+  // explicit, deliberate label saying so). Every deliverable published
+  // before this field existed is a pre-Phase-4.3 legacy record rendered
+  // by the untouched old template anyway, so this only ever matters for
+  // the new policy-composed view.
+  afterStatus?: "expected" | "measured";
 }
 
 export interface DeliverableData {
@@ -100,6 +108,15 @@ export interface DeliverableData {
   consultant: string;
   loomUrl: string;
   segment?: 'high_ticket' | 'microdosing';
+  // Phase 4.3 — the exact offer-catalog.ts priceId this delivery was
+  // dosed for (e.g. "price_dfy_intervention"). Drives the service-aware
+  // policy-composed view (src/lib/delivery-policy.ts) when present and
+  // resolvable; absent on every deliverable published before Phase 4.3
+  // and on any non-dosed/manual delivery, both of which fall through to
+  // the original segment-based rendering unchanged — this field is the
+  // entire routing switch for the new architecture, and its absence is
+  // what backward compatibility depends on.
+  offerPriceId?: string;
   currentPhase?: 'diagnostic' | 'intervention' | 'monitoring' | 'expansion' | 'autonomy';
   progressPercent?: number;
   // Previously hardcoded — now dynamic per client
@@ -114,6 +131,12 @@ export interface DeliverableData {
   evidence?: EvidenceItem[];
   // The single grounded, modeled projection range. Never a fixed number.
   projectedImpact?: ImpactRange;
+  // Dosed deliveries carry the scaffold's free-text projected_impact as a
+  // note (see dosing.ts's DosedDeliveryFields) rather than a structured
+  // low/high range — the 7-field scaffold model has no equivalent range
+  // concept. Already sent by buildDeliveryPayload(); adding it to the
+  // type here just makes that existing runtime shape honest.
+  projectedImpactNote?: string;
   // 0–100. Rendered visibly with confidenceReason — elite consultancies
   // state their own uncertainty. green >=65 / amber >=40 / red <40.
   confidenceLevel?: number;

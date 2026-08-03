@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAuthHeaders } from "@/lib/supabase";
 import { AdminStatCard, RevenueProgressBar } from "@/components/admin/AdminComponents";
-import { mapDosedScaffoldToDelivery, DWY_DOSING, type ScaffoldJudgment, type Line, type DwyTier } from "@/lib/dosing";
+import { mapDosedScaffoldToDelivery, NOT_YET_DELIVERED, DWY_DOSING, type ScaffoldJudgment, type Line, type DwyTier } from "@/lib/dosing";
 import { translateHypothesesForClient } from "@/lib/hypothesis-translation";
 import type { DiagnosisHypothesis } from "@/domain/reasoning";
+import { priceIdForLineTier, getDeliveryPolicy, type ServiceDeliveryPolicy } from "@/lib/delivery-policy";
 
 interface DashboardMetrics {
   totalLeads: number;
@@ -397,6 +398,7 @@ export default function AdminDashboard() {
   const [showDryRun, setShowDryRun] = useState(false);
   const [dryRunPayload, setDryRunPayload] = useState<any | null>(null);
   const [dryRunErrors, setDryRunErrors] = useState<string[]>([]);
+  const [policyWarnings, setPolicyWarnings] = useState<string[]>([]);
 
   // Real pipeline: scan the client's actual site (PageSpeed + HTML, same
   // as the public /scan flow), derive evidence tiers + confidence from
@@ -758,6 +760,13 @@ export default function AdminDashboard() {
       loomUrl,
       figmaUrl: figmaUrl || null,
       segment: (selectedClient.segment === "DFY" || selectedClient.segment === "high_ticket") ? "high_ticket" : "microdosing",
+      // Phase 4.3 — only set when this is a real dosed purchase; a
+      // non-dosed/legacy manual delivery gets no offerPriceId at all and
+      // therefore renders via the original segment-based template,
+      // exactly as it always has.
+      offerPriceId: dosedScaffold?.pending_dosing_line && dosedScaffold?.pending_dosing_tier
+        ? priceIdForLineTier(dosedScaffold.pending_dosing_line, dosedScaffold.pending_dosing_tier)
+        : undefined,
       founderFocusScore: 85,
       daysRemaining: 30,
       guaranteeStatus: "Specificity Guarantee Active",
@@ -906,14 +915,63 @@ export default function AdminDashboard() {
     return errors;
   };
 
+  // Phase 4.3 admin safeguard — advisory, never blocking (see
+  // handleReviewDelivery: these never affect dryRunErrors or the Publish
+  // button). Flags when a module the SERVICE POLICY marks "required" has
+  // no real content behind it yet, so an admin can't accidentally publish
+  // a $3,000 DFY Intervention with no execution summary, or a $1,500 DWY
+  // Autonomy Kit with no learning assets, without at least being told.
+  const isNotYetDelivered = (s: string | undefined) => !s || s === NOT_YET_DELIVERED;
+  const getPolicyWarnings = (
+    payload: ReturnType<typeof buildDeliveryPayload>,
+    policy: ServiceDeliveryPolicy | null
+  ): string[] => {
+    if (!policy) return [];
+    const m = policy.modules;
+    const warnings: string[] = [];
+
+    if (m.evidence === "required" && !payload.evidence?.length) {
+      warnings.push("Evidence is required for this service, but none is set.");
+    }
+    if (m.judgment === "required" && !(payload.diagnosis?.friction?.mechanism && payload.diagnosis?.friction?.rootCause)) {
+      warnings.push("Judgment (friction mechanism + root cause) is required for this service, but is incomplete.");
+    }
+    if (m.recommendation === "required" && !payload.diagnosis?.finalDecision) {
+      warnings.push("A final decision is required for this service, but none is set.");
+    }
+    if (m.implementationPlan === "required" && !payload.diagnosis?.finalDecision?.action) {
+      warnings.push("This service requires a sequenced implementation plan — the final decision it's built from is missing.");
+    }
+    if (m.executionSummary === "required" && isNotYetDelivered(payload.dfyDelivery?.execution_summary)) {
+      warnings.push('This service requires an execution summary ("What We Did"), but it hasn\'t been written on the scaffold yet.');
+    }
+    if (m.monitoringFindings === "required") {
+      if (policy.line === "dfy" && isNotYetDelivered(payload.dfyDelivery?.monitoring_findings)) {
+        warnings.push('This service requires monitoring findings ("What We Found"), but they haven\'t been written on the scaffold yet.');
+      }
+      if (policy.line === "dwy") {
+        warnings.push("DWY Monitoring has no automated measured-findings data source yet — a known infrastructure gap, not something fillable here.");
+      }
+    }
+    if ((m.founderLearningModules === "required" || m.checklist === "required") && !(payload.checklist?.length || payload.learningModules?.length)) {
+      warnings.push("This service requires founder learning/checklist assets, but none are set.");
+    }
+    if (m.handoffDocumentation === "required" && isNotYetDelivered(payload.dfyDelivery?.handoff_documentation)) {
+      warnings.push("This service requires handoff documentation (team runbook), but it hasn't been written on the scaffold yet.");
+    }
+    return warnings;
+  };
+
   // Part D — builds and validates the payload, then opens the dry-run
   // review. Nothing is written to the database from this function.
   const handleReviewDelivery = () => {
     if (!selectedClient) return;
     const payload = buildDeliveryPayload();
     const errors = validateDeliveryPayload(payload);
+    const policy = getDeliveryPolicy(payload.offerPriceId);
     setDryRunPayload(payload);
     setDryRunErrors(errors);
+    setPolicyWarnings(getPolicyWarnings(payload, policy));
     setShowDryRun(true);
   };
 
@@ -3021,6 +3079,45 @@ export default function AdminDashboard() {
                             <p className="font-mono text-xs text-[#7A6F65]">
                               {"No pending purchase for this client's scaffold — publishing from the manual form fields (legacy path), unchanged."}
                             </p>
+                          </div>
+                        )}
+
+                        {(() => {
+                          const policy = getDeliveryPolicy(dryRunPayload.offerPriceId);
+                          if (!policy) return null;
+                          return (
+                            <details className="border border-white/10 bg-white/[0.02] rounded">
+                              <summary className="font-mono text-[10px] text-[#7A6F65] uppercase tracking-widest px-3 py-2 cursor-pointer select-none">
+                                {`Service policy — ${policy.line.toUpperCase()} ${policy.tier.replace(/_/g, " ")} (click to expand full module list)`}
+                              </summary>
+                              <div className="px-3 pb-3 grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1 text-[10px] font-mono">
+                                {Object.entries(policy.modules).map(([id, status]) => (
+                                  <div key={id} className="flex justify-between gap-2">
+                                    <span className="text-[#7A6F65]">{id}</span>
+                                    <span
+                                      className={
+                                        status === "required" ? "text-[#D4A853]" :
+                                        status === "allowed" ? "text-[#5C9A6B]" :
+                                        "text-[#7A6F65]"
+                                      }
+                                    >
+                                      {status}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </details>
+                          );
+                        })()}
+
+                        {policyWarnings.length > 0 && (
+                          <div className="border border-[#D4A853]/40 bg-[#D4A853]/10 p-3 rounded space-y-1">
+                            <span className="font-mono text-[10px] text-[#D4A853] uppercase tracking-widest block">
+                              {"⚠ Service policy — this tier normally includes the following, and none is set (publishing is still allowed)"}
+                            </span>
+                            {policyWarnings.map((w, i) => (
+                              <p key={i} className="font-mono text-xs text-[#D4A853]">{"⚠ "}{w}</p>
+                            ))}
                           </div>
                         )}
 
