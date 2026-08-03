@@ -47,9 +47,13 @@ function UtcClock() {
 /* ═══════════════════════════════════════════════════════════════════════════════
    STEP CONFIG & OPTIONS
    ═══════════════════════════════════════════════════════════════════════════════ */
+// Phase 6.1 — same fix as src/app/page.tsx: step 2's desc previously
+// implied tile selection names the diagnosis. It's a symptom/situation
+// intake; the actual diagnosis is always one of six behavioral
+// mechanisms, from evidence. See funnelCaption on ScanFunnelCard below.
 const STEPS = [
   { id: 1, code: "SG.CAL", label: "Regional Calibration", desc: "Enter target APAC URL for diagnostic scan" },
-  { id: 2, code: "SIG.DET", label: "Signal Detection", desc: "Identify primary APAC friction zone" },
+  { id: 2, code: "SIG.DET", label: "Signal Detection", desc: "Where does it show up?" },
   { id: 3, code: "SEG.SEL", label: "Segment Selection", desc: "Choose regional cohort pathway" },
   { id: 4, code: "MET.ISO", label: "Variable Isolation", desc: "Isolate regional parameters" },
   { id: 5, code: "DX.EXEC", label: "APAC Execution", desc: "Confirm Singapore routing protocol" },
@@ -257,7 +261,7 @@ export default function SingaporeClient() {
           >
             <div className="space-y-2">
               <div className="font-mono text-xs text-[#D4A853]/70 tracking-[0.4em] uppercase">
-                Singapore Diagnostic Portal v4.5
+                Behavioral Diagnostic System — Singapore v4.5
               </div>
               <h1 className="font-hero text-[2.8rem] lg:text-[3.6rem] font-bold leading-[1.0] tracking-[-0.03em]">
                 Isolate Southeast Asia{" "}
@@ -269,8 +273,8 @@ export default function SingaporeClient() {
             </div>
 
             <p className="text-sm text-[#B0A89E] leading-relaxed max-w-md font-mono">
-              Clinical B2B SaaS diagnostic localized for APAC. 72h async delivery.
-              JCB &amp; PayNow checks. If it isn&apos;t specific to your product, you don&apos;t pay.
+              A specific behavioral diagnosis, evidence-ranked and confidence-graded — not a scraped report.
+              72h async delivery. JCB &amp; PayNow checks. If it isn&apos;t specific to your product, you don&apos;t pay.
             </p>
 
             {/* Magnetic pricing CTA — same hook as /pricing's hero, so
@@ -350,6 +354,12 @@ export default function SingaporeClient() {
               onScanClick={nextStep}
               funnelPain={funnelPain}
               funnelOptions={FUNNEL_OPTIONS}
+              funnelCaption={
+                <span style={{ fontSize: 12, color: "#8C8474", lineHeight: 1.5 }}>
+                  This tells us where to look. The diagnosis itself — one of six specific behavioral
+                  mechanisms — comes from evidence, not from what you pick here.
+                </span>
+              }
               onFunnelPainChange={(key) => { setFunnelPain(key); setErrorMsg(null); }}
               segmentSelection={segmentSelection}
               segmentOptions={SEGMENT_OPTIONS}
@@ -523,17 +533,20 @@ export default function SingaporeClient() {
         </div>
       </section>
 
-      {/* ── Section 3: Why Our Guarantee Beats AI ── */}
+      {/* ── Section 3: Why This Isn't an Audit — same rewrite as
+          src/app/page.tsx, kept verbatim for global/APAC parity ── */}
       <section className="w-full max-w-6xl mx-auto px-6 py-20 relative z-10 border-t border-[#D4A853]/8 space-y-12">
         <div className="text-center space-y-3">
           <span className="font-mono text-xs text-[#D4A853] tracking-[0.4em] uppercase border border-[#D4A853]/25 px-2.5 py-1 rounded bg-[#D4A853]/5 inline-block">
-            Comparison Audit
+            Why This Isn&apos;t an Audit
           </span>
           <h2 className="text-2xl lg:text-4xl font-serif text-white tracking-tight">
-            Why clinical diagnostics <span className="text-[#D4A853] glow-text">beats generic AI</span>.
+            A diagnosis has to be <span className="text-[#D4A853] glow-text">owned by someone</span>.
           </h2>
           <p className="text-sm text-[#B0A89E] font-mono max-w-lg mx-auto leading-relaxed">
-            Stop relying on automated audit scrapers that tell you to change colors. Compare our Specificity Promise against generic AI audits.
+            Any tool can generate a plausible-sounding list of issues. What it can&apos;t do is tell you
+            which one is real, rank the evidence behind it, or be wrong and accountable for it.
+            That part is still done by a person.
           </p>
         </div>
 
@@ -553,8 +566,8 @@ export default function SingaporeClient() {
                 <td className="p-4">Pay upfront with zero performance accountability.</td>
               </tr>
               <tr>
-                <td className="p-4 font-bold text-white uppercase text-xs">Verification Engine</td>
-                <td className="p-4">Every claim tagged: measured, modeled, or pending your data. Traceable to its source — or we say we can&apos;t see it.</td>
+                <td className="p-4 font-bold text-white uppercase text-xs">Evidence Standard</td>
+                <td className="p-4">Every claim tagged: measured, modeled, or unknown. Traceable to its source — or we say we can&apos;t see it.</td>
                 <td className="p-4">Unverified self-reported screenshots.</td>
               </tr>
               <tr>
@@ -563,9 +576,9 @@ export default function SingaporeClient() {
                 <td className="p-4">Dozens of generic, low-impact suggestions.</td>
               </tr>
               <tr>
-                <td className="p-4 font-bold text-white uppercase text-xs">Core Intelligence</td>
-                <td className="p-4">Real scan signals + human judgment on the one friction that matters. Never a guessed number.</td>
-                <td className="p-4">Single LLM API calls with generic template prompts.</td>
+                <td className="p-4 font-bold text-white uppercase text-xs">Who&apos;s Accountable</td>
+                <td className="p-4">A named analyst reviews the evidence and owns the call. AI is used to widen and challenge the reasoning — never to decide.</td>
+                <td className="p-4">An unnamed model generates confident-sounding text. No one is accountable if it&apos;s wrong.</td>
               </tr>
             </tbody>
           </table>

@@ -33,6 +33,12 @@ interface ScanFunnelCardProps {
   funnelPain: string;
   funnelOptions: ScanFunnelOption[];
   onFunnelPainChange: (key: string) => void;
+  // Phase 6.1 — the situation picked here is a symptom, not a diagnosis;
+  // this renders directly under the tiles to make that boundary explicit
+  // at the exact moment a visitor might otherwise read tile selection as
+  // "naming their friction." Optional so nothing breaks if a future
+  // caller doesn't set it.
+  funnelCaption?: React.ReactNode;
 
   segmentSelection: string;
   segmentOptions: ScanFunnelOption[];
@@ -91,6 +97,7 @@ export default function ScanFunnelCard({
   onScanClick,
   funnelPain,
   funnelOptions,
+  funnelCaption,
   onFunnelPainChange,
   segmentSelection,
   segmentOptions,
@@ -242,6 +249,11 @@ export default function ScanFunnelCard({
                       </button>
                     ))}
                   </div>
+                  {funnelCaption && (
+                    <div className="scan-funnel-tile-label" style={{ marginTop: 10, opacity: 0.85 }}>
+                      {funnelCaption}
+                    </div>
+                  )}
                   <div className="scan-funnel-footer-row">
                     <button type="button" onClick={onBack} className="scan-funnel-back">
                       &#8592; BACK
