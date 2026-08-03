@@ -1,15 +1,17 @@
 #!/usr/bin/env node
 /**
- * Drift protection for the two duplicated-by-necessity code trees this
- * repo carries — src/domain/reasoning and src/lib/dosing.ts each have a
- * mirrored copy under supabase/functions/_shared/ because Cloudflare Pages
- * Functions, Next.js, and Supabase Deno Edge Functions are three separate
- * build/import contexts with no shared module resolution path between
- * them. That's a real, load-bearing constraint (documented in
- * functions/api/diagnose.ts and elsewhere) — this script doesn't try to
- * remove the duplication, it makes silent divergence between the copies
- * a build failure instead of something nobody notices until it's wrong
- * in production.
+ * Drift protection for the duplicated-by-necessity code trees this repo
+ * carries — src/domain/reasoning and src/lib/dosing.ts each have a
+ * mirrored copy under supabase/functions/_shared/, and src/lib/training-
+ * workflow.ts (Diagnostic Calibration v3's stage-gating + hidden-verdict-
+ * stripping logic) has a mirrored copy under functions/api/training/
+ * _shared.ts — because Cloudflare Pages Functions, Next.js, and Supabase
+ * Deno Edge Functions are three separate build/import contexts with no
+ * shared module resolution path between them. That's a real, load-bearing
+ * constraint (documented in functions/api/diagnose.ts and elsewhere) —
+ * this script doesn't try to remove the duplication, it makes silent
+ * divergence between the copies a build failure instead of something
+ * nobody notices until it's wrong in production.
  *
  * Two comparison strategies:
  *   1. Full-file — for src/domain/reasoning/*, which has zero legitimate
@@ -91,6 +93,9 @@ for (const f of REASONING_FILES) {
 }
 
 checkMarkerBounded("src/lib/dosing.ts", "supabase/functions/_shared/dosing.ts");
+
+checkFullFile("src/lib/training-workflow.ts", "functions/api/training/_shared.ts");
+checkFullFile("src/lib/calibration-readiness.ts", "functions/api/training/_shared-readiness.ts");
 
 if (failed) {
   console.error("\nDrift detected — sync the copies above before committing.");
