@@ -24,6 +24,15 @@ interface TransactionEntry {
   account_id: string;
 }
 
+// Sidebar nav active-state comparison only — trailingSlash: true means
+// usePathname() and a navLinks href can differ by a trailing slash even
+// when they refer to the same route. Does not touch the isLoginPage logic
+// above, which already normalizes independently for the auth-gate bypass.
+function normalizePath(path: string): string {
+  if (path === "/") return path;
+  return path.replace(/\/+$/, "");
+}
+
 function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -159,6 +168,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     { href: "/admin/finance", label: "Finance", code: "FN" },
     { href: "/admin/priorities", label: "Priorities", code: "PR" },
     { href: "/admin/learning", label: "Learning", code: "LE" },
+    { href: "/admin/training", label: "Training · TEST", code: "TR" },
     { href: "/admin/certified", label: "Certified", code: "CE" },
   ];
 
@@ -251,7 +261,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
           <nav className="flex flex-col gap-0.5 px-2 md:px-3 mt-1">
             {navLinks.map((link) => {
-              const isActive = pathname === link.href;
+              const isActive = normalizePath(pathname) === normalizePath(link.href);
               return (
                 <Link
                   key={link.href}

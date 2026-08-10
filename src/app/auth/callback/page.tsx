@@ -1,41 +1,56 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+
+// La sesión implícita se establece de forma asíncrona vía detección de
+// fragmento hash (detectSessionInUrl, default del SDK). Este callback no
+// recibe ?code= (no es PKCE) — espera a que el SDK termine de procesarla.
+const SESSION_WAIT_TIMEOUT_MS = 6000;
 
 function CallbackHandler() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function handleCallback() {
-      const code = searchParams.get("code");
-      if (!code) {
-        setError("No authentication code found.");
-        return;
-      }
+    let settled = false;
 
-      try {
-        const { data, error: authError } = await supabase.auth.exchangeCodeForSession(code);
-        if (authError) throw authError;
-
-        if (data.session) {
-          // Set cookie client-side
-          document.cookie = `sf-admin-session=${data.session.access_token}; path=/; max-age=604800; SameSite=Lax; Secure`;
-          router.push("/admin/dashboard");
-        } else {
-          throw new Error("No session returned.");
-        }
-      } catch (err: any) {
-        console.error("Callback authentication error:", err);
-        setError(err.message || "Failed to exchange authentication code.");
-      }
+    function onSession(session: Session | null) {
+      if (settled || !session) return;
+      settled = true;
+      document.cookie = `sf-admin-session=${session.access_token}; path=/; max-age=604800; SameSite=Lax; Secure`;
+      router.push("/admin/dashboard");
     }
 
-    handleCallback();
-  }, [searchParams, router]);
+    supabase.auth.getSession().then(({ data, error: sessionError }) => {
+      if (sessionError) {
+        settled = true;
+        setError(sessionError.message || "Failed to retrieve session.");
+        return;
+      }
+      onSession(data.session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      onSession(session);
+    });
+
+    const timeoutId = window.setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        setError("No session could be established from this link. It may be expired or already used.");
+      }
+    }, SESSION_WAIT_TIMEOUT_MS);
+
+    return () => {
+      subscription.unsubscribe();
+      window.clearTimeout(timeoutId);
+    };
+  }, [router]);
 
   if (error) {
     return (
@@ -65,13 +80,7 @@ function CallbackHandler() {
 export default function CallbackPage() {
   return (
     <main className="min-h-screen bg-[#0A0908] text-[#F5F0EB] flex items-center justify-center p-6 relative">
-      <Suspense fallback={
-        <div className="font-mono text-xs text-[#807870] animate-pulse">
-          Loading authentication...
-        </div>
-      }>
-        <CallbackHandler />
-      </Suspense>
+      <CallbackHandler />
     </main>
   );
 }
