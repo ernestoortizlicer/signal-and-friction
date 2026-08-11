@@ -37,13 +37,21 @@ function fail(file, message) {
 
 const catalogPath = "src/lib/offer-catalog.ts";
 const catalog = readFileSync(path.join(ROOT, catalogPath), "utf8");
+const certifiedStart = catalog.indexOf("export const CERTIFIED_TIER");
+const certifiedEnd = catalog.indexOf("export const PENDING_PRICE_CHANGES");
 
-if (!/CERTIFIED_TIER[\s\S]*archived:\s*true/.test(catalog)) {
-  fail(catalogPath, "Certified must remain explicitly archived until a new product decision reactivates it.");
-}
+if (certifiedStart === -1 || certifiedEnd === -1 || certifiedEnd <= certifiedStart) {
+  fail(catalogPath, "could not isolate the canonical Certified archive record");
+} else {
+  const certifiedBlock = catalog.slice(certifiedStart, certifiedEnd);
 
-if (/CERTIFIED_TIER[\s\S]*priceId\s*:/.test(catalog)) {
-  fail(catalogPath, "Archived Certified records must not carry active checkout price IDs.");
+  if (!/archived:\s*true/.test(certifiedBlock)) {
+    fail(catalogPath, "Certified must remain explicitly archived until a new product decision reactivates it.");
+  }
+
+  if (/priceId\s*:/.test(certifiedBlock)) {
+    fail(catalogPath, "Archived Certified records must not carry active checkout price IDs.");
+  }
 }
 
 const forbidden = [
