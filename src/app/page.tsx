@@ -289,6 +289,17 @@ export default function Home() {
               72h async delivery. If it isn&apos;t specific to your product, you don&apos;t pay.
             </p>
 
+            {/* One-line preview of the engagement path — previously only
+                visible after clicking through to /pricing. Same wording as
+                the pricing page's own path summary, so it reads as one
+                continuous idea rather than a new claim. */}
+            <div className="font-mono text-[11px] text-[#7A6F65] tracking-[0.08em] uppercase">
+              Diagnose <span className="text-[#D4A853]/50">→</span> Fix{" "}
+              <span className="text-[#D4A853]/50">→</span> Monitor{" "}
+              <span className="text-[#D4A853]/50">→</span> Expand{" "}
+              <span className="text-[#D4A853]/50">→</span> Own it
+            </div>
+
             {/* Magnetic pricing CTA — same hook as /pricing's hero, so
                 clicking it feels like continuing a thought, not switching
                 context. Scan-line reused from the pricing cards themselves,
@@ -379,7 +390,7 @@ export default function Home() {
               onUrlChange={setUrl}
               urlPlaceholder="https://your-product.com"
               socialProof={<>Every finding tagged <strong>measured, modeled, or pending</strong>. No invented numbers — including this one.</>}
-              scanCta="Scan My Funnel"
+              scanCta="Diagnose My Funnel"
               onScanClick={nextStep}
               funnelPain={funnelPain}
               funnelOptions={FUNNEL_OPTIONS}
