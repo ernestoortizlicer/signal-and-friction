@@ -1,35 +1,30 @@
 /**
- * Signal & Friction — offer architecture, single source of truth.
- * ════════════════════════════════════════════════════════════════════════════
- * Pricing, billing type, and deliverable scope for every phase in both
- * ladders live here and ONLY here. Nothing else in the app should hardcode
- * a phase name, price, or scope description — read from this file (the
- * pricing page is the next task to wire up against it).
+ * Signal & Friction — canonical commercial offer architecture.
  *
- * `priceId` is the exact `price_id` value used in the live `stripe_payment_links`
- * Supabase table (verified against production 2026-07-29) — join against it
- * directly, no separate mapping layer.
+ * This file is the single source of truth for what can be sold publicly:
+ * offer identity, current price, billing type, segment, order, and scope.
+ * Public transactional surfaces must derive from the active ladders below.
  *
- * `priceUsd` is always the CURRENT LIVE price: what the Stripe payment link
- * behind `priceId` actually charges right now. Where a price change has been
- * business-approved but not yet made live in Stripe, it belongs in
- * PENDING_PRICE_CHANGES instead of overwriting priceUsd — a stale number
- * here would make the pricing page advertise a price its own payment link
- * doesn't actually charge. Move it into priceUsd (and clear the pending
- * entry) only once the new Stripe Price + Payment Link are live and
- * stripe_payment_links is updated to match.
+ * `priceId` is the exact `price_id` value used in the live
+ * `stripe_payment_links` Supabase table. UI code may resolve a payment URL
+ * from that table only for a phase returned by getPublicPhases()/getPhase().
+ *
+ * Archived concepts are records only. They deliberately do NOT implement
+ * OfferPhase and do not carry checkout identifiers, so archived product
+ * history cannot accidentally become transactable through the same APIs as
+ * active offers.
  */
 
 export type BillingType = 'one_time' | 'monthly';
-export type OfferSegment = 'dwy' | 'dfy' | 'certified';
+export type ActiveOfferSegment = 'dwy' | 'dfy';
 
 export interface OfferPhase {
   /** Exact match for stripe_payment_links.price_id. */
   priceId: string;
   order: 1 | 2 | 3 | 4 | 5;
   name: string;
-  segment: OfferSegment;
-  /** Current LIVE price in USD — matches what priceId's payment link actually charges. */
+  segment: ActiveOfferSegment;
+  /** Current LIVE price in USD — matches what priceId's payment link charges. */
   priceUsd: number;
   billing: BillingType;
   scope: string;
@@ -42,6 +37,19 @@ export interface PendingPriceChange {
   approvedAt: string;
   status: 'awaiting_stripe_update';
   note: string;
+}
+
+export interface ArchivedOfferRecord {
+  archived: true;
+  archivedAt: string;
+  name: string;
+  archivedNote: string;
+  /** Historical context only. Never render as a current price or checkout. */
+  historicalPricing: Array<{
+    label: string;
+    priceUsd: number;
+    billing: BillingType;
+  }>;
 }
 
 // ── DWY (Done-With-You) — founder executes, S&F diagnoses and guides ──
@@ -102,32 +110,32 @@ export const DFY_LADDER: OfferPhase[] = [
   },
 ];
 
-// ── Certified — ARCHIVED. Deliberately excluded from ALL_LADDERS / getPublicPhases(). ──
-export const CERTIFIED_TIER: { archived: true; archivedNote: string; phases: OfferPhase[] } = {
+/**
+ * Certified — ARCHIVED.
+ *
+ * Deliberately represented as historical product state rather than an active
+ * OfferPhase. It has no Stripe price IDs and can never appear in ALL_LADDERS,
+ * getPublicPhases(), getPhase(), or getLadder(). Re-activating Certified
+ * requires an explicit product decision plus migration back into the canonical
+ * active-offer model; a page-local price or checkout link is never sufficient.
+ */
+export const CERTIFIED_TIER: ArchivedOfferRecord = {
   archived: true,
-  archivedNote: 'Not shown anywhere public as of 2026-07-29. Kept here for record only — never included in ALL_LADDERS or getPublicPhases(). The standalone /certified marketing page and its own hardcoded Stripe links (src/app/certified/CertifiedClient.tsx) are untouched by this — unpublishing that page is a separate task if wanted.',
-  phases: [
-    {
-      priceId: 'price_certified_practitioner', order: 1, name: 'Certified Practitioner', segment: 'certified',
-      priceUsd: 2500, billing: 'one_time',
-      scope: 'Annual license to deliver S&F diagnostics under your own brand.',
-    },
-    {
-      priceId: 'price_certified_agency', order: 2, name: 'Certified Agency', segment: 'certified',
-      priceUsd: 5000, billing: 'one_time',
-      scope: 'Annual agency-tier license.',
-    },
+  archivedAt: '2026-07-29',
+  name: 'S&F Certified',
+  archivedNote: 'Archived product concept. No new enrollments or payments are accepted. Historical pricing is retained for audit context only.',
+  historicalPricing: [
+    { label: 'Certified Practitioner', priceUsd: 2500, billing: 'one_time' },
+    { label: 'Certified Agency', priceUsd: 5000, billing: 'one_time' },
   ],
 };
 
-// Empty as of 2026-07-29 — the DWY/DFY Expansion price changes that used to
-// sit here (350→500, 2000→2500) are both live in Stripe now (new Price +
-// Payment Link each, old ones archived/deactivated) and reflected directly
-// in priceUsd above. Add an entry here again if a future price change is
-// approved before it's actually live in Stripe.
+// Empty as of 2026-07-29 — approved future price changes belong here until
+// the corresponding Stripe Price + Payment Link are live and the canonical
+// catalog can safely be updated.
 export const PENDING_PRICE_CHANGES: PendingPriceChange[] = [];
 
-/** Certified is deliberately excluded — archived, never public. */
+/** Active public offers only. Archived concepts are structurally excluded. */
 export const ALL_LADDERS: OfferPhase[] = [...DWY_LADDER, ...DFY_LADDER];
 
 export function getPublicPhases(): OfferPhase[] {
@@ -138,7 +146,11 @@ export function getPhase(priceId: string): OfferPhase | undefined {
   return ALL_LADDERS.find((p) => p.priceId === priceId);
 }
 
-export function getLadder(segment: 'dwy' | 'dfy'): OfferPhase[] {
+export function isActivePriceId(priceId: string): boolean {
+  return getPhase(priceId) !== undefined;
+}
+
+export function getLadder(segment: ActiveOfferSegment): OfferPhase[] {
   return (segment === 'dwy' ? DWY_LADDER : DFY_LADDER).slice().sort((a, b) => a.order - b.order);
 }
 
