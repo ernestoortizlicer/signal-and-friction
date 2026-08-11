@@ -366,7 +366,7 @@ export const ACME_FALLBACK: DeliverableData = {
     {
       id: "m-4",
       title: "Module 4: Autonomy Checklist",
-      description: "Formulate your team's routine checklists to ensure conversion optimization ownership.",
+      description: "Formulate your team's routine checklists to ensure ongoing friction-monitoring ownership.",
       completed: false,
       content: "Establish weekly telemetry scans, bi-weekly copy iterations, and monthly speed audit checks."
     }
