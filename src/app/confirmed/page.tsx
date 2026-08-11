@@ -228,8 +228,8 @@ function ConfirmedContent() {
                 text, the Specificity Guarantee itself). */}
             <p className="text-sm text-[#B0A89E] font-mono leading-relaxed">
               The diagnostic fee activates your 72-hour clinical window. You receive one
-              evidence-ranked dominant friction, the recommended decision if your tier includes it,
-              and a Loom walkthrough — no calls, no meetings. If the finding isn&apos;t specific to
+              evidence-ranked dominant friction, the recommended decision, what not to do, and a
+              Loom walkthrough — no calls, no meetings. If the finding isn&apos;t specific to
               your product, you pay nothing.
             </p>
             <div className="pt-2">

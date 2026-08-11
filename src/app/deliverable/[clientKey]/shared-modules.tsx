@@ -168,9 +168,9 @@ export function AvoidSection({ items }: { items: AvoidItem[] }) {
   );
 }
 
-// Rendered in place of the recommendation when this tier withholds
-// the_decision/what_to_avoid (e.g. Beta Diagnostic) — an intentional,
-// designed boundary, never a blank section that reads as broken.
+// Legacy-renderer fallback for an unversioned historical record, or for an
+// explicitly governed withheld policy. No active paid Diagnostic policy
+// uses this component; current Diagnostics always include both judgments.
 export function RecommendationWithheldCard({ mechanism }: { mechanism?: string }) {
   return (
     <div className="border border-[#D4A853]/20 bg-[#D4A853]/[0.03] p-8 md:p-10 rounded space-y-4">
@@ -182,6 +182,21 @@ export function RecommendationWithheldCard({ mechanism }: { mechanism?: string }
         This diagnostic identifies exactly where{mechanism ? ` the ${mechanism.toLowerCase()} occurs and` : ""} why
         it&apos;s blocking conversion. The specific recommendation, the exact action to take, and what to avoid
         while you fix it are delivered with the Intervention tier.
+      </p>
+    </div>
+  );
+}
+
+export function RequiredJudgmentPendingCard({ subject }: { subject: string }) {
+  return (
+    <div className="border border-[#C85C5C]/25 bg-[#C85C5C]/[0.04] p-8 md:p-10 rounded space-y-4">
+      <span className="font-mono text-xs uppercase tracking-wider text-[#C85C5C]">Required analyst judgment pending</span>
+      <h3 className="text-xl font-serif text-[#F5F0EB] font-medium leading-snug">
+        This {subject} has not yet been published.
+      </h3>
+      <p className="text-base text-[#B0A89E] leading-relaxed max-w-[65ch]">
+        It is a required part of this Diagnostic. The evidence and diagnosis remain available, but this delivery
+        is not complete until Signal &amp; Friction publishes the analyst&apos;s judgment here.
       </p>
     </div>
   );

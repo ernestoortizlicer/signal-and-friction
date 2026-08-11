@@ -1,16 +1,15 @@
 /**
- * Regression test for the PUBLISH path specifically — not the teaser.
- * dosing.test.ts (Deno) already covers generateTeaser()/applyDosing();
- * this covers mapDosedScaffoldToDelivery(), the function
- * handlePublishDelivery actually calls in src/app/admin/dashboard/page.tsx.
+ * Regression test for the paid-delivery contract and its boundary with
+ * the free teaser. dosing.test.ts (Deno) covers the edge runtime in more
+ * depth; this also calls mapDosedScaffoldToDelivery(), the function
+ * handlePublishDelivery actually uses in src/app/admin/dashboard/page.tsx.
  * No test framework is configured in this project (no Jest/Vitest) — run
  * directly with Node, which has native TS type-stripping for erasable
  * syntax (this file has no enums/decorators, so it works unflagged):
  *
  *   node src/lib/dosing.publish.test.mjs
  */
-import assert from "node:assert/strict";
-import { mapDosedScaffoldToDelivery } from "./dosing.ts";
+import { generateTeaser, mapDosedScaffoldToDelivery } from "./dosing.ts";
 
 const SAMPLE = {
   friction_mechanism: "trust_deficit",
@@ -34,12 +33,18 @@ function check(name, cond) {
   else { fail++; console.log(`FAIL - ${name}`); }
 }
 
-// The single most important assertion in this whole file.
+// The paid Diagnostic contract includes both the recommended decision and
+// what not to do. Information dosing stops at the free teaser boundary.
+const teaser = generateTeaser(SAMPLE);
+check("free teaser: never reveals the recommended decision", !teaser.includes(SAMPLE.the_decision));
+check("free teaser: never reveals what not to do", !teaser.includes(SAMPLE.what_to_avoid));
+
 const betaDelivery = mapDosedScaffoldToDelivery(SAMPLE, "dwy", "beta_diagnostic");
-check("DWY beta: finalDecision is null (not an object with empty strings — genuinely absent)", betaDelivery.finalDecision === null);
-check("DWY beta: avoid array is empty", betaDelivery.avoid.length === 0);
-check("DWY beta: serialized payload never contains the_decision text", !JSON.stringify(betaDelivery).includes(SAMPLE.the_decision));
-check("DWY beta: serialized payload never contains what_to_avoid text", !JSON.stringify(betaDelivery).includes(SAMPLE.what_to_avoid));
+check("DWY beta: finalDecision carries the promised recommendation", betaDelivery.finalDecision?.action === SAMPLE.the_decision);
+check("DWY beta: finalDecision retains the analyst's reasoning", betaDelivery.finalDecision?.reasoning === SAMPLE.why_blocks_conversion);
+check("DWY beta: avoid carries the promised what-not-to-do judgment", betaDelivery.avoid[0]?.action === SAMPLE.what_to_avoid);
+check("DWY beta: serialized payload contains the_decision text", JSON.stringify(betaDelivery).includes(SAMPLE.the_decision));
+check("DWY beta: serialized payload contains what_to_avoid text", JSON.stringify(betaDelivery).includes(SAMPLE.what_to_avoid));
 check("DWY beta: diagnosis (mechanism/rootCause) IS present", betaDelivery.friction.mechanism.length > 0 && betaDelivery.friction.rootCause.length > 0);
 
 const interventionDelivery = mapDosedScaffoldToDelivery(SAMPLE, "dwy", "intervention");
@@ -48,6 +53,7 @@ check("DWY intervention: avoid array reveals the real avoid text", interventionD
 
 const dfyBetaDelivery = mapDosedScaffoldToDelivery(SAMPLE, "dfy", "beta_diagnostic");
 check("DFY beta: finalDecision revealed immediately (DFY has no disclosure withholding)", dfyBetaDelivery.finalDecision?.action === SAMPLE.the_decision);
+check("DFY beta: avoid reveals what not to do", dfyBetaDelivery.avoid[0]?.action === SAMPLE.what_to_avoid);
 
 // Phase 4.0 — dfyDelivery must no longer be silently dropped between
 // applyDosing() and the delivery payload.

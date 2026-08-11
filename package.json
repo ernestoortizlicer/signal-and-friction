@@ -2,6 +2,9 @@
   "name": "signal-and-friction-app",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22.18.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,7 +13,8 @@
     "crm": "node scripts/crm-server.mjs",
     "check:drift": "node scripts/check-domain-drift.mjs",
     "check:offers": "node scripts/check-offer-integrity.mjs",
-    "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs && npm run check:offers && npm run check:drift",
+    "test:contracts": "node src/lib/dosing.publish.test.mjs && node src/lib/delivery-policy.test.mjs",
+    "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs && npm run check:offers && npm run check:drift && npm run test:contracts",
     "deploy": "wrangler pages deploy out --project-name=signal-and-friction"
   },
   "dependencies": {
