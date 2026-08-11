@@ -374,18 +374,6 @@ async function handleRequest(req) {
             inputSchema: { type: 'object', properties: {} }
           },
           {
-            name: 'stripe_create_payment_link',
-            description: 'Generates a Stripe Checkout Payment Link for a specific Price ID and client. Performs a mock listing if no Stripe Secret Key is present.',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                priceId: { type: 'string', description: 'Price ID to create checkout payment link for (e.g. price_dfy_beta_diagnostic, price_dwy_beta_diagnostic).' },
-                clientId: { type: 'string', description: 'Optional UUID of the client this checkout is for.' }
-              },
-              required: ['priceId']
-            }
-          },
-          {
             name: 'stripe_get_revenue',
             description: 'Retrieve Stripe gross revenue, MRR, and refund statistics. Uses simulated live telemetry if STRIPE_SECRET_KEY is a placeholder.',
             inputSchema: { type: 'object', properties: {} }
@@ -495,9 +483,6 @@ async function handleRequest(req) {
           break;
         case 'stripe_list_products':
           result = await stripeListProducts();
-          break;
-        case 'stripe_create_payment_link':
-          result = await stripeCreatePaymentLink(args);
           break;
         case 'stripe_get_revenue':
           result = await stripeGetRevenue();
@@ -1626,90 +1611,6 @@ async function stripeListProducts() {
     report += `| ${p.product_name} | \`${p.price_id}\` | ${formattedAmount} | \`${p.segment}\` | [Link](${p.payment_link_url}) |\n`;
   });
   
-  return report;
-}
-
-async function stripeCreatePaymentLink(args) {
-  const { priceId, clientId } = args;
-  const stripeApiKey = process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder';
-  const isMock = !stripeApiKey || stripeApiKey === 'sk_test_placeholder';
-
-  let paymentLinkUrl = "";
-  let modeMessage = "";
-
-  if (isMock) {
-    modeMessage = "⚠️ [SANDBOX MODE] Generated simulated payment link (STRIPE_SECRET_KEY is placeholder)";
-    const { data } = await supabase
-      .from('stripe_payment_links')
-      .select('payment_link_url')
-      .eq('price_id', priceId)
-      .maybeSingle();
-    if (data && data.payment_link_url) {
-      paymentLinkUrl = data.payment_link_url;
-    } else {
-      paymentLinkUrl = `https://buy.stripe.com/mock_${priceId}`;
-    }
-    if (clientId) {
-      paymentLinkUrl += `?client_id=${encodeURIComponent(clientId)}`;
-    }
-  } else {
-    try {
-      const body = new URLSearchParams();
-      body.append('line_items[0][price]', priceId);
-      body.append('line_items[0][quantity]', '1');
-      if (clientId) {
-        body.append('metadata[client_id]', clientId);
-      }
-
-      const res = await fetch('https://api.stripe.com/v1/payment_links', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${stripeApiKey}`,
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: body.toString()
-      });
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error?.message || `HTTP error ${res.status}`);
-      }
-
-      const data = await res.json();
-      paymentLinkUrl = data.url;
-      modeMessage = "🟢 [LIVE MODE] Stripe payment link created successfully";
-
-      await supabase
-        .from('stripe_payment_links')
-        .upsert({
-          price_id: priceId,
-          payment_link_url: paymentLinkUrl,
-          amount: data.line_items?.data?.[0]?.price?.unit_amount || null
-        }, { onConflict: 'price_id' });
-
-    } catch (err) {
-      modeMessage = `⚠️ [STRIPE API ERROR] Fallback to simulated payment link. Error: ${err.message}`;
-      const { data } = await supabase
-        .from('stripe_payment_links')
-        .select('payment_link_url')
-        .eq('price_id', priceId)
-        .maybeSingle();
-      paymentLinkUrl = data?.payment_link_url || `https://buy.stripe.com/mock_${priceId}`;
-      if (clientId) {
-        paymentLinkUrl += `?client_id=${encodeURIComponent(clientId)}`;
-      }
-    }
-  }
-
-  let report = `# 🔗 Stripe Payment Link Generated\n\n`;
-  report += `**Status:** ${modeMessage}\n`;
-  report += `- **Price ID:** \`${priceId}\`\n`;
-  if (clientId) {
-    report += `- **Client ID:** \`${clientId}\`\n`;
-  }
-  report += `- **Checkout URL:** [Open Checkout Link](${paymentLinkUrl})\n\n`;
-  report += `*Copy the URL above to send directly to the client or embed in confirmation workflows.*`;
-
   return report;
 }
 

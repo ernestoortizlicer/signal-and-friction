@@ -23,6 +23,7 @@ import { getSupabaseUrl, getServiceRoleKey } from "./_env";
 const ADMIN_ALLOWLIST_FALLBACK = "ernestoortiz@gmail.com,ernestoortizlicer@gmail.com";
 
 export interface AdminUser {
+  id: string;
   email: string;
 }
 
@@ -147,15 +148,15 @@ export async function requireAdmin(
     );
   }
 
-  const user = (await userRes.json()) as { email?: string };
+  const user = (await userRes.json()) as { id?: string; email?: string };
   const email = (user.email || "").toLowerCase();
   const allowlist = (env.ADMIN_EMAILS || ADMIN_ALLOWLIST_FALLBACK)
     .split(",")
     .map((e) => e.trim().toLowerCase());
 
-  if (!email || !allowlist.includes(email)) {
+  if (!user.id || !email || !allowlist.includes(email)) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  return { email };
+  return { id: user.id, email };
 }

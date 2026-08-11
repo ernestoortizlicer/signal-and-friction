@@ -8,6 +8,8 @@
  * The leading `_` keeps Pages from treating this module as a route.
  */
 
+import { normalizePublicHttpUrl } from './_public-url-safety.mjs';
+
 export interface ScanEnv {
   PAGESPEED_API_KEY?: string;
 }
@@ -168,14 +170,40 @@ async function detectHtmlSignals(url: string): Promise<{
   onSiteTestimonial: Presence;
   thirdPartyReviewLink: Presence;
 }> {
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'SignalFrictionAudit/1.0 (+https://signal-and-friction.pages.dev)' },
-    signal: AbortSignal.timeout(8000),
-  });
+  let currentUrl = url;
+  let res: Response | null = null;
+  for (let redirectCount = 0; redirectCount <= 5; redirectCount += 1) {
+    const safeTarget = normalizePublicHttpUrl(currentUrl);
+    if (!safeTarget.ok || typeof safeTarget.url !== 'string') {
+      throw new Error(`Unsafe target URL: ${safeTarget.error}`);
+    }
+    currentUrl = safeTarget.url;
+    res = await fetch(currentUrl, {
+      headers: { 'User-Agent': 'SignalFrictionAudit/1.0 (+https://signal-and-friction.pages.dev)' },
+      redirect: 'manual',
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (res.status < 300 || res.status >= 400) break;
+    const location = res.headers.get('location');
+    if (!location) throw new Error(`Target redirect ${res.status} has no Location header`);
+    currentUrl = new URL(location, currentUrl).toString();
+    res = null;
+  }
+  if (!res) throw new Error('Target exceeded five safe redirects');
   if (!res.ok) {
     throw new Error(`Target returned HTTP ${res.status}`);
   }
+  const contentType = res.headers.get('content-type')?.toLowerCase() || '';
+  if (contentType && !contentType.includes('text/html') && !contentType.includes('application/xhtml+xml')) {
+    throw new Error(`Target returned unsupported content type ${contentType.split(';')[0]}`);
+  }
+  const contentLength = Number(res.headers.get('content-length') || '0');
+  if (Number.isFinite(contentLength) && contentLength > 2_000_000) {
+    throw new Error('Target HTML exceeds the 2 MB scan limit');
+  }
   const html = await res.text();
+  if (html.length > 2_000_000) throw new Error('Target HTML exceeds the 2 MB scan limit');
 
   // The final URL after redirects — the honest answer to "is this site
   // actually served over HTTPS", not just what protocol we requested.
@@ -349,19 +377,21 @@ async function runPageSpeedWithRetry(psUrl: string): Promise<{ result: PageSpeed
 
 export async function runScan(rawUrl: string, env: ScanEnv): Promise<ScanReport> {
   const normalizedUrl = normalizeUrl(rawUrl);
-  if (!isValidUrl(normalizedUrl)) {
-    throw new Error('Invalid URL');
+  const safeTarget = normalizePublicHttpUrl(normalizedUrl);
+  if (!safeTarget.ok || typeof safeTarget.url !== 'string') {
+    throw new Error(`Invalid public URL: ${safeTarget.error}`);
   }
+  const scanUrl = safeTarget.url;
 
-  const domain = new URL(normalizedUrl).hostname.replace('www.', '');
+  const domain = new URL(scanUrl).hostname.replace('www.', '');
 
   // Run PageSpeed + HTML scan in parallel
   const psKey = env.PAGESPEED_API_KEY ? `&key=${env.PAGESPEED_API_KEY}` : '';
-  const psUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&strategy=mobile${psKey}`;
+  const psUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(scanUrl)}&strategy=mobile${psKey}`;
 
   const [psOutcome, htmlSignals] = await Promise.allSettled([
     runPageSpeedWithRetry(psUrl),
-    detectHtmlSignals(normalizedUrl),
+    detectHtmlSignals(scanUrl),
   ]);
 
   // Parse PageSpeed
@@ -454,7 +484,7 @@ export async function runScan(rawUrl: string, env: ScanEnv): Promise<ScanReport>
 
   return {
     domain,
-    url: normalizedUrl,
+    url: scanUrl,
     scannedAt: new Date().toISOString(),
     grade,
     frictionScore,

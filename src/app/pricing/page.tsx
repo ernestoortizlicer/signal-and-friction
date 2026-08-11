@@ -177,15 +177,9 @@ function DiagnosticCard({
 function PhaseCard({
   phase,
   verb,
-  cta,
-  link,
-  linksLoaded,
 }: {
   phase: OfferPhase;
   verb: string;
-  cta: string;
-  link: string | null;
-  linksLoaded: boolean;
 }) {
   return (
     <div className="flex-1 border border-[#D4A853]/12 bg-[#0A0908]/95 rounded p-5 flex flex-col gap-3 relative overflow-hidden group hover:border-[#D4A853]/30 transition-colors">
@@ -202,24 +196,9 @@ function PhaseCard({
       <p className="text-xs text-[#B0A89E] font-mono leading-relaxed flex-1">
         {phase.scope}
       </p>
-      {linksLoaded && link ? (
-        <a
-          href={link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-1 w-full text-center py-2 border border-[#D4A853]/30 text-[#D4A853] font-mono text-[11px] uppercase tracking-[0.1em] hover:bg-[#D4A853] hover:text-[#0A0908] transition-all rounded"
-        >
-          {cta} →
-        </a>
-      ) : linksLoaded ? (
-        <span className="mt-1 w-full text-center py-2 border border-white/10 text-[#6A5F55] font-mono text-[11px] uppercase tracking-[0.1em] rounded cursor-not-allowed">
-          Link unavailable
-        </span>
-      ) : (
-        <span className="mt-1 w-full text-center py-2 border border-white/5 text-[#6A5F55] font-mono text-[11px] uppercase tracking-[0.1em] rounded">
-          Loading…
-        </span>
-      )}
+      <span className="mt-1 w-full text-center py-2 border border-white/10 text-[#7A6F65] font-mono text-[11px] uppercase tracking-[0.1em] rounded cursor-not-allowed">
+        Authorized after the prior phase
+      </span>
     </div>
   );
 }
@@ -305,9 +284,6 @@ function LadderSection({
                 <PhaseCard
                   phase={phase}
                   verb={j?.verb ?? phase.name}
-                  cta={j?.cta ?? "Learn more"}
-                  link={links[phase.priceId] ?? null}
-                  linksLoaded={linksLoaded}
                 />
                 {i < arr.length - 1 && <Connector />}
               </div>
@@ -334,7 +310,7 @@ export default function PricingPage() {
     (async () => {
       try {
         const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/stripe_payment_links?select=price_id,payment_link_url`,
+          `${SUPABASE_URL}/rest/v1/stripe_payment_links?is_active=eq.true&is_public_entry=eq.true&select=price_id,payment_link_url`,
           { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
         );
         if (res.ok) {

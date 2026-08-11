@@ -156,6 +156,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     { href: "/admin/dashboard", label: "Pipeline", code: "PL" },
     { href: "/admin/prospecting", label: "Prospecting", code: "PS" },
     { href: "/admin/scaffolds", label: "Scaffolds", code: "SC" },
+    { href: "/admin/commercial", label: "Commerce", code: "CO" },
     { href: "/admin/finance", label: "Finance", code: "FN" },
     { href: "/admin/priorities", label: "Priorities", code: "PR" },
     { href: "/admin/learning", label: "Learning", code: "LE" },
