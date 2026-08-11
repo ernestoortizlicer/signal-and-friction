@@ -35,6 +35,7 @@ import {
   ImpactRangeBlock,
   AvoidSection,
   RecommendationWithheldCard,
+  RequiredJudgmentPendingCard,
   FinalDecisionCard,
   LoomSection,
   BehavioralInterpretationSection,
@@ -407,7 +408,7 @@ export default function PolicyComposedDeliverable({
         </section>
       )}
 
-      {/* Judgment / Recommendation — withheld is enforced here regardless of data presence */}
+      {/* Judgment / Recommendation — withheld stays explicit; required-but-missing fails closed */}
       {shows(m.judgment) && data.diagnosis?.friction?.rootCause && (
         <section className="py-16 px-6 border-b border-[#D4A853]/8 bg-[#110F0D]/40">
           <div className="max-w-[900px] mx-auto space-y-4">
@@ -425,23 +426,33 @@ export default function PolicyComposedDeliverable({
             <RecommendationWithheldCard mechanism={data.diagnosis?.friction?.mechanism} />
           </div>
         </section>
-      ) : shows(m.recommendation) && data.diagnosis?.finalDecision ? (
+      ) : shows(m.recommendation) && (data.diagnosis?.finalDecision || m.recommendation === "required") ? (
         <section className="py-16 px-6 border-b border-[#D4A853]/8">
           <div className="max-w-[900px] mx-auto space-y-6">
             <SectionHeader>The Recommendation</SectionHeader>
-            <FinalDecisionCard decision={data.diagnosis.finalDecision} />
-            {data.projectedImpact && (
-              <ImpactRangeBlock range={data.projectedImpact} confidenceLevel={data.confidenceLevel} confidenceReason={data.confidenceReason} />
-            )}
+            {data.diagnosis?.finalDecision ? (
+              <>
+                <FinalDecisionCard decision={data.diagnosis.finalDecision} />
+                {data.projectedImpact && (
+                  <ImpactRangeBlock range={data.projectedImpact} confidenceLevel={data.confidenceLevel} confidenceReason={data.confidenceReason} />
+                )}
+              </>
+            ) : m.recommendation === "required" ? (
+              <RequiredJudgmentPendingCard subject="recommended decision" />
+            ) : null}
           </div>
         </section>
       ) : null}
 
-      {shows(m.recommendation) && data.avoid?.length ? (
+      {shows(m.recommendation) && (data.avoid?.length || m.recommendation === "required") ? (
         <section className="py-16 px-6 border-b border-[#D4A853]/8 bg-[#110F0D]/40">
           <div className="max-w-[900px] mx-auto">
             <SectionHeader>What Not To Do</SectionHeader>
-            <AvoidSection items={data.avoid} />
+            {data.avoid?.length ? (
+              <AvoidSection items={data.avoid} />
+            ) : (
+              <RequiredJudgmentPendingCard subject="what-not-to-do judgment" />
+            )}
           </div>
         </section>
       ) : null}

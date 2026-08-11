@@ -7,7 +7,7 @@
  * form, for any scaffold. Everything else is secondary to that.
  */
 
-import { assertEquals, assertStrictEquals } from "https://deno.land/std@0.168.0/testing/asserts.ts";
+import { assertEquals } from "https://deno.land/std@0.168.0/testing/asserts.ts";
 import { applyDosing, generateTeaser, NOT_YET_DELIVERED, type ScaffoldJudgment } from "./dosing.ts";
 
 const SAMPLE: ScaffoldJudgment = {
@@ -58,13 +58,10 @@ Deno.test("teaser never contains a bare number for projected impact", () => {
   assertEquals(/\d/.test(teaser), false);
 });
 
-Deno.test("DWY beta_diagnostic omits the_decision and what_to_avoid entirely (not just empty)", () => {
+Deno.test("DWY beta_diagnostic includes the promised decision and what to avoid", () => {
   const dosed = applyDosing(SAMPLE, "dwy", "beta_diagnostic");
-  assertStrictEquals(dosed.fields.the_decision, undefined);
-  assertStrictEquals(dosed.fields.what_to_avoid, undefined);
-  assertEquals("the_decision" in dosed.fields, false);
-  assertEquals("what_to_avoid" in dosed.fields, false);
-  // But the diagnosis itself is fully present.
+  assertEquals(dosed.fields.the_decision, SAMPLE.the_decision);
+  assertEquals(dosed.fields.what_to_avoid, SAMPLE.what_to_avoid);
   assertEquals(dosed.fields.specific_friction_point, SAMPLE.specific_friction_point);
   assertEquals(dosed.fields.why_blocks_conversion, SAMPLE.why_blocks_conversion);
 });

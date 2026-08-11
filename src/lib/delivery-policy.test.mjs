@@ -2,7 +2,6 @@
  * Regression tests for the delivery-policy layer (Phase 4.3). Run with:
  *   node src/lib/delivery-policy.test.mjs
  */
-import assert from "node:assert/strict";
 import { ALL_LADDERS } from "./offer-catalog.ts";
 import { getDeliveryPolicy, getAllDeliveryPolicies, ALL_MODULE_IDS, priceIdForLineTier } from "./delivery-policy.ts";
 
@@ -53,10 +52,15 @@ for (const [label, policy] of [["DWY Diagnostic", dwyDiagnostic], ["DWY Expansio
   check(`${label}: cannot receive implementation-only modules`, forbidsAll(policy, IMPLEMENTATION_ONLY));
   check(`${label}: cannot receive monitoring-only modules`, forbidsAll(policy, MONITORING_ONLY));
   check(`${label}: cannot receive autonomy-only modules`, forbidsAll(policy, AUTONOMY_ONLY));
-  check(`${label}: recommendation withheld or required-but-honest, never silently leaked`, policy.modules.recommendation === "withheld" || policy.modules.recommendation === "required");
+  check(`${label}: evidence, judgment, and recommendation are all required`,
+    policy.modules.evidence === "required" &&
+    policy.modules.judgment === "required" &&
+    policy.modules.recommendation === "required"
+  );
 }
-// Diagnostic specifically (not Expansion, which is intentionally identical) withholds the recommendation outright.
-check("DWY Diagnostic: recommendation is withheld (matches dosing.ts DWY_DOSING.beta_diagnostic)", dwyDiagnostic.modules.recommendation === "withheld");
+check("both paid Diagnostic lines require the promised recommendation",
+  dwyDiagnostic.modules.recommendation === "required" && dfyDiagnostic.modules.recommendation === "required"
+);
 check("DWY Expansion is policy-identical to DWY Diagnostic by design", JSON.stringify(dwyExpansion.modules) === JSON.stringify(dwyDiagnostic.modules));
 
 // ── Service-defining modules land exactly where the product brief says ──

@@ -11,14 +11,16 @@
  * here ever re-asks the human to redact their own judgment per tier.
  *
  * Two structurally different axes, per the approved strategy:
- *   - DWY: the axis is INFORMATION DISCLOSURE. Each tier reveals more of
- *     the 7 fields. Redaction below teaser-full is 100% deterministic —
- *     zero AI calls anywhere in this file, on purpose. Partial reveals
- *     are driven by 3 companion enums (funnel_stage,
- *     projected_impact_magnitude, confidence_level) filled once alongside
- *     the 7 fields, plus 6 static per-mechanism sentences written once in
- *     code — never a paraphrase of the human's own free text, which would
- *     be a real (if subtle) fabrication-adjacent risk.
+ *   - DWY: only the FREE TEASER is information-dosed. Every paid tier
+ *     receives the complete 7-field judgment, including the recommended
+ *     decision and what to avoid. Later tiers add implementation,
+ *     monitoring, expansion, or autonomy work; they do not unlock pieces
+ *     of a diagnosis already purchased. Teaser redaction is 100%
+ *     deterministic — zero AI calls anywhere in this file, on purpose.
+ *     Partial teaser reveals use 3 companion enums (funnel_stage,
+ *     projected_impact_magnitude, confidence_level) plus 6 static
+ *     per-mechanism sentences — never a paraphrase of the human's own
+ *     free text, which would be a fabrication-adjacent risk.
  *   - DFY: the axis is WORK COMPLETENESS, not disclosure. All 7 fields
  *     are full from Beta Diagnostic upward — withholding the fix doesn't
  *     protect anything when the client isn't the one executing it. The
@@ -79,8 +81,8 @@ export const DWY_DOSING: Record<"teaser" | DwyTier, DwyDosingRule> = {
     specific_friction_point: "full",
     why_blocks_conversion: "full",
     projected_impact: "full",
-    the_decision: "withheld",
-    what_to_avoid: "withheld",
+    the_decision: "full",
+    what_to_avoid: "full",
     confidence_and_why: "full",
   },
   intervention: {

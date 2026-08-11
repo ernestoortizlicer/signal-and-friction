@@ -63,11 +63,10 @@ export const ALL_MODULE_IDS: DeliverableModuleId[] = [
  * allowed    — shown only when real content exists; fully omitted, no
  *               warning, when it doesn't. This is where field-presence
  *               alone still governs.
- * withheld   — the concept applies to this line, but this tier
- *               deliberately does not show it (e.g. the recommendation at
- *               DWY Diagnostic) — enforced here even if the underlying
- *               data happens to be present, which is the whole point:
- *               the policy is the gate, not what an admin typed that day.
+ * withheld   — the concept applies to this line, but an explicitly
+ *               governed scope does not show it. No active Diagnostic may
+ *               use this state for its recommendation: the paid contract
+ *               always includes the decision and what not to do.
  * unsupported— the concept doesn't exist for this line/tier at all (e.g.
  *               executionSummary for any DWY tier).
  */
@@ -108,9 +107,9 @@ const dwyDiagnosticModules: Record<DeliverableModuleId, DeliverableModulePolicy>
   behavioralInterpretation: "allowed",
   ruledOutAlternative: "allowed",
   judgment: "required",
-  recommendation: "withheld", // dosing.ts DWY_DOSING.beta_diagnostic withholds the_decision/what_to_avoid
-  implementationPlan: "unsupported", // "Do not show: implementation plans" before a fix has been selected
-  expectedBeforeAfter: "unsupported", // "inappropriate before a fix has been selected or implemented"
+  recommendation: "required", // every paid Diagnostic includes the decision and what not to do
+  implementationPlan: "unsupported", // Diagnostic recommends the decision; Intervention adds execution guidance
+  expectedBeforeAfter: "unsupported", // inappropriate before the recommended fix has been implemented
   measuredBeforeAfter: "unsupported",
   monitoringFindings: "unsupported",
   executionSummary: "unsupported", // DWY has no execution concept at all
@@ -128,7 +127,7 @@ const dwyInterventionModules: Record<DeliverableModuleId, DeliverableModulePolic
   behavioralInterpretation: "allowed",
   ruledOutAlternative: "allowed",
   judgment: "required",
-  recommendation: "required", // the tier's core unlock — dosing.ts reveals it full here
+  recommendation: "required", // carried forward; implementationPlan is this tier's core unlock
   implementationPlan: "required", // "must be structurally distinct from a prose recommendation"
   expectedBeforeAfter: "allowed", // "clearly labeled as expected or modeled unless already measured"
   measuredBeforeAfter: "unsupported", // nothing has been measured yet — that's Monitoring's job

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAuthHeaders } from "@/lib/supabase";
 import { AdminStatCard, RevenueProgressBar } from "@/components/admin/AdminComponents";
-import { mapDosedScaffoldToDelivery, NOT_YET_DELIVERED, DWY_DOSING, type ScaffoldJudgment, type Line, type DwyTier } from "@/lib/dosing";
+import { mapDosedScaffoldToDelivery, NOT_YET_DELIVERED, type ScaffoldJudgment, type Line, type DwyTier } from "@/lib/dosing";
 import { translateHypothesesForClient } from "@/lib/hypothesis-translation";
 import type { DiagnosisHypothesis } from "@/domain/reasoning";
 import { priceIdForLineTier, getDeliveryPolicy, type ServiceDeliveryPolicy } from "@/lib/delivery-policy";
@@ -751,11 +751,11 @@ export default function AdminDashboard() {
     // Dosing-aware branch — a real purchase is pending dosing for this
     // client's scaffold, so the diagnosis content comes from
     // mapDosedScaffoldToDelivery (the exact function the regression test
-    // exercises), not from the manual form fields below. This is the fix
-    // for the gap found 2026-08-02: previously this function always used
-    // the manual fields regardless of which tier was purchased, so
-    // nothing stopped the_decision/what_to_avoid from reaching a Beta
-    // Diagnostic customer if someone typed them into the form by habit.
+    // exercises), not from the manual form fields below. Previously this
+    // function always used those manual fields regardless of purchase,
+    // so the paid judgment could drift from the analyst's canonical
+    // scaffold. The dosing map now carries the complete paid Diagnostic
+    // contract while keeping free-teaser redaction outside this path.
     const dosed = dosedScaffold?.pending_dosing_line && dosedScaffold?.pending_dosing_tier
       ? mapDosedScaffoldToDelivery(dosedScaffold, dosedScaffold.pending_dosing_line, dosedScaffold.pending_dosing_tier)
       : null;
@@ -893,9 +893,9 @@ export default function AdminDashboard() {
               mechanism: diagMechanism || "Cognitive Load",
               rootCause: diagRootCause || "See Loom video for complete root cause analysis and recommended intervention stack.",
             },
-        // Genuinely null when dosing withholds it at this tier — not an
-        // object with empty strings, which could still render as a blank
-        // "Recommended Fix" section rather than nothing at all.
+        // Genuinely null when the scaffold has no decision — not an object
+        // with empty strings. Every paid tier includes this judgment, so
+        // validateDeliveryPayload will block an incomplete scaffold.
         finalDecision: dosed
           ? dosed.finalDecision
           : {
@@ -915,13 +915,10 @@ export default function AdminDashboard() {
   // any measured claim has no traceable source, or the Loom URL is
   // missing/placeholder, publishing is refused outright.
   //
-  // Dosing-aware since 2026-08-02: a dosed delivery legitimately omits
-  // finalDecision/avoid/the numeric projectedImpact range below
-  // Intervention tier on DWY — that's the entire point of the dosing
-  // engine, not an incomplete form. Requiring them unconditionally would
-  // make it IMPOSSIBLE to ever publish a correctly-dosed Beta Diagnostic.
-  // The manual (non-dosed, legacy) path keeps the original hard
-  // requirement exactly as before.
+  // The numeric projectedImpact range remains optional on the dosed path,
+  // because the scaffold carries an honest qualitative impact judgment.
+  // finalDecision and avoid are mandatory for every paid tier on both
+  // lines. Information dosing ends at the free teaser boundary.
   const validateDeliveryPayload = (payload: ReturnType<typeof buildDeliveryPayload>): string[] => {
     const errors: string[] = [];
     if (!loomUrl || !loomUrl.includes("loom.com/") || loomUrl.toLowerCase().includes("placeholder")) {
@@ -931,8 +928,6 @@ export default function AdminDashboard() {
     const line = dosedScaffold?.pending_dosing_line;
     const tier = dosedScaffold?.pending_dosing_tier;
     const isDosed = !!(line && tier);
-    const decisionExpected = !isDosed || line === "dfy" || DWY_DOSING[tier!].the_decision === "full";
-    const avoidExpected = !isDosed || line === "dfy" || DWY_DOSING[tier!].what_to_avoid === "full";
 
     if (isDosed) {
       if (!payload.diagnosis.friction.mechanism.trim() || !payload.diagnosis.friction.rootCause.trim()) {
@@ -946,10 +941,10 @@ export default function AdminDashboard() {
     }
 
     const fd = payload.diagnosis.finalDecision;
-    if (decisionExpected && (!fd || !fd.label || !fd.action || !fd.reasoning || (!isDosed && !fd.tradeoff))) {
+    if (!fd || !fd.label || !fd.action || !fd.reasoning || (!isDosed && !fd.tradeoff)) {
       errors.push("Final Decision is required and must be fully filled in — this is never model-generated.");
     }
-    if (avoidExpected && (!payload.avoid || payload.avoid.length === 0)) {
+    if (!payload.avoid || payload.avoid.length === 0) {
       errors.push("At least one complete Avoid item is required — this is never model-generated.");
     }
     const unsourced = (payload.evidence || []).filter((e) => e.tier === "measured" && !e.source?.trim());
@@ -3244,7 +3239,7 @@ export default function AdminDashboard() {
                                 <p className="text-[#B0A89E] text-[10px] mt-1">{dryRunPayload.diagnosis.finalDecision.action}</p>
                               </>
                             ) : (
-                              <p className="text-[#7A6F65] italic">{"(withheld at this tier — not revealed to this customer)"}</p>
+                              <p className="text-[#C85C5C] italic">{"(missing — publication blocked)"}</p>
                             )}
                           </div>
 

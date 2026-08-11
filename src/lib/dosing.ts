@@ -25,14 +25,16 @@
  * here ever re-asks the human to redact their own judgment per tier.
  *
  * Two structurally different axes, per the approved strategy:
- *   - DWY: the axis is INFORMATION DISCLOSURE. Each tier reveals more of
- *     the 7 fields. Redaction below teaser-full is 100% deterministic —
- *     zero AI calls anywhere in this file, on purpose. Partial reveals
- *     are driven by 3 companion enums (funnel_stage,
- *     projected_impact_magnitude, confidence_level) filled once alongside
- *     the 7 fields, plus 6 static per-mechanism sentences written once in
- *     code — never a paraphrase of the human's own free text, which would
- *     be a real (if subtle) fabrication-adjacent risk.
+ *   - DWY: only the FREE TEASER is information-dosed. Every paid tier
+ *     receives the complete 7-field judgment, including the recommended
+ *     decision and what to avoid. Later tiers add implementation,
+ *     monitoring, expansion, or autonomy work; they do not unlock pieces
+ *     of a diagnosis already purchased. Teaser redaction is 100%
+ *     deterministic — zero AI calls anywhere in this file, on purpose.
+ *     Partial teaser reveals use 3 companion enums (funnel_stage,
+ *     projected_impact_magnitude, confidence_level) plus 6 static
+ *     per-mechanism sentences — never a paraphrase of the human's own
+ *     free text, which would be a fabrication-adjacent risk.
  *   - DFY: the axis is WORK COMPLETENESS, not disclosure. All 7 fields
  *     are full from Beta Diagnostic upward — withholding the fix doesn't
  *     protect anything when the client isn't the one executing it. The
@@ -93,8 +95,8 @@ export const DWY_DOSING: Record<"teaser" | DwyTier, DwyDosingRule> = {
     specific_friction_point: "full",
     why_blocks_conversion: "full",
     projected_impact: "full",
-    the_decision: "withheld",
-    what_to_avoid: "withheld",
+    the_decision: "full",
+    what_to_avoid: "full",
     confidence_and_why: "full",
   },
   intervention: {
@@ -291,16 +293,13 @@ export function applyDosing(scaffold: ScaffoldJudgment, line: Line, tier: DwyTie
 
 // ── Publish-path integration (Next.js only — the actual publish button
 // lives in src/app/admin/dashboard/page.tsx, a separate, older pipeline
-// from the scaffold/dosing system). This is the fix for a real gap found
-// 2026-08-02: handlePublishDelivery previously built its payload
-// entirely from manually-typed dashboard form fields, with zero
-// awareness of the dosing engine — nothing stopped the_decision/
-// what_to_avoid from being typed into a Beta Diagnostic delivery by
-// hand. This function is the ONLY place that maps a dosed scaffold into
-// the DeliverableData shape the dashboard/public deliverable page uses,
-// and it's a pure function specifically so the regression test can call
-// the exact same logic the publish button calls — not a reimplementation
-// that could silently drift from what actually ships.
+// from the scaffold/dosing system). handlePublishDelivery previously
+// built its payload entirely from manually-typed dashboard fields, with
+// no guarantee that the paid judgment came from the canonical scaffold.
+// This function is the ONLY place that maps a dosed scaffold into the
+// DeliverableData shape the dashboard/public page uses. It is pure so the
+// regression test calls the exact same logic as the publish button — not
+// a reimplementation that could silently drift from what actually ships.
 // Phase 4.0 (2026-08-11 audit fix): dfyDelivery was computed by
 // applyDosing() on every DFY call but this function never read it —
 // meaning DFY_TIER_SCOPE's entire execution_summary/monitoring_findings/
@@ -318,9 +317,9 @@ export interface DfyDeliveryFields {
 
 export interface DosedDeliveryFields {
   friction: { mechanism: string; rootCause: string };
-  // null, not an empty-but-present object — omitted entirely when the
-  // tier withholds it, so validateDeliveryPayload can tell the
-  // difference between "withheld by design" and "forgot to fill it in."
+  // null, not an empty-but-present object. Every paid tier includes the
+  // decision, so null identifies an incomplete scaffold and the publish
+  // validation gate can fail closed instead of rendering a blank section.
   finalDecision: { type: "A"; label: string; action: string; reasoning: string; tradeoff: string } | null;
   avoid: Array<{ action: string; reason: string }>;
   confidenceLevel: ConfidenceLevel | null;

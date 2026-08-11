@@ -16,7 +16,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.18.0
           cache: npm
 
       - name: Install dependencies
@@ -27,3 +27,6 @@ jobs:
 
       - name: Check mirrored domain drift
         run: npm run check:drift
+
+      - name: Check paid delivery contracts
+        run: npm run test:contracts
