@@ -30,3 +30,6 @@ jobs:
 
       - name: Check diagnostic authority
         run: npm run check:diagnostic-authority
+
+      - name: Check native intake product truth
+        run: npm run check:intake-truth

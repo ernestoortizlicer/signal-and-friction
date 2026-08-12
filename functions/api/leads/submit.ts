@@ -98,19 +98,6 @@ export const onRequestPost = async ({
       mappedSegment = 'microdosing';
     }
 
-    // Map friction mechanism
-    let mappedMechanism = 'cognitive_load';
-    const painLower = body.funnelPain.toLowerCase();
-    if (painLower.includes('bounce') || painLower.includes('landing')) {
-      mappedMechanism = 'value_deficit';
-    } else if (painLower.includes('billing') || painLower.includes('paywall') || painLower.includes('gate')) {
-      mappedMechanism = 'trust_deficit';
-    } else if (painLower.includes('onboarding') || painLower.includes('dropout') || painLower.includes('setup')) {
-      mappedMechanism = 'cognitive_load';
-    } else if (painLower.includes('pricing') || painLower.includes('confusion')) {
-      mappedMechanism = 'sequence_order';
-    }
-
     const region = body.region || 'US';
 
     const serviceRoleKey = getServiceRoleKey(env);
@@ -206,19 +193,20 @@ export const onRequestPost = async ({
       }
     }
 
-    // Create interaction record (non-critical telemetry).
+    // Intake is symptom/context capture, not diagnosis. Persist only the
+    // observable self-reported signal in the legacy-compatible column and
+    // deliberately leave dominant_friction_mechanism NULL. The canonical
+    // mechanism is owned later by the human-led diagnostic workflow.
+    //
+    // Production currently exposes the legacy interactions schema, so this
+    // write intentionally uses only columns proven to exist there. Richer
+    // intake context is already preserved in clients/beta_projects custom_fields.
     const { error: interactionErr } = await supabase
       .from('interactions')
       .insert({
         client_id: clientId,
-        interaction_type: 'form_submission',
-        dominant_friction_mechanism: mappedMechanism,
-        data: {
-          url: body.url,
-          funnel_pain: body.funnelPain,
-          segment_selection: body.segmentSelection,
-          custom_answer: body.customAnswer,
-        },
+        funnel_signal: body.funnelPain,
+        dominant_friction_mechanism: null,
       });
     if (interactionErr) {
       console.warn('interaction logging skipped:', interactionErr.message);
