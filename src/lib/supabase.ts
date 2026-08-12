@@ -1,14 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const rawSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const rawSupabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+// Environment values are configuration tokens, not user input. Normalize only
+// surrounding whitespace so a dashboard copy/paste newline cannot turn a valid
+// credential into an opaque build failure. Quotes or other content remain invalid.
+const supabaseUrl = rawSupabaseUrl?.trim()
+const supabaseAnonKey = rawSupabaseAnonKey?.trim()
 
 // A real Supabase project URL is always https://<20-char-lowercase-alphanumeric-ref>.supabase.co
-// A real Supabase anon key is always a JWT (three base64url segments, starts with "eyJ").
-// Checking for the literal substring 'placeholder' let 'https://dummy.supabase.co' and a
-// bare 'dummy' key through silently — both are truthy and neither contains that word. This
-// checks the actual SHAPE of a real credential instead of guessing at bad-value spellings,
-// so it can't be defeated by the next placeholder someone happens to type.
+// A legacy Supabase anon key is a JWT (three base64url segments, starts with "eyJ").
+// This project still uses the legacy client variable during the current release gate;
+// publishable-key migration is a separate change.
 const VALID_SUPABASE_URL = /^https:\/\/[a-z0-9]{20}\.supabase\.co$/
 const VALID_SUPABASE_ANON_KEY = /^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
 
@@ -23,9 +27,6 @@ function fatalConfigError(message: string): never {
       </div>
     `
   }
-  // Always throw — client or server, build or runtime. A silent fallback to a fake
-  // client is worse than a hard crash: it fails invisibly, page by page, instead of
-  // failing once, loudly, at the moment it's introduced.
   throw new Error(`Supabase config invalid: ${message}`)
 }
 
@@ -43,10 +44,10 @@ if (!supabaseAnonKey || !VALID_SUPABASE_ANON_KEY.test(supabaseAnonKey)) {
   )
 }
 
-export const supabase = createClient(supabaseUrl!, supabaseAnonKey!)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export function getAuthHeaders(): Record<string, string> {
-  let token = supabaseAnonKey ?? '';
+  let token = supabaseAnonKey;
   if (typeof window !== 'undefined') {
     const cookieMatch = document.cookie.match(/sf-admin-session=([^;]+)/);
     if (cookieMatch && cookieMatch[1]) {
@@ -54,7 +55,7 @@ export function getAuthHeaders(): Record<string, string> {
     }
   }
   return {
-    apikey: supabaseAnonKey ?? '',
+    apikey: supabaseAnonKey,
     Authorization: `Bearer ${token}`,
   };
 }
