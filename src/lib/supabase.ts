@@ -44,10 +44,17 @@ if (!supabaseAnonKey || !VALID_SUPABASE_ANON_KEY.test(supabaseAnonKey)) {
   )
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Capture the post-validation values as concrete strings. TypeScript does not
+// preserve module-level control-flow narrowing inside later function bodies, even
+// though these const bindings cannot change. Keeping validated aliases avoids
+// non-null assertions while preserving the fail-closed runtime contract above.
+const validatedSupabaseUrl: string = supabaseUrl
+const validatedSupabaseAnonKey: string = supabaseAnonKey
+
+export const supabase = createClient(validatedSupabaseUrl, validatedSupabaseAnonKey)
 
 export function getAuthHeaders(): Record<string, string> {
-  let token = supabaseAnonKey;
+  let token = validatedSupabaseAnonKey;
   if (typeof window !== 'undefined') {
     const cookieMatch = document.cookie.match(/sf-admin-session=([^;]+)/);
     if (cookieMatch && cookieMatch[1]) {
@@ -55,7 +62,7 @@ export function getAuthHeaders(): Record<string, string> {
     }
   }
   return {
-    apikey: supabaseAnonKey,
+    apikey: validatedSupabaseAnonKey,
     Authorization: `Bearer ${token}`,
   };
 }
