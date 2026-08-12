@@ -10,7 +10,8 @@
     "crm": "node scripts/crm-server.mjs",
     "check:drift": "node scripts/check-domain-drift.mjs",
     "check:offers": "node scripts/check-offer-integrity.mjs",
-    "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs && npm run check:offers && npm run check:drift",
+    "check:diagnostic-authority": "node scripts/check-diagnostic-authority.mjs",
+    "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs && npm run check:offers && npm run check:drift && npm run check:diagnostic-authority",
     "deploy": "wrangler pages deploy out --project-name=signal-and-friction"
   },
   "dependencies": {
