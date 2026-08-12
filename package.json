@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/check-cloudflare-build-env.mjs && next build",
     "start": "next start",
     "lint": "eslint",
     "crm": "node scripts/crm-server.mjs",
