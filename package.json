@@ -11,7 +11,8 @@
     "check:drift": "node scripts/check-domain-drift.mjs",
     "check:offers": "node scripts/check-offer-integrity.mjs",
     "check:diagnostic-authority": "node scripts/check-diagnostic-authority.mjs",
-    "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs && npm run check:offers && npm run check:drift && npm run check:diagnostic-authority",
+    "check:intake-truth": "node scripts/check-intake-product-truth.mjs",
+    "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs && npm run check:offers && npm run check:drift && npm run check:diagnostic-authority && npm run check:intake-truth",
     "deploy": "wrangler pages deploy out --project-name=signal-and-friction"
   },
   "dependencies": {
