@@ -1,3 +1,8 @@
+if (process.env.CF_PAGES !== '1') {
+  console.log('[cloudflare-build-env-preflight] SKIPPED (not running in Cloudflare Pages)');
+  process.exit(0);
+}
+
 const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const rawAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
