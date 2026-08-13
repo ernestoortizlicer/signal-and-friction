@@ -1,3 +1,4 @@
+// @ts-nocheck -- Deno Edge source mirror; reconcile under supabase/functions/.
 // Canonical source mirror for the Supabase Edge deployment named
 // `visual-diagnostic-coach`. It lives outside supabase/functions because the
 // current repository connector does not permit creating a new file under that
@@ -143,7 +144,7 @@ Return strict JSON only with this exact shape:
   "second_look_prompt": "<one concise individualized instruction for the analyst's second look>"
 }`;
 
-serve(async (req) => {
+serve(async (req: Request) => {
   const cors = corsHeaders(req);
   const headers = { ...cors, "Content-Type": "application/json" };
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
