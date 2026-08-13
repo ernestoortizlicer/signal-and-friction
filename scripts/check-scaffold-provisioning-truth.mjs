@@ -25,8 +25,10 @@ function requireMatch(source, pattern, message) {
 }
 
 const migration = read(files.migration);
-requireMatch(migration, /UPDATE public\.clients[\s\S]*target_url = s\.target_url[\s\S]*HAVING count\(DISTINCT target_url\) = 1/,
-  'legacy client target_url backfill must only use unambiguous scaffold evidence');
+requireMatch(migration, /HAVING count\(DISTINCT target_url\) = 1/,
+  'legacy client target_url backfill source must require one unambiguous scaffold target');
+requireMatch(migration, /UPDATE public\.clients[\s\S]*SET target_url = s\.target_url[\s\S]*WHERE c\.id = s\.client_id/,
+  'legacy client target_url backfill must write only the selected canonical scaffold target');
 requireMatch(migration, /clients_target_url_http_check[\s\S]*\^https\?\:\/\//,
   'database must reject malformed canonical client target URLs');
 requireMatch(migration, /CREATE UNIQUE INDEX IF NOT EXISTS diagnostic_scaffolds_one_per_client_idx[\s\S]*WHERE client_id IS NOT NULL/,
