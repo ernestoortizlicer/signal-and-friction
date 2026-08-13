@@ -26,18 +26,33 @@ async function buildAuthoritativeContext(env: Env, analystId: string, profileId:
   const { data: profile, error: profileError } = await supabase.from('finance_profiles').select('*').eq('id', profileId).eq('owner_id', analystId).single();
   if (profileError || !profile) throw profileError ?? new Error('Finance profile not found');
 
-  const [accountsRes, txRes, obligationsRes, sourcesRes, cashPolicyRes, ipsRes, goalsRes, investmentsRes] = await Promise.all([
+  const [accountsRes, txRes, obligationsRes, jurisdictionsRes, cashPolicyRes, ipsRes, goalsRes, investmentsRes] = await Promise.all([
     supabase.from('accounts').select('id,name,type,currency,liquidity_class,is_active').eq('profile_id', profileId).eq('is_active', true).order('type').order('name'),
     supabase.from('transactions').select('id,date,description,status,transaction_entries(account_id,amount)').eq('profile_id', profileId).order('date', { ascending: false }).limit(200),
     supabase.from('finance_obligations').select('id,jurisdiction_code,obligation_type,period_label,due_date,status,amount_cents,amount_currency,amount_source,source_id,evidence_ref,requires_professional_review,notes').eq('profile_id', profileId).order('due_date'),
-    supabase.from('finance_compliance_sources').select('id,jurisdiction_code,authority,topic,source_title,source_url,valid_from,valid_to,checked_at,verification_status,verified_at,verification_note').eq('jurisdiction_code', profile.jurisdiction_code ?? 'UNSET').eq('verification_status', 'verified').order('verified_at', { ascending: false }),
+    supabase.from('finance_profile_jurisdictions').select('id,jurisdiction_code,role,status,effective_from,effective_to,source_id,evidence_ref,requires_professional_review,notes').eq('profile_id', profileId).order('effective_from', { ascending: false }),
     supabase.from('finance_cash_policies').select('*').eq('profile_id', profileId).eq('status', 'active').maybeSingle(),
     supabase.from('finance_investment_policies').select('*').eq('profile_id', profileId).eq('status', 'active').maybeSingle(),
     supabase.from('financial_goals').select('id,name,target_amount,current_amount,target_date').eq('profile_id', profileId).is('archived_at', null).order('target_date'),
     supabase.from('investments').select('id,name,type,cost_basis,current_value,purchase_date,projected_annual_roi_pct,notes,source_note').eq('profile_id', profileId).is('archived_at', null),
   ]);
-  const error = accountsRes.error || txRes.error || obligationsRes.error || sourcesRes.error || cashPolicyRes.error || ipsRes.error || goalsRes.error || investmentsRes.error;
-  if (error) throw error;
+  const firstError = accountsRes.error || txRes.error || obligationsRes.error || jurisdictionsRes.error || cashPolicyRes.error || ipsRes.error || goalsRes.error || investmentsRes.error;
+  if (firstError) throw firstError;
+
+  const jurisdictionCodes = [...new Set([
+    ...(jurisdictionsRes.data ?? []).map((j) => j.jurisdiction_code),
+    ...(obligationsRes.data ?? []).map((o) => o.jurisdiction_code),
+    ...(profile.jurisdiction_code ? [String(profile.jurisdiction_code)] : []),
+  ].filter(Boolean))];
+
+  const sourcesRes = jurisdictionCodes.length
+    ? await supabase.from('finance_compliance_sources')
+        .select('id,jurisdiction_code,authority,topic,source_title,source_url,valid_from,valid_to,checked_at,verification_status,verified_at,verification_note')
+        .in('jurisdiction_code', jurisdictionCodes)
+        .eq('verification_status', 'verified')
+        .order('verified_at', { ascending: false })
+    : { data: [], error: null };
+  if (sourcesRes.error) throw sourcesRes.error;
 
   const accounts = accountsRes.data ?? [];
   const accountById = new Map(accounts.map((a) => [a.id, a]));
@@ -67,9 +82,15 @@ async function buildAuthoritativeContext(env: Env, analystId: string, profileId:
   return {
     asOf: new Date().toISOString(),
     profile: {
-      id: profile.id, name: profile.name, scope: profile.scope, entityName: profile.entity_name,
-      baseCurrency: profile.base_currency, jurisdictionCode: profile.jurisdiction_code,
-      jurisdictionStatus: profile.jurisdiction_status,
+      id: profile.id,
+      name: profile.name,
+      scope: profile.scope,
+      entityName: profile.entity_name,
+      baseCurrency: profile.base_currency,
+      // Compatibility metadata only; never treat this as tax-residency truth.
+      legacyJurisdictionCode: profile.jurisdiction_code,
+      legacyJurisdictionStatus: profile.jurisdiction_status,
+      jurisdictionStack: jurisdictionsRes.data ?? [],
     },
     metrics: {
       liquidCashCents: liquidCash,
@@ -114,13 +135,14 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
       profile_id: body.profileId,
       question,
       input_snapshot_hash: hash,
-      prompt_version: 'finance-os-v2-2026-08-13',
+      prompt_version: 'finance-os-v2.1-2026-08-13',
       status: 'started',
       trace_json: {
         context_as_of: context.asOf,
         accounts: context.accounts.length,
         transactions: context.recentTransactions.length,
         obligations: context.obligations.length,
+        jurisdictions: context.profile.jurisdictionStack.length,
         verified_sources: context.verifiedComplianceSources.length,
         cash_policy_present: !!context.cashPolicy,
         investment_policy_present: !!context.investmentPolicy,
@@ -177,7 +199,10 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
   } catch (err) {
     if (runId) {
       await supabase.from('finance_agent_runs').update({
-        status: 'failed', error: err instanceof Error ? err.message : 'Unknown failure', latency_ms: Date.now() - started, completed_at: new Date().toISOString(),
+        status: 'failed',
+        error: err instanceof Error ? err.message : 'Unknown failure',
+        latency_ms: Date.now() - started,
+        completed_at: new Date().toISOString(),
       }).eq('id', runId);
     }
     return Response.json({ error: err instanceof Error ? err.message : 'Finance Agent failed.' }, { status: 500, headers: CORS });
