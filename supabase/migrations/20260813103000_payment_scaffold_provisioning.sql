@@ -7,7 +7,8 @@
 -- 3. A canonical payment linked to a client atomically emits one durable provisioning job.
 -- 4. Background execution is an optimization; the durable DB job is the source of recovery truth.
 -- 5. External scan failure never rolls back or fakes payment success.
--- 6. One client owns at most one client-backed diagnostic scaffold; rescans update it.
+-- 6. Project delivery state says provisioning/awaiting_input until a real scaffold exists.
+-- 7. One client owns at most one client-backed diagnostic scaffold; rescans update it.
 
 -- Backfill target_url only where existing scaffold evidence is unambiguous.
 WITH canonical_scaffold_target AS (
@@ -38,10 +39,28 @@ ALTER TABLE public.clients
   );
 
 -- The UI and rescan flow already model one mutable workspace per client.
--- Make duplicate client-backed workspaces impossible at the database layer.
 CREATE UNIQUE INDEX IF NOT EXISTS diagnostic_scaffolds_one_per_client_idx
   ON public.diagnostic_scaffolds(client_id)
   WHERE client_id IS NOT NULL;
+
+-- Delivery state must distinguish paid-but-not-provisioned from diagnostic work
+-- that can actually begin.
+ALTER TABLE public.beta_projects
+  DROP CONSTRAINT IF EXISTS beta_projects_status_check;
+ALTER TABLE public.beta_projects
+  ADD CONSTRAINT beta_projects_status_check
+  CHECK (status IN (
+    'prospecting',
+    'outreach_sent',
+    'followup_sent',
+    'provisioning',
+    'awaiting_input',
+    'diagnostic_in_progress',
+    'delivered',
+    'awaiting_testimonial',
+    'closed_completed',
+    'closed_lost'
+  ));
 
 CREATE TABLE IF NOT EXISTS public.scaffold_provisioning_jobs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -95,6 +114,64 @@ CREATE TRIGGER trigger_enqueue_scaffold_provisioning_job
   FOR EACH ROW
   EXECUTE FUNCTION public.enqueue_scaffold_provisioning_job();
 
+-- Extend the payment state machine installed by PR #13. Payment confirmation
+-- is still canonical, but delivery does not claim diagnostic work has started
+-- until scaffold provisioning succeeds.
+CREATE OR REPLACE FUNCTION public.handle_payment_state_truth()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_project_count integer;
+  v_target_url text;
+BEGIN
+  IF NEW.client_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  IF TG_OP = 'UPDATE' AND OLD.client_id IS NOT DISTINCT FROM NEW.client_id THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT target_url INTO v_target_url
+  FROM public.clients
+  WHERE id = NEW.client_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'payment references missing client %', NEW.client_id
+      USING ERRCODE = '23503';
+  END IF;
+
+  UPDATE public.clients
+  SET protocol_stage = CASE
+        WHEN protocol_stage = 'pre_payment' THEN 'payment_confirmed'
+        ELSE protocol_stage
+      END,
+      updated_at = now()
+  WHERE id = NEW.client_id;
+
+  UPDATE public.beta_projects
+  SET payment_status = 'paid',
+      status = CASE
+        WHEN status IN ('prospecting', 'outreach_sent', 'followup_sent') THEN
+          CASE
+            WHEN v_target_url IS NULL OR btrim(v_target_url) = '' THEN 'awaiting_input'
+            ELSE 'provisioning'
+          END
+        ELSE status
+      END,
+      updated_at = now()
+  WHERE client_id = NEW.client_id;
+
+  GET DIAGNOSTICS v_project_count = ROW_COUNT;
+
+  IF v_project_count <> 1 THEN
+    RAISE EXCEPTION 'payment client % expected exactly one beta_project, found %', NEW.client_id, v_project_count
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Atomic claim prevents concurrent Stripe retries/background tasks from
 -- scanning the same target simultaneously. needs_input is only claimable
 -- through an explicit operator retry after the missing input is corrected.
@@ -125,3 +202,5 @@ COMMENT ON TABLE public.scaffold_provisioning_jobs IS
   'Durable outbox for payment-triggered client scaffold provisioning. Payment truth is committed first; external scan work is asynchronous/recoverable.';
 COMMENT ON FUNCTION public.claim_scaffold_provisioning_job(UUID, BOOLEAN) IS
   'Atomically claims one pending/retryable provisioning job. needs_input requires explicit operator retry.';
+COMMENT ON FUNCTION public.handle_payment_state_truth() IS
+  'Canonical payment advances payment truth while delivery remains provisioning/awaiting_input until a real scaffold is ready.';
