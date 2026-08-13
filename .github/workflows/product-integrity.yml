@@ -36,3 +36,6 @@ jobs:
 
       - name: Check Stripe webhook transport safety
         run: npm run check:stripe-webhook
+
+      - name: Check payment state machine truth
+        run: npm run check:payment-state
