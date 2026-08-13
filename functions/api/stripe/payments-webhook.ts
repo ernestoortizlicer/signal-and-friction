@@ -1,6 +1,7 @@
 import { onRequestPost as legacyOnRequestPost } from '../../../src/server/stripe/legacy-handler';
 import { classifyLegacyWebhookResponse } from '../../../src/server/stripe-webhook-boundary.mjs';
 import { provisionPaymentScaffoldBySessionId } from '../scaffolds/_provision-payment';
+import { handleReferralStripeEvent } from './_referrals';
 
 type LegacyContext = Parameters<typeof legacyOnRequestPost>[0];
 type PaymentsContext = Omit<LegacyContext, 'env'> & {
@@ -10,22 +11,22 @@ type PaymentsContext = Omit<LegacyContext, 'env'> & {
   waitUntil?: (promise: Promise<unknown>) => void;
 };
 
+type VerifiedEvent = {
+  id?: string;
+  type?: string;
+  data?: { object?: Record<string, unknown> };
+};
+
 /**
- * Dedicated Snapshot payment-event transport boundary.
+ * Dedicated payment-event transport boundary.
  *
- * The existing /api/stripe/webhook route remains bound to the pre-existing
- * Stripe Event Destination and its STRIPE_WEBHOOK_SECRET. Payment events use
- * a separate route + signing secret so two Stripe destinations never compete
- * for one verification secret.
- *
- * Payment acknowledgement and scaffold provisioning are deliberately split:
- * the private payment processor commits canonical payment truth first. Only
- * after the signed event is safely acknowledged do we schedule best-effort
- * background scaffold provisioning. The DB outbox remains durable if the
- * background task is interrupted or the external scan fails.
+ * The legacy processor remains the canonical compatibility unit for payment
+ * persistence. This wrapper owns only post-verification side effects that are
+ * explicitly isolated from payment acknowledgement: scaffold provisioning and
+ * the private referral-credit lifecycle.
  */
 export const onRequestPost = async (context: PaymentsContext): Promise<Response> => {
-  const provisioningRequest = context.request.clone();
+  const backgroundRequest = context.request.clone();
 
   const innerResponse = await legacyOnRequestPost({
     ...context,
@@ -50,21 +51,31 @@ export const onRequestPost = async (context: PaymentsContext): Promise<Response>
         headers: { 'Cache-Control': 'no-store' },
       });
 
-  // Never launch downstream work for an invalid signature, retryable payment
-  // failure, or unrelated event. The raw event body is only inspected after
-  // the inner processor has already verified the Stripe signature and the
-  // transport classifier has accepted the payment handling result.
-  if (response.status === 200 && typeof context.waitUntil === 'function') {
-    context.waitUntil((async () => {
+  // The body is inspected only after the inner processor verified the Stripe
+  // signature and the transport classifier accepted the event. Referral
+  // bookkeeping is non-fatal to canonical payment acknowledgement, but it is
+  // always attempted (waitUntil when available, awaited fallback otherwise).
+  if (response.status === 200) {
+    const backgroundWork = (async () => {
+      let event: VerifiedEvent;
       try {
-        const event = await provisioningRequest.json() as {
-          type?: string;
-          data?: { object?: { id?: string } };
-        };
-        if (event.type !== 'checkout.session.completed') return;
-        const sessionId = event.data?.object?.id;
-        if (!sessionId) return;
+        event = await backgroundRequest.json() as VerifiedEvent;
+      } catch (err) {
+        console.warn(`Verified Stripe event could not be parsed for post-processing: ${err instanceof Error ? err.message : 'unknown error'}`);
+        return;
+      }
 
+      try {
+        await handleReferralStripeEvent(event, context.env);
+      } catch (err) {
+        console.warn(`Referral lifecycle processing failed: ${err instanceof Error ? err.message : 'unknown error'}`);
+      }
+
+      if (event.type !== 'checkout.session.completed') return;
+      const sessionId = typeof event.data?.object?.id === 'string' ? event.data.object.id : null;
+      if (!sessionId) return;
+
+      try {
         const result = await provisionPaymentScaffoldBySessionId(sessionId, context.env);
         if (result.status === 'retryable' || result.status === 'needs_input') {
           console.warn(`Scaffold provisioning deferred: ${result.status}/${result.reason}`);
@@ -72,7 +83,10 @@ export const onRequestPost = async (context: PaymentsContext): Promise<Response>
       } catch (err) {
         console.warn(`Scaffold provisioning background task failed: ${err instanceof Error ? err.message : 'unknown error'}`);
       }
-    })());
+    })();
+
+    if (typeof context.waitUntil === 'function') context.waitUntil(backgroundWork);
+    else await backgroundWork;
   }
 
   return response;
