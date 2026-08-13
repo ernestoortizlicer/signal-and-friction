@@ -19,16 +19,16 @@ interface TechnicalSignals {
   lcp: { ms: number; label: string; status: string };
   tbt: { ms: number; label: string; status: string };
   cls: { value: number; status: string };
-  performanceScore: number; // informational only — not scored, see ScoreBreakdown
+  performanceScore: number;
   speedIndex: { ms: number; label: string };
   grade: string;
   platform: string | null;
-  missingOgTags: string[]; // informational only — not scored
-  httpsEnabled: boolean;   // informational only — not scored
+  missingOgTags: string[];
+  httpsEnabled: boolean;
   privacyPolicyLink: Presence;
   termsOfServiceLink: Presence;
   securityBadges: Presence;
-  liveChatWidget: Presence; // informational only — not scored
+  liveChatWidget: Presence;
   pricingLink: Presence;
   viewportMetaPresent: boolean;
   primaryCtaPresent: Presence;
@@ -213,9 +213,6 @@ export default function ProspectingCommandCenter() {
       if (res.ok) {
         const rows: Array<{ id: string; prospect_candidate_id: string }> = await res.json();
         const map: Record<string, string> = {};
-        // Most-recent-first isn't guaranteed by this query, but candidates
-        // only ever have one live scaffold in practice — last write wins
-        // either way, which is harmless.
         rows.forEach((r) => { map[r.prospect_candidate_id] = r.id; });
         setScaffoldIds(map);
       }
@@ -283,7 +280,6 @@ export default function ProspectingCommandCenter() {
       return;
     }
 
-    // De-dupe within the pasted batch itself before upserting.
     const uniqueByDomain = new Map<string, { url: string; domain: string }>();
     for (const p of parsed) uniqueByDomain.set(p.domain, p);
     const rows = Array.from(uniqueByDomain.values()).map((p) => ({
@@ -318,7 +314,6 @@ export default function ProspectingCommandCenter() {
     }
   }
 
-  // ── AI-suggested leads — ephemeral, writes nothing until Add is clicked ──
   async function fetchSuggestions() {
     setSuggestLoading(true);
     setSuggestError(null);
@@ -333,11 +328,6 @@ export default function ProspectingCommandCenter() {
         },
         body: JSON.stringify({ existingDomains }),
       });
-      // Capture the exact raw text this browser received, before any
-      // parsing — this is what lets a future mismatch (or a "why is this
-      // browser's result different from a curl test" question) be
-      // answered from what actually happened here, not from a guess or a
-      // separate request run from somewhere else.
       const rawText = await res.text();
       setSuggestRawResponse(
         `REQUEST existingDomains (${existingDomains.length}): ${JSON.stringify(existingDomains)}\n\nRESPONSE (HTTP ${res.status}):\n${rawText}`
@@ -362,10 +352,6 @@ export default function ProspectingCommandCenter() {
     }
   }
 
-  // Inserts exactly like a manually-pasted URL (source differs only in
-  // provenance, never in what gates it), then immediately triggers the same
-  // real scan every candidate has to pass — the suggestion is never treated
-  // as a real prospect until that scan either confirms or fails it.
   async function addSuggestion(s: Suggestion) {
     setAddingSuggestionDomains((prev) => new Set(prev).add(s.domain));
     try {
@@ -397,8 +383,6 @@ export default function ProspectingCommandCenter() {
         setNotice({ message: `${s.domain} added — scanning now.`, variant: "green" });
         await scanOne(created.id);
       } else {
-        // ignore-duplicates means it was already in the pipeline — no
-        // representation row comes back for a skipped conflict.
         setNotice({ message: `${s.domain} was already in the pipeline.`, variant: "green" });
         await fetchCandidates();
       }
@@ -426,10 +410,7 @@ export default function ProspectingCommandCenter() {
       try {
         body = rawText ? JSON.parse(rawText) : null;
       } catch {
-        // Not JSON — something between the Worker and this browser rewrote
-        // the response body (seen once already: Cloudflare's edge swaps in
-        // its own page for 50x "gateway" statuses). Show the raw bytes
-        // rather than a canned message, so that's visible instead of hidden.
+        // Preserve raw edge/runtime failure text below instead of masking it.
       }
       if (res.ok && body) {
         setCandidates((prev) => prev.map((c) => (c.id === id ? (body as unknown as Candidate) : c)));
@@ -454,9 +435,6 @@ export default function ProspectingCommandCenter() {
     const pending = candidates.filter((c) => c.status === "new" || c.status === "scan_failed" || c.status === "scanning");
     if (pending.length === 0) return;
     setBulkScanning(true);
-    // Sequential, not parallel — each scan already hits PageSpeed's own
-    // rate limits; fanning these out concurrently just trades one queue
-    // for another and makes partial failures harder to attribute.
     for (const c of pending) {
       await scanOne(c.id);
     }
@@ -473,12 +451,6 @@ export default function ProspectingCommandCenter() {
       return next;
     });
     try {
-      // getAuthHeaders() reads whatever's currently in the sf-admin-session
-      // cookie — normally kept fresh by admin/layout.tsx's
-      // onAuthStateChange listener, but this save was failing silently
-      // with zero diagnostic (see below), so pulling the session directly
-      // from the Supabase client here removes any doubt about a stale
-      // cookie being the cause, rather than trusting the cookie snapshot.
       const { data: { session } } = await supabase.auth.getSession();
       const headers = {
         apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
@@ -502,10 +474,6 @@ export default function ProspectingCommandCenter() {
       const rows = await res.json();
       const updated = rows[0];
       if (!updated) {
-        // 200/204 with zero rows back means the row exists but RLS (or a
-        // stale/invalid session) silently blocked the write — this is
-        // exactly the class of failure the old code couldn't distinguish
-        // from success. Surface it instead of pretending it saved.
         setContactErrors((prev) => ({
           ...prev,
           [id]: "Save request succeeded but no row was updated — likely a permissions issue. Try logging out and back in.",
@@ -533,10 +501,7 @@ export default function ProspectingCommandCenter() {
       setNotice({ message: "Add a founder contact before promoting — that's the manual step that keeps this from auto-contacting anyone.", variant: "red" });
       return;
     }
-    // A future Stripe payment is matched to a client purely by email
-    // (functions/api/stripe/webhook.ts looks up clients.contact_email) —
-    // founder_contact is free text (name, LinkedIn URL, or email) and
-    // can't be trusted as one. Ask explicitly rather than guess.
+
     const emailLooking = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const contactEmail = (
       window.prompt(
@@ -548,58 +513,32 @@ export default function ProspectingCommandCenter() {
       setNotice({ message: "Promotion cancelled — a valid contact email is required so a future payment can be matched to this client.", variant: "red" });
       return;
     }
+
     try {
-      const headers = { ...getAuthHeaders(), "Content-Type": "application/json", Prefer: "return=representation" };
-      const clientRes = await fetch(`${SUPABASE_URL}/rest/v1/clients`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/promote_prospect_candidate`, {
         method: "POST",
-        headers,
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
         body: JSON.stringify({
-          company_name: candidate.company_name || candidate.domain,
-          contact_name: founderContact,
-          contact_email: contactEmail,
-          contact_profile_url: candidate.url,
-          industry: "Unknown",
-          estimated_mrr: 0,
-          source_platform: "prospecting_seed_list",
+          p_candidate_id: candidate.id,
+          p_founder_contact: founderContact,
+          p_contact_email: contactEmail,
         }),
       });
-      if (!clientRes.ok) {
-        setNotice({ message: "Failed to create the client record.", variant: "red" });
+      const body = await res.json().catch(() => null);
+      const promotion = Array.isArray(body) ? body[0] : null;
+
+      if (!res.ok || !promotion?.client_id || !promotion?.project_id) {
+        const detail = body?.message || body?.hint || body?.details || `HTTP ${res.status}`;
+        setNotice({ message: `Promotion failed atomically — no partial client/opportunity should remain. ${detail}`, variant: "red" });
+        await fetchCandidates();
         return;
       }
-      const [newClient] = await clientRes.json();
 
-      // beta_projects starts at its default status ('prospecting') — the
-      // same real UI stage as any other client, with a real transition
-      // path (⚡ Send Outreach on the Pipeline dashboard). Without this
-      // row the client can never leave Prospecting: no "Deliver
-      // Diagnostic" button, no status at all, since the dashboard reads
-      // pipeline state from beta_projects, not clients.
-      const projectRes = await fetch(`${SUPABASE_URL}/rest/v1/beta_projects`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ client_id: newClient.id }),
-      });
-      if (!projectRes.ok) {
-        setNotice({ message: `${candidate.domain} promoted, but its pipeline record failed to create — open Pipeline and check ${candidate.company_name || candidate.domain} manually.`, variant: "red" });
-      }
-
-      const candRes = await fetch(`${SUPABASE_URL}/rest/v1/prospect_candidates?id=eq.${candidate.id}`, {
-        method: "PATCH",
-        headers,
-        body: JSON.stringify({
-          status: "promoted",
-          founder_contact: founderContact,
-          promoted_client_id: newClient.id,
-        }),
-      });
-      if (candRes.ok) {
-        const [updated] = await candRes.json();
-        if (updated) setCandidates((prev) => prev.map((c) => (c.id === candidate.id ? updated : c)));
-      }
-      setNotice({ message: `${candidate.domain} promoted to the client pipeline.`, variant: "green" });
-    } catch {
-      setNotice({ message: "Failed to promote this candidate.", variant: "red" });
+      await fetchCandidates();
+      setNotice({ message: `${candidate.domain} promoted to Opportunities. Client and project were committed atomically.`, variant: "green" });
+    } catch (err) {
+      setNotice({ message: `Promotion request failed before confirmation: ${err instanceof Error ? err.message : "network error"}`, variant: "red" });
+      await fetchCandidates();
     }
   }
 
@@ -620,7 +559,6 @@ export default function ProspectingCommandCenter() {
     }
   }
 
-  // ── Delete (hard, admin-gated) ──
   async function deleteCandidate(id: string, label: string) {
     if (!window.confirm(`Permanently delete ${label}? This cannot be undone.`)) return;
     setDeletingIds((prev) => new Set(prev).add(id));
@@ -651,7 +589,6 @@ export default function ProspectingCommandCenter() {
     }
   }
 
-  // ── Reset to New (un-dismiss, admin-gated) ──
   async function resetToNew(id: string) {
     try {
       const res = await fetch(`/api/prospecting/candidates/${id}`, {
@@ -670,7 +607,6 @@ export default function ProspectingCommandCenter() {
     }
   }
 
-  // ── Inline edit of company_name / url (admin-gated) ──
   function startEditing(c: Candidate) {
     setEditDrafts((prev) => ({ ...prev, [c.id]: { company_name: c.company_name ?? "", url: c.url } }));
     setEditingIds((prev) => new Set(prev).add(c.id));
@@ -731,7 +667,6 @@ export default function ProspectingCommandCenter() {
     }
   }
 
-  // ── Bulk selection ──
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -776,7 +711,6 @@ export default function ProspectingCommandCenter() {
     setSelectedActionRunning(false);
   }
 
-  // ── Clear All (hard delete of every candidate, regardless of filter/selection) ──
   async function clearAllCandidates() {
     if (candidates.length === 0) return;
     if (
@@ -836,9 +770,9 @@ export default function ProspectingCommandCenter() {
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
       <AdminSectionHeader
-        eyebrow="Prospecting"
-        title="Candidate Pipeline"
-        subtitle="Seed-list candidates, scanned and ranked by observable technical friction. You decide who's worth pursuing."
+        eyebrow="Sales · Prospects"
+        title="Prospects"
+        subtitle="Evidence-backed companies under review. Discover and qualify here; only explicit human promotion creates an Opportunity."
       />
 
       <AdminAlert variant="gold">
@@ -1093,11 +1027,6 @@ export default function ProspectingCommandCenter() {
           ]}
         >
           {visibleCandidates.map((c) => {
-            // Only "this browser tab has an in-flight request for this row"
-            // disables the button. c.status === "scanning" is DB state and
-            // can be stale from a request that died before writing back —
-            // gating the button on it would make a stuck row unrecoverable
-            // from the UI (no request in flight, but no button to retry).
             const isScanning = scanningIds.has(c.id);
             const isDeleting = deletingIds.has(c.id);
             const isSavingEdit = savingEditIds.has(c.id);
