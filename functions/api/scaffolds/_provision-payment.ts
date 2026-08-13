@@ -25,9 +25,7 @@ export async function provisionPaymentScaffoldBySessionId(
   options: { allowNeedsInput?: boolean } = {}
 ): Promise<ProvisionResult> {
   const serviceRoleKey = getServiceRoleKey(env as Record<string, string>);
-  if (!serviceRoleKey) {
-    return { status: 'retryable', reason: 'supabase_service_role_missing' };
-  }
+  if (!serviceRoleKey) return { status: 'retryable', reason: 'supabase_service_role_missing' };
 
   const supabase = createClient(getSupabaseUrl(env as Record<string, string>), serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -67,36 +65,13 @@ export async function provisionPaymentScaffoldBySessionId(
     status: 'succeeded' | 'needs_input' | 'retryable',
     patch: { scaffold_id?: string | null; last_error?: string | null }
   ) => {
-    const now = new Date().toISOString();
-    const { error: jobError } = await supabase
-      .from('scaffold_provisioning_jobs')
-      .update({
-        status,
-        scaffold_id: patch.scaffold_id ?? null,
-        last_error: patch.last_error ?? null,
-        finished_at: now,
-        updated_at: now,
-      })
-      .eq('payment_id', payment.id);
-    if (jobError) throw new Error('job_finish_failed');
-
-    // Delivery state is derived from the actual provisioning result, not from
-    // payment optimism. Never regress projects already beyond this boundary.
-    if (status === 'succeeded') {
-      const { error } = await supabase
-        .from('beta_projects')
-        .update({ status: 'diagnostic_in_progress', updated_at: now })
-        .eq('client_id', payment.client_id)
-        .in('status', ['provisioning', 'awaiting_input']);
-      if (error) throw new Error('project_state_advance_failed');
-    } else if (status === 'needs_input') {
-      const { error } = await supabase
-        .from('beta_projects')
-        .update({ status: 'awaiting_input', updated_at: now })
-        .eq('client_id', payment.client_id)
-        .eq('status', 'provisioning');
-      if (error) throw new Error('project_state_block_failed');
-    }
+    const { error } = await supabase.rpc('finish_scaffold_provisioning_job', {
+      p_payment_id: payment.id,
+      p_status: status,
+      p_scaffold_id: patch.scaffold_id ?? null,
+      p_last_error: patch.last_error ?? null,
+    });
+    if (error) throw new Error('job_finish_failed');
   };
 
   try {
@@ -119,8 +94,9 @@ export async function provisionPaymentScaffoldBySessionId(
 
     const canonicalTarget = canonicalizePublicTargetUrl(rawTargetUrl);
     if (!canonicalTarget.ok) {
-      await finish('needs_input', { last_error: `client_target_url_${canonicalTarget.reason}` });
-      return { status: 'needs_input', reason: `client_target_url_${canonicalTarget.reason}` };
+      const reason = `client_target_url_${canonicalTarget.reason}`;
+      await finish('needs_input', { last_error: reason });
+      return { status: 'needs_input', reason };
     }
 
     const { data: existing, error: existingError } = await supabase
@@ -136,9 +112,7 @@ export async function provisionPaymentScaffoldBySessionId(
     }
 
     const report = await runScan(canonicalTarget.url, env);
-    if (report.psError || report.htmlSignalsError) {
-      throw new Error('scan_incomplete');
-    }
+    if (report.psError || report.htmlSignalsError) throw new Error('scan_incomplete');
 
     const signals = toRawTechnicalSignals(report);
     const evidence = buildScaffoldEvidence(signals);
