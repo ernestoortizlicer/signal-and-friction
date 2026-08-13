@@ -1,0 +1,28 @@
+{
+  "id": "opportunity_scout",
+  "name": "Signal and Friction Opportunity Scout",
+  "status": "experimental_build",
+  "specPath": "docs/agents/agent-01-opportunity-scout-spec-v0.1.md",
+  "decisionLogPath": "docs/decision-log-2026-08-13-agent-roadmap.md",
+  "evalPath": "evals/opportunity-scout",
+  "canonicalAuthorities": [
+    "functions/api/_scan.ts",
+    "src/lib/offer-catalog.ts",
+    "src/domain/reasoning/types.ts"
+  ],
+  "reusedCapabilities": [
+    "supabase/functions/prospecting-suggest-leads/index.ts",
+    "functions/api/prospecting/scan.ts",
+    "supabase/functions/prospecting-discover-contact/index.ts",
+    "src/lib/offer-catalog.ts",
+    "prospect_candidates"
+  ],
+  "deterministicFirst": [
+    "seller self-reference gate",
+    "domain normalization/validation",
+    "existing deterministic technical Scan"
+  ],
+  "humanApprovalBoundary": "No external outreach, reply, proposal, negotiation, pricing change, or irreversible sales action may occur without explicit human approval. Agent v0.1 has no send tool.",
+  "productionWriteSurface": "none in current Python slice",
+  "notes": "Discovery, Scan, contact discovery and offer truth are existing capabilities to wrap/reuse, not rebuild."
+}
