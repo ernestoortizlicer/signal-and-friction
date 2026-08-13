@@ -29,30 +29,26 @@ export const onRequestGet = async ({
     "Content-Type": "application/json",
   };
 
-  // 1. Check if deliverable already exists — if yes, SLA is done. No PII
-  // in this response (boolean + URL only), so no capability check needed.
+  // A published deliverable is the authoritative terminal state for this
+  // client-facing SLA surface. Do not infer delivery from elapsed time.
   try {
     const resDeliv = await fetch(
       `${supabaseUrl}/rest/v1/deliverables?client_key=eq.${encodeURIComponent(clientKey)}&select=client_key`,
-      { headers }
+      { headers },
     );
     if (resDeliv.ok) {
       const delivData: Array<{ client_key: string }> = await resDeliv.json();
       if (delivData.length > 0) {
         return Response.json(
           { status: "delivered", deliverableUrl: `/deliverable/${clientKey}` },
-          { headers: CORS }
+          { headers: CORS },
         );
       }
     }
   } catch {
-    // non-fatal
+    // Non-fatal. Continue to the authorized project-state lookup.
   }
 
-  // 2. Real (non-demo) clients require their own UUID as a capability
-  // token (`?cid=`) — clientKey alone is a guessable company-name slug.
-  // This also replaces the old unfiltered "fetch every client row" query
-  // with a single filtered lookup by id.
   if (!DEMO_CLIENT_KEYS.has(clientKey)) {
     const cid = new URL(request.url).searchParams.get("cid");
     if (!cid) {
@@ -61,8 +57,8 @@ export const onRequestGet = async ({
 
     try {
       const resClient = await fetch(
-        `${supabaseUrl}/rest/v1/clients?id=eq.${encodeURIComponent(cid)}&select=id,company_name,beta_projects(status,created_at,delivered_at)`,
-        { headers }
+        `${supabaseUrl}/rest/v1/clients?id=eq.${encodeURIComponent(cid)}&select=id,company_name,protocol_stage,beta_projects(status,payment_status,delivered_at)`,
+        { headers },
       );
       if (!resClient.ok) {
         return Response.json({ error: "Service unavailable" }, { status: 503, headers: CORS });
@@ -71,7 +67,12 @@ export const onRequestGet = async ({
       const rows: Array<{
         id: string;
         company_name: string;
-        beta_projects: Array<{ status: string; created_at: string; delivered_at: string | null }>;
+        protocol_stage: string;
+        beta_projects: Array<{
+          status: string;
+          payment_status: string | null;
+          delivered_at: string | null;
+        }>;
       }> = await resClient.json();
       const match = rows[0];
 
@@ -80,9 +81,37 @@ export const onRequestGet = async ({
       }
 
       const project = match.beta_projects?.[0];
-      const createdAt = project?.created_at || new Date().toISOString();
+
+      // Payment truth owns the commercial SLA start. beta_projects.created_at
+      // can predate payment by hours or days because intake creates the project.
+      const resPayment = await fetch(
+        `${supabaseUrl}/rest/v1/payments?client_id=eq.${encodeURIComponent(match.id)}&select=created_at&order=created_at.asc&limit=1`,
+        { headers },
+      );
+      if (!resPayment.ok) {
+        return Response.json({ error: "Service unavailable" }, { status: 503, headers: CORS });
+      }
+
+      const payments: Array<{ created_at: string }> = await resPayment.json();
+      const payment = payments[0];
+
+      if (!payment) {
+        return Response.json(
+          {
+            status: "awaiting_payment",
+            clientName: match.company_name,
+            clientKey,
+            protocolStage: match.protocol_stage,
+            projectStatus: project?.status ?? null,
+            paymentStatus: project?.payment_status ?? null,
+          },
+          { headers: CORS },
+        );
+      }
+
+      const slaStartedAt = payment.created_at;
       const now = Date.now();
-      const hoursElapsed = (now - new Date(createdAt).getTime()) / 3600000;
+      const hoursElapsed = Math.max(0, (now - new Date(slaStartedAt).getTime()) / 3600000);
       const hoursRemaining = Math.max(0, 72 - hoursElapsed);
       const pctElapsed = Math.min(100, (hoursElapsed / 72) * 100);
 
@@ -91,21 +120,23 @@ export const onRequestGet = async ({
           status: "in_progress",
           clientName: match.company_name,
           clientKey,
-          createdAt,
+          slaStartedAt,
           hoursElapsed: Math.round(hoursElapsed * 10) / 10,
           hoursRemaining: Math.round(hoursRemaining * 10) / 10,
           pctElapsed: Math.round(pctElapsed * 10) / 10,
-          projectStatus: project?.status || "active",
+          protocolStage: match.protocol_stage,
+          projectStatus: project?.status ?? null,
+          paymentStatus: project?.payment_status ?? null,
         },
-        { headers: CORS }
+        { headers: CORS },
       );
     } catch {
       return Response.json({ error: "Internal error" }, { status: 500, headers: CORS });
     }
   }
 
-  // Demo clientKey with no matching deliverables-table row (step 1 already
-  // returned if one existed) — nothing real to report.
+  // Demo client keys without a published deliverable have no canonical live
+  // payment/project state, so do not manufacture an SLA timeline for them.
   return Response.json({ error: "Not found" }, { status: 404, headers: CORS });
 };
 
