@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import DailyTrainingPlan from "./DailyTrainingPlan";
+import VisualDiagnosticCoach from "./VisualDiagnosticCoach";
 import DiagnosticCalibration from "./DiagnosticCalibration";
 import ReasoningActivities from "./ReasoningActivities";
 
-type Tab = "daily" | "calibration" | "reasoning" | "archive";
+type Tab = "daily" | "visual" | "calibration" | "reasoning" | "archive";
 
 export default function LearningDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>("daily");
@@ -23,7 +24,7 @@ export default function LearningDashboard() {
             <span className="font-mono text-[10px] text-[#D4A853]/70 tracking-[0.35em] uppercase block">Learning OS v2 · Deliberate Practice</span>
             <h1 className="text-3xl font-serif tracking-tight mt-1">Engineer skill, don’t collect course completion.</h1>
             <p className="text-xs text-[#7A6F65] mt-2 max-w-3xl leading-relaxed">
-              External courses feed the system. Retrieval, applied builds, traces, and staged diagnostic work create evidence. Premium authorization remains a separate fail-closed gate.
+              External courses feed the system. Visual discrimination, retrieval, applied builds, traces, and staged diagnostic work create evidence. Premium authorization remains a separate fail-closed gate.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -35,6 +36,7 @@ export default function LearningDashboard() {
         <nav className="flex gap-5 border-b border-[#D4A853]/10 overflow-x-auto">
           {([
             { key: "daily", label: "Today" },
+            { key: "visual", label: "Visual Lab" },
             { key: "calibration", label: "Diagnostic Calibration" },
             { key: "reasoning", label: "Reasoning Lab" },
             { key: "archive", label: "Archive" },
@@ -42,9 +44,7 @@ export default function LearningDashboard() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`pb-3 whitespace-nowrap text-xs uppercase tracking-widest border-b-2 transition-colors ${
-                activeTab === tab.key ? "border-[#D4A853] text-[#D4A853]" : "border-transparent text-[#7A6F65] hover:text-[#B0A89E]"
-              }`}
+              className={`pb-3 whitespace-nowrap text-xs uppercase tracking-widest border-b-2 transition-colors ${activeTab === tab.key ? "border-[#D4A853] text-[#D4A853]" : "border-transparent text-[#7A6F65] hover:text-[#B0A89E]"}`}
             >
               {tab.label}
             </button>
@@ -57,7 +57,7 @@ export default function LearningDashboard() {
             onOpenReasoning={() => setActiveTab("reasoning")}
           />
         )}
-
+        {activeTab === "visual" && <VisualDiagnosticCoach />}
         {activeTab === "calibration" && <DiagnosticCalibration />}
         {activeTab === "reasoning" && <ReasoningActivities />}
 
