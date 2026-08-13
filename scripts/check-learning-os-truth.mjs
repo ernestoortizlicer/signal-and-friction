@@ -14,11 +14,15 @@ const forbidText = (body, needle, label) => body.includes(needle) ? fail(`${labe
 const page = read("src/app/admin/learning/page.tsx");
 const daily = read("src/app/admin/learning/DailyTrainingPlan.tsx");
 const api = read("functions/api/learning/daily.ts");
+const visual = read("src/app/admin/learning/VisualDiagnosticCoach.tsx");
+const visualApi = read("functions/api/learning/visual.ts");
+const visualRuntime = read("functions/runtime/visual-diagnostic-coach.ts");
 const migration = read("supabase/migrations/20260813140000_learning_os_v2.sql");
 const training = read("src/lib/training-workflow.ts");
 
 requireText(page, 'useState<Tab>("daily")', "Learning opens on the daily deliberate-practice control surface");
 requireText(page, "DailyTrainingPlan", "Learning uses Daily Learning OS");
+requireText(page, "VisualDiagnosticCoach", "Visual Lab is integrated into canonical Learning OS");
 requireText(page, "DiagnosticCalibration", "Diagnostic Calibration remains the canonical diagnostic practice surface");
 requireText(page, "ReasoningActivities", "Reasoning Lab remains available as a supporting practice surface");
 requireText(page, "Legacy data preserved; legacy pedagogy retired", "Legacy learning is explicitly non-authoritative");
@@ -35,6 +39,16 @@ requireText(api, "ensure_plan", "Learning API can materialize the daily plan det
 requireText(api, "complete_session", "Learning API records completed evidence-bearing sessions");
 requireText(api, "calibrationFocus", "Daily learning can target recent calibration failure modes");
 
+requireText(visual, "Practice only", "Visual coach is visibly practice-only");
+requireText(visual, "Train the input before the reasoning", "Visual training prioritizes perception before diagnosis");
+requireText(visualApi, "requireAdmin", "Visual practice persistence is admin gated");
+requireText(visualApi, "visual:", "Visual practice reuses Learning evidence references rather than creating parallel mastery state");
+requireText(visualApi, "data:image", "Visual persistence explicitly rejects raw image data");
+requireText(visualApi, "practiceOnly: true", "Persisted visual practice cannot masquerade as certification evidence");
+requireText(visualRuntime, "UNTRUSTED INTERFACE CONTENT", "Visual runtime treats screenshot text as untrusted content");
+requireText(visualRuntime, "PRACTICE feedback, not certification ground truth", "Visual model is not a certification authority");
+requireText(visualRuntime, "Do not name or score friction mechanisms", "Perception drills do not jump prematurely to diagnosis");
+
 requireText(migration, "learning_daily_settings", "Daily targets are persisted as explicit state");
 requireText(migration, "learning_resources", "External courses/resources are tracked explicitly");
 requireText(migration, "learning_sessions", "Deliberate-practice sessions are persisted explicitly");
@@ -45,7 +59,7 @@ for (const stage of ["observation","evidence_review","hypothesis","counter_hypot
 }
 
 if (failed) {
-  console.error("\nLearning OS truth guard failed. Keep daily study, practice evidence and Diagnostic Calibration authority aligned.");
+  console.error("\nLearning OS truth guard failed. Keep daily study, visual practice, Diagnostic Calibration and certification authority aligned.");
   process.exit(1);
 }
 console.log("\nLearning OS authority contract passed.");
