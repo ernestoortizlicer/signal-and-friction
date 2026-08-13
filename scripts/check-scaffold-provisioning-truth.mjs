@@ -3,6 +3,7 @@ import fs from 'node:fs';
 const failures = [];
 const files = {
   migration: 'supabase/migrations/20260813103000_payment_scaffold_provisioning.sql',
+  retentionMigration: 'supabase/migrations/20260813103100_payment_client_retention_truth.sql',
   intake: 'functions/api/leads/submit.ts',
   targetPolicy: 'functions/api/_target-url.ts',
   route: 'functions/api/stripe/payments-webhook.ts',
@@ -48,6 +49,12 @@ requireMatch(migration, /successful provisioning requires scaffold owned by clie
   'success must prove scaffold ownership before advancing delivery');
 requireMatch(migration, /'provisioning'[\s\S]*'awaiting_input'[\s\S]*'diagnostic_in_progress'/,
   'project state machine must model provisioning and missing-input states explicitly');
+
+const retentionMigration = read(files.retentionMigration);
+requireMatch(retentionMigration, /DROP CONSTRAINT IF EXISTS payments_client_id_fkey/,
+  'payment client FK must be deliberately replaced rather than drift');
+requireMatch(retentionMigration, /FOREIGN KEY \(client_id\)[\s\S]*REFERENCES public\.clients\(id\)[\s\S]*ON DELETE RESTRICT/,
+  'immutable payment ownership must not contradict an ON DELETE SET NULL foreign key');
 
 const targetPolicy = read(files.targetPolicy);
 requireMatch(targetPolicy, /credentials_forbidden/,
@@ -110,4 +117,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('✅ Scaffold provisioning truth: canonical target, durable outbox, leased claims, atomic finish, async recovery, SSRF guardrails, idempotent scaffold identity, and evidence-gated delivery state');
+console.log('✅ Scaffold provisioning truth: canonical target, durable outbox, leased claims, atomic finish, retention-aligned payment ownership, async recovery, SSRF guardrails, idempotent scaffold identity, and evidence-gated delivery state');
