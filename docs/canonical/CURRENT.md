@@ -8,6 +8,8 @@
 
 - `docs/canonical/V2-OPERATING-STANDARD.md` — engineering/agent/eval/source/approval constitution.
 - `docs/architecture/capability-registry.md` — what already exists; mandatory discovery before new builds.
+- `docs/architecture/backend-os-v3.md` — operator module map, LIVE/PLANNED connection truth and runtime health projection.
+- `docs/decision-log-2026-08-13-backend-os-v3.md` — decision record for the outcome-driven admin/backend cutover.
 - `docs/decision-log-2026-08-13-agent-roadmap.md` — agent roadmap decisions.
 
 ## Learning / diagnostic authority
