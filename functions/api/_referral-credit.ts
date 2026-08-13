@@ -1,36 +1,47 @@
 /**
- * Referral credit — proportional model.
- * ════════════════════════════════════════════════════════════════════════════
- * Replaces the old flat $500 Stripe coupon (SFREF500), which could exceed the
- * price of a $350 DWY phase and turn a referral into a loss. A fixed
- * percentage of what the referred person actually paid can never do that —
- * at 20%, the credit is mathematically bounded by the transaction it came
- * from. There's no separate "margin cap" to enforce on top of this; the
- * proportionality IS the cap.
+ * Signal & Friction — private client-introduction credit policy.
  *
- * Lives under functions/ (not src/lib) because Cloudflare esbuild cannot
- * resolve cross-directory imports into src/ at function compile time (same
- * constraint documented in _scan.ts and _models.ts). src/lib/referral-credit.ts
- * is the sibling copy for app code (admin UI, future pricing page) — keep the
- * rate and REFERRALS_LIVE in sync between the two if either ever changes.
+ * Commercial rule (2026-08-13): an existing qualifying client who introduces
+ * a genuinely new client earns 20% of that new client's first retained,
+ * qualifying service fee as non-cash credit toward a future eligible
+ * engagement. The referred client pays the normal price.
+ *
+ * Runtime persistence and Stripe event handling live in
+ * functions/api/stripe/_referrals.ts.
  */
 
-// Parked post-launch (2026-07-29): the `referrals` table doesn't exist yet
-// (20260729000003_referrals_table.sql is written and ready, but
-// deliberately not run — no first client yet, so a referral loop is
-// premature). functions/api/stripe/webhook.ts gates its referral-recording
-// block on this flag instead of just letting the Supabase call fail and
-// get caught — a guaranteed failure on every single payment isn't a
-// "graceful degrade" to leave running, it's log spam. Flip to true once
-// the migration has actually been run.
+/**
+ * The pre-2026-08-13 compatibility write path inside legacy-handler.ts stays
+ * off. It targeted the old schema and lacked eligibility, new-client, expiry
+ * and revocation controls. Keep this false until that block is deleted.
+ */
 export const REFERRALS_LIVE = false;
 
-export const REFERRAL_CREDIT_RATE = 0.20; // 20%, fixed — confirmed 2026-07-29
+/** The policy-complete referral subsystem is live. */
+export const REFERRAL_SYSTEM_LIVE = true;
 
-/** Never round a credit UP in the payer's favor. */
-export function computeReferralCreditCents(referredPurchaseAmountCents: number | null | undefined): number {
-  if (!referredPurchaseAmountCents || !Number.isFinite(referredPurchaseAmountCents) || referredPurchaseAmountCents <= 0) {
+export const REFERRAL_CREDIT_RATE = 0.20;
+export const REFERRAL_QUALIFYING_MINIMUM_CENTS = 100_000; // $1,000
+export const REFERRAL_CREDIT_CAP_CENTS = 100_000; // $1,000 per referral
+export const REFERRAL_CREDIT_TTL_DAYS = 180;
+
+/**
+ * Credit is computed from retained service fees excluding tax/shipping.
+ * Never round up. Below-threshold purchases produce no credit.
+ */
+export function computeReferralCreditCents(
+  qualifyingAmountCents: number | null | undefined,
+): number {
+  if (
+    !qualifyingAmountCents ||
+    !Number.isFinite(qualifyingAmountCents) ||
+    qualifyingAmountCents < REFERRAL_QUALIFYING_MINIMUM_CENTS
+  ) {
     return 0;
   }
-  return Math.floor(referredPurchaseAmountCents * REFERRAL_CREDIT_RATE);
+
+  return Math.min(
+    Math.floor(qualifyingAmountCents * REFERRAL_CREDIT_RATE),
+    REFERRAL_CREDIT_CAP_CENTS,
+  );
 }
