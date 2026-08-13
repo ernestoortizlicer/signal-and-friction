@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { requireAdmin } from '../_admin-auth';
+import { requireAdmin, type AdminUser } from '../_admin-auth';
 import { getSupabaseUrl, getServiceRoleKey } from '../_env';
 
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
@@ -11,13 +11,12 @@ function db(env: Env) {
   });
 }
 
-async function rpcAsCaller(request: Request, env: Env, name: string, payload: Record<string, unknown>): Promise<unknown> {
-  const auth = request.headers.get('Authorization');
-  const apikey = getServiceRoleKey(env);
-  if (!auth?.startsWith('Bearer ') || !apikey) throw new Error('Verified caller credentials unavailable');
+async function rpcInternal(env: Env, name: string, payload: Record<string, unknown>): Promise<unknown> {
+  const key = getServiceRoleKey(env);
+  if (!key) throw new Error('Server finance credential unavailable');
   const res = await fetch(`${getSupabaseUrl(env)}/rest/v1/rpc/${name}`, {
     method: 'POST',
-    headers: { apikey, Authorization: auth, 'Content-Type': 'application/json' },
+    headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
   const text = await res.text();
@@ -28,8 +27,7 @@ async function rpcAsCaller(request: Request, env: Env, name: string, payload: Re
 
 function cents(value: unknown): number {
   const n = Number(value);
-  if (!Number.isFinite(n)) return 0;
-  return Math.round(n);
+  return Number.isFinite(n) ? Math.round(n) : 0;
 }
 
 function parseList(value: unknown): string[] {
@@ -38,15 +36,19 @@ function parseList(value: unknown): string[] {
   return [];
 }
 
+async function getOwnedProfile(env: Env, analystId: string, profileId: string) {
+  const supabase = db(env);
+  const { data, error } = await supabase.from('finance_profiles').select('*').eq('id', profileId).eq('owner_id', analystId).single();
+  if (error || !data) throw new Error('Finance profile not found for this operator');
+  return data;
+}
+
 async function dashboard(env: Env, analystId: string, requestedProfileId?: string | null) {
   const supabase = db(env);
-  const { data: profiles, error: profilesError } = await supabase
-    .from('finance_profiles').select('*').eq('owner_id', analystId).order('created_at');
+  const { data: profiles, error: profilesError } = await supabase.from('finance_profiles').select('*').eq('owner_id', analystId).order('created_at');
   if (profilesError) throw profilesError;
   const profile = (profiles ?? []).find((p) => p.id === requestedProfileId) ?? profiles?.[0] ?? null;
-  if (!profile) {
-    return { profiles: [], profile: null, accounts: [], transactions: [], metrics: null, investments: [], goals: [], sources: [], obligations: [], cashPolicy: null, investmentPolicy: null, recommendations: [] };
-  }
+  if (!profile) return { profiles: [], profile: null, accounts: [], transactions: [], metrics: null, investments: [], goals: [], sources: [], obligations: [], cashPolicy: null, investmentPolicy: null, recommendations: [] };
 
   const [accountsRes, txRes, investmentsRes, goalsRes, sourcesRes, obligationsRes, cashPolicyRes, ipsRes, recommendationsRes] = await Promise.all([
     supabase.from('accounts').select('*').eq('profile_id', profile.id).eq('is_active', true).order('type').order('name'),
@@ -68,42 +70,33 @@ async function dashboard(env: Env, analystId: string, requestedProfileId?: strin
   const now = Date.now();
   const cutoff30 = now - 30 * 86400000;
   const cutoff90 = now - 90 * 86400000;
-  let expenses30 = 0;
-  let expenses90 = 0;
-  let revenue30 = 0;
-  let revenue90 = 0;
+  let expenses30 = 0, expenses90 = 0, revenue30 = 0, revenue90 = 0;
 
   const transactions = (txRes.data ?? []).map((tx) => {
     const entries = (tx.transaction_entries ?? []) as Array<{ id: string; account_id: string; category_id: string | null; amount: number }>;
     for (const entry of entries) {
-      balances[entry.account_id] = (balances[entry.account_id] ?? 0) + cents(entry.amount);
+      const amount = cents(entry.amount);
+      balances[entry.account_id] = (balances[entry.account_id] ?? 0) + amount;
       const account = accountById.get(entry.account_id);
       const when = Date.parse(tx.date);
       if (account?.type === 'expense') {
-        if (when >= cutoff90) expenses90 += cents(entry.amount);
-        if (when >= cutoff30) expenses30 += cents(entry.amount);
-      }
-      if (account?.type === 'revenue') {
-        if (when >= cutoff90) revenue90 += -cents(entry.amount);
-        if (when >= cutoff30) revenue30 += -cents(entry.amount);
+        if (when >= cutoff90) expenses90 += amount;
+        if (when >= cutoff30) expenses30 += amount;
+      } else if (account?.type === 'revenue') {
+        if (when >= cutoff90) revenue90 += -amount;
+        if (when >= cutoff30) revenue30 += -amount;
       }
     }
     const debit = entries.find((e) => cents(e.amount) > 0);
     const credit = entries.find((e) => cents(e.amount) < 0);
     return {
-      id: tx.id,
-      date: tx.date,
-      description: tx.description,
-      status: tx.status,
-      voidedAt: tx.voided_at,
-      voidReason: tx.void_reason,
-      reversesTransactionId: tx.reverses_transaction_id,
-      reversalTransactionId: tx.reversal_transaction_id,
+      id: tx.id, date: tx.date, description: tx.description, status: tx.status,
+      voidedAt: tx.voided_at, voidReason: tx.void_reason,
+      reversesTransactionId: tx.reverses_transaction_id, reversalTransactionId: tx.reversal_transaction_id,
       debitAccount: debit ? accountById.get(debit.account_id)?.name ?? debit.account_id : null,
       creditAccount: credit ? accountById.get(credit.account_id)?.name ?? credit.account_id : null,
       amountCents: debit ? Math.abs(cents(debit.amount)) : entries.reduce((m, e) => Math.max(m, Math.abs(cents(e.amount))), 0),
-      externalSource: tx.external_source,
-      externalId: tx.external_id,
+      externalSource: tx.external_source, externalId: tx.external_id,
     };
   });
 
@@ -111,37 +104,28 @@ async function dashboard(env: Env, analystId: string, requestedProfileId?: strin
   const totalLiabilities = accounts.filter((a) => a.type === 'liability').reduce((sum, a) => sum + Math.abs(balances[a.id] ?? 0), 0);
   const liquidCash = accounts.filter((a) => a.type === 'asset' && ['cash','cash_equivalent'].includes(a.liquidity_class)).reduce((sum, a) => sum + (balances[a.id] ?? 0), 0);
   const normalizedMonthlyBurn = Math.max(0, expenses90 / 3);
-  const runwayMonths = normalizedMonthlyBurn > 0 ? liquidCash / normalizedMonthlyBurn : null;
   const currencies = [...new Set(accounts.map((a) => a.currency))];
 
   return {
-    profiles: profiles ?? [],
-    profile,
-    accounts: accounts.map((a) => ({ ...a, balance_cents: balances[a.id] ?? 0 })),
-    transactions,
+    profiles: profiles ?? [], profile,
+    accounts: accounts.map((a) => ({ ...a, balance_cents: balances[a.id] ?? 0 })), transactions,
     metrics: {
-      totalAssetsCents: totalAssets,
-      totalLiabilitiesCents: totalLiabilities,
-      netWorthCents: totalAssets - totalLiabilities,
-      liquidCashCents: liquidCash,
-      expenses30Cents: expenses30,
-      expenses90Cents: expenses90,
-      normalizedMonthlyBurnCents: normalizedMonthlyBurn,
-      revenue30Cents: revenue30,
-      revenue90Cents: revenue90,
+      totalAssetsCents: totalAssets, totalLiabilitiesCents: totalLiabilities, netWorthCents: totalAssets - totalLiabilities,
+      liquidCashCents: liquidCash, expenses30Cents: expenses30, expenses90Cents: expenses90,
+      normalizedMonthlyBurnCents: normalizedMonthlyBurn, revenue30Cents: revenue30, revenue90Cents: revenue90,
       operatingProfit30Cents: revenue30 - expenses30,
-      runwayMonths,
-      currencies,
-      mixedCurrencyWarning: currencies.length > 1,
+      runwayMonths: normalizedMonthlyBurn > 0 ? liquidCash / normalizedMonthlyBurn : null,
+      currencies, mixedCurrencyWarning: currencies.length > 1,
     },
-    investments: investmentsRes.data ?? [],
-    goals: goalsRes.data ?? [],
-    sources: sourcesRes.data ?? [],
-    obligations: obligationsRes.data ?? [],
-    cashPolicy: cashPolicyRes.data ?? null,
-    investmentPolicy: ipsRes.data ?? null,
-    recommendations: recommendationsRes.data ?? [],
+    investments: investmentsRes.data ?? [], goals: goalsRes.data ?? [], sources: sourcesRes.data ?? [],
+    obligations: obligationsRes.data ?? [], cashPolicy: cashPolicyRes.data ?? null,
+    investmentPolicy: ipsRes.data ?? null, recommendations: recommendationsRes.data ?? [],
   };
+}
+
+async function requireOwnedProfileForAction(env: Env, admin: AdminUser, profileId: string | null) {
+  if (!profileId) throw new Error('profileId is required');
+  return getOwnedProfile(env, admin.id, profileId);
 }
 
 export const onRequestGet = async ({ request, env }: { request: Request; env: Env }): Promise<Response> => {
@@ -151,8 +135,7 @@ export const onRequestGet = async ({ request, env }: { request: Request; env: En
     return Response.json(body, { status: admin.status, headers: CORS });
   }
   try {
-    const profileId = new URL(request.url).searchParams.get('profileId');
-    return Response.json(await dashboard(env, admin.id, profileId), { headers: CORS });
+    return Response.json(await dashboard(env, admin.id, new URL(request.url).searchParams.get('profileId')), { headers: CORS });
   } catch (err) {
     return Response.json({ error: err instanceof Error ? err.message : 'Failed to load Finance OS.' }, { status: 500, headers: CORS });
   }
@@ -161,9 +144,10 @@ export const onRequestGet = async ({ request, env }: { request: Request; env: En
 export const onRequestPost = async ({ request, env }: { request: Request; env: Env }): Promise<Response> => {
   const admin = await requireAdmin(request, env);
   if (admin instanceof Response) {
-    const body = await admin.json().catch(() => ({}));
-    return Response.json(body, { status: admin.status, headers: CORS });
+    const responseBody = await admin.json().catch(() => ({}));
+    return Response.json(responseBody, { status: admin.status, headers: CORS });
   }
+
   let body: Record<string, unknown>;
   try { body = await request.json(); }
   catch { return Response.json({ error: 'Invalid request body' }, { status: 400, headers: CORS }); }
@@ -174,7 +158,9 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
 
   try {
     if (action === 'post_transaction') {
-      await rpcAsCaller(request, env, 'post_finance_transaction', {
+      await requireOwnedProfileForAction(env, admin, profileId);
+      await rpcInternal(env, 'post_finance_transaction', {
+        p_actor_id: admin.id,
         p_date: typeof body.date === 'string' ? body.date : new Date().toISOString(),
         p_description: String(body.description ?? ''),
         p_debit_account: body.debitAccountId,
@@ -184,7 +170,9 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
         p_external_id: body.externalId ?? null,
       });
     } else if (action === 'void_transaction') {
-      await rpcAsCaller(request, env, 'void_finance_transaction', {
+      await requireOwnedProfileForAction(env, admin, profileId);
+      await rpcInternal(env, 'void_finance_transaction', {
+        p_actor_id: admin.id,
         p_transaction_id: body.transactionId,
         p_reason: String(body.reason ?? ''),
       });
@@ -210,9 +198,8 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
         if (error) throw error;
       }
     } else if (action === 'add_compliance_source') {
-      if (!profileId) return Response.json({ error: 'profileId is required' }, { status: 400, headers: CORS });
-      const { data: profile } = await supabase.from('finance_profiles').select('jurisdiction_code').eq('id', profileId).eq('owner_id', admin.id).single();
-      const jurisdiction = String(body.jurisdictionCode ?? profile?.jurisdiction_code ?? '').trim().toUpperCase();
+      const profile = await requireOwnedProfileForAction(env, admin, profileId);
+      const jurisdiction = String(body.jurisdictionCode ?? profile.jurisdiction_code ?? '').trim().toUpperCase();
       const sourceUrl = String(body.sourceUrl ?? '').trim();
       const authority = String(body.authority ?? '').trim();
       const topic = String(body.topic ?? '').trim();
@@ -227,28 +214,30 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
       });
       if (error) throw error;
     } else if (action === 'verify_compliance_source') {
-      await rpcAsCaller(request, env, 'verify_finance_compliance_source', {
+      await requireOwnedProfileForAction(env, admin, profileId);
+      await rpcInternal(env, 'verify_finance_compliance_source', {
         p_source_id: body.sourceId,
         p_note: String(body.note ?? 'Reviewed against the cited authority page.'),
+        p_verified_by: admin.email,
       });
     } else if (action === 'save_obligation') {
-      if (!profileId) return Response.json({ error: 'profileId is required' }, { status: 400, headers: CORS });
+      const profile = await requireOwnedProfileForAction(env, admin, profileId);
       const sourceId = typeof body.sourceId === 'string' && body.sourceId ? body.sourceId : null;
       let sourceVerified = false;
       if (sourceId) {
-        const { data: source } = await supabase.from('finance_compliance_sources').select('verification_status').eq('id', sourceId).single();
-        sourceVerified = source?.verification_status === 'verified';
+        const { data: source } = await supabase.from('finance_compliance_sources').select('verification_status,jurisdiction_code').eq('id', sourceId).single();
+        sourceVerified = source?.verification_status === 'verified' && source?.jurisdiction_code === String(body.jurisdictionCode ?? profile.jurisdiction_code ?? '').trim().toUpperCase();
       }
       const amount = body.amountCents == null || body.amountCents === '' ? null : Math.round(Number(body.amountCents));
       const row = {
-        profile_id: profileId,
-        jurisdiction_code: String(body.jurisdictionCode ?? '').trim().toUpperCase(),
+        profile_id: profile.id,
+        jurisdiction_code: String(body.jurisdictionCode ?? profile.jurisdiction_code ?? '').trim().toUpperCase(),
         obligation_type: String(body.obligationType ?? '').trim(),
         period_label: typeof body.periodLabel === 'string' && body.periodLabel.trim() ? body.periodLabel.trim() : null,
         due_date: typeof body.dueDate === 'string' && body.dueDate ? body.dueDate : null,
         status: sourceVerified ? String(body.status ?? 'open') : 'needs_review',
         amount_cents: amount,
-        amount_currency: amount == null ? null : String(body.amountCurrency ?? 'EUR').trim().toUpperCase(),
+        amount_currency: amount == null ? null : String(body.amountCurrency ?? profile.base_currency).trim().toUpperCase(),
         amount_source: amount == null ? null : (['manual','authority_import','professional_verified'].includes(String(body.amountSource)) ? String(body.amountSource) : 'manual'),
         source_id: sourceId,
         evidence_ref: typeof body.evidenceRef === 'string' && body.evidenceRef.trim() ? body.evidenceRef.trim() : null,
@@ -258,54 +247,48 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
       };
       if (!row.jurisdiction_code || !row.obligation_type) return Response.json({ error: 'jurisdictionCode and obligationType are required' }, { status: 400, headers: CORS });
       const id = typeof body.id === 'string' ? body.id : null;
-      if (id) {
-        const { error } = await supabase.from('finance_obligations').update(row).eq('id', id).eq('profile_id', profileId);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from('finance_obligations').insert(row);
-        if (error) throw error;
-      }
+      const result = id
+        ? await supabase.from('finance_obligations').update(row).eq('id', id).eq('profile_id', profile.id)
+        : await supabase.from('finance_obligations').insert(row);
+      if (result.error) throw result.error;
     } else if (action === 'activate_cash_policy') {
-      if (!profileId) return Response.json({ error: 'profileId is required' }, { status: 400, headers: CORS });
-      await rpcAsCaller(request, env, 'activate_finance_cash_policy', {
-        p_profile_id: profileId,
-        p_name: String(body.name ?? 'Treasury Policy'),
-        p_reserve_months: Number(body.reserveMonthsTarget ?? 6),
-        p_owner_pay: Number(body.ownerPayPct ?? 0),
-        p_tax_reserve: Number(body.taxComplianceReservePct ?? 0),
-        p_operating_reserve: Number(body.operatingReservePct ?? 0),
-        p_long_term_investing: Number(body.longTermInvestingPct ?? 0),
-        p_opportunity: Number(body.opportunityFundPct ?? 0),
-        p_tax_verified: body.taxReserveVerified === true,
-        p_tax_evidence: String(body.taxReserveEvidenceRef ?? ''),
-        p_rationale: String(body.rationale ?? ''),
+      await requireOwnedProfileForAction(env, admin, profileId);
+      await rpcInternal(env, 'activate_finance_cash_policy', {
+        p_actor_id: admin.id, p_profile_id: profileId,
+        p_name: String(body.name ?? 'Treasury Policy'), p_reserve_months: Number(body.reserveMonthsTarget ?? 6),
+        p_owner_pay: Number(body.ownerPayPct ?? 0), p_tax_reserve: Number(body.taxComplianceReservePct ?? 0),
+        p_operating_reserve: Number(body.operatingReservePct ?? 0), p_long_term_investing: Number(body.longTermInvestingPct ?? 0),
+        p_opportunity: Number(body.opportunityFundPct ?? 0), p_tax_verified: body.taxReserveVerified === true,
+        p_tax_evidence: String(body.taxReserveEvidenceRef ?? ''), p_rationale: String(body.rationale ?? ''),
       });
     } else if (action === 'activate_investment_policy') {
-      if (!profileId) return Response.json({ error: 'profileId is required' }, { status: 400, headers: CORS });
-      await rpcAsCaller(request, env, 'activate_finance_investment_policy', {
-        p_profile_id: profileId,
-        p_horizon_years: Number(body.horizonYears ?? 10),
-        p_liquidity_months: Number(body.liquidityBufferMonths ?? 6),
-        p_risk_capacity: String(body.riskCapacity ?? 'unassessed'),
-        p_max_single_asset: Number(body.maxSingleAssetPct ?? 20),
-        p_max_illiquid: Number(body.maxIlliquidPct ?? 30),
-        p_allowed: parseList(body.allowedAssetClasses),
-        p_prohibited: parseList(body.prohibitedAssetClasses),
-        p_notes: String(body.notes ?? ''),
+      await requireOwnedProfileForAction(env, admin, profileId);
+      await rpcInternal(env, 'activate_finance_investment_policy', {
+        p_actor_id: admin.id, p_profile_id: profileId,
+        p_horizon_years: Number(body.horizonYears ?? 10), p_liquidity_months: Number(body.liquidityBufferMonths ?? 6),
+        p_risk_capacity: String(body.riskCapacity ?? 'unassessed'), p_max_single_asset: Number(body.maxSingleAssetPct ?? 20),
+        p_max_illiquid: Number(body.maxIlliquidPct ?? 30), p_allowed: parseList(body.allowedAssetClasses),
+        p_prohibited: parseList(body.prohibitedAssetClasses), p_notes: String(body.notes ?? ''),
       });
     } else if (action === 'save_goal') {
-      if (!profileId) return Response.json({ error: 'profileId is required' }, { status: 400, headers: CORS });
+      const profile = await requireOwnedProfileForAction(env, admin, profileId);
       const target = Math.round(Number(body.targetAmountCents));
       if (!String(body.name ?? '').trim() || !Number.isFinite(target) || target <= 0) return Response.json({ error: 'goal name and positive target are required' }, { status: 400, headers: CORS });
-      const { error } = await supabase.from('financial_goals').insert({ profile_id: profileId, name: String(body.name).trim(), target_amount: target, current_amount: Math.max(0, Math.round(Number(body.currentAmountCents ?? 0))), target_date: typeof body.targetDate === 'string' && body.targetDate ? body.targetDate : null });
+      const { error } = await supabase.from('financial_goals').insert({
+        profile_id: profile.id, name: String(body.name).trim(), target_amount: target,
+        current_amount: Math.max(0, Math.round(Number(body.currentAmountCents ?? 0))),
+        target_date: typeof body.targetDate === 'string' && body.targetDate ? body.targetDate : null,
+      });
       if (error) throw error;
     } else if (action === 'archive_goal') {
-      const { error } = await supabase.from('financial_goals').update({ archived_at: new Date().toISOString() }).eq('id', body.id).eq('profile_id', profileId);
+      const profile = await requireOwnedProfileForAction(env, admin, profileId);
+      const { error } = await supabase.from('financial_goals').update({ archived_at: new Date().toISOString() }).eq('id', body.id).eq('profile_id', profile.id);
       if (error) throw error;
     } else if (action === 'recommendation_decision') {
+      const profile = await requireOwnedProfileForAction(env, admin, profileId);
       const status = body.status === 'approved' ? 'approved' : body.status === 'rejected' ? 'rejected' : null;
       if (!status) return Response.json({ error: 'decision must be approved or rejected' }, { status: 400, headers: CORS });
-      const { error } = await supabase.from('finance_recommendations').update({ status, decided_at: new Date().toISOString() }).eq('id', body.id).eq('profile_id', profileId);
+      const { error } = await supabase.from('finance_recommendations').update({ status, decided_at: new Date().toISOString() }).eq('id', body.id).eq('profile_id', profile.id);
       if (error) throw error;
     } else {
       return Response.json({ error: `Unknown action: ${action}` }, { status: 400, headers: CORS });
