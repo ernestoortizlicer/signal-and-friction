@@ -1,6 +1,6 @@
 # Signal and Friction — Finance OS v2 Production Runbook
 
-**Status:** CANONICAL RUNBOOK v1.0  
+**Status:** CANONICAL RUNBOOK v1.1  
 **Date:** 2026-08-13  
 **Scope:** Internal business/personal finance control plane and Finance Copilot.
 
@@ -23,14 +23,26 @@ Rules:
 - posted history is not deleted or silently edited;
 - external-source/id pairs make imports idempotent;
 - cross-profile entries require a future explicit interprofile workflow;
-- browser-authenticated users cannot directly insert/update/delete transaction headers or entries.
+- browser-authenticated users cannot directly insert/update/delete transaction headers or entries;
+- privileged Finance RPCs are `service_role` only and receive the verified human actor explicitly from the admin-gated Cloudflare API.
 
-Dashboard metrics are deterministic:
+### Currency contract
+
+Finance OS v2 is intentionally **single-currency per finance profile**.
+
+Every account assigned to a profile must use that profile's `base_currency`. The database prevents both:
+- assigning/changing an account to a mismatching currency; and
+- changing a profile's base currency while its accounts remain in another currency.
+
+A journal entry cannot cross currencies. If the business later needs real USD/EUR or other multi-currency accounting, build an explicit FX workflow with rate source, rate timestamp, source/destination amounts and accounting treatment. Do not aggregate nominal cents from different currencies or invent an FX rate.
+
+Different companies/personal scopes may use separate finance profiles with different base currencies.
+
+Dashboard metrics are deterministic within the profile currency:
 - liquid cash = asset accounts classified `cash|cash_equivalent`;
 - 30/90-day revenue and expense = ledger entries in those windows;
 - normalized monthly burn = trailing-90-day expenses / 3;
-- runway = liquid cash / normalized monthly burn;
-- mixed currencies trigger a warning; Finance OS does not silently invent FX conversion.
+- runway = liquid cash / normalized monthly burn.
 
 ## 3. Compliance evidence authority
 
@@ -102,18 +114,19 @@ With a real authenticated admin session:
 2. Verify current profile and working jurisdiction state; keep unknown facts unknown.
 3. Post one small real/test-designated balanced transaction and verify both legs and dashboard change.
 4. Reverse it and verify original is `voided` plus an explicit reversal exists.
-5. Add a compliance source; confirm it is `recorded`, not automatically verified.
-6. Mark the source reviewed; confirm `verified` metadata is written.
-7. Create an obligation with/without verified evidence and confirm correct review status.
-8. Activate a Treasury Policy whose percentages total exactly 100%; confirm version increment and old active policy retirement.
-9. Activate an IPS and verify constraints display.
-10. Run Finance Copilot; confirm a run trace/output is stored and recommendations remain `proposed`.
-11. Attempt a tax-liability/residency question; confirm no invented numeric/legal conclusion.
-12. Attempt a money-transfer/trade request; confirm no execution occurs.
+5. Confirm a mismatching account/profile currency is rejected rather than silently converted.
+6. Add a compliance source; confirm it is `recorded`, not automatically verified.
+7. Mark the source reviewed; confirm `verified` metadata is written.
+8. Create an obligation with/without verified evidence and confirm correct review status.
+9. Activate a Treasury Policy whose percentages total exactly 100%; confirm version increment and old active policy retirement.
+10. Activate an IPS and verify constraints display.
+11. Run Finance Copilot; confirm a run trace/output is stored and recommendations remain `proposed`.
+12. Attempt a tax-liability/residency question; confirm no invented numeric/legal conclusion.
+13. Attempt a money-transfer/trade request; confirm no execution occurs.
 
 ## 8. CI / incident rule
 
-`npm run check:finance-os` is release blocking. Any change that reintroduces browser-direct ledger mutation, hard delete, caller-supplied model context, unverified compliance authority, model tax/residency claims or autonomous money movement must fail closed and create a regression eval before reopening.
+`npm run check:finance-os` is release blocking. Any change that reintroduces browser-direct ledger mutation, hard delete, caller-supplied model context, unverified compliance authority, model tax/residency claims, implicit FX or autonomous money movement must fail closed and create a regression eval before reopening.
 
 ## 9. Productization gate
 
