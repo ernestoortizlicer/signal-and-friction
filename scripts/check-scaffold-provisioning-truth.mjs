@@ -4,6 +4,7 @@ const failures = [];
 const files = {
   migration: 'supabase/migrations/20260813103000_payment_scaffold_provisioning.sql',
   retentionMigration: 'supabase/migrations/20260813103100_payment_client_retention_truth.sql',
+  leastPrivilegeMigration: 'supabase/migrations/20260813103200_scaffold_provisioning_least_privilege.sql',
   intake: 'functions/api/leads/submit.ts',
   targetPolicy: 'functions/api/_target-url.ts',
   route: 'functions/api/stripe/payments-webhook.ts',
@@ -57,6 +58,29 @@ requireMatch(retentionMigration, /DROP CONSTRAINT IF EXISTS payments_client_id_f
   'payment client FK must be deliberately replaced rather than drift');
 requireMatch(retentionMigration, /FOREIGN KEY \(client_id\)[\s\S]*REFERENCES public\.clients\(id\)[\s\S]*ON DELETE RESTRICT/,
   'immutable payment ownership must not contradict an ON DELETE SET NULL foreign key');
+
+const leastPrivilegeMigration = read(files.leastPrivilegeMigration);
+for (const functionSignature of [
+  'enqueue_scaffold_provisioning_job\\(\\)',
+  'handle_payment_state_truth\\(\\)',
+  'claim_scaffold_provisioning_job\\(UUID, BOOLEAN\\)',
+  'finish_scaffold_provisioning_job\\(UUID, TEXT, UUID, TEXT\\)',
+]) {
+  requireMatch(
+    leastPrivilegeMigration,
+    new RegExp(`ALTER FUNCTION public\\.${functionSignature}[\\s\\S]{0,100}SET search_path = public, pg_temp`),
+    `internal function ${functionSignature} must pin search_path`
+  );
+  requireMatch(
+    leastPrivilegeMigration,
+    new RegExp(`REVOKE EXECUTE ON FUNCTION public\\.${functionSignature}[\\s\\S]{0,100}FROM PUBLIC, anon, authenticated`),
+    `internal function ${functionSignature} must not remain executable by public/anon/authenticated roles`
+  );
+}
+requireMatch(leastPrivilegeMigration, /GRANT EXECUTE ON FUNCTION public\.claim_scaffold_provisioning_job\(UUID, BOOLEAN\)[\s\S]*TO service_role/,
+  'service role must retain the internal claim RPC capability');
+requireMatch(leastPrivilegeMigration, /GRANT EXECUTE ON FUNCTION public\.finish_scaffold_provisioning_job\(UUID, TEXT, UUID, TEXT\)[\s\S]*TO service_role/,
+  'service role must retain the internal finish RPC capability');
 
 const targetPolicy = read(files.targetPolicy);
 requireMatch(targetPolicy, /credentials_forbidden/,
@@ -119,4 +143,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('✅ Scaffold provisioning truth: canonical target, durable outbox, leased claims, atomic finish, retention-aligned payment ownership, async recovery, SSRF guardrails, idempotent scaffold identity, and evidence-gated delivery state');
+console.log('✅ Scaffold provisioning truth: canonical target, durable outbox, leased claims, atomic finish, least-privilege RPCs, retention-aligned payment ownership, async recovery, SSRF guardrails, idempotent scaffold identity, and evidence-gated delivery state');
