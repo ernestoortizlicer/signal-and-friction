@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseUrl, getServiceRoleKey } from '../_env';
 import { runScan, toRawTechnicalSignals, buildScaffoldEvidence } from '../_scan';
+import { canonicalizePublicTargetUrl } from '../_target-url';
 
 type ProvisionEnv = Record<string, string | undefined> & {
   SUPABASE_URL?: string;
@@ -9,7 +10,7 @@ type ProvisionEnv = Record<string, string | undefined> & {
 
 export type ProvisionResult =
   | { status: 'succeeded'; scaffoldId: string; created: boolean }
-  | { status: 'needs_input'; reason: 'client_target_url_missing' }
+  | { status: 'needs_input'; reason: string }
   | { status: 'retryable'; reason: string }
   | { status: 'noop'; reason: string };
 
@@ -90,10 +91,16 @@ export async function provisionPaymentScaffoldBySessionId(
       return { status: 'retryable', reason: 'client_lookup_failed' };
     }
 
-    const targetUrl = typeof client.target_url === 'string' ? client.target_url.trim() : '';
-    if (!targetUrl) {
+    const rawTargetUrl = typeof client.target_url === 'string' ? client.target_url : '';
+    if (!rawTargetUrl.trim()) {
       await finish('needs_input', { last_error: 'client_target_url_missing' });
       return { status: 'needs_input', reason: 'client_target_url_missing' };
+    }
+
+    const canonicalTarget = canonicalizePublicTargetUrl(rawTargetUrl);
+    if (!canonicalTarget.ok) {
+      await finish('needs_input', { last_error: `client_target_url_${canonicalTarget.reason}` });
+      return { status: 'needs_input', reason: `client_target_url_${canonicalTarget.reason}` };
     }
 
     const { data: existing, error: existingError } = await supabase
@@ -108,7 +115,7 @@ export async function provisionPaymentScaffoldBySessionId(
       return { status: 'succeeded', scaffoldId: existing.id, created: false };
     }
 
-    const report = await runScan(targetUrl, env);
+    const report = await runScan(canonicalTarget.url, env);
     if (report.psError || report.htmlSignalsError) {
       throw new Error('scan_incomplete');
     }
