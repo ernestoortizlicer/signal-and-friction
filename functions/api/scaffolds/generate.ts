@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { requireAdmin } from '../_admin-auth';
 import { getSupabaseUrl, getServiceRoleKey } from '../_env';
 import { runScan, toRawTechnicalSignals, buildScaffoldEvidence, type RawTechnicalSignals } from '../_scan';
+import { canonicalizePublicTargetUrl } from '../_target-url';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -44,10 +45,6 @@ export const onRequestPost = async ({
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  // Rescan: re-derive the target from the existing scaffold row (never
-  // trust a client/candidate id passed alongside scaffoldId — the
-  // scaffold's own stored link is authoritative) instead of the
-  // clientId/prospectCandidateId branch below.
   let clientId: string | null = null;
   let prospectCandidateId: string | null = null;
 
@@ -92,11 +89,6 @@ export const onRequestPost = async ({
       targetUrl = candidate.url;
       domain = candidate.domain;
 
-      // Reuse the candidate's own scan if it already succeeded — avoids a
-      // redundant PageSpeed call and stays consistent with what's shown
-      // in the prospecting table. Only re-scan if there's no usable
-      // stored result yet. On an explicit Rescan, always run a fresh scan
-      // instead — that's the whole point of the button.
       if (!payload.scaffoldId && candidate.status === 'scanned' && candidate.technical_signals) {
         const stored = candidate.technical_signals as RawTechnicalSignals;
         if (stored.psError || stored.htmlSignalsError) {
@@ -118,30 +110,83 @@ export const onRequestPost = async ({
         signals = toRawTechnicalSignals(report);
       }
     } else {
-      // Client-backed scaffold: clients have no stored URL, so use
-      // whatever was passed, falling back to the scaffold's own
-      // previously recorded target_url on a Rescan with no override.
-      let clientTargetUrl = payload.url?.trim();
+      const { data: client, error: fetchError } = await supabase
+        .from('clients')
+        .select('id, target_url')
+        .eq('id', clientId)
+        .single();
+      if (fetchError || !client) {
+        return Response.json({ error: 'Client not found' }, { status: 404, headers: CORS });
+      }
+
+      if (!payload.scaffoldId) {
+        const { data: existingClientScaffold } = await supabase
+          .from('diagnostic_scaffolds')
+          .select('id')
+          .eq('client_id', clientId)
+          .maybeSingle();
+        if (existingClientScaffold) {
+          return Response.json(
+            { error: 'Client scaffold already exists; rescan the existing scaffold instead', code: 'client_scaffold_exists', scaffoldId: existingClientScaffold.id },
+            { status: 409, headers: CORS }
+          );
+        }
+      }
+
+      let persistedTarget: string | null = null;
+      if (client.target_url) {
+        const parsed = canonicalizePublicTargetUrl(client.target_url);
+        if (!parsed.ok) {
+          return Response.json({ error: 'Stored client target URL requires review' }, { status: 409, headers: CORS });
+        }
+        persistedTarget = parsed.url;
+      }
+
+      let providedTarget: string | null = null;
+      if (payload.url?.trim()) {
+        const parsed = canonicalizePublicTargetUrl(payload.url);
+        if (!parsed.ok) {
+          return Response.json({ error: 'Invalid target URL', reason: parsed.reason }, { status: 400, headers: CORS });
+        }
+        providedTarget = parsed.url;
+      }
+
+      if (persistedTarget && providedTarget && persistedTarget !== providedTarget) {
+        return Response.json(
+          { error: 'Target URL conflicts with canonical client target; update the client record deliberately before rescanning' },
+          { status: 409, headers: CORS }
+        );
+      }
+
+      const clientTargetUrl = persistedTarget ?? providedTarget;
       if (!clientTargetUrl && payload.scaffoldId) {
         const { data: existingScaffold } = await supabase
           .from('diagnostic_scaffolds')
           .select('target_url')
           .eq('id', payload.scaffoldId)
           .single();
-        clientTargetUrl = existingScaffold?.target_url;
+        if (existingScaffold?.target_url) {
+          const parsed = canonicalizePublicTargetUrl(existingScaffold.target_url);
+          if (parsed.ok) persistedTarget = parsed.url;
+        }
       }
-      if (!clientTargetUrl) {
-        return Response.json({ error: 'url is required when generating a scaffold for a client' }, { status: 400, headers: CORS });
+
+      const finalTargetUrl = clientTargetUrl ?? persistedTarget;
+      if (!finalTargetUrl) {
+        return Response.json({ error: 'Client target_url is required before generating a scaffold' }, { status: 400, headers: CORS });
       }
-      const { data: client, error: fetchError } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('id', clientId)
-        .single();
-      if (fetchError || !client) {
-        return Response.json({ error: 'Client not found' }, { status: 404, headers: CORS });
+
+      if (!client.target_url && providedTarget) {
+        const { error: targetUpdateError } = await supabase
+          .from('clients')
+          .update({ target_url: providedTarget, updated_at: new Date().toISOString() })
+          .eq('id', clientId);
+        if (targetUpdateError) {
+          return Response.json({ error: 'Failed to persist canonical client target URL' }, { status: 500, headers: CORS });
+        }
       }
-      const report = await runScan(clientTargetUrl, env);
+
+      const report = await runScan(finalTargetUrl, env);
       if (report.psError || report.htmlSignalsError) {
         const reasons = [
           report.psError ? `PageSpeed: ${report.psError}` : null,
@@ -161,8 +206,6 @@ export const onRequestPost = async ({
   const evidence = buildScaffoldEvidence(signals);
 
   if (payload.scaffoldId) {
-    // Rescan — refresh evidence/technical_signals/target_url/domain only.
-    // The 7 judgment fields and status are untouched.
     const { data: updated, error: updateError } = await supabase
       .from('diagnostic_scaffolds')
       .update({
@@ -198,6 +241,9 @@ export const onRequestPost = async ({
     .single();
 
   if (insertError || !scaffold) {
+    if (insertError?.code === '23505' && clientId) {
+      return Response.json({ error: 'Client scaffold already exists', code: 'client_scaffold_exists' }, { status: 409, headers: CORS });
+    }
     return Response.json({ error: insertError?.message ?? 'Failed to create scaffold' }, { status: 500, headers: CORS });
   }
 
