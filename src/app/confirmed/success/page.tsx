@@ -1,8 +1,8 @@
 "use client";
 
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
 
 type Verification = {
   verified: boolean;
@@ -12,6 +12,14 @@ type Verification = {
 };
 
 export default function SuccessPage() {
+  return (
+    <Suspense fallback={<VerificationShell title="Preparing payment verification…" body="Loading the checkout return state." />}>
+      <CheckoutVerification />
+    </Suspense>
+  );
+}
+
+function CheckoutVerification() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const [verification, setVerification] = useState<Verification | null>(null);
@@ -25,16 +33,26 @@ export default function SuccessPage() {
       try {
         const response = await fetch(`/api/stripe/session-status?session_id=${encodeURIComponent(sessionId)}`);
         const result = await response.json();
-        if (!cancelled) setVerification(response.ok ? result : { verified: false, canonicalRecorded: false, status: null, paymentStatus: null });
+        if (!cancelled) {
+          setVerification(
+            response.ok
+              ? result
+              : { verified: false, canonicalRecorded: false, status: null, paymentStatus: null },
+          );
+        }
       } catch {
-        if (!cancelled) setVerification({ verified: false, canonicalRecorded: false, status: null, paymentStatus: null });
+        if (!cancelled) {
+          setVerification({ verified: false, canonicalRecorded: false, status: null, paymentStatus: null });
+        }
       } finally {
         if (!cancelled) setChecking(false);
       }
     };
 
     void check();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [sessionId]);
 
   const stripeVerified = verification?.verified === true;
@@ -82,6 +100,18 @@ export default function SuccessPage() {
             Payment support
           </a>
         </div>
+      </section>
+    </main>
+  );
+}
+
+function VerificationShell({ title, body }: { title: string; body: string }) {
+  return (
+    <main className="min-h-screen bg-bg text-text-primary flex items-center justify-center px-6 py-16">
+      <section className="w-full max-w-2xl rounded-xl border border-border-accent bg-surface p-8 sm:p-10 space-y-3">
+        <p className="font-mono text-xs uppercase tracking-[0.22em] text-accent">Checkout return</p>
+        <h1 className="font-serif text-3xl font-bold tracking-tight">{title}</h1>
+        <p className="text-text-body">{body}</p>
       </section>
     </main>
   );
