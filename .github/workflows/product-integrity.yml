@@ -45,3 +45,9 @@ jobs:
 
       - name: Check scaffold provisioning truth
         run: npm run check:scaffold-provisioning
+
+      - name: Check agent build manifests
+        run: npm run check:agent-build
+
+      - name: Check training unit integrity
+        run: npm run check:training-unit
