@@ -21,6 +21,14 @@ if (!fs.existsSync(migrationPath)) {
     'legacy payment_confirmed rows may only be corrected when no canonical payment exists');
   requireMatch(sql, /DROP TRIGGER IF EXISTS trigger_project_payment_paid ON public\.beta_projects/,
     'derived payment_status must not remain a financial authority');
+  requireMatch(sql, /CREATE TRIGGER trigger_guard_client_payment_stage_truth[\s\S]*BEFORE INSERT OR UPDATE OF protocol_stage ON public\.clients/,
+    'DB must reject post-payment protocol stages without canonical payment evidence');
+  requireMatch(sql, /client % cannot enter protocol_stage %[\s\S]*without canonical payment/,
+    'client payment-stage guard must fail closed');
+  requireMatch(sql, /CREATE TRIGGER trigger_guard_project_payment_status_truth[\s\S]*BEFORE INSERT OR UPDATE OF payment_status ON public\.beta_projects/,
+    'DB must reject project paid state without canonical payment evidence');
+  requireMatch(sql, /project for client % cannot become paid without canonical payment/,
+    'project paid-state guard must fail closed');
   requireMatch(sql, /CREATE TRIGGER trigger_payment_state_truth[\s\S]*AFTER INSERT ON public\.payments/,
     'canonical payment insertion must own workflow state transition');
   requireMatch(sql, /WHEN protocol_stage = 'pre_payment' THEN 'payment_confirmed'[\s\S]*ELSE protocol_stage/,
@@ -50,4 +58,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('✅ Payment state truth: pre-payment is explicit, payment transitions are atomic/monotonic, and finance has one authority');
+console.log('✅ Payment state truth: impossible paid states are rejected, transitions are atomic/monotonic, and finance has one authority');
