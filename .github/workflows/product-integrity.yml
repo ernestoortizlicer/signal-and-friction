@@ -51,3 +51,9 @@ jobs:
 
       - name: Check training unit integrity
         run: npm run check:training-unit
+
+      - name: Check Learning OS authority
+        run: npm run check:learning-os
+
+      - name: Check Finance OS authority
+        run: npm run check:finance-os
