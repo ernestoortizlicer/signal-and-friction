@@ -38,6 +38,14 @@ requireMatch(migration, /CREATE TRIGGER trigger_enqueue_scaffold_provisioning_jo
   'canonical payment linkage must atomically emit provisioning intent');
 requireMatch(migration, /CREATE OR REPLACE FUNCTION public\.claim_scaffold_provisioning_job[\s\S]*status IN \('pending', 'retryable'\)/,
   'provisioning job claim must be atomic and retry-safe');
+requireMatch(migration, /status = 'running'[\s\S]*started_at < now\(\) - interval '10 minutes'/,
+  'interrupted running jobs must have a bounded reclaim lease');
+requireMatch(migration, /CREATE OR REPLACE FUNCTION public\.finish_scaffold_provisioning_job/,
+  'job completion must have a dedicated atomic database boundary');
+requireMatch(migration, /p_status = 'succeeded'[\s\S]*diagnostic_in_progress[\s\S]*UPDATE public\.scaffold_provisioning_jobs/,
+  'scaffold success and project readiness must commit in the same DB function');
+requireMatch(migration, /successful provisioning requires scaffold owned by client/,
+  'success must prove scaffold ownership before advancing delivery');
 requireMatch(migration, /'provisioning'[\s\S]*'awaiting_input'[\s\S]*'diagnostic_in_progress'/,
   'project state machine must model provisioning and missing-input states explicitly');
 
@@ -70,6 +78,11 @@ requireMatch(route, /event\.type !== 'checkout\.session\.completed'/,
 const provisioner = read(files.provisioner);
 requireMatch(provisioner, /rpc\('claim_scaffold_provisioning_job'/,
   'provisioner must atomically claim the durable job');
+requireMatch(provisioner, /rpc\('finish_scaffold_provisioning_job'/,
+  'provisioner must finish job/project state through the atomic DB boundary');
+if (/\.from\('beta_projects'\)[\s\S]{0,500}\.update\(/.test(provisioner)) {
+  failures.push('provisioner must not independently update project delivery state outside the atomic finish RPC');
+}
 requireMatch(provisioner, /canonicalizePublicTargetUrl\(rawTargetUrl\)/,
   'automatic provisioner must revalidate the stored target before external fetch');
 requireMatch(provisioner, /\.from\('diagnostic_scaffolds'\)[\s\S]*\.eq\('client_id', payment\.client_id\)/,
@@ -78,10 +91,6 @@ requireMatch(provisioner, /runScan\(canonicalTarget\.url, env\)/,
   'provisioner must use the canonical shared scan engine rather than duplicate scan logic');
 requireMatch(provisioner, /insertError\?\.code === '23505'/,
   'concurrent scaffold creation must converge through the database uniqueness invariant');
-requireMatch(provisioner, /status === 'succeeded'[\s\S]*diagnostic_in_progress/,
-  'project may enter diagnostic_in_progress only after scaffold readiness succeeds');
-requireMatch(provisioner, /status === 'needs_input'[\s\S]*awaiting_input/,
-  'missing/unsafe input must become explicit awaiting_input state');
 
 const retry = read(files.retry);
 requireMatch(retry, /requireAdmin/,
@@ -101,4 +110,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('✅ Scaffold provisioning truth: canonical target, durable outbox, async recovery, SSRF guardrails, idempotent scaffold identity, and evidence-gated delivery state');
+console.log('✅ Scaffold provisioning truth: canonical target, durable outbox, leased claims, atomic finish, async recovery, SSRF guardrails, idempotent scaffold identity, and evidence-gated delivery state');
