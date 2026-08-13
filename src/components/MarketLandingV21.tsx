@@ -30,11 +30,11 @@ export default function MarketLandingV21({ marketId }: { marketId: MarketSurface
           </h1>
           <p className="max-w-2xl text-base leading-relaxed text-text-body">{profile.heroSubhead}</p>
           <div className="flex flex-wrap gap-3">
-            <Link href="/pricing" className="rounded-md bg-accent px-5 py-3 font-mono text-xs font-bold uppercase tracking-[0.14em] text-bg">
-              See diagnostic options
+            <Link href="/scan" className="rounded-md bg-accent px-5 py-3 font-mono text-xs font-bold uppercase tracking-[0.14em] text-bg">
+              Run the free scan
             </Link>
-            <Link href="/portfolio" className="rounded-md border border-border-accent px-5 py-3 font-mono text-xs uppercase tracking-[0.14em] text-accent">
-              See the method
+            <Link href="/pricing" className="rounded-md border border-border-accent px-5 py-3 font-mono text-xs uppercase tracking-[0.14em] text-accent">
+              See diagnostic options
             </Link>
           </div>
           <p className="max-w-2xl font-mono text-xs leading-relaxed text-text-muted">{profile.marketNote}</p>
