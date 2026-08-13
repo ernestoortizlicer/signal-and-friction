@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 
 const rawSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const rawSupabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const hermeticBuild = process.env.SF_HERMETIC_BUILD === '1' && process.env.CF_PAGES !== '1'
 
 // Environment values are configuration tokens, not user input. Normalize only
 // surrounding whitespace so a dashboard copy/paste newline cannot turn a valid
@@ -11,8 +12,6 @@ const supabaseAnonKey = rawSupabaseAnonKey?.trim()
 
 // A real Supabase project URL is always https://<20-char-lowercase-alphanumeric-ref>.supabase.co
 // A legacy Supabase anon key is a JWT (three base64url segments, starts with "eyJ").
-// This project still uses the legacy client variable during the current release gate;
-// publishable-key migration is a separate change.
 const VALID_SUPABASE_URL = /^https:\/\/[a-z0-9]{20}\.supabase\.co$/
 const VALID_SUPABASE_ANON_KEY = /^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
 
@@ -30,26 +29,28 @@ function fatalConfigError(message: string): never {
   throw new Error(`Supabase config invalid: ${message}`)
 }
 
-if (!supabaseUrl || !VALID_SUPABASE_URL.test(supabaseUrl)) {
-  fatalConfigError(
-    `NEXT_PUBLIC_SUPABASE_URL is missing or not a real Supabase project URL (got: "${supabaseUrl ?? '(unset)'}"). ` +
-    `Expected https://<project-ref>.supabase.co. Refusing to build a client against a placeholder value.`
-  )
+// Product Integrity needs to prove that the whole static graph compiles without
+// borrowing production credentials. This explicit CI-only mode creates a client
+// pointed at localhost; it is never enabled on Cloudflare, and no network access
+// is expected during prerender. Production remains fail-closed below.
+if (!hermeticBuild) {
+  if (!supabaseUrl || !VALID_SUPABASE_URL.test(supabaseUrl)) {
+    fatalConfigError(
+      `NEXT_PUBLIC_SUPABASE_URL is missing or not a real Supabase project URL (got: "${supabaseUrl ?? '(unset)'}"). ` +
+      `Expected https://<project-ref>.supabase.co. Refusing to build a client against a placeholder value.`
+    )
+  }
+
+  if (!supabaseAnonKey || !VALID_SUPABASE_ANON_KEY.test(supabaseAnonKey)) {
+    fatalConfigError(
+      `NEXT_PUBLIC_SUPABASE_ANON_KEY is missing or not a real Supabase anon key (expected a JWT). ` +
+      `Refusing to build a client against a placeholder value.`
+    )
+  }
 }
 
-if (!supabaseAnonKey || !VALID_SUPABASE_ANON_KEY.test(supabaseAnonKey)) {
-  fatalConfigError(
-    `NEXT_PUBLIC_SUPABASE_ANON_KEY is missing or not a real Supabase anon key (expected a JWT). ` +
-    `Refusing to build a client against a placeholder value.`
-  )
-}
-
-// Capture the post-validation values as concrete strings. TypeScript does not
-// preserve module-level control-flow narrowing inside later function bodies, even
-// though these const bindings cannot change. Keeping validated aliases avoids
-// non-null assertions while preserving the fail-closed runtime contract above.
-const validatedSupabaseUrl: string = supabaseUrl
-const validatedSupabaseAnonKey: string = supabaseAnonKey
+const validatedSupabaseUrl: string = hermeticBuild ? 'http://127.0.0.1:54321' : supabaseUrl as string
+const validatedSupabaseAnonKey: string = hermeticBuild ? 'ci-build-placeholder' : supabaseAnonKey as string
 
 export const supabase = createClient(validatedSupabaseUrl, validatedSupabaseAnonKey)
 
@@ -57,9 +58,7 @@ export function getAuthHeaders(): Record<string, string> {
   let token = validatedSupabaseAnonKey;
   if (typeof window !== 'undefined') {
     const cookieMatch = document.cookie.match(/sf-admin-session=([^;]+)/);
-    if (cookieMatch && cookieMatch[1]) {
-      token = cookieMatch[1];
-    }
+    if (cookieMatch && cookieMatch[1]) token = cookieMatch[1];
   }
   return {
     apikey: validatedSupabaseAnonKey,
