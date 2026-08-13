@@ -62,6 +62,9 @@ jobs:
       - name: Check Finance OS authority
         run: npm run check:finance-os
 
+      - name: Check public brand voice
+        run: npm run check:brand-voice
+
       - name: Smoke exact Cloudflare preview
         if: github.event_name == 'pull_request'
         env:
