@@ -37,7 +37,10 @@ export default function MarketLandingV21({ marketId }: { marketId: MarketSurface
               See diagnostic options
             </Link>
           </div>
-          <p className="max-w-2xl font-mono text-xs leading-relaxed text-text-muted">{profile.marketNote}</p>
+          <div className="max-w-2xl space-y-2 font-mono text-xs leading-relaxed text-text-muted">
+            <p>I&apos;m Ernesto Ortiz Licer. I run Signal &amp; Friction independently.</p>
+            <p>{profile.marketNote}</p>
+          </div>
         </div>
 
         <aside className="rounded-xl border border-border-accent bg-surface/80 p-6">
