@@ -8,9 +8,10 @@
 -- 4. Background execution is an optimization; the durable DB job is the source of recovery truth.
 -- 5. External scan failure never rolls back or fakes payment success.
 -- 6. Project delivery state says provisioning/awaiting_input until a real scaffold exists.
--- 7. One client owns at most one client-backed diagnostic scaffold; rescans update it.
+-- 7. Job completion + project transition are one DB transaction.
+-- 8. Interrupted running jobs become reclaimable after a bounded lease.
+-- 9. One client owns at most one client-backed diagnostic scaffold; rescans update it.
 
--- Backfill target_url only where existing scaffold evidence is unambiguous.
 WITH canonical_scaffold_target AS (
   SELECT client_id, min(target_url) AS target_url
   FROM public.diagnostic_scaffolds
@@ -38,13 +39,10 @@ ALTER TABLE public.clients
     )
   );
 
--- The UI and rescan flow already model one mutable workspace per client.
 CREATE UNIQUE INDEX IF NOT EXISTS diagnostic_scaffolds_one_per_client_idx
   ON public.diagnostic_scaffolds(client_id)
   WHERE client_id IS NOT NULL;
 
--- Delivery state must distinguish paid-but-not-provisioned from diagnostic work
--- that can actually begin.
 ALTER TABLE public.beta_projects
   DROP CONSTRAINT IF EXISTS beta_projects_status_check;
 ALTER TABLE public.beta_projects
@@ -114,9 +112,8 @@ CREATE TRIGGER trigger_enqueue_scaffold_provisioning_job
   FOR EACH ROW
   EXECUTE FUNCTION public.enqueue_scaffold_provisioning_job();
 
--- Extend the payment state machine installed by PR #13. Payment confirmation
--- is still canonical, but delivery does not claim diagnostic work has started
--- until scaffold provisioning succeeds.
+-- Payment confirms money, not delivery readiness. The later scaffold executor
+-- owns only the transition from provisioning/awaiting_input into real work.
 CREATE OR REPLACE FUNCTION public.handle_payment_state_truth()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -172,9 +169,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Atomic claim prevents concurrent Stripe retries/background tasks from
--- scanning the same target simultaneously. needs_input is only claimable
--- through an explicit operator retry after the missing input is corrected.
+-- Claim is a lease, not a permanent lock. A Worker can disappear after
+-- claiming; a retry/operator may reclaim a running job after ten minutes.
 CREATE OR REPLACE FUNCTION public.claim_scaffold_provisioning_job(
   p_payment_id UUID,
   p_allow_needs_input BOOLEAN DEFAULT false
@@ -192,15 +188,93 @@ BEGIN
   WHERE j.payment_id = p_payment_id
     AND (
       j.status IN ('pending', 'retryable')
+      OR (j.status = 'running' AND j.started_at < now() - interval '10 minutes')
       OR (p_allow_needs_input AND j.status = 'needs_input')
     )
   RETURNING j.*;
 END;
 $$ LANGUAGE plpgsql;
 
+-- Finishing a job and changing delivery state must never split. This RPC is
+-- the only application-facing completion boundary for the provisioning job.
+CREATE OR REPLACE FUNCTION public.finish_scaffold_provisioning_job(
+  p_payment_id UUID,
+  p_status TEXT,
+  p_scaffold_id UUID DEFAULT NULL,
+  p_last_error TEXT DEFAULT NULL
+)
+RETURNS public.scaffold_provisioning_jobs AS $$
+DECLARE
+  v_job public.scaffold_provisioning_jobs%ROWTYPE;
+  v_project_exists boolean;
+BEGIN
+  IF p_status NOT IN ('succeeded', 'needs_input', 'retryable') THEN
+    RAISE EXCEPTION 'invalid scaffold provisioning finish status %', p_status
+      USING ERRCODE = '23514';
+  END IF;
+
+  SELECT * INTO v_job
+  FROM public.scaffold_provisioning_jobs
+  WHERE payment_id = p_payment_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'scaffold provisioning job missing for payment %', p_payment_id
+      USING ERRCODE = '23503';
+  END IF;
+
+  SELECT EXISTS(
+    SELECT 1 FROM public.beta_projects WHERE client_id = v_job.client_id
+  ) INTO v_project_exists;
+  IF NOT v_project_exists THEN
+    RAISE EXCEPTION 'beta project missing for provisioning client %', v_job.client_id
+      USING ERRCODE = '23503';
+  END IF;
+
+  IF p_status = 'succeeded' THEN
+    IF p_scaffold_id IS NULL OR NOT EXISTS (
+      SELECT 1 FROM public.diagnostic_scaffolds
+      WHERE id = p_scaffold_id AND client_id = v_job.client_id
+    ) THEN
+      RAISE EXCEPTION 'successful provisioning requires scaffold owned by client %', v_job.client_id
+        USING ERRCODE = '23514';
+    END IF;
+
+    UPDATE public.beta_projects
+    SET status = CASE
+          WHEN status IN ('provisioning', 'awaiting_input') THEN 'diagnostic_in_progress'
+          ELSE status
+        END,
+        updated_at = now()
+    WHERE client_id = v_job.client_id;
+  ELSIF p_status = 'needs_input' THEN
+    UPDATE public.beta_projects
+    SET status = CASE
+          WHEN status = 'provisioning' THEN 'awaiting_input'
+          ELSE status
+        END,
+        updated_at = now()
+    WHERE client_id = v_job.client_id;
+  END IF;
+
+  UPDATE public.scaffold_provisioning_jobs
+  SET status = p_status,
+      scaffold_id = CASE WHEN p_status = 'succeeded' THEN p_scaffold_id ELSE scaffold_id END,
+      last_error = CASE WHEN p_status = 'succeeded' THEN NULL ELSE left(p_last_error, 500) END,
+      finished_at = now(),
+      updated_at = now()
+  WHERE payment_id = p_payment_id
+  RETURNING * INTO v_job;
+
+  RETURN v_job;
+END;
+$$ LANGUAGE plpgsql;
+
 COMMENT ON TABLE public.scaffold_provisioning_jobs IS
   'Durable outbox for payment-triggered client scaffold provisioning. Payment truth is committed first; external scan work is asynchronous/recoverable.';
 COMMENT ON FUNCTION public.claim_scaffold_provisioning_job(UUID, BOOLEAN) IS
-  'Atomically claims one pending/retryable provisioning job. needs_input requires explicit operator retry.';
+  'Atomically claims pending/retryable work, explicitly reclaims needs_input, and leases stale running jobs after 10 minutes.';
+COMMENT ON FUNCTION public.finish_scaffold_provisioning_job(UUID, TEXT, UUID, TEXT) IS
+  'Atomically finishes provisioning and advances/blocks project delivery state without regressions.';
 COMMENT ON FUNCTION public.handle_payment_state_truth() IS
   'Canonical payment advances payment truth while delivery remains provisioning/awaiting_input until a real scaffold is ready.';
