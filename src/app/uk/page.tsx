@@ -1,3 +1,22 @@
+import type { Metadata } from "next";
 import MarketLanding from "../../components/MarketLanding";
-const market = "GB" as const;
-export default function Page() { return <MarketLanding countryCode={market} />; }
+
+export const metadata: Metadata = {
+  title: "Signal & Friction — UK B2B SaaS Diagnostic",
+  description: "Evidence-ranked behavioral diagnosis for UK B2B SaaS and digital-service teams. 72h async delivery.",
+  alternates: {
+    canonical: "https://signal-and-friction.com/uk",
+    languages: {
+      "x-default": "https://signal-and-friction.com/",
+      "en-US": "https://signal-and-friction.com/us",
+      "en-CA": "https://signal-and-friction.com/ca",
+      "en-GB": "https://signal-and-friction.com/uk",
+      "en-SG": "https://signal-and-friction.com/sg",
+      "en-AU": "https://signal-and-friction.com/au",
+    },
+  },
+};
+
+export default function Page() {
+  return <MarketLanding countryCode="GB" />;
+}
