@@ -48,11 +48,11 @@ export const metadata: Metadata = {
   keywords: [
     "B2B SaaS",
     "revenue friction",
-    "conversion optimization",
+    "behavioral diagnostics",
     "SaaS diagnostic",
     "cognitive friction",
     "revenue audit",
-    "pricing page optimization",
+    "B2B SaaS pricing diagnostic",
   ],
   openGraph: {
     title: "Signal & Friction — Behavioral Diagnostic",

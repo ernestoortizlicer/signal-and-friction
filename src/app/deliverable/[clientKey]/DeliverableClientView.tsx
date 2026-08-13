@@ -524,7 +524,7 @@ export default function DeliverableClientView({ data: staticData, staticClientKe
         <div className="max-w-[900px] mx-auto">
           <motion.div variants={itemVariants}>
             <h2 className="font-mono text-xs font-semibold uppercase tracking-[0.15em] text-[#B0A89E] mb-4">
-              01 — The Funnel Signal
+              01 — The Signal
             </h2>
             <p className="text-base text-[#F5F0EB] leading-relaxed max-w-[65ch] font-light">
               {d.diagnosis?.signal}

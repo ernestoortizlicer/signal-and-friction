@@ -493,7 +493,7 @@ export default function PricingPage() {
         id="dfy-pricing"
         eyebrow="Done-For-You — we execute"
         badge={`${dfyRange} · high-ticket`}
-        headline="No time to do it yourself? We become your conversion team."
+        headline="No time to do it yourself? We become your diagnostic team."
         ladder={DFY_LADDER}
         journey={JOURNEY_DFY}
         diagnosticCopy={DIAGNOSTIC_COPY.dfy}
