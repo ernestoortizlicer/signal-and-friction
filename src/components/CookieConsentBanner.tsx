@@ -31,7 +31,7 @@ export default function CookieConsentBanner() {
     <div className="fixed bottom-0 inset-x-0 z-50 border-t border-[#D4A853]/25 bg-[#0A0908]/95 backdrop-blur-md px-4 py-3 md:px-6">
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-3 md:gap-6 text-xs font-mono text-[#B0A89E]">
         <p className="flex-1 text-center md:text-left leading-relaxed">
-          We use cookies for basic analytics to understand how visitors use this site. They only load if you accept.{" "}
+          I use cookies for basic analytics to understand how visitors use this site. They only load if you accept.{" "}
           <Link href="/legal/privacy" className="text-[#D4A853] hover:underline">
             Privacy Policy →
           </Link>

@@ -52,27 +52,33 @@ export interface ArchivedOfferRecord {
   }>;
 }
 
+const DIAGNOSTIC_SCOPE =
+  'Evidence-ranked diagnosis of the highest-confidence friction supported by the available evidence, with measured/modeled/pending evidence, competing hypotheses, uncertainty, and a recommended decision when warranted. If the evidence is insufficient for a defensible finding, the diagnostic explicitly abstains. Delivered as a web page plus a short Loom walkthrough.';
+
+const MONITORING_SCOPE =
+  "Monthly: measure agreed KPI and signal movement after the intervention, report what changed, and surface a new evidence-ranked issue only when the evidence supports one; otherwise report no new finding.";
+
 // ── DWY (Done-With-You) — founder executes, S&F diagnoses and guides ──
 export const DWY_LADDER: OfferPhase[] = [
   {
     priceId: 'price_dwy_beta_diagnostic', order: 1, name: 'Diagnostic', segment: 'dwy',
     priceUsd: 350, billing: 'one_time',
-    scope: 'Full diagnosis of ONE dominant friction: evidence tiered measured/modeled/pending, why it blocks conversion, and the recommended decision. Delivered as a web page plus a short Loom walkthrough.',
+    scope: DIAGNOSTIC_SCOPE,
   },
   {
     priceId: 'price_dwy_intervention', order: 2, name: 'Intervention', segment: 'dwy',
     priceUsd: 750, billing: 'one_time',
-    scope: 'Step-by-step implementation plan for the diagnosed fix, guiding the founder to execute it themselves, with expected before/after.',
+    scope: 'Step-by-step implementation plan for a decision supported by the Diagnostic, guiding the founder to execute it themselves, with an explicit before/after measurement plan.',
   },
   {
     priceId: 'price_dwy_monitoring', order: 3, name: 'Monitoring', segment: 'dwy',
     priceUsd: 500, billing: 'monthly',
-    scope: "Monthly: measure the fix's effect, report signal movement, and surface the next friction point.",
+    scope: MONITORING_SCOPE,
   },
   {
     priceId: 'price_dwy_expansion', order: 4, name: 'Expansion', segment: 'dwy',
     priceUsd: 500, billing: 'one_time',
-    scope: 'The diagnostic repeated on another funnel area.',
+    scope: 'The Diagnostic repeated on another funnel area under the same evidence, uncertainty, and abstention rules.',
   },
   {
     priceId: 'price_dwy_autonomy', order: 5, name: 'Autonomy Kit', segment: 'dwy',
@@ -81,27 +87,27 @@ export const DWY_LADDER: OfferPhase[] = [
   },
 ];
 
-// ── DFY (Done-For-You) — same 5 scopes, S&F executes everything ──
+// ── DFY (Done-For-You) — diagnosis first; execution only in phases that include it ──
 export const DFY_LADDER: OfferPhase[] = [
   {
     priceId: 'price_dfy_beta_diagnostic', order: 1, name: 'Diagnostic', segment: 'dfy',
     priceUsd: 2000, billing: 'one_time',
-    scope: 'Full diagnosis of ONE dominant friction: evidence tiered measured/modeled/pending, why it blocks conversion, and the recommended decision. Delivered as a web page plus a short Loom walkthrough.',
+    scope: DIAGNOSTIC_SCOPE,
   },
   {
     priceId: 'price_dfy_intervention', order: 2, name: 'Intervention', segment: 'dfy',
     priceUsd: 3000, billing: 'one_time',
-    scope: 'S&F implements the diagnosed fix directly, with measured before/after.',
+    scope: 'S&F implements the decision supported by the Diagnostic directly, with measured before/after where the required data is available.',
   },
   {
     priceId: 'price_dfy_monitoring', order: 3, name: 'Monitoring', segment: 'dfy',
     priceUsd: 2500, billing: 'monthly',
-    scope: "Monthly: measure the fix's effect, report signal movement, and surface the next friction point.",
+    scope: MONITORING_SCOPE,
   },
   {
     priceId: 'price_dfy_expansion', order: 4, name: 'Expansion', segment: 'dfy',
     priceUsd: 2500, billing: 'one_time',
-    scope: 'The diagnostic repeated on another funnel area, with S&F implementing the fix directly.',
+    scope: 'The Diagnostic repeated on another funnel area under the same evidence, uncertainty, and abstention rules; any implementation is limited to the scope explicitly included in the purchased phase.',
   },
   {
     priceId: 'price_dfy_autonomy', order: 5, name: 'Autonomy Kit', segment: 'dfy',

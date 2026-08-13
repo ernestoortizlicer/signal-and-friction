@@ -6,6 +6,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  checks: read
+
 jobs:
   integrity:
     runs-on: ubuntu-latest
@@ -57,3 +61,12 @@ jobs:
 
       - name: Check Finance OS authority
         run: npm run check:finance-os
+
+      - name: Check public brand voice
+        run: npm run check:brand-voice
+
+      - name: Smoke exact Cloudflare preview
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/check-cloudflare-preview-smoke.mjs

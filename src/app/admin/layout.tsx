@@ -86,7 +86,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     { href: "/admin/finance", label: "Finance", code: "FN" },
     { href: "/admin/priorities", label: "Priorities", code: "PR" },
     { href: "/admin/learning", label: "Learning", code: "LE" },
-    { href: "/admin/certified", label: "Certified", code: "CE" },
+    { href: "/admin/certified", label: "Certified Archive", code: "AR" },
   ];
 
   if (isLoginPage) return <>{children}</>;
@@ -152,7 +152,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
             })}
             {normalizedPathname.startsWith("/admin/finance") && <Link href="/admin/finance/jurisdictions" className={`hidden md:flex ml-8 mt-1 px-3 py-2 rounded text-[10px] font-mono uppercase tracking-wider border ${normalizedPathname === "/admin/finance/jurisdictions" ? "border-[#D4A853]/30 bg-[#D4A853]/8 text-[#D4A853]" : "border-transparent text-[#7A6F65] hover:text-[#B0A89E]"}`}>JX · Jurisdictions</Link>}
           </nav>
-          <div className="mt-auto px-5 py-4 hidden md:block border-t border-[#D4A853]/6"><div className="font-mono text-xs text-[#7A6F65] tracking-[0.15em] uppercase">Engine v2.5</div></div>
+          <div className="mt-auto px-5 py-4 hidden md:block border-t border-[#D4A853]/6"><div className="font-mono text-xs text-[#7A6F65] tracking-[0.15em] uppercase">V2 Authority</div></div>
         </aside>
         <main className="flex-1 bg-[#0A0908] relative overflow-auto"><div className="absolute inset-0 diagnostic-grid pointer-events-none opacity-30"/><div className="relative z-10 h-full">{children}</div></main>
       </div>

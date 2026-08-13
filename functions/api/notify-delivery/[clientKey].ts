@@ -167,17 +167,17 @@ function buildEmail(clientName: string, deliverableUrl: string): string {
     [
       "🎬",
       "Loom Video Walkthrough",
-      "A full screen-recorded breakdown of your funnel — annotated, precise, and actionable.",
+      "My screen-recorded walkthrough of the evidence, interpretation, uncertainty, and recommended decision.",
     ],
     [
       "⚡",
-      "One Recommendation, With a Range",
-      "A single evidence-grounded decision and a projected impact range — not three options, not a fixed promise.",
+      "Evidence-Grounded Decision",
+      "The recommendation the evidence supports, with assumptions and uncertainty made explicit rather than hidden.",
     ],
     [
       "📊",
       "Evidence, Tiered by Confidence",
-      "Every claim marked measured, modeled, or pending — plus a stated confidence level for the diagnosis as a whole.",
+      "Every claim marked measured, modeled, or pending — plus the confidence and evidence boundary for the diagnosis.",
     ],
   ];
 
@@ -221,13 +221,10 @@ function buildEmail(clientName: string, deliverableUrl: string): string {
               Hi ${greeting} —
             </p>
             <p style="margin:0 0 16px;font-size:15px;color:#9A8F82;line-height:1.7;">
-              Your friction diagnostic is complete. We've analyzed your funnel,
-              isolated the friction mechanism, and produced one evidence-grounded
-              recommendation — Loom walkthrough included.
+              I&apos;ve completed the review and prepared your diagnostic portal. It shows the evidence, what I could and could not conclude, and the recommendation the evidence supports. Your Loom walkthrough is included.
             </p>
             <p style="margin:0 0 32px;font-size:15px;color:#9A8F82;line-height:1.7;">
-              The 72-hour protocol has been fulfilled. Everything is waiting in your
-              diagnostic portal.
+              The delivery protocol has been fulfilled. Everything is waiting in your diagnostic portal.
             </p>
 
             <!-- CTA -->
@@ -282,7 +279,7 @@ function buildEmail(clientName: string, deliverableUrl: string): string {
               Signal &amp; Friction · signal-and-friction.com
             </p>
             <p style="margin:0;font-size:11px;color:rgba(154,143,130,0.4);line-height:1.55;">
-              This message was sent automatically by the Signal &amp; Friction 72h Protocol.
+              This message was sent automatically by the Signal &amp; Friction delivery protocol.
               Reply to this email if you have any questions.
             </p>
           </td>

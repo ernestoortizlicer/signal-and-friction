@@ -30,7 +30,7 @@ export const MARKET_PROFILES: Record<MarketSurfaceId, MarketProfile> = {
     heroEyebrow: 'Evidence-ranked behavioral diagnosis',
     heroHeadline: 'Isolate the highest-confidence friction your evidence can actually defend.',
     heroSubhead:
-      'Measured signals, explicit hypotheses, uncertainty and one reviewable decision. If the evidence is insufficient, we say so. 72h async delivery.',
+      'Measured signals, explicit hypotheses, uncertainty and one reviewable decision. If the evidence is insufficient, I say so. 72h async delivery.',
     intakeUrlLabel: 'Enter target URL for diagnostic intake',
     marketNote: 'Serving English-first B2B SaaS and digital-service companies in the US, Canada and UK.',
     analyticsRegionLegacy: 'US',
