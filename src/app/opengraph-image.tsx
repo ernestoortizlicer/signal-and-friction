@@ -121,7 +121,7 @@ export default async function Image() {
                 lineHeight: 1.35,
               }}
             >
-              Measured signals. Explicit hypotheses. Uncertainty. If the evidence is insufficient, we say so.
+              Measured signals. Explicit hypotheses. Uncertainty. If the evidence is insufficient, I say so.
             </div>
           </div>
 
