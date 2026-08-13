@@ -17,7 +17,7 @@
     "check:payment-state": "node scripts/check-payment-state-truth.mjs",
     "check:scaffold-provisioning": "node scripts/check-scaffold-provisioning-truth.mjs",
     "check:agent-build": "node scripts/check-agent-build-gate.mjs",
-    "check:training-unit": "node src/lib/training-workflow.test.mjs && node src/lib/calibration-readiness.test.mjs",
+    "check:training-unit": "node --experimental-strip-types src/lib/training-workflow.test.mjs && node --experimental-strip-types src/lib/calibration-readiness.test.mjs",
     "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs && npm run check:offers && npm run check:drift && npm run check:diagnostic-authority && npm run check:intake-truth && npm run check:stripe-webhook && npm run check:payment-state && npm run check:scaffold-provisioning && npm run check:agent-build && npm run check:training-unit",
     "deploy": "wrangler pages deploy out --project-name=signal-and-friction"
   },
