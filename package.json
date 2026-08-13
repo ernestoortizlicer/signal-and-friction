@@ -20,7 +20,8 @@
     "check:training-unit": "node --experimental-strip-types src/lib/training-workflow.test.mjs && node --experimental-strip-types src/lib/calibration-readiness.test.mjs",
     "check:learning-os": "node scripts/check-learning-os-truth.mjs",
     "check:finance-os": "node scripts/check-finance-os-truth.mjs",
-    "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs && npm run check:offers && npm run check:drift && npm run check:diagnostic-authority && npm run check:intake-truth && npm run check:stripe-webhook && npm run check:payment-state && npm run check:scaffold-provisioning && npm run check:agent-build && npm run check:training-unit && npm run check:learning-os && npm run check:finance-os",
+    "check:stripe-finance": "node scripts/check-stripe-finance-projection.mjs",
+    "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs && npm run check:offers && npm run check:drift && npm run check:diagnostic-authority && npm run check:intake-truth && npm run check:stripe-webhook && npm run check:payment-state && npm run check:scaffold-provisioning && npm run check:agent-build && npm run check:training-unit && npm run check:learning-os && npm run check:finance-os && npm run check:stripe-finance",
     "deploy": "wrangler pages deploy out --project-name=signal-and-friction"
   },
   "dependencies": {

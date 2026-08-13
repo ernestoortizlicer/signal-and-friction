@@ -9,6 +9,14 @@ const CORS = {
 
 type Env = Record<string, string>;
 
+type LearningSession = {
+  id: string;
+  analyst_id: string;
+  session_type: 'course_study' | 'diagnostic_case' | 'active_recall' | 'build_application' | 'review';
+  status: 'planned' | 'in_progress' | 'completed' | 'skipped';
+  started_at: string | null;
+};
+
 function db(env: Env) {
   return createClient(getSupabaseUrl(env), getServiceRoleKey(env) ?? '', {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -24,6 +32,12 @@ function asInt(value: unknown, fallback: number, min: number, max: number): numb
   return Number.isFinite(n) ? Math.max(min, Math.min(max, Math.round(n))) : fallback;
 }
 
+function nonEmpty(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
 async function loadPayload(env: Env, analystId: string, date: string) {
   const supabase = db(env);
   const [settingsRes, resourcesRes, sessionsRes, attemptsRes] = await Promise.all([
@@ -37,9 +51,9 @@ async function loadPayload(env: Env, analystId: string, date: string) {
   if (firstError) throw new Error(firstError.message);
 
   const sessions = sessionsRes.data ?? [];
-  const completed7 = sessions.filter((s) => s.status === 'completed' && s.actual_minutes != null);
-  const distinctDays = new Set(completed7.map((s) => s.session_date));
-  const actualMinutes7 = completed7.reduce((sum, s) => sum + Number(s.actual_minutes || 0), 0);
+  const completed14 = sessions.filter((s) => s.status === 'completed' && s.actual_seconds != null && s.outcome);
+  const distinctDays = new Set(completed14.map((s) => s.session_date));
+  const actualMinutes14 = completed14.reduce((sum, s) => sum + Number(s.actual_minutes || 0), 0);
 
   const confusion = new Map<string, number>();
   for (const a of attemptsRes.data ?? []) {
@@ -62,11 +76,23 @@ async function loadPayload(env: Env, analystId: string, date: string) {
     today: sessions.filter((s) => s.session_date === date),
     adherence: {
       activeDaysLast14: distinctDays.size,
-      actualMinutesLast14: actualMinutes7,
-      completedBlocksLast14: completed7.length,
+      actualMinutesLast14: actualMinutes14,
+      completedBlocksLast14: completed14.length,
     },
     calibrationFocus: focus,
   };
+}
+
+async function ownedSession(env: Env, analystId: string, id: string): Promise<LearningSession | null> {
+  const supabase = db(env);
+  const { data, error } = await supabase
+    .from('learning_sessions')
+    .select('id,analyst_id,session_type,status,started_at')
+    .eq('id', id)
+    .eq('analyst_id', analystId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as LearningSession | null) ?? null;
 }
 
 export const onRequestGet = async ({ request, env }: { request: Request; env: Env }): Promise<Response> => {
@@ -81,15 +107,15 @@ export const onRequestGet = async ({ request, env }: { request: Request; env: En
   try {
     return Response.json(await loadPayload(env, admin.id, date), { headers: CORS });
   } catch (err) {
-    return Response.json({ error: err instanceof Error ? err.message : 'Failed to load Learning OS.' }, { status: 500, headers: CORS });
+    return Response.json({ error: err instanceof Error ? err.message : 'Failed to load Training OS.' }, { status: 500, headers: CORS });
   }
 };
 
 export const onRequestPost = async ({ request, env }: { request: Request; env: Env }): Promise<Response> => {
   const admin = await requireAdmin(request, env);
   if (admin instanceof Response) {
-    const body = await admin.json().catch(() => ({}));
-    return Response.json(body, { status: admin.status, headers: CORS });
+    const responseBody = await admin.json().catch(() => ({}));
+    return Response.json(responseBody, { status: admin.status, headers: CORS });
   }
 
   let body: Record<string, unknown>;
@@ -108,24 +134,24 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
         diagnostic_practice_target_min: asInt(body.diagnosticPracticeTargetMin, 30, 0, 240),
         active_recall_target_min: asInt(body.activeRecallTargetMin, 15, 0, 120),
         build_application_target_min: asInt(body.buildApplicationTargetMin, 30, 0, 240),
-        timezone: typeof body.timezone === 'string' && body.timezone.trim() ? body.timezone.trim() : 'Europe/Madrid',
+        timezone: nonEmpty(body.timezone) ?? 'Europe/Madrid',
         updated_at: new Date().toISOString(),
       };
       const { error } = await supabase.from('learning_daily_settings').upsert(row, { onConflict: 'analyst_id' });
       if (error) throw error;
     } else if (action === 'add_resource') {
-      const title = typeof body.title === 'string' ? body.title.trim() : '';
-      const provider = typeof body.provider === 'string' ? body.provider.trim() : '';
+      const title = nonEmpty(body.title);
+      const provider = nonEmpty(body.provider);
       if (!title || !provider) return Response.json({ error: 'provider and title are required' }, { status: 400, headers: CORS });
       const { error } = await supabase.from('learning_resources').insert({
         analyst_id: admin.id,
         provider,
         title,
-        source_url: typeof body.sourceUrl === 'string' && body.sourceUrl.trim() ? body.sourceUrl.trim() : null,
+        source_url: nonEmpty(body.sourceUrl),
         status: 'active',
         priority: asInt(body.priority, 3, 1, 5),
         estimated_total_minutes: body.estimatedTotalMinutes == null ? null : asInt(body.estimatedTotalMinutes, 60, 1, 100000),
-        notes: typeof body.notes === 'string' && body.notes.trim() ? body.notes.trim() : null,
+        notes: nonEmpty(body.notes),
         started_at: new Date().toISOString(),
       });
       if (error) throw error;
@@ -133,7 +159,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
       const id = typeof body.id === 'string' ? body.id : '';
       if (!id) return Response.json({ error: 'resource id is required' }, { status: 400, headers: CORS });
       const status = typeof body.status === 'string' ? body.status : undefined;
-      const allowed = ['planned','active','paused','completed','archived'];
+      const allowed = ['planned', 'active', 'paused', 'completed', 'archived'];
       if (status && !allowed.includes(status)) return Response.json({ error: 'invalid resource status' }, { status: 400, headers: CORS });
       const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
       if (status) {
@@ -145,7 +171,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
       if (error) throw error;
     } else if (action === 'ensure_plan') {
       const { data: settings, error: settingsError } = await supabase.from('learning_daily_settings').select('*').eq('analyst_id', admin.id).single();
-      if (settingsError || !settings) throw settingsError ?? new Error('Learning settings missing');
+      if (settingsError || !settings) throw settingsError ?? new Error('Training settings missing');
       const { data: resource } = await supabase.from('learning_resources').select('id').eq('analyst_id', admin.id).eq('status', 'active').order('priority', { ascending: false }).limit(1).maybeSingle();
       const blocks = [
         { key: 'course', type: 'course_study', minutes: settings.course_study_target_min, resource_id: resource?.id ?? null },
@@ -158,8 +184,12 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
         const { data: existing } = await supabase.from('learning_sessions').select('id,status').eq('analyst_id', admin.id).eq('session_date', date).eq('plan_key', planKey).maybeSingle();
         if (!existing) {
           const { error } = await supabase.from('learning_sessions').insert({
-            analyst_id: admin.id, session_date: date, session_type: block.type,
-            plan_key: planKey, resource_id: block.resource_id, planned_minutes: block.minutes,
+            analyst_id: admin.id,
+            session_date: date,
+            session_type: block.type,
+            plan_key: planKey,
+            resource_id: block.resource_id,
+            planned_minutes: block.minutes,
           });
           if (error) throw error;
         } else if (existing.status === 'planned') {
@@ -167,24 +197,82 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
           if (error) throw error;
         }
       }
+    } else if (action === 'start_session') {
+      const id = typeof body.id === 'string' ? body.id : '';
+      if (!id) return Response.json({ error: 'session id is required' }, { status: 400, headers: CORS });
+      const session = await ownedSession(env, admin.id, id);
+      if (!session) return Response.json({ error: 'training session not found' }, { status: 404, headers: CORS });
+      if (session.status === 'completed' || session.status === 'skipped') {
+        return Response.json({ error: `cannot start a ${session.status} session` }, { status: 409, headers: CORS });
+      }
+      if (session.status === 'planned') {
+        const { error } = await supabase.from('learning_sessions').update({
+          status: 'in_progress',
+          started_at: new Date().toISOString(),
+          actual_minutes: null,
+          actual_seconds: null,
+          completed_at: null,
+          updated_at: new Date().toISOString(),
+        }).eq('id', id).eq('analyst_id', admin.id).eq('status', 'planned');
+        if (error) throw error;
+      }
     } else if (action === 'complete_session') {
       const id = typeof body.id === 'string' ? body.id : '';
       if (!id) return Response.json({ error: 'session id is required' }, { status: 400, headers: CORS });
-      const actualMinutes = asInt(body.actualMinutes, 0, 1, 720);
+      const session = await ownedSession(env, admin.id, id);
+      if (!session) return Response.json({ error: 'training session not found' }, { status: 404, headers: CORS });
+      if (session.status !== 'in_progress' || !session.started_at) {
+        return Response.json({ error: 'Start the training block before completing it.' }, { status: 409, headers: CORS });
+      }
+
+      const outcome = nonEmpty(body.outcome);
+      const evidenceRef = nonEmpty(body.evidenceRef);
+      const linkedAttemptId = nonEmpty(body.linkedAttemptId);
+      const retrievalScore = body.retrievalScore == null || body.retrievalScore === '' ? null : asInt(body.retrievalScore, 0, 0, 100);
+
+      if (!outcome) return Response.json({ error: 'Completion requires an outcome: what can you now explain, decide, or do?' }, { status: 400, headers: CORS });
+      if (session.session_type === 'active_recall' && retrievalScore == null) {
+        return Response.json({ error: 'Active Recall requires a retrieval score.' }, { status: 400, headers: CORS });
+      }
+      if (session.session_type === 'build_application' && !evidenceRef) {
+        return Response.json({ error: 'Build / Apply requires an evidence reference to the artifact.' }, { status: 400, headers: CORS });
+      }
+      if (session.session_type === 'diagnostic_case' && !evidenceRef && !linkedAttemptId) {
+        return Response.json({ error: 'Diagnostic Calibration requires a linked attempt or case evidence reference.' }, { status: 400, headers: CORS });
+      }
+
+      if (linkedAttemptId) {
+        const { data: attempt, error: attemptError } = await supabase.from('training_attempts').select('id').eq('id', linkedAttemptId).eq('analyst_id', admin.id).maybeSingle();
+        if (attemptError) throw attemptError;
+        if (!attempt) return Response.json({ error: 'linked training attempt not found for this analyst' }, { status: 400, headers: CORS });
+      }
+
+      const startedMs = Date.parse(session.started_at);
+      if (!Number.isFinite(startedMs)) throw new Error('Training session has an invalid started_at timestamp');
+      const completedAt = new Date();
+      const actualSeconds = Math.max(1, Math.floor((completedAt.getTime() - startedMs) / 1000));
+      const actualMinutes = Math.max(1, Math.round(actualSeconds / 60));
+
       const { error } = await supabase.from('learning_sessions').update({
         status: 'completed',
         actual_minutes: actualMinutes,
-        outcome: typeof body.outcome === 'string' && body.outcome.trim() ? body.outcome.trim() : null,
-        evidence_ref: typeof body.evidenceRef === 'string' && body.evidenceRef.trim() ? body.evidenceRef.trim() : null,
-        retrieval_score: body.retrievalScore == null ? null : asInt(body.retrievalScore, 0, 0, 100),
-        completed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }).eq('id', id).eq('analyst_id', admin.id);
+        actual_seconds: actualSeconds,
+        outcome,
+        evidence_ref: evidenceRef,
+        linked_attempt_id: linkedAttemptId,
+        retrieval_score: retrievalScore,
+        completed_at: completedAt.toISOString(),
+        updated_at: completedAt.toISOString(),
+      }).eq('id', id).eq('analyst_id', admin.id).eq('status', 'in_progress');
       if (error) throw error;
     } else if (action === 'skip_session') {
       const id = typeof body.id === 'string' ? body.id : '';
       if (!id) return Response.json({ error: 'session id is required' }, { status: 400, headers: CORS });
-      const { error } = await supabase.from('learning_sessions').update({ status: 'skipped', outcome: typeof body.reason === 'string' ? body.reason.trim() : null, updated_at: new Date().toISOString() }).eq('id', id).eq('analyst_id', admin.id);
+      const { error } = await supabase.from('learning_sessions').update({
+        status: 'skipped',
+        outcome: nonEmpty(body.reason) ?? 'Skipped intentionally',
+        updated_at: new Date().toISOString(),
+      }).eq('id', id).eq('analyst_id', admin.id).in('status', ['planned', 'in_progress']);
       if (error) throw error;
     } else {
       return Response.json({ error: `Unknown action: ${action}` }, { status: 400, headers: CORS });
@@ -192,11 +280,15 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
 
     return Response.json(await loadPayload(env, admin.id, date), { headers: CORS });
   } catch (err) {
-    return Response.json({ error: err instanceof Error ? err.message : 'Learning OS action failed.' }, { status: 500, headers: CORS });
+    return Response.json({ error: err instanceof Error ? err.message : 'Training OS action failed.' }, { status: 500, headers: CORS });
   }
 };
 
 export const onRequestOptions = (): Response => new Response(null, {
   status: 204,
-  headers: { ...CORS, 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' },
+  headers: {
+    ...CORS,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  },
 });
