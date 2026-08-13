@@ -1,0 +1,33 @@
+{
+  "id": "finance_copilot",
+  "name": "Signal and Friction Finance Copilot",
+  "status": "internal_active_reviewed_loop",
+  "specPath": "docs/agents/finance-copilot-spec-v0.1.md",
+  "decisionLogPath": "docs/decision-log-2026-08-13-finance-os-v2.md",
+  "evalPath": "evals/finance-copilot",
+  "canonicalAuthorities": [
+    "public.accounts + public.transactions + public.transaction_entries",
+    "public.finance_obligations + public.finance_compliance_sources",
+    "public.finance_cash_policies",
+    "public.finance_investment_policies",
+    "functions/api/finance/advisor.ts"
+  ],
+  "reusedCapabilities": [
+    "existing double-entry ledger and deferred balance constraint",
+    "supabase/functions/_shared/ai-router.ts",
+    "functions/api/_admin-auth.ts",
+    "public.financial_goals",
+    "public.investments"
+  ],
+  "deterministicFirst": [
+    "account balances and cash liquidity classification",
+    "trailing revenue/expense/runway calculations",
+    "ledger posting/reversal/idempotency",
+    "compliance source verification state",
+    "treasury allocation arithmetic",
+    "policy version activation and concentration limits"
+  ],
+  "humanApprovalBoundary": "Every model-generated recommendation is review-only. No model call may move money, place a trade, file a tax return, activate a treasury/IPS policy, mark an obligation complete, determine tax residency, or create a binding financial/legal commitment. Approval records operator intent only and is not execution.",
+  "productionWriteSurface": "finance_agent_runs and finance_recommendations only; ledger mutations are deterministic RPCs initiated by the human UI, not agent tools",
+  "notes": "The agent receives an authoritative server-built snapshot. Browser-supplied financial context is forbidden. Jurisdiction-specific compliance authority comes only from human-verified source records; missing evidence fails to review/professional escalation."
+}
