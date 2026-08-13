@@ -29,8 +29,14 @@ if (!fs.existsSync(migrationPath)) {
     'DB must reject project paid state without canonical payment evidence');
   requireMatch(sql, /project for client % cannot become paid without canonical payment/,
     'project paid-state guard must fail closed');
-  requireMatch(sql, /CREATE TRIGGER trigger_payment_state_truth[\s\S]*AFTER INSERT ON public\.payments/,
-    'canonical payment insertion must own workflow state transition');
+  requireMatch(sql, /CREATE TRIGGER trigger_guard_payment_client_assignment_truth[\s\S]*BEFORE UPDATE OF client_id ON public\.payments/,
+    'canonical payment client ownership must become immutable once assigned');
+  requireMatch(sql, /OLD\.client_id IS NOT NULL[\s\S]*NEW\.client_id IS DISTINCT FROM OLD\.client_id[\s\S]*RAISE EXCEPTION/,
+    'payment reassignment between clients must fail closed');
+  requireMatch(sql, /CREATE TRIGGER trigger_payment_state_truth[\s\S]*AFTER INSERT OR UPDATE OF client_id ON public\.payments/,
+    'canonical payment insert and NULL-to-client reconciliation must own workflow state transition');
+  requireMatch(sql, /TG_OP = 'UPDATE'[\s\S]*OLD\.client_id IS NOT DISTINCT FROM NEW\.client_id[\s\S]*RETURN NEW/,
+    'no-op payment client updates must not replay state transitions');
   requireMatch(sql, /WHEN protocol_stage = 'pre_payment' THEN 'payment_confirmed'[\s\S]*ELSE protocol_stage/,
     'payment transition must be monotonic and never regress later protocol stages');
   requireMatch(sql, /SET payment_status = 'paid'[\s\S]*'prospecting', 'outreach_sent', 'followup_sent'[\s\S]*'diagnostic_in_progress'/,
@@ -38,7 +44,7 @@ if (!fs.existsSync(migrationPath)) {
   requireMatch(sql, /GET DIAGNOSTICS v_project_count = ROW_COUNT[\s\S]*v_project_count <> 1[\s\S]*RAISE EXCEPTION/,
     'missing or duplicate project state must fail closed instead of silently drifting');
   requireMatch(sql, /IF NEW\.client_id IS NULL THEN[\s\S]*RETURN NEW/,
-    'unmatched economic events must remain recorded for recovery without inventing client state');
+    'unmatched economic events must remain recorded without inventing client state');
 }
 
 if (!fs.existsSync(handlerPath)) {
@@ -58,4 +64,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('✅ Payment state truth: impossible paid states are rejected, transitions are atomic/monotonic, and finance has one authority');
+console.log('✅ Payment state truth: impossible paid states are rejected, recovery is safe, transitions are atomic/monotonic, and finance has one authority');
