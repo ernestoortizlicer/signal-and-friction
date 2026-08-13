@@ -25,13 +25,25 @@ If any answer is missing, the module is incomplete or wrongly bounded.
 | Module | Outcome | Canonical truth / authority | Primary surface |
 |---|---|---|---|
 | Command | Decide what deserves attention now | `priority_tasks` as a **derived projection**; source state remains canonical elsewhere | `/admin/priorities` |
-| Sales | Move a qualified company toward paid work | `clients`, `beta_projects`, `prospect_candidates`, offer/payment contracts | `/admin/dashboard`, `/admin/prospecting` |
+| Sales | Move a company from evidence-backed prospect to opportunity, client and paid work | `prospect_candidates`, `clients`, `beta_projects`, offer/payment contracts | `/admin/sales` → `Prospects / Opportunities / Clients` |
 | Delivery | Turn evidence into reviewable diagnosis and deliverable | `diagnostic_scaffolds` + canonical reasoning/delivery policy | `/admin/scaffolds` |
 | Training | Build and prove analyst capability | `learning_sessions`, `training_attempts`, readiness views | `/admin/training` |
 | Finance | Keep money truth deterministic and judgment reviewable | ledger + `finance_*` evidence/policy objects | `/admin/finance` |
 | Reliability | Turn failure into fix and regression evidence | `ai_incidents` + CI/eval/runtime evidence | `/admin/reliability` |
 
 `/admin/overview` is the control plane over these modules; it is not a seventh business authority.
+
+### Sales lifecycle boundary
+
+Sales is expressed as one lifecycle rather than separate top-level products:
+
+`Prospects → human promotion → Opportunities → Clients`
+
+- `/admin/prospecting` owns evidence gathering before commercial commitment.
+- `/admin/opportunities` owns commercial state for relationships deliberately chosen for pursuit.
+- `/admin/clients` owns relationship/contact identity.
+- `/admin/dashboard` is compatibility-only while its remaining commercial write actions are extracted; it does not define the mental model.
+- system/AI learning belongs to Reliability, never to a Sales tab.
 
 ## Connection truth
 
@@ -70,7 +82,7 @@ Primary navigation uses outcome vocabulary only:
 
 `Overview / Command / Sales / Delivery / Training / Finance / Reliability`
 
-Implementation-history labels such as `Scaffolds`, `Learning`, `Certified`, or duplicated pipeline/prospecting top-level modules may remain as routes for compatibility but do not define the operator mental model.
+Implementation-history labels such as `Scaffolds`, `Learning`, `Certified`, `Pipeline`, or duplicated prospecting top-level modules may remain as compatibility routes but do not define the operator mental model.
 
 ## Architectural invariants
 
@@ -80,9 +92,11 @@ Implementation-history labels such as `Scaffolds`, `Learning`, `Certified`, or d
 4. **Deterministic first.** Facts, state transitions, permissions and side effects stay outside model judgment where specifiable.
 5. **Failures compound into evidence.** Material incidents become regression/eval work, not anecdotal patches.
 6. **No module theater.** A pretty card without action/state/connection contracts is not a finished module.
+7. **One project, one visual grammar.** Product surfaces consume the shared Project Design System; modules do not invent parallel type, spacing or surface systems.
 
-## Regression guard
+## Regression guards
 
-`scripts/check-backend-os-contract.mjs` protects the visible module set, shared registry, health endpoint, truth boundaries and removal of legacy vocabulary from first-class navigation.
+- `scripts/check-backend-os-contract.mjs` protects the visible module set, shared registry, health endpoint and truth boundaries.
+- `scripts/check-project-design-system.mjs` protects the shared visual authority, Sales lifecycle surfaces, Prospecting composition and system-learning boundary.
 
-This guard is part of Product Integrity CI.
+Both guards are part of Product Integrity CI.

@@ -1,0 +1,399 @@
+/*
+ * Signal & Friction — Project Design Constitution v1
+ *
+ * This file is the visual authority for the whole product. Pages may compose
+ * these primitives, but must not invent a parallel type scale, spacing rhythm,
+ * control density or surface hierarchy.
+ *
+ * Product rule: one project → one visual grammar. Admin and public surfaces may
+ * have different information density, never different design logic.
+ */
+
+:root {
+  /* Semantic surfaces — aliases keep the existing Gold Diagnostic palette as
+     the color authority while giving components stable product vocabulary. */
+  --sf-canvas: var(--color-bg, #0a0908);
+  --sf-surface-1: var(--color-surface, #121110);
+  --sf-surface-2: var(--color-surface-hi, #1a1815);
+  --sf-surface-3: var(--color-surface-elevated, #211e1a);
+  --sf-text-strong: var(--color-text-primary, #f5f0eb);
+  --sf-text: var(--color-text-body, #9a8f82);
+  --sf-text-muted: var(--color-text-muted, #6a5f55);
+  --sf-accent: var(--color-accent, #d4a853);
+  --sf-success: var(--color-success, #6b8f5e);
+  --sf-danger: var(--color-error, #c84b31);
+
+  /* One spacing rhythm. 4px base, with larger product-level intervals. */
+  --sf-space-1: 0.25rem;
+  --sf-space-2: 0.5rem;
+  --sf-space-3: 0.75rem;
+  --sf-space-4: 1rem;
+  --sf-space-5: 1.25rem;
+  --sf-space-6: 1.5rem;
+  --sf-space-8: 2rem;
+  --sf-space-10: 2.5rem;
+  --sf-space-12: 3rem;
+  --sf-space-16: 4rem;
+  --sf-space-20: 5rem;
+
+  /* One radius hierarchy: controls < cards < feature surfaces. */
+  --sf-radius-control: 0.625rem;
+  --sf-radius-card: 0.875rem;
+  --sf-radius-feature: 1.25rem;
+  --sf-radius-pill: 999px;
+
+  /* One type scale. Nothing operationally important lives below 12px. */
+  --sf-type-micro: 0.75rem;       /* 12 */
+  --sf-type-label: 0.8125rem;     /* 13 */
+  --sf-type-body: 0.9375rem;      /* 15 */
+  --sf-type-body-lg: 1rem;        /* 16 */
+  --sf-type-card-title: 1.125rem;  /* 18 */
+  --sf-type-section: 1.5rem;      /* 24 */
+  --sf-type-page: clamp(2rem, 2.5vw, 2.75rem);
+  --sf-type-display: clamp(2.75rem, 5vw, 5rem);
+
+  --sf-leading-tight: 1.08;
+  --sf-leading-heading: 1.16;
+  --sf-leading-body: 1.6;
+
+  --sf-control-height: 2.5rem;
+  --sf-control-height-compact: 2.25rem;
+  --sf-admin-content-max: 90rem; /* 1440px */
+  --sf-public-content-max: 80rem;
+  --sf-reading-max: 72ch;
+  --sf-page-inline: clamp(1rem, 2.25vw, 2.25rem);
+  --sf-page-block: clamp(1.5rem, 3vw, 3rem);
+
+  --sf-border-subtle: 1px solid rgba(212, 168, 83, 0.10);
+  --sf-border: 1px solid rgba(212, 168, 83, 0.16);
+  --sf-border-strong: 1px solid rgba(212, 168, 83, 0.28);
+  --sf-shadow-card: 0 18px 50px -34px rgba(0, 0, 0, 0.85);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   WHOLE PRODUCT BASELINE
+   ────────────────────────────────────────────────────────────────────────── */
+
+.sf-product {
+  background: var(--sf-canvas);
+  color: var(--sf-text);
+  font-size: var(--sf-type-body-lg);
+  line-height: var(--sf-leading-body);
+}
+
+.sf-product button,
+.sf-product input,
+.sf-product textarea,
+.sf-product select {
+  font: inherit;
+}
+
+.sf-product button,
+.sf-product a,
+.sf-product input,
+.sf-product textarea,
+.sf-product select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sf-page-shell {
+  width: min(100%, var(--sf-public-content-max));
+  margin-inline: auto;
+  padding: var(--sf-page-block) var(--sf-page-inline);
+}
+
+.sf-page-header {
+  display: grid;
+  gap: var(--sf-space-3);
+  padding-bottom: var(--sf-space-6);
+  border-bottom: var(--sf-border-subtle);
+}
+
+.sf-eyebrow {
+  color: color-mix(in srgb, var(--sf-accent) 78%, transparent);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--sf-type-label);
+  font-weight: 650;
+  letter-spacing: 0.16em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.sf-page-title {
+  color: var(--sf-text-strong);
+  font-family: var(--font-serif), serif;
+  font-size: var(--sf-type-page);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: var(--sf-leading-heading);
+  text-wrap: balance;
+}
+
+.sf-page-subtitle {
+  max-width: var(--sf-reading-max);
+  color: var(--sf-text);
+  font-size: var(--sf-type-body-lg);
+  line-height: var(--sf-leading-body);
+}
+
+.sf-card {
+  border: var(--sf-border-subtle);
+  border-radius: var(--sf-radius-card);
+  background: color-mix(in srgb, var(--sf-surface-1) 88%, transparent);
+  box-shadow: var(--sf-shadow-card);
+}
+
+.sf-control {
+  min-height: var(--sf-control-height);
+  border: var(--sf-border);
+  border-radius: var(--sf-radius-control);
+  background: color-mix(in srgb, black 30%, transparent);
+  color: var(--sf-text-strong);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   COMMAND CENTER BASELINE
+   Every admin route is scoped by AdminShellV3. Existing pages inherit the
+   constitution immediately; new pages should use the explicit sf-* classes.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.sf-admin {
+  --sf-public-content-max: var(--sf-admin-content-max);
+  min-height: 100vh;
+  background: var(--sf-canvas);
+  color: var(--sf-text-strong);
+  font-size: var(--sf-type-body);
+  line-height: var(--sf-leading-body);
+}
+
+.sf-admin-content > * {
+  width: min(100%, var(--sf-admin-content-max)) !important;
+  max-width: var(--sf-admin-content-max) !important;
+  margin-inline: auto !important;
+  padding: var(--sf-page-block) var(--sf-page-inline) !important;
+}
+
+/* Stable hierarchy regardless of local Tailwind experiments. */
+.sf-admin h1 {
+  font-family: var(--font-serif), serif !important;
+  font-size: var(--sf-type-page) !important;
+  font-weight: 600 !important;
+  line-height: var(--sf-leading-heading) !important;
+  letter-spacing: -0.025em !important;
+}
+
+.sf-admin h2 {
+  font-family: var(--font-serif), serif !important;
+  font-size: var(--sf-type-section) !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+}
+
+.sf-admin h3 {
+  font-size: var(--sf-type-card-title) !important;
+  font-weight: 650 !important;
+  line-height: 1.3 !important;
+}
+
+/* Legacy pages contain many arbitrary 9–11px declarations. Keep microcopy
+   compact, but never microscopic. This raises the visual floor everywhere. */
+.sf-admin .text-xs {
+  font-size: var(--sf-type-label) !important;
+  line-height: 1.35rem !important;
+}
+
+.sf-admin [class*="text-[9px]"],
+.sf-admin [class*="text-[10px]"],
+.sf-admin [class*="text-[11px]"] {
+  font-size: var(--sf-type-micro) !important;
+  line-height: 1.15rem !important;
+}
+
+.sf-admin input:not([type="checkbox"]):not([type="radio"]),
+.sf-admin textarea,
+.sf-admin select {
+  min-height: var(--sf-control-height);
+  border-radius: var(--sf-radius-control) !important;
+  font-size: 0.875rem !important;
+  line-height: 1.4 !important;
+}
+
+.sf-admin button:not([aria-label]) {
+  min-height: var(--sf-control-height-compact);
+}
+
+.sf-admin table {
+  font-size: var(--sf-type-label) !important;
+  line-height: 1.4 !important;
+}
+
+.sf-admin th {
+  font-size: var(--sf-type-micro) !important;
+  line-height: 1.25 !important;
+}
+
+.sf-admin td {
+  vertical-align: top;
+}
+
+/* One surface grammar. Existing rounded-xl/2xl cards remain visually coherent
+   even before their JSX is migrated to AdminCard. */
+.sf-admin [class*="rounded-xl"][class*="border"],
+.sf-admin [class*="rounded-2xl"][class*="border"] {
+  border-radius: var(--sf-radius-card) !important;
+}
+
+/* Admin navigation has its own compact density but shares the same scale. */
+.sf-admin-nav-label {
+  font-size: var(--sf-type-label);
+  line-height: 1.25;
+}
+
+.sf-admin-subnav-label {
+  font-size: var(--sf-type-micro);
+  line-height: 1.2;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   PROSPECTING — operational row cards without a horizontal spreadsheet.
+   We scope by route data, so the rule belongs to the workflow while the
+   underlying data/actions remain untouched.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.sf-admin[data-path="/admin/prospecting"] table {
+  display: block;
+  width: 100%;
+}
+
+.sf-admin[data-path="/admin/prospecting"] thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sf-admin[data-path="/admin/prospecting"] tbody {
+  display: grid;
+  gap: var(--sf-space-4);
+  padding: var(--sf-space-2);
+}
+
+.sf-admin[data-path="/admin/prospecting"] tbody > tr {
+  display: grid;
+  grid-template-columns: 2rem minmax(12rem, 2fr) repeat(4, minmax(5.75rem, 0.72fr));
+  grid-template-areas:
+    "select company company company score status"
+    "select lcp perf platform viewport cta"
+    "select founder founder founder discovery discovery"
+    "select actions actions actions actions actions";
+  gap: var(--sf-space-3) var(--sf-space-4);
+  padding: var(--sf-space-5);
+  border: var(--sf-border-subtle);
+  border-radius: var(--sf-radius-card);
+  background: color-mix(in srgb, var(--sf-surface-1) 92%, transparent);
+  box-shadow: var(--sf-shadow-card);
+}
+
+.sf-admin[data-path="/admin/prospecting"] tbody > tr:hover {
+  border-color: rgba(212, 168, 83, 0.24);
+  background: color-mix(in srgb, var(--sf-surface-2) 80%, transparent);
+}
+
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td {
+  min-width: 0 !important;
+  padding: 0 !important;
+}
+
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(1) { grid-area: select; padding-top: 0.15rem !important; }
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(2) { grid-area: company; }
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(3) { grid-area: score; }
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(4) { grid-area: lcp; }
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(5) { grid-area: perf; }
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(6) { grid-area: platform; }
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(7) { grid-area: viewport; }
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(8) { grid-area: cta; }
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(9) { grid-area: founder; }
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(10) { grid-area: discovery; }
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(11) { grid-area: status; justify-self: end; }
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(12) { grid-area: actions; }
+
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(n+3):nth-child(-n+10)::before {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--sf-text-muted);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--sf-type-micro);
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(3)::before { content: "Signal score"; }
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(4)::before { content: "LCP"; }
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(5)::before { content: "Performance"; }
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(6)::before { content: "Platform"; }
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(7)::before { content: "Viewport"; }
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(8)::before { content: "CTA"; }
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(9)::before { content: "Founder contact"; }
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(10)::before { content: "Contact discovery"; }
+
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(9):has(input:placeholder-shown)::after {
+  content: "No founder contact saved yet. Add one only when you have evidence worth preserving.";
+  display: block;
+  margin-top: 0.4rem;
+  color: var(--sf-text-muted);
+  font-size: var(--sf-type-micro);
+  line-height: 1.45;
+}
+
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(10) > div {
+  min-width: 0 !important;
+  width: 100%;
+}
+
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(10) [class*="max-w-[320px]"] {
+  width: 100%;
+  max-width: none !important;
+}
+
+.sf-admin[data-path="/admin/prospecting"] tbody > tr > td:nth-child(12) > div {
+  justify-content: flex-end;
+}
+
+@media (max-width: 1180px) {
+  .sf-admin[data-path="/admin/prospecting"] tbody > tr {
+    grid-template-columns: 2rem repeat(4, minmax(0, 1fr));
+    grid-template-areas:
+      "select company company score status"
+      "select lcp perf platform viewport"
+      "select cta founder founder founder"
+      "select discovery discovery discovery discovery"
+      "select actions actions actions actions";
+  }
+}
+
+@media (max-width: 760px) {
+  .sf-admin-content > * {
+    padding-inline: 0.9rem !important;
+  }
+
+  .sf-admin[data-path="/admin/prospecting"] tbody > tr {
+    grid-template-columns: 1.75rem 1fr 1fr;
+    grid-template-areas:
+      "select company company"
+      "select score status"
+      "select lcp perf"
+      "select platform viewport"
+      "select cta cta"
+      "select founder founder"
+      "select discovery discovery"
+      "select actions actions";
+    padding: var(--sf-space-4);
+  }
+}

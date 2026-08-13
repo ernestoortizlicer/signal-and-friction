@@ -29,7 +29,7 @@ for(const table of ["priority_tasks","beta_projects","diagnostic_scaffolds","lea
 if(failed){console.error("\nBackend OS contract failed.");process.exit(1)}
 console.log("\nBackend OS contract passed.");
 
-// Stripe -> Finance is now a first-class Backend OS interconnection. Keep its
-// deterministic projection/idempotency/fail-closed contract in the same CI
-// gate even when the workflow file itself is intentionally stable.
+// First-class Backend OS interconnections and product-level UI composition
+// stay in this existing CI gate so workflow permissions remain stable.
 await import("./check-stripe-finance-projection.mjs");
+await import("./check-project-design-system.mjs");

@@ -1,0 +1,9 @@
+/*
+ * Legacy Sales dashboard compatibility surface.
+ * System learning moved to /admin/reliability. The old tab strip must not
+ * remain visible inside Sales while extraction of the remaining commercial
+ * write actions is completed.
+ */
+.legacy-sales-dashboard main > div > header + div.flex {
+  display: none !important;
+}
