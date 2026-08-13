@@ -33,3 +33,6 @@ jobs:
 
       - name: Check native intake product truth
         run: npm run check:intake-truth
+
+      - name: Check Stripe webhook transport safety
+        run: npm run check:stripe-webhook
