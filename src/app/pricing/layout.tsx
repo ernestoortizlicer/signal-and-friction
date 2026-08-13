@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PricingV21 from "@/components/PricingV21";
 import { PUBLIC_CLAIMS } from "@/lib/public-claims";
 
 const description = `New clients start with a Diagnostic. ${PUBLIC_CLAIMS.evidenceRanked.copy} ${PUBLIC_CLAIMS.abstention.copy}`;
@@ -21,6 +22,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function PricingLayout({ children }: { children: React.ReactNode }) {
-  return children;
+/**
+ * Frontend OS v2.1 migration bridge.
+ *
+ * The historical pricing page remains in the tree for rollback/provenance but
+ * is intentionally not rendered. Remove it after the v2.1 pricing surface has
+ * passed exact-head checkout smoke tests.
+ */
+export default function PricingLayout() {
+  return <PricingV21 />;
 }
