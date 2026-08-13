@@ -28,3 +28,8 @@ need(api,'requireAdmin',"health API admin boundary");
 for(const table of ["priority_tasks","beta_projects","diagnostic_scaffolds","learning_sessions","finance_obligations","ai_incidents"])need(api,`.from('${table}')`,`health reads ${table}`);
 if(failed){console.error("\nBackend OS contract failed.");process.exit(1)}
 console.log("\nBackend OS contract passed.");
+
+// Stripe -> Finance is now a first-class Backend OS interconnection. Keep its
+// deterministic projection/idempotency/fail-closed contract in the same CI
+// gate even when the workflow file itself is intentionally stable.
+await import("./check-stripe-finance-projection.mjs");
