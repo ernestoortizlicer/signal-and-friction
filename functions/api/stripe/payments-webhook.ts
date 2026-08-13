@@ -17,16 +17,8 @@ type VerifiedEvent = {
   data?: { object?: Record<string, unknown> };
 };
 
-/**
- * Dedicated payment-event transport boundary.
- *
- * The legacy processor remains the canonical compatibility unit for payment
- * persistence. This wrapper owns only post-verification side effects that are
- * explicitly isolated from payment acknowledgement: scaffold provisioning and
- * the private referral-credit lifecycle.
- */
 export const onRequestPost = async (context: PaymentsContext): Promise<Response> => {
-  const backgroundRequest = context.request.clone();
+  const provisioningRequest = context.request.clone();
 
   const innerResponse = await legacyOnRequestPost({
     ...context,
@@ -51,17 +43,13 @@ export const onRequestPost = async (context: PaymentsContext): Promise<Response>
         headers: { 'Cache-Control': 'no-store' },
       });
 
-  // The body is inspected only after the inner processor verified the Stripe
-  // signature and the transport classifier accepted the event. Referral
-  // bookkeeping is non-fatal to canonical payment acknowledgement, but it is
-  // always attempted (waitUntil when available, awaited fallback otherwise).
-  if (response.status === 200) {
-    const backgroundWork = (async () => {
+  if (response.status === 200 && typeof context.waitUntil === 'function') {
+    context.waitUntil((async () => {
       let event: VerifiedEvent;
       try {
-        event = await backgroundRequest.json() as VerifiedEvent;
+        event = await provisioningRequest.json() as VerifiedEvent;
       } catch (err) {
-        console.warn(`Verified Stripe event could not be parsed for post-processing: ${err instanceof Error ? err.message : 'unknown error'}`);
+        console.warn(`Stripe post-processing parse failed: ${err instanceof Error ? err.message : 'unknown error'}`);
         return;
       }
 
@@ -83,10 +71,7 @@ export const onRequestPost = async (context: PaymentsContext): Promise<Response>
       } catch (err) {
         console.warn(`Scaffold provisioning background task failed: ${err instanceof Error ? err.message : 'unknown error'}`);
       }
-    })();
-
-    if (typeof context.waitUntil === 'function') context.waitUntil(backgroundWork);
-    else await backgroundWork;
+    })());
   }
 
   return response;
