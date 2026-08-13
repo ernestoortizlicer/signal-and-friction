@@ -173,6 +173,44 @@
   padding: var(--sf-page-block) var(--sf-page-inline) !important;
 }
 
+/* A page header is a semantic contract, not a local font-size decision.
+   Any page-level <header> carrying an h1 inherits the same composition even
+   while legacy JSX is being retired. The shell header lives outside
+   .sf-admin-content and is intentionally unaffected. */
+.sf-admin-content header:has(h1) {
+  display: grid !important;
+  gap: var(--sf-space-3) !important;
+  padding-bottom: var(--sf-space-6) !important;
+  margin-bottom: 0 !important;
+  border-bottom: var(--sf-border-subtle) !important;
+}
+
+.sf-admin-content header:has(h1) h1 {
+  margin-top: var(--sf-space-2) !important;
+  color: var(--sf-text-strong) !important;
+  text-wrap: balance;
+}
+
+.sf-admin-content header:has(h1) > span:first-child,
+.sf-admin-content header:has(h1) > div:first-child > span:first-child {
+  color: color-mix(in srgb, var(--sf-accent) 78%, transparent) !important;
+  font-family: var(--font-mono), monospace !important;
+  font-size: var(--sf-type-label) !important;
+  font-weight: 650 !important;
+  letter-spacing: 0.16em !important;
+  line-height: 1.35 !important;
+  text-transform: uppercase !important;
+}
+
+.sf-admin-content header:has(h1) > p,
+.sf-admin-content header:has(h1) > div:first-child > p {
+  max-width: var(--sf-reading-max) !important;
+  margin-top: var(--sf-space-3) !important;
+  color: var(--sf-text) !important;
+  font-size: var(--sf-type-body-lg) !important;
+  line-height: var(--sf-leading-body) !important;
+}
+
 /* Stable hierarchy regardless of local Tailwind experiments. */
 .sf-admin h1 {
   font-family: var(--font-serif), serif !important;
