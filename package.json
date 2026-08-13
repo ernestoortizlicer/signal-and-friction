@@ -16,7 +16,9 @@
     "check:stripe-webhook": "node scripts/check-stripe-webhook-boundary.mjs && node --test src/server/stripe-webhook-boundary.test.mjs",
     "check:payment-state": "node scripts/check-payment-state-truth.mjs",
     "check:scaffold-provisioning": "node scripts/check-scaffold-provisioning-truth.mjs",
-    "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs && npm run check:offers && npm run check:drift && npm run check:diagnostic-authority && npm run check:intake-truth && npm run check:stripe-webhook && npm run check:payment-state && npm run check:scaffold-provisioning",
+    "check:agent-build": "node scripts/check-agent-build-gate.mjs",
+    "check:training-unit": "node src/lib/training-workflow.test.mjs && node src/lib/calibration-readiness.test.mjs",
+    "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs && npm run check:offers && npm run check:drift && npm run check:diagnostic-authority && npm run check:intake-truth && npm run check:stripe-webhook && npm run check:payment-state && npm run check:scaffold-provisioning && npm run check:agent-build && npm run check:training-unit",
     "deploy": "wrangler pages deploy out --project-name=signal-and-friction"
   },
   "dependencies": {
@@ -37,7 +39,6 @@
     "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
-    "puppeteer": "^25.1.0",
     "supabase": "^2.107.0",
     "tailwindcss": "^4",
     "typescript": "^5"
