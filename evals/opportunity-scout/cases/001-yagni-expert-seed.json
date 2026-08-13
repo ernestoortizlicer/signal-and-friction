@@ -1,0 +1,118 @@
+{
+  "id": "case-001-yagni-expert-seed",
+  "version": "0.1.0",
+  "label_authority": "expert_seed_provisional",
+  "company": {
+    "name": "YAGNI",
+    "domain": "yagni.app",
+    "country_signal": "United States",
+    "founder_signal": "Jack Collins — Founder, Denver",
+    "team_signal": "Company About page states: We're a small team."
+  },
+  "sources": [
+    {
+      "url": "https://yagni.app/",
+      "type": "official_homepage",
+      "observed": [
+        "Current homepage positions YAGNI as coding agents that know your company.",
+        "Homepage describes a metered cost model and says there is no platform fee.",
+        "Homepage repeatedly routes users to a 30-minute founder call for the current coding-agent offer."
+      ]
+    },
+    {
+      "url": "https://yagni.app/pricing/",
+      "type": "official_pricing",
+      "observed": [
+        "Pricing page states every workspace starts free with 20 starter credits and no card.",
+        "Untethered and Syndicate are described as self-serve.",
+        "Pricing page lists Untethered at $99/month, Syndicate at $249/month, Orbit at $999/month, Enterprise custom."
+      ]
+    },
+    {
+      "url": "https://yagni.app/about/",
+      "type": "official_about",
+      "observed": [
+        "Jack Collins is identified as founder in Denver.",
+        "The page says the company is a small team."
+      ]
+    }
+  ],
+  "expert_assessment": {
+    "decision": "qualified_for_review",
+    "confidence": "medium",
+    "icp_fit": "strong",
+    "friction_evidence_strength": "moderate",
+    "commercial_relevance": "strong",
+    "timing_signal": "moderate",
+    "contactability": "strong",
+    "evidence_completeness": "incomplete",
+    "disqualifiers": [],
+    "unknowns": [
+      "No fresh Signal and Friction Scan has yet been recorded for yagni.app in this case.",
+      "Public pages may be in active transition; the apparent pricing/positioning mismatch could be intentional, temporary, or stale content rather than proven conversion harm.",
+      "No internal funnel conversion data, traffic, revenue, CAC, or buyer objections are available.",
+      "No evidence yet proves budget or willingness to buy Signal and Friction services."
+    ]
+  },
+  "evidence_labels": [
+    {
+      "label": "OBSERVED",
+      "claim": "YAGNI publicly identifies Jack Collins as founder in Denver and describes itself as a small team.",
+      "source": "https://yagni.app/about/"
+    },
+    {
+      "label": "OBSERVED",
+      "claim": "The pricing page presents explicit self-serve workspace plans at $99/month and $249/month, plus higher tiers.",
+      "source": "https://yagni.app/pricing/"
+    },
+    {
+      "label": "OBSERVED",
+      "claim": "The current homepage presents the product primarily as a metered coding-agent replacement and emphasizes a founder call and usage-based savings.",
+      "source": "https://yagni.app/"
+    },
+    {
+      "label": "INFERRED",
+      "claim": "The coexistence of the current homepage positioning and the separate workspace-plan pricing page may create a message/pricing-model consistency problem for a prospect evaluating the product.",
+      "source": null
+    },
+    {
+      "label": "HYPOTHESIS",
+      "claim": "If both narratives are actively encountered in the buyer journey, the inconsistency could increase uncertainty or friction before signup or booking a call.",
+      "source": null
+    },
+    {
+      "label": "UNKNOWN",
+      "claim": "Whether the observed inconsistency materially reduces conversion.",
+      "source": null
+    }
+  ],
+  "service_fit": {
+    "entry_offer": "Diagnostic",
+    "segment": "unknown",
+    "reason": "A diagnostic is the narrowest evidence-first entry. DWY vs DFY should not be selected from public evidence alone without budget, urgency, and execution-preference information.",
+    "confidence": "medium"
+  },
+  "contact": {
+    "person_name": "Jack Collins",
+    "role": "Founder",
+    "source": "https://yagni.app/about/",
+    "verification_status": "candidate"
+  },
+  "outreach_policy": {
+    "draft_allowed": true,
+    "send_allowed": false,
+    "safe_angle": "Reference the observable coexistence of two product/pricing narratives and ask whether they are intentionally serving different buyer paths; do not claim lost conversion or revenue.",
+    "claims_to_avoid": [
+      "Your pricing is hurting conversion.",
+      "You are losing customers because the pages conflict.",
+      "Your funnel is broken.",
+      "The mismatch is costing a specific amount of revenue."
+    ]
+  },
+  "next_required_evidence": [
+    "Run a fresh Signal and Friction technical Scan on yagni.app.",
+    "Check whether the homepage and pricing page are both reachable from the current primary navigation and represent the same live product journey.",
+    "Capture a current page-state timestamp before any outreach draft is approved.",
+    "Optionally inspect signup/call path to determine whether self-serve and founder-led sales are intentionally segmented."
+  ]
+}
