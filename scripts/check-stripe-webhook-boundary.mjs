@@ -73,12 +73,53 @@ function inspectRoute(publicRoute, { dedicatedPaymentsSecret = false } = {}) {
   }
 }
 
+function inspectPaymentClientContract() {
+  const handlerPath = 'src/server/stripe/legacy-handler.ts';
+  const migrationPath = 'supabase/migrations/20260813093000_payment_client_reference_contract.sql';
+
+  if (!fs.existsSync(handlerPath)) {
+    failures.push('private compatibility handler is missing');
+    return;
+  }
+  if (!fs.existsSync(migrationPath)) {
+    failures.push(`${migrationPath} is missing`);
+    return;
+  }
+
+  const handler = fs.readFileSync(handlerPath, 'utf8');
+  const migration = fs.readFileSync(migrationPath, 'utf8');
+
+  if (!handler.includes(".from('clients')")) {
+    failures.push('Stripe payment handler must resolve the canonical client from clients');
+  }
+  if (!/client_id\s*:\s*clientId/.test(handler)) {
+    failures.push('Stripe payment insert must persist clients.id in payments.client_id');
+  }
+  if (/lead_id\s*:\s*clientId/.test(handler)) {
+    failures.push('Stripe payment handler must never write clients.id into payments.lead_id');
+  }
+  if (!/\.eq\('client_id',\s*clientId\)/.test(handler)) {
+    failures.push('Downstream scaffold flagging must use the canonical clientId');
+  }
+
+  if (!migration.includes('ADD COLUMN IF NOT EXISTS client_id UUID')) {
+    failures.push('payment-client migration must add payments.client_id');
+  }
+  if (!migration.includes('payments_client_id_fkey')) {
+    failures.push('payment-client migration must name the client FK deterministically');
+  }
+  if (!/REFERENCES\s+public\.clients\(id\)/.test(migration)) {
+    failures.push('payments.client_id must reference public.clients(id)');
+  }
+  if (!migration.includes("Legacy lead reference. FK → public.leads(id). Never store clients.id here.")) {
+    failures.push('payment-client migration must preserve and document lead_id semantics');
+  }
+}
+
 inspectRoute('functions/api/stripe/webhook.ts');
 inspectRoute('functions/api/stripe/payments-webhook.ts', { dedicatedPaymentsSecret: true });
+inspectPaymentClientContract();
 
-if (!fs.existsSync('src/server/stripe/legacy-handler.ts')) {
-  failures.push('private compatibility handler is missing');
-}
 if (!fs.existsSync('src/server/stripe-webhook-boundary.mjs')) {
   failures.push('Stripe webhook transport policy module is missing');
 }
@@ -89,4 +130,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('✅ Stripe webhook boundaries: legacy and payment destinations are transport-only and use isolated signing-secret paths');
+console.log('✅ Stripe webhook boundaries: isolated signing secrets, retry semantics, and canonical payment→client referential truth are enforced');

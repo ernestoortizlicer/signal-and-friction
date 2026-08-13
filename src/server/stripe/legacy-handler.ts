@@ -160,12 +160,12 @@ export const onRequestPost = async ({
       // Still process - email may be optional for some flows
     }
 
-    // lead_id has no FK constraint (see the migration that documents this
-    // table), so nothing enforced it being set — it just silently stayed
-    // null on every payment, and the admin dashboard could show a revenue
-    // total but never which client actually paid. Look up the client the
-    // checkout email belongs to and link it here.
-    let leadId: string | null = null;
+    // Production truth: payments.lead_id is a real FK to leads(id). It must
+    // never contain clients.id. Link the canonical paying client through the
+    // dedicated payments.client_id FK instead. Native intake creates clients
+    // before handing the customer a Stripe Payment Link, so this lookup is the
+    // normal path for a first real payment.
+    let clientId: string | null = null;
     if (email) {
       try {
         const { data: matchedClient } = await supabase
@@ -173,9 +173,9 @@ export const onRequestPost = async ({
           .select('id')
           .eq('contact_email', email)
           .maybeSingle();
-        leadId = matchedClient?.id ?? null;
+        clientId = matchedClient?.id ?? null;
       } catch (err) {
-        console.warn(`⚠️ Client lookup for lead_id failed (non-fatal): ${err instanceof Error ? err.message : 'unknown error'}`);
+        console.warn(`⚠️ Client lookup for client_id failed (non-fatal): ${err instanceof Error ? err.message : 'unknown error'}`);
       }
     }
 
@@ -190,7 +190,7 @@ export const onRequestPost = async ({
       segment: dosingLine ? (dosingLine.toUpperCase() as 'DFY' | 'DWY') : inferSegment(productName),
       referral_code: referralCode,
       raw_event: event as unknown as Record<string, unknown>,
-      lead_id: leadId,
+      client_id: clientId,
     });
 
     if (insertError) {
@@ -218,7 +218,7 @@ export const onRequestPost = async ({
     // esbuild at function compile time (same constraint already
     // documented in functions/api/diagnose.ts). Non-fatal: a flagging
     // failure must never affect the payment already recorded above.
-    if (dosingLine && dosingTier && leadId) {
+    if (dosingLine && dosingTier && clientId) {
       try {
         // .select() so we can tell "0 rows matched" (no scaffold exists
         // yet for this client) apart from a real error — an UPDATE that
@@ -231,19 +231,19 @@ export const onRequestPost = async ({
             pending_dosing_tier: dosingTier,
             pending_dosing_triggered_at: new Date().toISOString(),
           })
-          .eq('client_id', leadId)
+          .eq('client_id', clientId)
           .select('id');
 
         if (flagError) throw flagError;
         if (flaggedRows && flaggedRows.length > 0) {
-          console.log(`✅ Scaffold flagged for review: client ${leadId} → ${dosingLine}/${dosingTier}`);
+          console.log(`✅ Scaffold flagged for review: client ${clientId} → ${dosingLine}/${dosingTier}`);
         } else {
-          console.warn(`⚠️ Client ${leadId} matched to ${dosingLine}/${dosingTier}, but no scaffold exists to flag yet — nothing was updated. Generate the scaffold, then flag manually.`);
+          console.warn(`⚠️ Client ${clientId} matched to ${dosingLine}/${dosingTier}, but no scaffold exists to flag yet — nothing was updated. Generate the scaffold, then flag manually.`);
         }
       } catch (err) {
         console.warn(`⚠️ Dosing-engine scaffold flagging failed (payment still recorded): ${err instanceof Error ? err.message : 'unknown error'}`);
       }
-    } else if (dosingLine && dosingTier && !leadId) {
+    } else if (dosingLine && dosingTier && !clientId) {
       console.warn(`⚠️ Purchase matched to ${dosingLine}/${dosingTier} but no client record found for ${email ?? '(no email)'} — nothing to flag yet. Create the client/scaffold, then flag manually.`);
     }
 
