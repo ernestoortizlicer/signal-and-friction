@@ -30,6 +30,8 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+const buildSha = process.env.CF_PAGES_COMMIT_SHA || process.env.GITHUB_SHA || "local";
+
 export const metadata: Metadata = {
   title: PUBLIC_SITE_COPY.title,
   description: PUBLIC_SITE_COPY.description,
@@ -67,6 +69,11 @@ export const metadata: Metadata = {
  * public claims and hard-coded prices. Reintroduce JSON-LD only from a derived
  * canonical builder after offer/claim semantics have passed the same product
  * truth gate as the visible UI.
+ *
+ * `sf-build-sha` is build observability, not product state. Cloudflare Pages
+ * injects CF_PAGES_COMMIT_SHA during the build; preview smoke tests use the
+ * marker to prove they are testing the exact candidate commit rather than a
+ * stale branch deployment.
  */
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -75,6 +82,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       className={`${inter.variable} ${interHero.variable} ${newsreader.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <head>
+        <meta name="sf-build-sha" content={buildSha} />
         <link
           rel="icon"
           href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"
