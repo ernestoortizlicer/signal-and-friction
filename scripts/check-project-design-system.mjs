@@ -26,6 +26,9 @@ const requireFile = (file, label) => {
 console.log("Project Design System contract\n");
 
 requireFile("src/styles/sf-design-system.css", "Project visual authority exists");
+requireFile("docs/decision-log-2026-08-13-project-design-system-v1.md", "Material design/lifecycle decision has a Decision Log");
+requireText("docs/architecture/project-design-system-v1.md", "ACTIVE PROJECT-WIDE VISUAL AUTHORITY", "Project design authority is active rather than proposed");
+requireText("docs/canonical/CURRENT.md", "docs/decision-log-2026-08-13-project-design-system-v1.md", "CURRENT points to the design/lifecycle decision record");
 requireText("src/app/template.tsx", "@/styles/sf-design-system.css", "Design authority is loaded at the app root");
 requireText("src/app/template.tsx", "sf-product", "Every application surface receives the project design scope");
 requireText("src/app/admin/layout.tsx", "@/styles/sf-design-system.css", "Command Center explicitly loads the same design authority");
