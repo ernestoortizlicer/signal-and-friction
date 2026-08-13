@@ -39,3 +39,6 @@ jobs:
 
       - name: Check payment state machine truth
         run: npm run check:payment-state
+
+      - name: Check scaffold provisioning truth
+        run: npm run check:scaffold-provisioning
