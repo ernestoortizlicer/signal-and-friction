@@ -70,14 +70,14 @@ function CheckoutVerification() {
                 ? "Payment recorded. Your delivery window can begin."
                 : stripeVerified
                   ? "Stripe confirms the payment. Recording is still processing."
-                  : "We can’t confirm a payment from this return link."}
+                  : "I can’t confirm a payment from this return link."}
           </h1>
           <p className="text-text-body leading-relaxed">
             {canonicalRecorded
               ? "The payment exists in Signal & Friction’s canonical payment state. Downstream workflow state must derive from that record, not from this browser redirect."
               : stripeVerified
-                ? "Stripe reports the Checkout Session as paid, but our webhook-backed payment record is not visible yet. Do not treat the diagnostic as started until canonical recording completes."
-                : "A success-page URL is not payment evidence. If you completed Checkout, use the exact redirect from Stripe or contact support so we can verify the canonical payment record."}
+                ? "Stripe reports the Checkout Session as paid, but the webhook-backed Signal & Friction payment record is not visible yet. Do not treat the diagnostic as started until canonical recording completes."
+                : "A success-page URL is not payment evidence. If you completed Checkout, use the exact redirect from Stripe or contact me so I can verify the canonical payment record."}
           </p>
         </div>
 
