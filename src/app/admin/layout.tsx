@@ -80,13 +80,12 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   };
 
   const navLinks = [
-    { href: "/admin/dashboard", label: "Pipeline", code: "PL" },
-    { href: "/admin/prospecting", label: "Prospecting", code: "PS" },
-    { href: "/admin/scaffolds", label: "Scaffolds", code: "SC" },
+    { href: "/admin/overview", label: "Command", code: "CM" },
+    { href: "/admin/prospecting", label: "Sales", code: "SL" },
+    { href: "/admin/scaffolds", label: "Delivery", code: "DL" },
+    { href: "/admin/training", label: "Training", code: "TR" },
     { href: "/admin/finance", label: "Finance", code: "FN" },
-    { href: "/admin/priorities", label: "Priorities", code: "PR" },
-    { href: "/admin/learning", label: "Learning", code: "LE" },
-    { href: "/admin/certified", label: "Certified", code: "CE" },
+    { href: "/admin/reliability", label: "Reliability", code: "SY" },
   ];
 
   if (isLoginPage) return <>{children}</>;
@@ -122,14 +121,14 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="opacity-60 flex-shrink-0"><path d="M7 1L13 7L7 13L1 7Z" stroke="#D4A853" strokeWidth="1.2"/></svg>
           <span className="font-mono text-xs text-[#F5F0EB] tracking-[0.12em] uppercase font-semibold">S&amp;F</span>
           <div className="w-px h-4 bg-[#D4A853]/10"/>
-          <span className="font-mono text-xs text-[#7A6F65] tracking-[0.15em] uppercase hidden sm:block">Command Center</span>
+          <span className="font-mono text-xs text-[#7A6F65] tracking-[0.15em] uppercase hidden sm:block">Operating System</span>
         </div>
 
         <div className="flex-1 flex items-center justify-center gap-1">
           {[
-            { label: "Active Leads", value: statsError ? "—" : String(stats.activeLeads), color: "text-[#5C9A6B]" },
+            { label: "Active Work", value: statsError ? "—" : String(stats.activeLeads), color: "text-[#5C9A6B]" },
             { label: "Net Worth", value: netWorthLabel, color: "text-[#D4A853]" },
-            { label: "Pending", value: statsError ? "—" : String(stats.tasksToday), color: "text-amber-400" },
+            { label: "Actions", value: statsError ? "—" : String(stats.tasksToday), color: "text-amber-400" },
           ].map((stat, i) => <div key={stat.label} className="flex items-center"><div className="flex items-center gap-2 px-3 py-1.5 rounded border border-[#D4A853]/10 bg-[#D4A853]/[0.03]"><span className="font-mono text-xs text-[#7A6F65] tracking-[0.1em] uppercase hidden md:block">{stat.label}</span><span className={`font-mono text-sm font-semibold tabular-nums ${stat.color}`}>{stat.value}</span></div>{i<2&&<div className="w-px h-4 bg-[#D4A853]/8 mx-1"/>}</div>)}
         </div>
 
@@ -138,7 +137,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex-1 flex overflow-hidden">
         <aside className="w-16 md:w-60 border-r border-[#D4A853]/8 bg-[#0A0908] flex flex-col py-4 flex-shrink-0">
-          <div className="hidden md:block font-mono text-xs text-[#7A6F65] tracking-[0.2em] uppercase px-5 pb-3 border-b border-[#D4A853]/6 mb-2">Modules</div>
+          <div className="hidden md:block font-mono text-xs text-[#7A6F65] tracking-[0.2em] uppercase px-5 pb-3 border-b border-[#D4A853]/6 mb-2">Outcome surfaces</div>
           <nav className="flex flex-col gap-0.5 px-2 md:px-3 mt-1">
             {navLinks.map((link) => {
               const isActive = normalizedPathname === link.href || normalizedPathname.startsWith(`${link.href}/`);
@@ -150,9 +149,11 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                 {isActive&&<span className="hidden md:block ml-auto w-1.5 h-1.5 rounded-full bg-[#D4A853]"/>}
               </Link>;
             })}
+            {(normalizedPathname === "/admin/overview" || normalizedPathname.startsWith("/admin/priorities")) && <Link href="/admin/priorities" className={`hidden md:flex ml-8 mt-1 px-3 py-2 rounded text-[10px] font-mono uppercase tracking-wider border ${normalizedPathname.startsWith("/admin/priorities") ? "border-[#D4A853]/30 bg-[#D4A853]/8 text-[#D4A853]" : "border-transparent text-[#7A6F65] hover:text-[#B0A89E]"}`}>PE · Priority Engine</Link>}
+            {normalizedPathname.startsWith("/admin/prospecting") && <Link href="/admin/dashboard" className="hidden md:flex ml-8 mt-1 px-3 py-2 rounded text-[10px] font-mono uppercase tracking-wider border border-transparent text-[#7A6F65] hover:text-[#B0A89E]">OP · Opportunities</Link>}
             {normalizedPathname.startsWith("/admin/finance") && <Link href="/admin/finance/jurisdictions" className={`hidden md:flex ml-8 mt-1 px-3 py-2 rounded text-[10px] font-mono uppercase tracking-wider border ${normalizedPathname === "/admin/finance/jurisdictions" ? "border-[#D4A853]/30 bg-[#D4A853]/8 text-[#D4A853]" : "border-transparent text-[#7A6F65] hover:text-[#B0A89E]"}`}>JX · Jurisdictions</Link>}
           </nav>
-          <div className="mt-auto px-5 py-4 hidden md:block border-t border-[#D4A853]/6"><div className="font-mono text-xs text-[#7A6F65] tracking-[0.15em] uppercase">Engine v2.5</div></div>
+          <div className="mt-auto px-5 py-4 hidden md:block border-t border-[#D4A853]/6"><div className="font-mono text-xs text-[#7A6F65] tracking-[0.15em] uppercase">Backend OS v3</div></div>
         </aside>
         <main className="flex-1 bg-[#0A0908] relative overflow-auto"><div className="absolute inset-0 diagnostic-grid pointer-events-none opacity-30"/><div className="relative z-10 h-full">{children}</div></main>
       </div>
