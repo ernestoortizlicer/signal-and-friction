@@ -7,14 +7,9 @@ import { SHOW_BANNER_EVENT } from "@/lib/cookieConsent";
 
 const HexGrid = dynamic(() => import("@/components/HexGrid"), { ssr: false });
 
-// Illustrative SAMPLE diagnostics only — fictional companies (Acme Corp,
-// Growthly, PayFlux, StartupHub), not real clients, not real results.
-// Every field below traces to the real sample deliverable JSON in
-// public/deliverables/ — the evidence tier counts are computed from each
-// file's actual `evidence` array, and every sharpened "friction"/"decision"
-// line paraphrases that same file's real signal/decision text (the ~48 and
-// ~110 data-point counts are the real numbers stated there, not invented).
-// No percentage, no "verified" badge, no named real company anywhere here.
+// Illustrative SAMPLE diagnostics only — fictional companies, not real clients
+// and not outcome claims. Evidence counts are drawn from the bundled sample
+// deliverables and are presented as method walkthroughs only.
 const ILLUSTRATIVE_SAMPLES = [
   {
     clientKey: "acme-corp",
@@ -80,9 +75,9 @@ export default function PublicPortfolio() {
       <div className="flex-1 max-w-[1000px] mx-auto w-full px-6 py-16 relative z-10 space-y-8">
         <div className="space-y-4 text-center">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-white tracking-tight leading-[1.1]">
-            Everyone else shows you logos and percentages.
+            Don&apos;t take a logo wall or a percentage on faith.
             <br />
-            <span className="text-[#D4A853] glow-text">Most of them are made up.</span>
+            <span className="text-[#D4A853] glow-text">Inspect the reasoning and the evidence.</span>
           </h1>
           <p className="text-sm text-[#B0A89E] font-mono max-w-lg mx-auto leading-relaxed">
             I&apos;d rather show you how I actually think.
@@ -142,8 +137,8 @@ export default function PublicPortfolio() {
             If the diagnosis doesn&apos;t surface a friction point specific to your product — something I observed in your actual funnel, not generic advice — you don&apos;t pay.
           </p>
           <div className="pt-2">
-            <Link href="/" className="inline-block py-3 px-6 bg-[#D4A853] text-[#0A0908] font-mono font-bold text-xs uppercase tracking-wider hover:bg-[#E8C97A] transition-all">
-              Get Your Diagnostic →
+            <Link href="/pricing" className="inline-block py-3 px-6 bg-[#D4A853] text-[#0A0908] font-mono font-bold text-xs uppercase tracking-wider hover:bg-[#E8C97A] transition-all">
+              See Diagnostic Options →
             </Link>
           </div>
         </div>
