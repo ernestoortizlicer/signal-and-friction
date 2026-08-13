@@ -1,15 +1,24 @@
 "use client";
 
+import Link from "next/link";
 import { getMarketProfile, type MarketSurfaceId } from "@/lib/market-profiles";
 
 export default function MarketLanding({ marketId }: { marketId: MarketSurfaceId }) {
   const profile = getMarketProfile(marketId);
   return (
     <main className="min-h-screen bg-bg text-text-primary">
+      <header className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between gap-4">
+        <Link href={profile.route}>Signal &amp; Friction</Link>
+        <nav className="flex gap-4">
+          <Link href="/scan">Free scan</Link>
+          <Link href="/portfolio">Method samples</Link>
+          <Link href="/pricing">Pricing</Link>
+        </nav>
+      </header>
       <section className="max-w-6xl mx-auto px-6 py-20">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-accent">{profile.heroEyebrow}</p>
-        <h1 className="mt-4 text-4xl font-bold">{profile.heroHeadline}</h1>
-        <p className="mt-4 text-text-body">{profile.heroSubhead}</p>
+        <p>{profile.heroEyebrow}</p>
+        <h1>{profile.heroHeadline}</h1>
+        <p>{profile.heroSubhead}</p>
       </section>
     </main>
   );
