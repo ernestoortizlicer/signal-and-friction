@@ -2,11 +2,12 @@
 -- 2026-08-13
 --
 -- Invariants:
--- 1. A client is never "payment_confirmed" before an authoritative payment row exists.
--- 2. Inserting the first canonical payment for a client atomically advances client/project payment state.
--- 3. A payment-linked client must have exactly one beta_project; otherwise the payment insert fails and Stripe can retry.
--- 4. Payment cannot regress a client that is already beyond payment_confirmed.
--- 5. The payments table / Stripe webhook owns payment truth. A manual beta_projects.payment_status update must not create revenue.
+-- 1. A client cannot enter a post-payment protocol stage without an authoritative payment row.
+-- 2. A beta project cannot enter payment_status = paid without an authoritative payment row.
+-- 3. Inserting the first canonical payment for a client atomically advances client/project payment state.
+-- 4. A payment-linked client must have exactly one beta_project; otherwise the payment insert fails and Stripe can retry.
+-- 5. Payment cannot regress a client/project already beyond the initial paid state.
+-- 6. The payments table / Stripe webhook owns payment truth. A manual derived-state update must not create revenue.
 
 -- The old protocol model started every client at payment_confirmed, which made
 -- pre-payment intake indistinguishable from a paid customer. Introduce an
@@ -57,6 +58,64 @@ BEGIN
   END IF;
 END
 $$;
+
+-- Invalid state should be impossible, not merely visible in a dashboard.
+-- Any transition from pre_payment into the delivery protocol requires a
+-- canonical payments row for that client. The payment AFTER INSERT trigger
+-- below satisfies this guard in the same transaction.
+CREATE OR REPLACE FUNCTION public.guard_client_payment_stage_truth()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.protocol_stage IS DISTINCT FROM 'pre_payment'
+     AND (
+       TG_OP = 'INSERT'
+       OR OLD.protocol_stage IS DISTINCT FROM NEW.protocol_stage
+     )
+     AND NOT EXISTS (
+       SELECT 1 FROM public.payments p WHERE p.client_id = NEW.id
+     )
+  THEN
+    RAISE EXCEPTION 'client % cannot enter protocol_stage % without canonical payment', NEW.id, NEW.protocol_stage
+      USING ERRCODE = '23514';
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_guard_client_payment_stage_truth ON public.clients;
+CREATE TRIGGER trigger_guard_client_payment_stage_truth
+  BEFORE INSERT OR UPDATE OF protocol_stage ON public.clients
+  FOR EACH ROW
+  EXECUTE FUNCTION public.guard_client_payment_stage_truth();
+
+-- payment_status = paid is also derived state. Direct/manual writes cannot
+-- manufacture a paid project when there is no canonical payment evidence.
+CREATE OR REPLACE FUNCTION public.guard_project_payment_status_truth()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.payment_status = 'paid'
+     AND (
+       TG_OP = 'INSERT'
+       OR OLD.payment_status IS DISTINCT FROM NEW.payment_status
+     )
+     AND NOT EXISTS (
+       SELECT 1 FROM public.payments p WHERE p.client_id = NEW.client_id
+     )
+  THEN
+    RAISE EXCEPTION 'project for client % cannot become paid without canonical payment', NEW.client_id
+      USING ERRCODE = '23514';
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_guard_project_payment_status_truth ON public.beta_projects;
+CREATE TRIGGER trigger_guard_project_payment_status_truth
+  BEFORE INSERT OR UPDATE OF payment_status ON public.beta_projects
+  FOR EACH ROW
+  EXECUTE FUNCTION public.guard_project_payment_status_truth();
 
 CREATE OR REPLACE FUNCTION public.handle_payment_state_truth()
 RETURNS TRIGGER AS $$
