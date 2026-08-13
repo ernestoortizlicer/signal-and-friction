@@ -119,7 +119,7 @@ export default function ScanPage() {
             Measure observable technical friction before anyone calls it a diagnosis.
           </h1>
           <p className="max-w-2xl text-text-body leading-relaxed">
-            Enter a public product or funnel URL. We inspect performance and page-level technical signals. This scan observes; it does not infer a behavioral mechanism, prove revenue causality, or replace the paid diagnostic.
+            Enter a public product or funnel URL. The scan inspects performance and page-level technical signals. This scan observes; it does not infer a behavioral mechanism, prove revenue causality, or replace the paid diagnostic.
           </p>
         </div>
 
@@ -186,7 +186,7 @@ export default function ScanPage() {
             <form onSubmit={saveForReview} className="rounded-xl border border-border-hi bg-bg/40 p-5 space-y-3">
               <div>
                 <p className="font-mono text-xs uppercase tracking-[0.18em] text-text-muted">Optional human review</p>
-                <p className="mt-1 text-sm text-text-body">Save this observable scan with your business email so Signal &amp; Friction can review the context. Saving it does not create a diagnosis or start a paid engagement.</p>
+                <p className="mt-1 text-sm text-text-body">Save this observable scan with your business email so I can review the context. Saving it does not create a diagnosis or start a paid engagement.</p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <input
