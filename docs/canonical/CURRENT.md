@@ -10,6 +10,7 @@
 - `docs/architecture/capability-registry.md` — what already exists; mandatory discovery before new builds.
 - `docs/architecture/backend-os-v3.md` — operator module map, LIVE/PLANNED connection truth and runtime health projection.
 - `docs/architecture/project-design-system-v1.md` — project-wide visual authority: typography, spacing, surfaces, responsive composition and cross-surface consistency.
+- `docs/decision-log-2026-08-13-project-design-system-v1.md` — decision record for the shared visual authority and Sales lifecycle cutover.
 - `docs/decision-log-2026-08-13-backend-os-v3.md` — decision record for the outcome-driven admin/backend cutover.
 - `docs/decision-log-2026-08-13-agent-roadmap.md` — agent roadmap decisions.
 
