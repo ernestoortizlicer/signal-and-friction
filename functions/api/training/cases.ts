@@ -1,23 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
 import { requireAdmin } from '../_admin-auth';
 import { getSupabaseUrl, getServiceRoleKey } from '../_env';
-import { visibleCaseFields, CANONICAL_MECHANISMS, type FullCaseRow } from './_shared';
+import {
+  visibleCaseFields,
+  CANONICAL_MECHANISMS,
+  CASE_DISPOSITIONS,
+  dispositionRequiresMechanism,
+  type FullCaseRow,
+  type CaseDisposition,
+} from './_shared';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Content-Type': 'application/json',
 };
-
-// Diagnostic Calibration System v3. Two responsibilities:
-//   GET  — list published cases, OBSERVABLE FIELDS ONLY (attemptStage is
-//          always null here — case *browsing* happens before any attempt
-//          exists, the strictest pre-reveal state per visibleCaseFields()).
-//   POST — admin case authoring/import. Validation here intentionally
-//          mirrors the migration's CHECK constraints (provenance,
-//          observable-evidence) so a bad case is rejected with a clear
-//          message rather than bouncing off a raw Postgres constraint
-//          error — "case may be used for reference calibration only when
-//          its source material genuinely contains" the required parts.
 
 function dbRowToFullCase(row: Record<string, unknown>): FullCaseRow {
   return {
@@ -34,7 +30,8 @@ function dbRowToFullCase(row: Record<string, unknown>): FullCaseRow {
     checkoutFlow: (row.checkout_flow as string) ?? null,
     technicalFindings: (row.technical_findings as string) ?? null,
     contextualInfo: (row.contextual_info as string) ?? null,
-    referenceMechanism: row.reference_mechanism as FullCaseRow['referenceMechanism'],
+    referenceDisposition: row.reference_disposition as FullCaseRow['referenceDisposition'],
+    referenceMechanism: (row.reference_mechanism as FullCaseRow['referenceMechanism']) ?? null,
     referenceMechanismNote: (row.reference_mechanism_note as string) ?? null,
     referenceDiagnosis: row.reference_diagnosis as string,
     referenceRecommendation: row.reference_recommendation as string,
@@ -42,11 +39,13 @@ function dbRowToFullCase(row: Record<string, unknown>): FullCaseRow {
   };
 }
 
-export const onRequestGet = async ({
-  env,
-}: {
-  env: Record<string, string>;
-}): Promise<Response> => {
+export const onRequestGet = async ({ request, env }: { request: Request; env: Record<string, string> }): Promise<Response> => {
+  const admin = await requireAdmin(request, env);
+  if (admin instanceof Response) {
+    const body = await admin.json().catch(() => ({}));
+    return Response.json(body, { status: admin.status, headers: CORS });
+  }
+
   const supabase = createClient(getSupabaseUrl(env), getServiceRoleKey(env) ?? '', {
     auth: { persistSession: false, autoRefreshToken: false },
   });
@@ -56,32 +55,29 @@ export const onRequestGet = async ({
     .select('*')
     .eq('is_published', true)
     .order('case_key');
+  if (error) return Response.json({ error: error.message }, { status: 500, headers: CORS });
 
-  if (error) {
-    return Response.json({ error: error.message }, { status: 500, headers: CORS });
-  }
+  const { data: eligibilityRows, error: eligibilityError } = await supabase
+    .from('v_case_eligibility_derived')
+    .select('case_id,derived_eligible');
+  if (eligibilityError) return Response.json({ error: `Eligibility lookup failed: ${eligibilityError.message}` }, { status: 500, headers: CORS });
+  const eligibility = new Map((eligibilityRows ?? []).map((r) => [r.case_id as string, r.derived_eligible === true]));
 
-  const cases = (data ?? []).map((row) => visibleCaseFields(dbRowToFullCase(row), null));
+  const cases = (data ?? []).map((row) => ({
+    ...visibleCaseFields(dbRowToFullCase(row), null),
+    trainingUse: eligibility.get(row.id) ? 'certification_eligible' : 'practice_only',
+  }));
 
-  // Explicit, honest per-mechanism coverage — the empty state the spec
-  // requires ("an explicit empty state explaining that verified cases
-  // must be added") is computed here, not left for the client to guess.
   const coverage: Record<string, number> = Object.fromEntries(CANONICAL_MECHANISMS.map((m) => [m, 0]));
   for (const row of data ?? []) {
-    const m = row.reference_mechanism as string;
-    if (m in coverage) coverage[m] += 1;
+    const m = row.reference_mechanism as string | null;
+    if (m && m in coverage) coverage[m] += 1;
   }
 
   return Response.json({ cases, mechanismCoverage: coverage }, { headers: CORS });
 };
 
-export const onRequestPost = async ({
-  request,
-  env,
-}: {
-  request: Request;
-  env: Record<string, string>;
-}): Promise<Response> => {
+export const onRequestPost = async ({ request, env }: { request: Request; env: Record<string, string> }): Promise<Response> => {
   const admin = await requireAdmin(request, env);
   if (admin instanceof Response) {
     const body = await admin.json().catch(() => ({}));
@@ -95,25 +91,32 @@ export const onRequestPost = async ({
     return Response.json({ error: 'Invalid request body' }, { status: 400, headers: CORS });
   }
 
-  const required = ['caseKey', 'title', 'sourceType', 'referenceMechanism', 'referenceDiagnosis', 'referenceRecommendation'];
+  const required = ['caseKey', 'title', 'sourceType', 'referenceDisposition', 'referenceDiagnosis', 'referenceRecommendation'];
   const missing = required.filter((k) => !payload[k] || (typeof payload[k] === 'string' && !(payload[k] as string).trim()));
-  if (missing.length > 0) {
-    return Response.json({ error: `Missing required fields: ${missing.join(', ')}` }, { status: 400, headers: CORS });
+  if (missing.length > 0) return Response.json({ error: `Missing required fields: ${missing.join(', ')}` }, { status: 400, headers: CORS });
+
+  const disposition = payload.referenceDisposition as CaseDisposition;
+  if (!CASE_DISPOSITIONS.includes(disposition)) {
+    return Response.json({ error: `referenceDisposition must be one of: ${CASE_DISPOSITIONS.join(', ')}` }, { status: 400, headers: CORS });
   }
-  if (!CANONICAL_MECHANISMS.includes(payload.referenceMechanism as never)) {
-    return Response.json({ error: `referenceMechanism must be one of: ${CANONICAL_MECHANISMS.join(', ')}` }, { status: 400, headers: CORS });
+  if (dispositionRequiresMechanism(disposition)) {
+    if (!CANONICAL_MECHANISMS.includes(payload.referenceMechanism as never)) {
+      return Response.json({ error: `referenceMechanism is required for ${disposition} and must be one of: ${CANONICAL_MECHANISMS.join(', ')}` }, { status: 400, headers: CORS });
+    }
+  } else if (payload.referenceMechanism) {
+    return Response.json({ error: `referenceMechanism must be empty for abstention disposition ${disposition}` }, { status: 400, headers: CORS });
   }
+
   const validSourceTypes = ['primary', 'practitioner_account', 'secondary_vendor', 'internal_sf_resolved'];
   if (!validSourceTypes.includes(payload.sourceType as string)) {
     return Response.json({ error: `sourceType must be one of: ${validSourceTypes.join(', ')}` }, { status: 400, headers: CORS });
   }
-  // "Enough provenance to identify the source" — enforced here, not just at the DB.
   if (!payload.sourceUrl && !payload.sourceNote) {
     return Response.json({ error: 'A case needs sourceUrl or sourceNote — provenance is not optional.' }, { status: 400, headers: CORS });
   }
   const observableFields = ['landingPage', 'pricingPage', 'onboardingFlow', 'checkoutFlow', 'technicalFindings', 'contextualInfo'];
-  if (!observableFields.some((k) => payload[k] && (payload[k] as string).trim())) {
-    return Response.json({ error: 'A case needs at least one populated observable-evidence field (landingPage, pricingPage, onboardingFlow, checkoutFlow, technicalFindings, or contextualInfo).' }, { status: 400, headers: CORS });
+  if (!observableFields.some((k) => payload[k] && typeof payload[k] === 'string' && (payload[k] as string).trim())) {
+    return Response.json({ error: 'A case needs at least one populated observable-evidence field.' }, { status: 400, headers: CORS });
   }
 
   const supabase = createClient(getSupabaseUrl(env), getServiceRoleKey(env) ?? '', {
@@ -135,23 +138,23 @@ export const onRequestPost = async ({
       checkout_flow: payload.checkoutFlow ?? null,
       technical_findings: payload.technicalFindings ?? null,
       contextual_info: payload.contextualInfo ?? null,
-      reference_mechanism: payload.referenceMechanism,
+      reference_disposition: disposition,
+      reference_mechanism: dispositionRequiresMechanism(disposition) ? payload.referenceMechanism : null,
       reference_mechanism_note: payload.referenceMechanismNote ?? null,
       reference_diagnosis: payload.referenceDiagnosis,
       reference_recommendation: payload.referenceRecommendation,
       reference_result: payload.referenceResult ?? null,
-      // Draft by default — an admin-authored/imported case never reaches
-      // the trainee-facing pool until deliberately published.
+      reference_source: 'operator_authored',
+      gate_eligible: false,
+      reference_locked: false,
       is_published: payload.isPublished === true,
     })
     .select()
     .single();
 
-  if (error || !data) {
-    return Response.json({ error: error?.message ?? 'Failed to create case' }, { status: 500, headers: CORS });
-  }
+  if (error || !data) return Response.json({ error: error?.message ?? 'Failed to create case' }, { status: 500, headers: CORS });
 
-  return Response.json({ case: dbRowToFullCase(data) }, { status: 201, headers: CORS });
+  return Response.json({ case: dbRowToFullCase(data), trainingUse: 'practice_only' }, { status: 201, headers: CORS });
 };
 
 export const onRequestOptions = (): Response =>
