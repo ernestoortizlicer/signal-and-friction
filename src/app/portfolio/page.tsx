@@ -55,13 +55,11 @@ export default function PublicPortfolio() {
     <main className="min-h-screen bg-[#0A0908] text-[#F5F0EB] overflow-x-hidden relative flex flex-col justify-between font-sans">
       <HexGrid />
 
-      {/* Background Grids */}
       <div className="absolute inset-0 pointer-events-none" style={{
         backgroundImage: "linear-gradient(rgba(212,168,83,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(212,168,83,0.02) 1px, transparent 1px)",
         backgroundSize: "80px 80px",
       }} />
 
-      {/* Header */}
       <header className="px-6 py-4 flex items-center justify-between border-b border-[#D4A853]/10 bg-[#0A0908]/80 backdrop-blur-md relative z-10">
         <div className="flex items-center gap-3">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
@@ -79,7 +77,6 @@ export default function PublicPortfolio() {
         </Link>
       </header>
 
-      {/* Main Content */}
       <div className="flex-1 max-w-[1000px] mx-auto w-full px-6 py-16 relative z-10 space-y-8">
         <div className="space-y-4 text-center">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-white tracking-tight leading-[1.1]">
@@ -88,17 +85,16 @@ export default function PublicPortfolio() {
             <span className="text-[#D4A853] glow-text">Most of them are made up.</span>
           </h1>
           <p className="text-sm text-[#B0A89E] font-mono max-w-lg mx-auto leading-relaxed">
-            We&apos;d rather show you how we actually think.
+            I&apos;d rather show you how I actually think.
           </p>
         </div>
 
         <div className="border border-[#D4A853]/25 bg-[#D4A853]/5 rounded-xl px-5 py-4 text-center">
           <p className="text-xs font-mono text-[#D4A853] leading-relaxed">
-            <strong>Acme Corp, Growthly, PayFlux, and StartupHub aren&apos;t real clients</strong> — they&apos;re fictional, built to show the method. The numbers below aren&apos;t results. They&apos;re evidence counts: what we measured, what we modeled, what&apos;s still pending your data. That&apos;s the whole point — we don&apos;t skip that part.
+            <strong>Acme Corp, Growthly, PayFlux, and StartupHub aren&apos;t real clients</strong> — they&apos;re fictional, built to show the method. The numbers below aren&apos;t results. They&apos;re evidence counts: what I measured, what I modeled, what&apos;s still pending your data. That&apos;s the whole point — I don&apos;t skip that part.
           </p>
         </div>
 
-        {/* Portfolio Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
           {ILLUSTRATIVE_SAMPLES.map((sample, idx) => (
             <motion.div
@@ -140,11 +136,10 @@ export default function PublicPortfolio() {
           ))}
         </div>
 
-        {/* Guarantee CTA */}
         <div className="border border-[#D4A853]/15 bg-[#0A0908]/95 p-8 rounded text-center space-y-4">
           <h3 className="text-xl font-bold font-serif text-white">Backed by the S&amp;F Specificity Guarantee</h3>
           <p className="text-sm text-[#B0A89E] font-mono max-w-md mx-auto leading-relaxed">
-            If the diagnosis doesn&apos;t surface a friction point specific to your product — something we observed in your actual funnel, not generic advice — you don&apos;t pay.
+            If the diagnosis doesn&apos;t surface a friction point specific to your product — something I observed in your actual funnel, not generic advice — you don&apos;t pay.
           </p>
           <div className="pt-2">
             <Link href="/" className="inline-block py-3 px-6 bg-[#D4A853] text-[#0A0908] font-mono font-bold text-xs uppercase tracking-wider hover:bg-[#E8C97A] transition-all">
@@ -154,7 +149,6 @@ export default function PublicPortfolio() {
         </div>
       </div>
 
-      {/* Footer */}
       <footer className="border-t border-white/[0.03] py-6 px-6 text-center text-xs font-mono text-[#7A6F65] relative z-10 space-y-2">
         <div>© 2026 Signal &amp; Friction Method. All rights reserved.</div>
         <div className="flex items-center justify-center gap-3">
