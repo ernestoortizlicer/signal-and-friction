@@ -38,7 +38,7 @@ export default function MarketLandingV21({ marketId }: { marketId: MarketSurface
             </Link>
           </div>
           <div className="max-w-2xl space-y-2 font-mono text-xs leading-relaxed text-text-muted">
-            <p>I&apos;m Ernesto Ortiz Licer. I run Signal &amp; Friction independently.</p>
+            <p>I&apos;m Ernesto Ortiz. I run Signal &amp; Friction independently.</p>
             <p>{profile.marketNote}</p>
           </div>
         </div>
