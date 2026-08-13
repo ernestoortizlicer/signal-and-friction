@@ -1,1274 +1,235 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 import { getAuthHeaders } from "@/lib/supabase";
 
-function renderInlineBold(text: string): React.ReactNode {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
-  return parts.map((part, i) =>
-    part.startsWith('**') && part.endsWith('**')
-      ? <strong key={i} className="text-[#F5F0EB] font-semibold">{part.slice(2, -2)}</strong>
-      : <span key={i}>{part}</span>
-  );
+type Tab = "command" | "ledger" | "compliance" | "treasury" | "wealth" | "agent";
+type Profile = { id: string; name: string; scope: "business" | "personal"; entity_name: string | null; base_currency: string; jurisdiction_code: string | null; jurisdiction_status: string; notes: string | null };
+type Account = { id: string; name: string; type: string; currency: string; liquidity_class: string; balance_cents: number };
+type Tx = { id: string; date: string; description: string; status: string; voidedAt: string | null; voidReason: string | null; reversesTransactionId: string | null; debitAccount: string | null; creditAccount: string | null; amountCents: number };
+type Metrics = { totalAssetsCents: number; totalLiabilitiesCents: number; netWorthCents: number; liquidCashCents: number; expenses30Cents: number; expenses90Cents: number; normalizedMonthlyBurnCents: number; revenue30Cents: number; revenue90Cents: number; operatingProfit30Cents: number; runwayMonths: number | null; currencies: string[]; mixedCurrencyWarning: boolean };
+type Source = { id: string; jurisdiction_code: string; authority: string; topic: string; source_title: string; source_url: string; checked_at: string; valid_from: string | null; valid_to: string | null; verification_status: "recorded" | "verified" | "revoked"; verified_at: string | null; verification_note: string | null };
+type Obligation = { id: string; jurisdiction_code: string; obligation_type: string; period_label: string | null; due_date: string | null; status: string; amount_cents: number | null; amount_currency: string | null; amount_source: string | null; source_id: string | null; evidence_ref: string | null; requires_professional_review: boolean; notes: string | null; finance_compliance_sources?: { authority: string; source_title: string; source_url: string; verification_status: string } | null };
+type CashPolicy = { id: string; version: number; name: string; status: string; reserve_months_target: number; owner_pay_pct: number; tax_compliance_reserve_pct: number; operating_reserve_pct: number; long_term_investing_pct: number; opportunity_fund_pct: number; tax_reserve_verified: boolean; tax_reserve_evidence_ref: string | null; rationale: string | null; approved_at: string | null };
+type InvestmentPolicy = { id: string; version: number; horizon_years: number; liquidity_buffer_months: number; risk_capacity: string; max_single_asset_pct: number; max_illiquid_pct: number; allowed_asset_classes: string[]; prohibited_asset_classes: string[]; notes: string | null; approved_at: string | null };
+type Goal = { id: string; name: string; target_amount: number; current_amount: number; target_date: string | null };
+type Recommendation = { id: string; category: string; title: string; rationale: string; assumptions: unknown; evidence: unknown; risk_level: string; status: string; requires_human_approval: boolean; created_at: string };
+type Dashboard = { profiles: Profile[]; profile: Profile | null; accounts: Account[]; transactions: Tx[]; metrics: Metrics | null; investments: Record<string, unknown>[]; goals: Goal[]; sources: Source[]; obligations: Obligation[]; cashPolicy: CashPolicy | null; investmentPolicy: InvestmentPolicy | null; recommendations: Recommendation[] };
+type AgentAnalysis = { executive_summary?: string; facts?: Array<{label:string;value:string;evidence:string}>; policy_deviations?: Array<{severity:string;statement:string;evidence:string}>; recommendations?: Array<{category:string;title:string;rationale:string;evidence:string[];assumptions:string[];risk_level:string;requires_human_approval:boolean}>; professional_review?: string[]; education?: Array<{concept:string;explanation:string;why_it_matters:string}>; missing_data?: string[] };
+
+function money(cents: number | null | undefined, currency = "USD") {
+  if (cents == null || !Number.isFinite(Number(cents))) return "—";
+  try { return new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 2 }).format(Number(cents) / 100); }
+  catch { return `${(Number(cents) / 100).toFixed(2)} ${currency}`; }
 }
 
-function renderMarkdownBlock(text: string): React.ReactNode {
-  return text.split('\n').map((line, idx) => {
-    if (line.startsWith('### ')) {
-      const content = line.slice(4).replace(/\*\*/g, '');
-      return <div key={idx} className="font-bold text-[#D4A853] text-xs uppercase tracking-wider pt-3 pb-1">{content}</div>;
-    }
-    if (line.startsWith('## ')) {
-      const content = line.slice(3).replace(/\*\*/g, '');
-      return <div key={idx} className="font-bold text-[#F5F0EB] text-sm pt-3 pb-1">{content}</div>;
-    }
-    if (line.trim() === '') {
-      return <div key={idx} className="h-1.5" />;
-    }
-    if (line.startsWith('- ')) {
-      return (
-        <div key={idx} className="flex gap-2 items-start">
-          <span className="text-[#D4A853] shrink-0 leading-relaxed">·</span>
-          <span className="leading-relaxed">{renderInlineBold(line.slice(2))}</span>
-        </div>
-      );
-    }
-    return <div key={idx} className="leading-relaxed">{renderInlineBold(line)}</div>;
-  });
+function pct(value: number | string | null | undefined) {
+  return `${Number(value ?? 0).toFixed(0)}%`;
 }
 
-interface Account {
-  id: string;
-  name: string;
-  type: 'asset' | 'liability' | 'equity' | 'revenue' | 'expense';
-  currency: string;
-}
-
-interface TransactionEntry {
-  id: string;
-  transaction_id: string;
-  account_id: string;
-  category_id?: string;
-  amount: number; // in cents
-  created_at: string;
-  accounts?: Account;
-}
-
-interface Transaction {
-  id: string;
-  date: string;
-  description: string;
-  source_project_id?: string;
-  created_at: string;
-  transaction_entries?: Array<{
-    id: string;
-    account_id: string;
-    amount: number;
-    accounts?: Account;
-  }>;
-}
-
-interface Investment {
-  id: string;
-  account_id: string;
-  name: string;
-  type: 'hardware' | 'ai_tools' | 'software' | 'financial_asset';
-  purchase_date: string;
-  cost_basis: number;
-  current_value: number;
-  projected_annual_roi_pct?: number;
-  actual_annual_roi_pct?: number;
-  depreciation_rate_annual_pct?: number;
-}
-
-interface EducationContent {
-  id: string;
-  title: string;
-  slug: string;
-  category: string;
-  summary: string;
-  body: string;
-  read_time_mins: number;
-}
-
-interface Goal {
-  id: string;
-  name: string;
-  target_amount: number;
-  current_amount: number;
-  target_date?: string;
-}
-
-const springConfig = { type: "spring" as const, stiffness: 100, damping: 18 };
-
-export default function PersonalFinanceCenter() {
-  const [activeSubView, setActiveSubView] = useState<'overview' | 'accounting' | 'investments' | 'education' | 'insights'>('overview');
+export default function FinancePage() {
+  const [tab, setTab] = useState<Tab>("command");
+  const [data, setData] = useState<Dashboard | null>(null);
+  const [profileId, setProfileId] = useState<string>("");
   const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState<string | null>(null);
-  const [expandedArticleId, setExpandedArticleId] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Database States
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [entries, setEntries] = useState<TransactionEntry[]>([]);
-  const [investments, setInvestments] = useState<Investment[]>([]);
-  const [articles, setArticles] = useState<EducationContent[]>([]);
-  const [goals, setGoals] = useState<Goal[]>([]);
-
-  // Interactive advice states
-  const [advisorQuestion, setAdvisorQuestion] = useState("Should I upgrade my MacBook or buy more AI credits?");
-  const [adviceResponse, setAdviceResponse] = useState<string | null>(null);
-  const [adviceError, setAdviceError] = useState<string | null>(null);
-  const [adviceLoading, setAdviceLoading] = useState(false);
-  const [advisorMeta, setAdvisorMeta] = useState<{ model: string; tier: string; estimatedCostUSD: number } | null>(null);
-
-  // Retirement calculator input states
-  const [monthlyContrib, setMonthlyContrib] = useState(1000);
-  const [returnRate, setReturnRate] = useState(8);
-  const [yearsProject, setYearsProject] = useState(25);
-
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  // ── Add/Edit modal state ──
-  const [showTxModal, setShowTxModal] = useState(false);
-  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
-  const [showInvModal, setShowInvModal] = useState(false);
-  const [editingInv, setEditingInv] = useState<Investment | null>(null);
-  const [showGoalModal, setShowGoalModal] = useState(false);
-  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://your-supabase.supabase.co";
-
-  async function fetchFinanceData() {
-    setFetchError(null);
+  async function load(wantedProfileId?: string) {
+    setError(null);
     try {
-      const headers = getAuthHeaders();
-
-      // Every request is checked for real failure — a non-ok response
-      // throws, a genuinely empty table does not. Empty renders as
-      // empty; only a real fetch failure is an error.
-      const [resAcc, resTx, resEntries, resInv, resEdu, resGoals] = await Promise.all([
-        fetch(`${supabaseUrl}/rest/v1/accounts?select=*`, { headers }),
-        fetch(`${supabaseUrl}/rest/v1/transactions?select=*,transaction_entries(*,accounts(*))&order=date.desc`, { headers }),
-        fetch(`${supabaseUrl}/rest/v1/transaction_entries?select=*,accounts(*)`, { headers }),
-        fetch(`${supabaseUrl}/rest/v1/investments?select=*`, { headers }),
-        fetch(`${supabaseUrl}/rest/v1/education_content?select=*`, { headers }),
-        fetch(`${supabaseUrl}/rest/v1/financial_goals?select=*`, { headers }),
-      ]);
-
-      for (const [label, res] of [
-        ["accounts", resAcc], ["transactions", resTx], ["transaction entries", resEntries],
-        ["investments", resInv], ["education content", resEdu], ["financial goals", resGoals],
-      ] as const) {
-        if (!res.ok) throw new Error(`Failed to load ${label} (${res.status}).`);
-      }
-
-      setAccounts(await resAcc.json());
-      setTransactions(await resTx.json());
-      setEntries(await resEntries.json());
-      setInvestments(await resInv.json());
-      setArticles(await resEdu.json());
-      setGoals(await resGoals.json());
-      setLoading(false);
+      const id = wantedProfileId ?? profileId;
+      const res = await fetch(`/api/finance${id ? `?profileId=${encodeURIComponent(id)}` : ""}`, { headers: getAuthHeaders() });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to load Finance OS.");
+      setData(json);
+      if (json.profile?.id) setProfileId(json.profile.id);
     } catch (err) {
-      console.error("Failed to load financial data:", err);
-      setFetchError(err instanceof Error ? err.message : "Failed to load financial data.");
-      setLoading(false);
-    }
+      setError(err instanceof Error ? err.message : "Failed to load Finance OS.");
+    } finally { setLoading(false); }
   }
 
-  useEffect(() => {
-    fetchFinanceData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Compute Balances
-  const accountBalances = accounts.reduce((acc, curr) => {
-    const accountEntries = entries.filter(e => e.account_id === curr.id);
-    const balance = accountEntries.reduce((sum, entry) => sum + entry.amount, 0);
-    acc[curr.id] = balance;
-    return acc;
-  }, {} as Record<string, number>);
-
-  // Compute Net Worth (Assets - Liabilities)
-  const totalAssets = accounts
-    .filter(a => a.type === "asset")
-    .reduce((sum, a) => sum + (accountBalances[a.id] || 0), 0) / 100;
-
-  const totalLiabilities = accounts
-    .filter(a => a.type === "liability")
-    .reduce((sum, a) => sum + Math.abs(accountBalances[a.id] || 0), 0) / 100;
-
-  const netWorth = totalAssets - totalLiabilities;
-
-  // Monthly Expenses / Burn Rate calculation
-  const totalExpenses = accounts
-    .filter(a => a.type === "expense")
-    .reduce((sum, a) => sum + (accountBalances[a.id] || 0), 0) / 100;
-
-  const averageBurnRate = totalExpenses;
-  const runwayMonths = averageBurnRate > 0 ? totalAssets / averageBurnRate : 0;
-
-  const consultingAccount = accounts.find(a => a.name === "Consulting Revenue");
-  const consultingRevenue = consultingAccount ? Math.abs(accountBalances[consultingAccount.id] || 0) / 100 : 0;
-
-  // Retirement compound calculator math
-  const p = totalAssets; // start value
-  const r = returnRate / 100;
-  const n = 12;
-  const yrs = yearsProject;
-  const pmt = monthlyContrib;
-  const nt = n * yrs;
-  const rn = r / n;
-  // rn can be 0 (0% return rate) — the annuity formula divides by rn, so a
-  // real 0% scenario needs its own branch instead of producing NaN.
-  const contributionsAt = (months: number) =>
-    rn > 0 ? pmt * ((Math.pow(1 + rn, months) - 1) / rn) * (1 + rn) : pmt * months;
-  const compoundPrincipal = p * Math.pow(1 + rn, nt);
-  const compoundContributions = contributionsAt(nt);
-  const totalAccumulated = compoundPrincipal + compoundContributions;
-
-  // Real yearly trajectory for the projection chart — replaces a
-  // previously-static decorative SVG path that never reflected the actual
-  // inputs.
-  const chartYears = Math.max(1, Math.min(60, Math.round(yearsProject)));
-  const trajectory = Array.from({ length: chartYears + 1 }, (_, yr) => {
-    const months = n * yr;
-    return p * Math.pow(1 + rn, months) + contributionsAt(months);
-  });
-  const trajectoryMax = Math.max(...trajectory, 1);
-  const trajectoryPath = trajectory
-    .map((v, i) => {
-      const x = (i / chartYears) * 100;
-      const y = 100 - (v / trajectoryMax) * 92;
-      return `${i === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
-    })
-    .join(" ");
-
-  // AI Advice Handler
-  async function triggerAiAdvice() {
-    setAdviceLoading(true);
-    setAdviceError(null);
-    setAdvisorMeta(null);
+  async function act(action: string, body: Record<string, unknown> = {}) {
+    setBusy(action); setError(null);
     try {
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder";
-
-      const response = await fetch(`${supabaseUrl}/functions/v1/finance-advisor-prompt`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseAnonKey}`
-        },
-        body: JSON.stringify({
-          question: advisorQuestion,
-          context: { accounts, investments, goals, transactions: transactions.slice(0, 10) },
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Advisor request failed (${response.status}).`);
-      }
-      const result = await response.json();
-      setAdviceResponse(result.answer);
-      if (result.meta) setAdvisorMeta(result.meta);
+      const res = await fetch("/api/finance", { method: "POST", headers: { ...getAuthHeaders(), "Content-Type": "application/json" }, body: JSON.stringify({ action, profileId, ...body }) });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `${action} failed.`);
+      setData(json);
+      if (json.profile?.id) setProfileId(json.profile.id);
+      return true;
     } catch (err) {
-      // Never fabricate an AI answer — a failed call is a real error, not
-      // an occasion to show a canned response as if the model produced it.
-      console.error("Finance advisor call failed:", err);
-      setAdviceResponse(null);
-      setAdviceError(err instanceof Error ? err.message : "Advisor request failed.");
-    } finally {
-      setAdviceLoading(false);
-    }
+      setError(err instanceof Error ? err.message : `${action} failed.`);
+      return false;
+    } finally { setBusy(null); }
   }
 
-  // ── Delete (hard, admin-gated by RLS — requires an authenticated session) ──
-  async function deleteTransaction(id: string, label: string) {
-    if (!window.confirm(`Permanently delete transaction "${label}"? This also removes its ledger entries and cannot be undone.`)) return;
-    setDeleteError(null);
-    setDeletingId(id);
-    try {
-      const headers = getAuthHeaders();
-      const res = await fetch(`${supabaseUrl}/rest/v1/transactions?id=eq.${id}`, { method: "DELETE", headers });
-      if (!res.ok) throw new Error(`Failed to delete transaction (${res.status}).`);
-      setTransactions(prev => prev.filter(t => t.id !== id));
-      setEntries(prev => prev.filter(e => e.transaction_id !== id));
-    } catch (err) {
-      console.error("Failed to delete transaction:", err);
-      setDeleteError(err instanceof Error ? err.message : "Failed to delete transaction.");
-    } finally {
-      setDeletingId(null);
-    }
-  }
+  useEffect(() => { void load(); }, []);
 
-  async function deleteInvestment(id: string, label: string) {
-    if (!window.confirm(`Permanently delete "${label}" from the asset portfolio? This cannot be undone.`)) return;
-    setDeleteError(null);
-    setDeletingId(id);
-    try {
-      const headers = getAuthHeaders();
-      const res = await fetch(`${supabaseUrl}/rest/v1/investments?id=eq.${id}`, { method: "DELETE", headers });
-      if (!res.ok) throw new Error(`Failed to delete investment (${res.status}).`);
-      setInvestments(prev => prev.filter(i => i.id !== id));
-    } catch (err) {
-      console.error("Failed to delete investment:", err);
-      setDeleteError(err instanceof Error ? err.message : "Failed to delete investment.");
-    } finally {
-      setDeletingId(null);
-    }
-  }
+  const currency = data?.profile?.base_currency || "USD";
+  const metrics = data?.metrics;
+  const policy = data?.cashPolicy;
+  const reserveTargetCents = metrics && policy && metrics.normalizedMonthlyBurnCents > 0 ? metrics.normalizedMonthlyBurnCents * Number(policy.reserve_months_target) : null;
+  const deployableSurplusCents = reserveTargetCents != null && metrics ? Math.max(0, metrics.liquidCashCents - reserveTargetCents) : null;
 
-  async function deleteGoal(id: string, label: string) {
-    if (!window.confirm(`Permanently delete goal "${label}"? This cannot be undone.`)) return;
-    setDeleteError(null);
-    setDeletingId(id);
-    try {
-      const headers = getAuthHeaders();
-      const res = await fetch(`${supabaseUrl}/rest/v1/financial_goals?id=eq.${id}`, { method: "DELETE", headers });
-      if (!res.ok) throw new Error(`Failed to delete goal (${res.status}).`);
-      setGoals(prev => prev.filter(g => g.id !== id));
-    } catch (err) {
-      console.error("Failed to delete goal:", err);
-      setDeleteError(err instanceof Error ? err.message : "Failed to delete goal.");
-    } finally {
-      setDeletingId(null);
-    }
-  }
-
-  // ── Create/update — real balanced double-entry writes ──
-  //
-  // A transaction is never written as a single row: the deferred
-  // sum-to-zero constraint on transaction_entries checks "this
-  // transaction's entries sum to zero" at the end of the SQL transaction
-  // the insert ran in, so both entries must land in ONE insert call, not
-  // two — the same pattern already used by the Stripe webhook's ledger
-  // posting (functions/api/stripe/webhook.ts).
-  async function saveTransaction(input: {
-    date: string; description: string; debitAccountId: string; creditAccountId: string; amountUsd: number;
-  }): Promise<string | null> {
-    const headers = { ...getAuthHeaders(), "Content-Type": "application/json", Prefer: "return=representation" };
-    const amountCents = Math.round(input.amountUsd * 100);
-
-    if (editingTx) {
-      // Replace the entries rather than PATCH them in place — changing an
-      // amount or account in place risks a moment where the two entries
-      // don't sum to zero if one write succeeds and the other fails.
-      // Delete + single re-insert keeps the balanced-pair invariant intact
-      // the same way creation does.
-      const patchRes = await fetch(`${supabaseUrl}/rest/v1/transactions?id=eq.${editingTx.id}`, {
-        method: "PATCH", headers,
-        body: JSON.stringify({ date: input.date, description: input.description }),
-      });
-      if (!patchRes.ok) throw new Error(`Failed to update transaction (${patchRes.status}).`);
-
-      const delRes = await fetch(`${supabaseUrl}/rest/v1/transaction_entries?transaction_id=eq.${editingTx.id}`, {
-        method: "DELETE", headers,
-      });
-      if (!delRes.ok) throw new Error(`Failed to clear old entries (${delRes.status}).`);
-
-      const insRes = await fetch(`${supabaseUrl}/rest/v1/transaction_entries`, {
-        method: "POST", headers,
-        body: JSON.stringify([
-          { transaction_id: editingTx.id, account_id: input.debitAccountId, amount: amountCents },
-          { transaction_id: editingTx.id, account_id: input.creditAccountId, amount: -amountCents },
-        ]),
-      });
-      if (!insRes.ok) throw new Error(`Failed to write new entries (${insRes.status}).`);
-      return editingTx.id;
-    }
-
-    const txRes = await fetch(`${supabaseUrl}/rest/v1/transactions`, {
-      method: "POST", headers,
-      body: JSON.stringify({ date: input.date, description: input.description }),
-    });
-    if (!txRes.ok) throw new Error(`Failed to create transaction (${txRes.status}).`);
-    const [tx] = await txRes.json();
-    if (!tx?.id) throw new Error("Transaction created but no id returned.");
-
-    const entriesRes = await fetch(`${supabaseUrl}/rest/v1/transaction_entries`, {
-      method: "POST", headers,
-      body: JSON.stringify([
-        { transaction_id: tx.id, account_id: input.debitAccountId, amount: amountCents },
-        { transaction_id: tx.id, account_id: input.creditAccountId, amount: -amountCents },
-      ]),
-    });
-    if (!entriesRes.ok) {
-      // The transaction header exists but has no balanced entries — an
-      // orphaned header is safer to leave for manual cleanup than to
-      // silently hide, so surface the real error rather than retry blind.
-      throw new Error(`Transaction created but entries failed to write (${entriesRes.status}). Transaction id ${tx.id} needs manual review.`);
-    }
-    return tx.id;
-  }
-
-  async function saveInvestment(input: {
-    name: string; type: Investment['type']; accountId: string; purchaseDate: string;
-    costBasisUsd: number; currentValueUsd: number; projectedRoiPct: number; depreciationPct: number;
-  }) {
-    const headers = { ...getAuthHeaders(), "Content-Type": "application/json", Prefer: "return=representation" };
-    const body = {
-      name: input.name,
-      type: input.type,
-      account_id: input.accountId,
-      purchase_date: input.purchaseDate,
-      cost_basis: Math.round(input.costBasisUsd * 100),
-      current_value: Math.round(input.currentValueUsd * 100),
-      projected_annual_roi_pct: input.projectedRoiPct || 0,
-      depreciation_rate_annual_pct: input.depreciationPct || 0,
-    };
-    const res = editingInv
-      ? await fetch(`${supabaseUrl}/rest/v1/investments?id=eq.${editingInv.id}`, { method: "PATCH", headers, body: JSON.stringify(body) })
-      : await fetch(`${supabaseUrl}/rest/v1/investments`, { method: "POST", headers, body: JSON.stringify(body) });
-    if (!res.ok) throw new Error(`Failed to ${editingInv ? "update" : "create"} investment (${res.status}).`);
-  }
-
-  async function saveGoal(input: { name: string; targetAmountUsd: number; currentAmountUsd: number; targetDate: string }) {
-    const headers = { ...getAuthHeaders(), "Content-Type": "application/json", Prefer: "return=representation" };
-    const body = {
-      name: input.name,
-      target_amount: Math.round(input.targetAmountUsd * 100),
-      current_amount: Math.round(input.currentAmountUsd * 100),
-      target_date: input.targetDate || null,
-    };
-    const res = editingGoal
-      ? await fetch(`${supabaseUrl}/rest/v1/financial_goals?id=eq.${editingGoal.id}`, { method: "PATCH", headers, body: JSON.stringify(body) })
-      : await fetch(`${supabaseUrl}/rest/v1/financial_goals`, { method: "POST", headers, body: JSON.stringify(body) });
-    if (!res.ok) throw new Error(`Failed to ${editingGoal ? "update" : "create"} goal (${res.status}).`);
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0A0908] flex items-center justify-center font-mono text-xs text-[#B0A89E] animate-pulse">
-        {"Loading financial workspace..."}
-      </div>
-    );
-  }
+  if (loading) return <main className="min-h-screen bg-[#0A0908] text-[#7A6F65] p-8 font-mono text-xs">Loading Finance OS v2…</main>;
 
   return (
-    <main className="min-h-screen bg-[#0A0908] text-[#cbd5e1] p-8 md:p-12 grain overflow-x-hidden">
-      <div className="max-w-[1200px] mx-auto space-y-12">
-        {fetchError && (
-          <div className="border-2 border-[#C85C5C]/50 bg-[#C85C5C]/10 px-4 py-2.5 rounded flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#C85C5C] animate-pulse shrink-0" />
-            <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#C85C5C]">
-              {"⚠ Failed to load financial data — "}{fetchError}
-            </span>
-          </div>
-        )}
-
-        {deleteError && (
-          <div className="border-2 border-[#C85C5C]/50 bg-[#C85C5C]/10 px-4 py-2.5 rounded flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#C85C5C] animate-pulse shrink-0" />
-            <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#C85C5C]">
-              {"⚠ "}{deleteError}
-            </span>
-            <button type="button" onClick={() => setDeleteError(null)} className="underline text-xs font-mono ml-auto cursor-pointer">
-              dismiss
-            </button>
-          </div>
-        )}
-
-        {/* Navigation & Header */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#D4A853]/8 pb-8">
+    <main className="min-h-screen bg-[#0A0908] text-[#F5F0EB] p-4 md:p-6 relative overflow-x-hidden">
+      <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "linear-gradient(rgba(212,168,83,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(212,168,83,.018) 1px,transparent 1px)", backgroundSize: "64px 64px" }} />
+      <div className="max-w-[1500px] mx-auto relative z-10 space-y-5">
+        <header className="border-b border-[#D4A853]/15 pb-5 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#B0A89E] block mb-2">{"General Ledger — Ernesto Ortiz"}</span>
-            <h1 className="text-4xl font-serif text-[#F5F0EB] tracking-tight">{"Investment Finance Center"}</h1>
+            <span className="font-mono text-[10px] uppercase tracking-[0.35em] text-[#D4A853]/70">Finance OS v2 · Control Plane</span>
+            <h1 className="font-serif text-3xl mt-1">Money stays deterministic. Judgment stays reviewable.</h1>
+            <p className="text-xs text-[#7A6F65] mt-2 max-w-3xl leading-relaxed">Ledger → Compliance Evidence → Treasury Policy → Investment Policy → Finance Agent. No autonomous tax conclusions. No autonomous trades.</p>
           </div>
-          <div className="flex items-center gap-4 mt-4 md:mt-0">
-            <span className="font-mono text-xs uppercase tracking-wider text-[#D4A853] border border-[#D4A853]/20 px-3 py-1.5 rounded-full bg-[#D4A853]/5">
-              {"Active Ledger"}
-            </span>
+          <div className="flex gap-2 items-center">
+            {data?.profiles.length ? <select value={profileId} onChange={(e) => { setProfileId(e.target.value); void load(e.target.value); }} className="bg-[#110F0D] border border-[#D4A853]/15 rounded px-3 py-2 text-xs font-mono">{data.profiles.map((p) => <option key={p.id} value={p.id}>{p.name} · {p.scope}</option>)}</select> : null}
+            <span className="border border-[#5C9A6B]/25 bg-[#5C9A6B]/5 text-[#5C9A6B] px-2.5 py-1 rounded-full font-mono text-[10px] uppercase">Human approval</span>
           </div>
         </header>
 
-        {/* View Toggle Tabs */}
-        <div className="flex border-b border-[#D4A853]/8 gap-6 overflow-x-auto">
-          {[
-            { key: "overview", label: "Overview" },
-            { key: "accounting", label: "Accounting" },
-            { key: "investments", label: "ROI & Capitalization" },
-            { key: "education", label: "Education" },
-            { key: "insights", label: "AI Advisor" }
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveSubView(tab.key as typeof activeSubView)}
-              className={`pb-4 font-mono text-xs uppercase tracking-widest border-b-2 transition-all duration-300 whitespace-nowrap cursor-pointer ${
-                activeSubView === tab.key ? "border-[#D4A853] text-[#F5F0EB]" : "border-transparent text-[#B0A89E] hover:text-[#F5F0EB]"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        {error && <div className="border border-[#C85C5C]/40 bg-[#C85C5C]/10 rounded p-3 text-xs font-mono text-[#C85C5C] flex justify-between gap-3"><span>{error}</span><button onClick={() => setError(null)}>dismiss</button></div>}
 
-        <AnimatePresence mode="wait">
-          {activeSubView === 'overview' && (
-            <motion.div
-              key="overview"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={springConfig}
-              className="space-y-12"
-            >
-              {/* Scorecard — every figure computed from real accounts/entries, real $0 when there's nothing to show */}
-              <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                  { label: "Net Worth", value: `$${netWorth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, detail: "Assets − Liabilities" },
-                  { label: "Cash Runway", value: `${runwayMonths.toFixed(1)} ${"months"}`, detail: "Checking vs. expenses" },
-                  { label: "Monthly Burn", value: `$${averageBurnRate.toFixed(2)}`, detail: "AI API, software, hosting" },
-                  { label: "Consulting Revenue", value: `$${consultingRevenue.toFixed(2)}`, detail: "Reconciled beta fees" },
-                ].map((item, idx) => (
-                  <div key={idx} className="border border-[#D4A853]/10 p-5 bg-[#110F0D] rounded-2xl relative overflow-hidden">
-                    <span className="font-mono text-xs text-[#B0A89E] uppercase tracking-wider block mb-2">{item.label}</span>
-                    <span className="font-serif text-3xl font-bold text-[#F5F0EB] block mb-1">{item.value}</span>
-                    <span className="text-xs text-[#7A6F65]">{item.detail}</span>
-                  </div>
-                ))}
-              </section>
+        <nav className="flex gap-5 overflow-x-auto border-b border-[#D4A853]/10">
+          {([
+            ["command","Command Center"],["ledger","Ledger"],["compliance","Compliance"],["treasury","Treasury Policy"],["wealth","Wealth Lab"],["agent","Finance Agent"],
+          ] as [Tab,string][]).map(([key,label]) => <button key={key} onClick={() => setTab(key)} className={`pb-3 whitespace-nowrap text-xs uppercase tracking-widest border-b-2 transition-colors ${tab===key?"border-[#D4A853] text-[#D4A853]":"border-transparent text-[#7A6F65] hover:text-[#B0A89E]"}`}>{label}</button>)}
+        </nav>
 
-              {/* Goals Tracker */}
-              <section className="border border-[#D4A853]/8 p-8 bg-[#0A0908]/40 rounded space-y-6">
-                <div className="flex justify-between items-center border-b border-[#D4A853]/8 pb-3">
-                  <h3 className="font-serif text-lg text-[#F5F0EB]">{"Active Goals"}</h3>
-                  <button
-                    type="button"
-                    onClick={() => { setEditingGoal(null); setShowGoalModal(true); }}
-                    className="px-3 py-1 bg-[#D4A853]/10 text-[#D4A853] border border-[#D4A853]/25 hover:bg-[#D4A853]/15 rounded font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer"
-                  >
-                    {"+ Add Goal"}
-                  </button>
-                </div>
-                {goals.length === 0 ? (
-                  <p className="text-xs font-mono text-[#7A6F65] italic">{"No goals yet."}</p>
-                ) : (
-                  <div className="space-y-6">
-                    {goals.map(goal => {
-                      const pct = goal.target_amount > 0 ? (goal.current_amount / goal.target_amount) * 100 : 0;
-                      return (
-                        <div key={goal.id} className="space-y-2">
-                          <div className="flex justify-between items-center text-xs font-mono gap-2">
-                            <button type="button" onClick={() => { setEditingGoal(goal); setShowGoalModal(true); }} className="text-[#B0A89E] hover:text-[#D4A853] cursor-pointer text-left">
-                              {goal.name}
-                            </button>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-[#F5F0EB]">${(goal.current_amount/100).toFixed(0)} / ${(goal.target_amount/100).toFixed(0)}</span>
-                              <button
-                                type="button"
-                                onClick={() => deleteGoal(goal.id, goal.name)}
-                                disabled={deletingId === goal.id}
-                                title="Delete goal"
-                                className="text-[#C85C5C]/70 hover:text-[#C85C5C] disabled:opacity-40 cursor-pointer"
-                              >
-                                {deletingId === goal.id ? "…" : "✕"}
-                              </button>
-                            </div>
-                          </div>
-                          <div className="h-1.5 bg-black border border-[#D4A853]/8 rounded-full overflow-hidden">
-                            <div className="h-full bg-[#D4A853]" style={{ width: `${Math.min(100, pct)}%` }} />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </section>
-            </motion.div>
-          )}
-
-          {activeSubView === 'accounting' && (
-            <motion.div
-              key="accounting"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={springConfig}
-              className="space-y-8"
-            >
-              {/* Balances list */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Balance Sheet */}
-                <div className="border border-[#D4A853]/8 p-8 bg-[#0A0908]/20 rounded space-y-6">
-                  <h3 className="font-serif text-lg text-[#F5F0EB] border-b border-[#D4A853]/8 pb-3">{"Balance Sheet"}</h3>
-                  <div className="space-y-4 font-mono text-xs">
-                    <div className="text-[#D4A853] uppercase text-xs border-b border-[#D4A853]/8 pb-1">{"Assets"}</div>
-                    {accounts.filter(a => a.type === "asset").map(a => (
-                      <div key={a.id} className="flex justify-between">
-                        <span className="text-[#B0A89E]">{a.name}</span>
-                        <span className="text-[#F5F0EB]">${((accountBalances[a.id] || 0) / 100).toFixed(2)}</span>
-                      </div>
-                    ))}
-                    <div className="border-t border-[#D4A853]/8 pt-2 flex justify-between font-bold text-sm text-[#F5F0EB]">
-                      <span>{"Total Assets"}</span>
-                      <span>${totalAssets.toFixed(2)}</span>
-                    </div>
-
-                    <div className="text-[#D4A853] uppercase text-xs border-b border-[#D4A853]/8 pb-1 mt-6">{"Liabilities"}</div>
-                    {accounts.filter(a => a.type === "liability").length === 0 ? (
-                      <div className="text-xs text-[#7A6F65] italic">{"No liabilities on the balance sheet."}</div>
-                    ) : (
-                      accounts.filter(a => a.type === "liability").map(a => (
-                        <div key={a.id} className="flex justify-between">
-                          <span className="text-[#B0A89E]">{a.name}</span>
-                          <span className="text-[#F5F0EB]">${((accountBalances[a.id] || 0) / 100).toFixed(2)}</span>
-                        </div>
-                      ))
-                    )}
-                    <div className="border-t border-[#D4A853]/8 pt-2 flex justify-between font-bold text-sm text-[#F5F0EB]">
-                      <span>{"Total Liabilities"}</span>
-                      <span>${totalLiabilities.toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Profit & Loss Statement */}
-                <div className="border border-[#D4A853]/8 p-8 bg-[#0A0908]/20 rounded space-y-6">
-                  <h3 className="font-serif text-lg text-[#F5F0EB] border-b border-[#D4A853]/8 pb-3">{"Income Statement (P&L)"}</h3>
-                  <div className="space-y-4 font-mono text-xs">
-                    <div className="text-[#D4A853] uppercase text-xs border-b border-[#D4A853]/8 pb-1">{"Consulting Revenue"}</div>
-                    {accounts.filter(a => a.type === "revenue").map(a => (
-                      <div key={a.id} className="flex justify-between">
-                        <span className="text-[#B0A89E]">{a.name}</span>
-                        {/* Revenues are credit balance (negative stored), show absolute */}
-                        <span className="text-[#F5F0EB]">${(Math.abs(accountBalances[a.id] || 0) / 100).toFixed(2)}</span>
-                      </div>
-                    ))}
-
-                    <div className="text-[#D4A853] uppercase text-xs border-b border-[#D4A853]/8 pb-1 mt-6">{"Operating Expenses"}</div>
-                    {accounts.filter(a => a.type === "expense").map(a => (
-                      <div key={a.id} className="flex justify-between">
-                        <span className="text-[#B0A89E]">{a.name}</span>
-                        <span className="text-[#F5F0EB]">${((accountBalances[a.id] || 0) / 100).toFixed(2)}</span>
-                      </div>
-                    ))}
-                    <div className="border-t border-[#D4A853]/8 pt-2 flex justify-between font-bold text-sm text-[#F5F0EB]">
-                      <span>{"Net Operating Profit"}</span>
-                      <span>
-                        ${(
-                          (accounts
-                            .filter(a => a.type === "revenue")
-                            .reduce((sum, a) => sum + Math.abs(accountBalances[a.id] || 0), 0) -
-                           accounts
-                            .filter(a => a.type === "expense")
-                            .reduce((sum, a) => sum + (accountBalances[a.id] || 0), 0)
-                          ) / 100
-                        ).toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Transactions Ledger */}
-              <div className="border border-[#D4A853]/8 p-8 bg-[#0A0908]/20 rounded space-y-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-serif text-xl text-[#F5F0EB]">{"Double-Entry General Ledger"}</h3>
-                  <button
-                    type="button"
-                    onClick={() => { setEditingTx(null); setShowTxModal(true); }}
-                    className="px-3 py-1.5 bg-[#D4A853]/10 text-[#D4A853] border border-[#D4A853]/25 hover:bg-[#D4A853]/15 rounded font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer"
-                  >
-                    {"+ Add Transaction"}
-                  </button>
-                </div>
-                {transactions.length === 0 ? (
-                  <p className="text-xs font-mono text-[#7A6F65] italic py-4">{"No transactions yet. Add the first one, or a real Stripe payment will post here automatically."}</p>
-                ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left font-mono text-xs">
-                    <thead>
-                      <tr className="border-b border-white/10 pb-2 text-[#B0A89E] text-xs uppercase">
-                        <th className="py-3">{"Date"}</th>
-                        <th>{"Description"}</th>
-                        <th>{"Debit Account"}</th>
-                        <th>{"Credit Account"}</th>
-                        <th className="text-right">{"Amount"}</th>
-                        <th className="text-right">{"Actions"}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {transactions.map(tx => {
-                        const debitEntry = tx.transaction_entries?.find(e => e.amount > 0);
-                        const creditEntry = tx.transaction_entries?.find(e => e.amount < 0);
-                        return (
-                          <tr key={tx.id} className="border-b border-[#D4A853]/8 hover:bg-white/[0.01]">
-                            <td className="py-4 text-[#B0A89E]">{new Date(tx.date).toLocaleDateString()}</td>
-                            <td className="text-[#F5F0EB]">{tx.description}</td>
-                            <td className="text-[#5C9A6B]">{debitEntry?.accounts?.name || 'Unknown'}</td>
-                            <td className="text-[#B0A89E]">{creditEntry?.accounts?.name || 'Unknown'}</td>
-                            <td className="text-right text-[#F5F0EB] font-bold">
-                              ${(Math.abs(debitEntry?.amount || 0) / 100).toFixed(2)}
-                            </td>
-                            <td className="text-right whitespace-nowrap">
-                              <button
-                                type="button"
-                                onClick={() => { setEditingTx(tx); setShowTxModal(true); }}
-                                className="px-2.5 py-1 mr-1.5 rounded bg-white/5 border border-white/10 text-[#B0A89E] text-[10px] font-mono uppercase tracking-wide hover:bg-white/10 cursor-pointer"
-                              >
-                                {"Edit"}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => deleteTransaction(tx.id, tx.description)}
-                                disabled={deletingId === tx.id}
-                                className="px-2.5 py-1 rounded bg-[#C85C5C]/10 border border-[#C85C5C]/25 text-[#C85C5C] text-[10px] font-mono uppercase tracking-wide hover:bg-[#C85C5C]/15 disabled:opacity-40 cursor-pointer"
-                              >
-                                {deletingId === tx.id ? "Deleting…" : "Delete"}
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-
-          {activeSubView === 'investments' && (
-            <motion.div
-              key="investments"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={springConfig}
-              className="space-y-8"
-            >
-              {/* Retirement Projection Calculator — a labeled what-if tool:
-                  starts from your real net worth, everything past that is
-                  your own adjustable assumptions, never asserted as fact. */}
-              <div className="border border-[#D4A853]/8 p-8 bg-[#0A0908]/40 rounded space-y-6">
-                <div>
-                  <h3 className="font-serif text-lg text-[#F5F0EB] border-b border-[#D4A853]/8 pb-3">{"Compound Retirement Calculator"}</h3>
-                  <p className="text-xs text-[#7A6F65] font-mono pt-2">{"A what-if projection, not a forecast — starts from your real net worth ($" + totalAssets.toFixed(2) + "), everything else below is whatever you enter."}</p>
-                </div>
-
-                {/* Inputs */}
-                <div className="grid grid-cols-3 gap-4 text-xs font-mono">
-                  <div className="space-y-1">
-                    <label className="text-[#B0A89E] text-xs uppercase">{"Monthly Savings"}</label>
-                    <input
-                      type="number"
-                      value={monthlyContrib}
-                      onChange={e => setMonthlyContrib(Number(e.target.value))}
-                      className="w-full bg-black border border-[#D4A853]/8 rounded p-2 focus:outline-none focus:border-[#D4A853]/40 text-[#F5F0EB]"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[#B0A89E] text-xs uppercase">{"Annual Return %"}</label>
-                    <input
-                      type="number"
-                      value={returnRate}
-                      onChange={e => setReturnRate(Number(e.target.value))}
-                      className="w-full bg-black border border-[#D4A853]/8 rounded p-2 focus:outline-none focus:border-[#D4A853]/40 text-[#F5F0EB]"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[#B0A89E] text-xs uppercase">{"Years to Project"}</label>
-                    <input
-                      type="number"
-                      value={yearsProject}
-                      onChange={e => setYearsProject(Number(e.target.value))}
-                      className="w-full bg-black border border-[#D4A853]/8 rounded p-2 focus:outline-none focus:border-[#D4A853]/40 text-[#F5F0EB]"
-                    />
-                  </div>
-                </div>
-
-                {/* Real trajectory chart — plots the actual year-by-year
-                    compounding of the inputs above, not a fixed decorative
-                    curve. */}
-                <div className="h-32 border-b border-[#D4A853]/8 relative flex items-end pt-4">
-                  <div className="absolute top-2 left-2 text-xs font-mono text-[#7A6F65]">{"Compound Interest Projection"}</div>
-                  <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <path d={trajectoryPath} fill="none" stroke="#D4A853" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-                  </svg>
-                </div>
-
-                {/* Outputs */}
-                <div className="space-y-2 text-xs font-mono">
-                  <div className="flex justify-between">
-                    <span className="text-[#B0A89E]">{"Compounded Principal (Cash):"}</span>
-                    <span className="text-[#F5F0EB]">${compoundPrincipal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#B0A89E]">{"Added Contributions:"}</span>
-                    <span className="text-[#F5F0EB]">${(monthlyContrib * 12 * yearsProject).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                  </div>
-                  <div className="flex justify-between border-t border-[#D4A853]/8 pt-2 font-bold text-sm">
-                    <span className="text-[#B0A89E]">{"Projected Net Worth:"}</span>
-                    <span className="text-[#5C9A6B]">${totalAccumulated.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Investments ledger */}
-              <div className="border border-[#D4A853]/8 p-8 bg-[#0A0908]/20 rounded space-y-6">
-                <div className="flex justify-between items-center border-b border-[#D4A853]/8 pb-4">
-                  <h3 className="font-serif text-xl text-[#F5F0EB]">{"Asset Portfolio"}</h3>
-                  <button
-                    type="button"
-                    onClick={() => { setEditingInv(null); setShowInvModal(true); }}
-                    className="px-3 py-1 bg-[#D4A853]/10 text-[#D4A853] border border-[#D4A853]/25 hover:bg-[#D4A853]/15 rounded font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer"
-                  >
-                    {"+ Add Asset"}
-                  </button>
-                </div>
-                {investments.length === 0 ? (
-                  <div className="border border-dashed border-white/10 p-12 text-center rounded space-y-4">
-                    <p className="text-xs font-mono text-[#B0A89E]">{"No assets catalogued."}</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left font-mono text-xs">
-                      <thead>
-                        <tr className="border-b border-white/10 pb-2 text-[#B0A89E] text-xs uppercase">
-                          <th className="py-3">{"Asset Description"}</th>
-                          <th>{"Type"}</th>
-                          <th>{"Purchase Date"}</th>
-                          <th className="text-right">{"Cost Basis"}</th>
-                          <th className="text-right">{"Current Valuation"}</th>
-                          <th className="text-right">{"Annual ROI / Depreciation"}</th>
-                          <th className="text-right">{"Actions"}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {investments.map(inv => (
-                          <tr key={inv.id} className="border-b border-[#D4A853]/8 hover:bg-white/[0.01]">
-                            <td className="py-4 text-[#F5F0EB] font-bold">{inv.name}</td>
-                            <td className="text-[#B0A89E] text-xs uppercase">{inv.type}</td>
-                            <td className="text-[#B0A89E]">{new Date(inv.purchase_date).toLocaleDateString()}</td>
-                            <td className="text-right text-[#B0A89E]">${(inv.cost_basis/100).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                            <td className="text-right text-[#F5F0EB]">${(inv.current_value/100).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                            <td className="text-right">
-                              {inv.projected_annual_roi_pct ? (
-                                <span className="text-[#5C9A6B]">+{inv.projected_annual_roi_pct}% ROI</span>
-                              ) : (
-                                <span className="text-[#C85C5C]">-{inv.depreciation_rate_annual_pct}% Depr</span>
-                              )}
-                            </td>
-                            <td className="text-right whitespace-nowrap">
-                              <button
-                                type="button"
-                                onClick={() => { setEditingInv(inv); setShowInvModal(true); }}
-                                className="px-2.5 py-1 mr-1.5 rounded bg-white/5 border border-white/10 text-[#B0A89E] text-[10px] font-mono uppercase tracking-wide hover:bg-white/10 cursor-pointer"
-                              >
-                                {"Edit"}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => deleteInvestment(inv.id, inv.name)}
-                                disabled={deletingId === inv.id}
-                                className="px-2.5 py-1 rounded bg-[#C85C5C]/10 border border-[#C85C5C]/25 text-[#C85C5C] text-[10px] font-mono uppercase tracking-wide hover:bg-[#C85C5C]/15 disabled:opacity-40 cursor-pointer"
-                              >
-                                {deletingId === inv.id ? "Deleting…" : "Delete"}
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-
-          {activeSubView === 'education' && (
-            <motion.div
-              key="education"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={springConfig}
-              className="grid grid-cols-1 md:grid-cols-2 gap-8"
-            >
-              {articles.map(art => {
-                const isExpanded = expandedArticleId === art.id;
-                return (
-                  <div
-                    key={art.id}
-                    onClick={() => setExpandedArticleId(isExpanded ? null : art.id)}
-                    className="border border-[#D4A853]/8 p-8 bg-[#0A0908]/40 rounded space-y-4 cursor-pointer hover:border-[#D4A853]/30 transition-all duration-300"
-                  >
-                    <div className="flex justify-between items-center border-b border-[#D4A853]/8 pb-3">
-                      <span className="font-mono text-xs uppercase tracking-wider text-[#D4A853] border border-[#D4A853]/20 px-2 py-0.5 rounded">
-                        {art.category}
-                      </span>
-                      <span className="font-mono text-xs text-[#B0A89E]">{art.read_time_mins} {"min read"}</span>
-                    </div>
-                    <h3 className="font-serif text-xl text-[#F5F0EB] tracking-tight">{art.title}</h3>
-                    <p className="text-sm text-[#B0A89E] font-mono leading-relaxed italic">{art.summary}</p>
-
-                    <AnimatePresence initial={false}>
-                      {isExpanded && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="overflow-hidden"
-                        >
-                          <p className="text-xs text-[#cbd5e1] leading-relaxed font-sans pt-4 border-t border-[#D4A853]/8">
-                            {art.body}
-                          </p>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                    {!isExpanded && (
-                      <span className="text-xs text-[#D4A853] uppercase tracking-wider font-mono hover:underline block pt-2">
-                        {"Read full article →"}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </motion.div>
-          )}
-
-          {activeSubView === 'insights' && (
-            <motion.div
-              key="insights"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={springConfig}
-              className="space-y-8"
-            >
-              {/* Question form */}
-              <div className="border border-[#D4A853]/8 p-8 bg-[#0A0908]/20 rounded space-y-6">
-                <h3 className="font-serif text-xl text-[#F5F0EB]">{"AI Investment Intelligence Engine"}</h3>
-                <p className="text-xs text-[#B0A89E] font-mono">
-                  {"Enter a financial or opportunity cost question. The AI router selects the optimal model and returns a quantified, bisturí-style recommendation."}
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <input
-                    type="text"
-                    value={advisorQuestion}
-                    onChange={e => setAdvisorQuestion(e.target.value)}
-                    placeholder="Enter your investment query..."
-                    className="flex-1 bg-black border border-[#D4A853]/8 rounded p-3 text-xs text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40 font-mono"
-                  />
-                  <button
-                    onClick={triggerAiAdvice}
-                    disabled={adviceLoading}
-                    className="font-mono text-xs uppercase bg-[#D4A853] hover:bg-[#E8C97A] text-white px-6 py-3 rounded transition-all duration-300 disabled:opacity-50"
-                  >
-                    {adviceLoading ? "Calculating projections..." : "Consult Advisor"}
-                  </button>
-                </div>
-              </div>
-
-              {/* AI Advice Error */}
-              {adviceError && (
-                <div className="border border-[#C85C5C]/40 bg-[#C85C5C]/10 rounded px-4 py-3 font-mono text-xs text-[#C85C5C]">
-                  {"⚠ "}{adviceError}
-                </div>
-              )}
-
-              {/* AI Advice Response */}
-              {adviceResponse && (
-                <motion.div
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="border border-[#D4A853]/20 bg-[#0A0908]/40 p-8 rounded space-y-4"
-                >
-                  <div className="flex items-center justify-between border-b border-[#D4A853]/8 pb-2">
-                    <span className="font-mono text-xs text-[#D4A853] uppercase tracking-wider">Advisor Report</span>
-                    {advisorMeta && (
-                      <span className="font-mono text-[9px] text-[#7A6F65] tracking-wide">
-                        {advisorMeta.model} · {advisorMeta.tier} · ${advisorMeta.estimatedCostUSD.toFixed(5)}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-xs leading-[1.8] text-[#B0A89E] font-mono space-y-0.5">
-                    {renderMarkdownBlock(adviceResponse)}
-                  </div>
-                </motion.div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
+        {tab === "command" && <CommandCenter data={data} currency={currency} reserveTargetCents={reserveTargetCents} deployableSurplusCents={deployableSurplusCents} onTab={setTab} />}
+        {tab === "ledger" && <Ledger data={data} currency={currency} busy={busy} act={act} />}
+        {tab === "compliance" && <Compliance data={data} currency={currency} busy={busy} act={act} />}
+        {tab === "treasury" && <Treasury data={data} currency={currency} busy={busy} act={act} reserveTargetCents={reserveTargetCents} deployableSurplusCents={deployableSurplusCents} />}
+        {tab === "wealth" && <WealthLab data={data} currency={currency} busy={busy} act={act} />}
+        {tab === "agent" && <FinanceAgent data={data} profileId={profileId} currency={currency} busy={busy} setBusy={setBusy} setError={setError} load={() => load(profileId)} act={act} />}
       </div>
-
-      <AnimatePresence>
-        {showTxModal && (
-          <TransactionModal
-            accounts={accounts}
-            editing={editingTx}
-            onClose={() => { setShowTxModal(false); setEditingTx(null); }}
-            onSave={async (input) => {
-              await saveTransaction(input);
-              await fetchFinanceData();
-            }}
-          />
-        )}
-        {showInvModal && (
-          <InvestmentModal
-            accounts={accounts}
-            editing={editingInv}
-            onClose={() => { setShowInvModal(false); setEditingInv(null); }}
-            onSave={async (input) => {
-              await saveInvestment(input);
-              await fetchFinanceData();
-            }}
-          />
-        )}
-        {showGoalModal && (
-          <GoalModal
-            editing={editingGoal}
-            onClose={() => { setShowGoalModal(false); setEditingGoal(null); }}
-            onSave={async (input) => {
-              await saveGoal(input);
-              await fetchFinanceData();
-            }}
-          />
-        )}
-      </AnimatePresence>
     </main>
   );
 }
 
-// ── Shared modal chrome ──────────────────────────────────────────────────
-function ModalShell({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 10, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 10, scale: 0.98 }}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg bg-[#0A0908] border border-[#D4A853]/20 rounded-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto"
-      >
-        <div className="flex items-center justify-between border-b border-[#D4A853]/8 pb-3">
-          <h3 className="font-serif text-lg text-[#F5F0EB]">{title}</h3>
-          <button onClick={onClose} className="font-mono text-xs text-[#7A6F65] hover:text-white uppercase cursor-pointer">{"✕"}</button>
-        </div>
-        {children}
-      </motion.div>
-    </motion.div>
-  );
+function CommandCenter({ data, currency, reserveTargetCents, deployableSurplusCents, onTab }: { data:Dashboard|null; currency:string; reserveTargetCents:number|null; deployableSurplusCents:number|null; onTab:(t:Tab)=>void }) {
+  const m = data?.metrics;
+  const obligations = data?.obligations.filter((o) => !["filed","paid","not_applicable"].includes(o.status)) ?? [];
+  const unverified = data?.sources.filter((s) => s.verification_status !== "verified") ?? [];
+  return <div className="space-y-5">
+    <section className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <Metric label="Liquid Cash" value={money(m?.liquidCashCents,currency)} detail="cash / cash-equivalent only" />
+      <Metric label="30d Revenue" value={money(m?.revenue30Cents,currency)} detail="ledger-derived" />
+      <Metric label="30d Expenses" value={money(m?.expenses30Cents,currency)} detail="ledger-derived" />
+      <Metric label="Normalized Burn" value={money(m?.normalizedMonthlyBurnCents,currency)} detail="trailing 90d ÷ 3" />
+      <Metric label="Runway" value={m?.runwayMonths==null?"Need expense data":`${m.runwayMonths.toFixed(1)} mo`} detail="liquid cash ÷ normalized burn" />
+    </section>
+    {m?.mixedCurrencyWarning && <Notice tone="warn">Multiple account currencies exist. Finance OS v2 does not silently FX-convert them; consolidated totals are not decision-grade until an FX policy exists.</Notice>}
+    <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <Panel title="Compliance state" kicker="Evidence, not memory">
+        <div className="space-y-2 text-xs"><StateRow label="Open / review obligations" value={String(obligations.length)} tone={obligations.length?"warn":"ok"}/><StateRow label="Unverified source records" value={String(unverified.length)} tone={unverified.length?"warn":"ok"}/><StateRow label="Jurisdiction" value={data?.profile?.jurisdiction_code || "UNSET"} tone={data?.profile?.jurisdiction_code?"ok":"warn"}/></div>
+        <button onClick={()=>onTab("compliance")} className="mt-4 text-[10px] font-mono uppercase text-[#D4A853] underline underline-offset-4">Open compliance evidence →</button>
+      </Panel>
+      <Panel title="Treasury state" kicker="Policy before impulse">
+        {data?.cashPolicy ? <div className="space-y-2 text-xs"><StateRow label="Active policy" value={`v${data.cashPolicy.version}`} tone="ok"/><StateRow label="Reserve target" value={reserveTargetCents==null?"Need expense history":money(reserveTargetCents,currency)} tone={reserveTargetCents==null?"warn":"ok"}/><StateRow label="Deployable surplus" value={deployableSurplusCents==null?"Not computable":money(deployableSurplusCents,currency)} tone="ok"/></div> : <Notice tone="warn">No active cash-allocation policy. The agent may teach and propose, but it has no authority to decide where surplus cash goes.</Notice>}
+        <button onClick={()=>onTab("treasury")} className="mt-4 text-[10px] font-mono uppercase text-[#D4A853] underline underline-offset-4">Open treasury policy →</button>
+      </Panel>
+      <Panel title="Wealth state" kicker="IPS before assets">
+        {data?.investmentPolicy ? <div className="space-y-2 text-xs"><StateRow label="Active IPS" value={`v${data.investmentPolicy.version}`} tone="ok"/><StateRow label="Horizon" value={`${data.investmentPolicy.horizon_years}y`} tone="ok"/><StateRow label="Risk capacity" value={data.investmentPolicy.risk_capacity} tone={data.investmentPolicy.risk_capacity==="unassessed"?"warn":"ok"}/><StateRow label="Max illiquid" value={pct(data.investmentPolicy.max_illiquid_pct)} tone="ok"/></div> : <Notice tone="warn">No Investment Policy Statement. Real-estate, public-market or other asset ideas should remain scenarios until horizon, liquidity and concentration limits are explicit.</Notice>}
+        <button onClick={()=>onTab("wealth")} className="mt-4 text-[10px] font-mono uppercase text-[#D4A853] underline underline-offset-4">Open Wealth Lab →</button>
+      </Panel>
+    </section>
+    <Panel title="Decision queue" kicker="Nothing executes itself">
+      {data?.recommendations.filter((r)=>r.status==="proposed").length ? <div className="grid grid-cols-1 md:grid-cols-2 gap-2">{data.recommendations.filter((r)=>r.status==="proposed").slice(0,6).map((r)=><div key={r.id} className="border border-[#D4A853]/10 rounded p-3"><div className="flex justify-between gap-3"><span className="text-sm text-[#F5F0EB]">{r.title}</span><span className="text-[10px] font-mono uppercase text-[#7A6F65]">{r.category} · {r.risk_level}</span></div><p className="text-xs text-[#7A6F65] mt-1 line-clamp-2">{r.rationale}</p></div>)}</div> : <p className="text-xs text-[#7A6F65]">No pending recommendations. Finance Agent outputs become reviewable proposals, never automatic actions.</p>}
+    </Panel>
+  </div>;
 }
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <label className="font-mono text-xs text-[#7A6F65] uppercase tracking-wider block mb-1">{children}</label>;
+function Ledger({ data, currency, busy, act }: { data:Dashboard|null; currency:string; busy:string|null; act:(a:string,b?:Record<string,unknown>)=>Promise<boolean> }) {
+  const [mode,setMode]=useState<"expense"|"income"|"transfer">("expense");
+  const [description,setDescription]=useState(""); const [amount,setAmount]=useState(""); const [date,setDate]=useState(()=>new Date().toISOString().slice(0,10));
+  const assets=data?.accounts.filter((a)=>a.type==="asset")??[]; const expenses=data?.accounts.filter((a)=>a.type==="expense")??[]; const revenue=data?.accounts.filter((a)=>a.type==="revenue")??[];
+  const [cashAccount,setCashAccount]=useState(""); const [categoryAccount,setCategoryAccount]=useState(""); const [otherAsset,setOtherAsset]=useState("");
+  const defaultCash=cashAccount||assets.find((a)=>a.liquidity_class==="cash")?.id||assets[0]?.id||"";
+  const defaultCategory=categoryAccount||(mode==="expense"?expenses[0]?.id:revenue[0]?.id)||"";
+  async function submit(e:React.FormEvent){e.preventDefault();const cents=Math.round(Number(amount)*100);if(!description.trim()||!Number.isFinite(cents)||cents<=0)return;let debit="",credit="";if(mode==="expense"){debit=defaultCategory;credit=defaultCash;}else if(mode==="income"){debit=defaultCash;credit=defaultCategory;}else{debit=otherAsset;credit=defaultCash;}if(!debit||!credit||debit===credit)return;const ok=await act("post_transaction",{date:`${date}T12:00:00Z`,description,amountCents:cents,debitAccountId:debit,creditAccountId:credit});if(ok){setDescription("");setAmount("");}}
+  return <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-5">
+    <Panel title="Post transaction" kicker="Atomic double-entry RPC">
+      <form onSubmit={submit} className="space-y-3">
+        <div className="grid grid-cols-3 gap-2">{(["expense","income","transfer"] as const).map((m)=><button type="button" key={m} onClick={()=>{setMode(m);setCategoryAccount("");}} className={`py-2 rounded border font-mono text-[10px] uppercase ${mode===m?"border-[#D4A853]/40 text-[#D4A853] bg-[#D4A853]/5":"border-[#D4A853]/10 text-[#7A6F65]"}`}>{m}</button>)}</div>
+        <Field label="Date"><input type="date" value={date} onChange={(e)=>setDate(e.target.value)} className="input"/></Field>
+        <Field label="Description"><input value={description} onChange={(e)=>setDescription(e.target.value)} className="input" placeholder="AI API bill, client payment…"/></Field>
+        <Field label={`Amount (${currency})`}><input type="number" min="0.01" step="0.01" value={amount} onChange={(e)=>setAmount(e.target.value)} className="input" placeholder="0.00"/></Field>
+        <Field label={mode==="income"?"Cash destination":"Cash source"}><select value={defaultCash} onChange={(e)=>setCashAccount(e.target.value)} className="input">{assets.map((a)=><option key={a.id} value={a.id}>{a.name}</option>)}</select></Field>
+        {mode!=="transfer"?<Field label={mode==="expense"?"Expense account":"Revenue account"}><select value={defaultCategory} onChange={(e)=>setCategoryAccount(e.target.value)} className="input">{(mode==="expense"?expenses:revenue).map((a)=><option key={a.id} value={a.id}>{a.name}</option>)}</select></Field>:<Field label="Asset destination"><select value={otherAsset} onChange={(e)=>setOtherAsset(e.target.value)} className="input"><option value="">Select destination</option>{assets.filter((a)=>a.id!==defaultCash).map((a)=><option key={a.id} value={a.id}>{a.name}</option>)}</select></Field>}
+        <button disabled={busy==="post_transaction"} className="w-full py-2.5 rounded border border-[#5C9A6B]/35 text-[#5C9A6B] font-mono text-xs uppercase disabled:opacity-40">Post balanced transaction</button>
+        <p className="text-[10px] text-[#7A6F65] leading-relaxed">Editing posted journal lines is intentionally unavailable. Corrections are made with a reversal so history stays auditable.</p>
+      </form>
+    </Panel>
+    <Panel title="Ledger" kicker={`${data?.transactions.length??0} transactions loaded`}>
+      <div className="overflow-x-auto"><table className="w-full text-xs"><thead><tr className="text-[#7A6F65] border-b border-[#D4A853]/10"><th className="text-left py-2">Date</th><th className="text-left">Description</th><th className="text-left">Flow</th><th className="text-right">Amount</th><th className="text-right">State</th></tr></thead><tbody>{data?.transactions.map((t)=><tr key={t.id} className="border-b border-[#D4A853]/6"><td className="py-2.5 text-[#7A6F65]">{t.date.slice(0,10)}</td><td className="pr-4">{t.description}</td><td className="text-[#7A6F65] pr-4">{t.creditAccount} → {t.debitAccount}</td><td className="text-right">{money(t.amountCents,currency)}</td><td className="text-right">{t.status==="voided"?<span className="text-[#C85C5C]">voided</span>:t.reversesTransactionId?<span className="text-[#D4A853]">reversal</span>:<button onClick={async()=>{const reason=window.prompt("Reason for reversal?");if(reason)await act("void_transaction",{transactionId:t.id,reason});}} className="text-[#7A6F65] hover:text-[#C85C5C]">reverse</button>}</td></tr>)}</tbody></table>{!data?.transactions.length&&<p className="py-8 text-center text-[#7A6F65]">No transactions yet. Start with real business income and expenses; the dashboard will stop pretending all-time expenses are a monthly burn rate.</p>}</div>
+    </Panel>
+  </div>;
 }
 
-const inputClass = "w-full bg-black/40 border border-[#D4A853]/15 rounded px-3 py-2 text-sm font-mono text-[#F5F0EB] focus:outline-none focus:border-[#D4A853]/40";
-
-// ── Add/Edit Transaction ──────────────────────────────────────────────────
-function TransactionModal({
-  accounts, editing, onClose, onSave,
-}: {
-  accounts: Account[];
-  editing: Transaction | null;
-  onClose: () => void;
-  onSave: (input: { date: string; description: string; debitAccountId: string; creditAccountId: string; amountUsd: number }) => Promise<void>;
-}) {
-  const existingDebit = editing?.transaction_entries?.find(e => e.amount > 0);
-  const existingCredit = editing?.transaction_entries?.find(e => e.amount < 0);
-  const [date, setDate] = useState(editing ? editing.date.slice(0, 10) : new Date().toISOString().slice(0, 10));
-  const [description, setDescription] = useState(editing?.description ?? "");
-  const [debitAccountId, setDebitAccountId] = useState(existingDebit?.account_id ?? "");
-  const [creditAccountId, setCreditAccountId] = useState(existingCredit?.account_id ?? "");
-  const [amountUsd, setAmountUsd] = useState(existingDebit ? Math.abs(existingDebit.amount) / 100 : 0);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async () => {
-    setError(null);
-    if (!description.trim()) return setError("Description is required.");
-    if (!debitAccountId || !creditAccountId) return setError("Both a debit and credit account are required.");
-    if (debitAccountId === creditAccountId) return setError("Debit and credit accounts must be different — that's not a real transaction.");
-    if (!amountUsd || amountUsd <= 0) return setError("Amount must be greater than zero.");
-    setSaving(true);
-    try {
-      await onSave({ date, description: description.trim(), debitAccountId, creditAccountId, amountUsd });
-      onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save transaction.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <ModalShell title={editing ? "Edit Transaction" : "Add Transaction"} onClose={onClose}>
-      {error && <div className="border border-[#C85C5C]/40 bg-[#C85C5C]/10 rounded px-3 py-2 font-mono text-xs text-[#C85C5C]">{"⚠ "}{error}</div>}
-      <p className="text-xs text-[#7A6F65] font-mono leading-relaxed">
-        {"Real double-entry: money is debited from one account and credited to another. Recording income? Debit your checking account, credit a revenue account. Recording an expense? Debit an expense account, credit checking."}
-      </p>
-      <div className="space-y-3">
-        <div><FieldLabel>Date</FieldLabel><input type="date" value={date} onChange={e => setDate(e.target.value)} className={inputClass} /></div>
-        <div><FieldLabel>Description *</FieldLabel><input type="text" value={description} onChange={e => setDescription(e.target.value)} placeholder="e.g. Consulting invoice — PayFlux" className={inputClass} /></div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <FieldLabel>Debit Account *</FieldLabel>
-            <select value={debitAccountId} onChange={e => setDebitAccountId(e.target.value)} className={inputClass}>
-              <option value="">Select…</option>
-              {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
-            </select>
-          </div>
-          <div>
-            <FieldLabel>Credit Account *</FieldLabel>
-            <select value={creditAccountId} onChange={e => setCreditAccountId(e.target.value)} className={inputClass}>
-              <option value="">Select…</option>
-              {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
-            </select>
-          </div>
-        </div>
-        <div><FieldLabel>Amount ($) *</FieldLabel><input type="number" min={0.01} step={0.01} value={amountUsd} onChange={e => setAmountUsd(Number(e.target.value))} className={inputClass} /></div>
-      </div>
-      <div className="flex justify-end gap-3 border-t border-[#D4A853]/8 pt-4">
-        <button type="button" onClick={onClose} className="px-4 py-2 border border-white/10 hover:text-white uppercase tracking-wider rounded cursor-pointer text-xs font-mono">Cancel</button>
-        <button type="button" disabled={saving} onClick={handleSubmit} className="px-5 py-2 bg-[#D4A853] text-[#0A0908] font-bold uppercase tracking-wider hover:bg-[#E8C97A] transition-all rounded cursor-pointer text-xs font-mono disabled:opacity-40">
-          {saving ? "Saving…" : "Save"}
-        </button>
-      </div>
-    </ModalShell>
-  );
+function Compliance({ data, currency, busy, act }: { data:Dashboard|null; currency:string; busy:string|null; act:(a:string,b?:Record<string,unknown>)=>Promise<boolean> }) {
+  const p=data?.profile; const [jurisdiction,setJurisdiction]=useState(p?.jurisdiction_code||"");
+  const [source,setSource]=useState({authority:"",topic:"",title:"",url:""});
+  const [ob,setOb]=useState({type:"",period:"",due:"",sourceId:"",amount:"",notes:""});
+  useEffect(()=>setJurisdiction(p?.jurisdiction_code||""),[p?.id,p?.jurisdiction_code]);
+  const verified=data?.sources.filter((s)=>s.verification_status==="verified")??[];
+  return <div className="space-y-5">
+    <section className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-5">
+      <Panel title="Jurisdiction profile" kicker="Self-reported until reviewed">
+        <Field label="Jurisdiction code"><input value={jurisdiction} onChange={(e)=>setJurisdiction(e.target.value.toUpperCase())} className="input" placeholder="ES, FI, US…"/></Field>
+        <button disabled={busy==="save_profile"} onClick={()=>act("save_profile",{name:p?.name||"Signal & Friction",scope:p?.scope||"business",entityName:p?.entity_name,baseCurrency:p?.base_currency||currency,jurisdictionCode:jurisdiction,notes:p?.notes})} className="w-full mt-3 py-2 border border-[#D4A853]/30 text-[#D4A853] rounded font-mono text-xs uppercase disabled:opacity-40">Save self-reported jurisdiction</button>
+        <p className="text-[10px] text-[#7A6F65] mt-3">This field does not determine tax residency. Finance OS records your working jurisdiction context; professional verification is a separate evidence event.</p>
+      </Panel>
+      <Panel title="Obligation register" kicker="Deadlines + evidence + review status">
+        {data?.obligations.length?<div className="space-y-2">{data.obligations.map((o)=><div key={o.id} className="border border-[#D4A853]/10 rounded p-3 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3"><div><div className="flex gap-2 items-center"><span className="text-sm">{o.obligation_type}</span><Badge tone={o.status==="needs_review"?"warn":o.status==="paid"||o.status==="filed"?"ok":"neutral"}>{o.status}</Badge>{o.requires_professional_review&&<Badge tone="warn">professional review</Badge>}</div><p className="text-[10px] text-[#7A6F65] mt-1">{o.jurisdiction_code}{o.period_label?` · ${o.period_label}`:""}{o.due_date?` · due ${o.due_date}`:""}</p>{o.finance_compliance_sources&&<a href={o.finance_compliance_sources.source_url} target="_blank" rel="noreferrer" className="text-[10px] text-[#D4A853] underline">{o.finance_compliance_sources.authority} · {o.finance_compliance_sources.source_title}</a>}</div><div className="text-right text-xs">{o.amount_cents==null?"amount not stored":money(o.amount_cents,o.amount_currency||currency)}</div></div>)}</div>:<p className="text-xs text-[#7A6F65]">No obligations recorded. That means “unknown,” not “nothing is due.” Add verified authority sources before relying on this register.</p>}
+      </Panel>
+    </section>
+    <section className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <Panel title="Compliance sources" kicker="URL entered ≠ verified">
+        <form onSubmit={async(e)=>{e.preventDefault();const ok=await act("add_compliance_source",{jurisdictionCode:jurisdiction,authority:source.authority,topic:source.topic,sourceTitle:source.title,sourceUrl:source.url});if(ok)setSource({authority:"",topic:"",title:"",url:""});}} className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4"><input required value={source.authority} onChange={(e)=>setSource({...source,authority:e.target.value})} className="input" placeholder="Authority (AEAT, Seguridad Social…)"/><input required value={source.topic} onChange={(e)=>setSource({...source,topic:e.target.value})} className="input" placeholder="Topic"/><input required value={source.title} onChange={(e)=>setSource({...source,title:e.target.value})} className="input" placeholder="Source title"/><input required value={source.url} onChange={(e)=>setSource({...source,url:e.target.value})} className="input" placeholder="Official URL"/><button className="md:col-span-2 py-2 border border-[#D4A853]/25 text-[#D4A853] rounded font-mono text-[10px] uppercase">Record source</button></form>
+        <div className="space-y-2">{data?.sources.map((s)=><div key={s.id} className="border border-[#D4A853]/8 rounded p-3 flex gap-3 justify-between"><div><a href={s.source_url} target="_blank" rel="noreferrer" className="text-xs text-[#F5F0EB] hover:text-[#D4A853]">{s.authority} — {s.source_title} ↗</a><p className="text-[10px] text-[#7A6F65]">{s.topic} · checked {s.checked_at.slice(0,10)}</p></div>{s.verification_status==="verified"?<Badge tone="ok">verified</Badge>:<button disabled={busy==="verify_compliance_source"} onClick={()=>act("verify_compliance_source",{sourceId:s.id,note:"Operator reviewed the cited authority source."})} className="text-[10px] text-[#D4A853] font-mono uppercase">mark reviewed</button>}</div>)}</div>
+      </Panel>
+      <Panel title="Add obligation" kicker="Unverified sources fail to needs_review">
+        <form onSubmit={async(e)=>{e.preventDefault();const amountCents=ob.amount?Math.round(Number(ob.amount)*100):null;const ok=await act("save_obligation",{jurisdictionCode:jurisdiction,obligationType:ob.type,periodLabel:ob.period,dueDate:ob.due,sourceId:ob.sourceId||null,amountCents,amountCurrency:currency,amountSource:amountCents!=null?"manual":null,requiresProfessionalReview:true,notes:ob.notes});if(ok)setOb({type:"",period:"",due:"",sourceId:"",amount:"",notes:""});}} className="space-y-2"><input required value={ob.type} onChange={(e)=>setOb({...ob,type:e.target.value})} className="input" placeholder="Obligation type / filing"/><div className="grid grid-cols-2 gap-2"><input value={ob.period} onChange={(e)=>setOb({...ob,period:e.target.value})} className="input" placeholder="Period"/><input type="date" value={ob.due} onChange={(e)=>setOb({...ob,due:e.target.value})} className="input"/></div><select value={ob.sourceId} onChange={(e)=>setOb({...ob,sourceId:e.target.value})} className="input"><option value="">No verified source yet → needs_review</option>{verified.map((s)=><option key={s.id} value={s.id}>{s.authority} · {s.topic}</option>)}</select><input type="number" step="0.01" min="0" value={ob.amount} onChange={(e)=>setOb({...ob,amount:e.target.value})} className="input" placeholder={`Known amount (${currency}) — optional`}/><textarea value={ob.notes} onChange={(e)=>setOb({...ob,notes:e.target.value})} className="input min-h-20" placeholder="Scope, uncertainty, accountant question…"/><button className="w-full py-2 border border-[#5C9A6B]/30 text-[#5C9A6B] rounded font-mono text-[10px] uppercase">Add to register</button></form>
+      </Panel>
+    </section>
+  </div>;
 }
 
-// ── Add/Edit Investment ───────────────────────────────────────────────────
-function InvestmentModal({
-  accounts, editing, onClose, onSave,
-}: {
-  accounts: Account[];
-  editing: Investment | null;
-  onClose: () => void;
-  onSave: (input: {
-    name: string; type: Investment['type']; accountId: string; purchaseDate: string;
-    costBasisUsd: number; currentValueUsd: number; projectedRoiPct: number; depreciationPct: number;
-  }) => Promise<void>;
-}) {
-  const assetAccounts = accounts.filter(a => a.type === "asset");
-  const [name, setName] = useState(editing?.name ?? "");
-  const [type, setType] = useState<Investment['type']>(editing?.type ?? "software");
-  const [accountId, setAccountId] = useState(editing?.account_id ?? assetAccounts[0]?.id ?? "");
-  const [purchaseDate, setPurchaseDate] = useState(editing ? editing.purchase_date.slice(0, 10) : new Date().toISOString().slice(0, 10));
-  const [costBasisUsd, setCostBasisUsd] = useState(editing ? editing.cost_basis / 100 : 0);
-  const [currentValueUsd, setCurrentValueUsd] = useState(editing ? editing.current_value / 100 : 0);
-  const [projectedRoiPct, setProjectedRoiPct] = useState(editing?.projected_annual_roi_pct ?? 0);
-  const [depreciationPct, setDepreciationPct] = useState(editing?.depreciation_rate_annual_pct ?? 0);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async () => {
-    setError(null);
-    if (!name.trim()) return setError("Name is required.");
-    if (!accountId) return setError("An account is required.");
-    if (costBasisUsd < 0 || currentValueUsd < 0) return setError("Values can't be negative.");
-    setSaving(true);
-    try {
-      await onSave({ name: name.trim(), type, accountId, purchaseDate, costBasisUsd, currentValueUsd, projectedRoiPct, depreciationPct });
-      onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save investment.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <ModalShell title={editing ? "Edit Asset" : "Add Asset"} onClose={onClose}>
-      {error && <div className="border border-[#C85C5C]/40 bg-[#C85C5C]/10 rounded px-3 py-2 font-mono text-xs text-[#C85C5C]">{"⚠ "}{error}</div>}
-      <div className="space-y-3">
-        <div><FieldLabel>Name *</FieldLabel><input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. MacBook Pro M4" className={inputClass} /></div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <FieldLabel>Type</FieldLabel>
-            <select value={type} onChange={e => setType(e.target.value as Investment['type'])} className={inputClass}>
-              {(['hardware', 'ai_tools', 'software', 'financial_asset'] as const).map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
-          <div>
-            <FieldLabel>Linked Account *</FieldLabel>
-            <select value={accountId} onChange={e => setAccountId(e.target.value)} className={inputClass}>
-              <option value="">Select…</option>
-              {(assetAccounts.length > 0 ? assetAccounts : accounts).map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-            </select>
-          </div>
-        </div>
-        <div><FieldLabel>Purchase Date</FieldLabel><input type="date" value={purchaseDate} onChange={e => setPurchaseDate(e.target.value)} className={inputClass} /></div>
-        <div className="grid grid-cols-2 gap-3">
-          <div><FieldLabel>Cost Basis ($)</FieldLabel><input type="number" min={0} step={0.01} value={costBasisUsd} onChange={e => setCostBasisUsd(Number(e.target.value))} className={inputClass} /></div>
-          <div><FieldLabel>Current Value ($)</FieldLabel><input type="number" min={0} step={0.01} value={currentValueUsd} onChange={e => setCurrentValueUsd(Number(e.target.value))} className={inputClass} /></div>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div><FieldLabel>Projected Annual ROI %</FieldLabel><input type="number" step={0.1} value={projectedRoiPct} onChange={e => setProjectedRoiPct(Number(e.target.value))} className={inputClass} /></div>
-          <div><FieldLabel>Depreciation %/yr</FieldLabel><input type="number" step={0.1} value={depreciationPct} onChange={e => setDepreciationPct(Number(e.target.value))} className={inputClass} /></div>
-        </div>
-      </div>
-      <div className="flex justify-end gap-3 border-t border-[#D4A853]/8 pt-4">
-        <button type="button" onClick={onClose} className="px-4 py-2 border border-white/10 hover:text-white uppercase tracking-wider rounded cursor-pointer text-xs font-mono">Cancel</button>
-        <button type="button" disabled={saving} onClick={handleSubmit} className="px-5 py-2 bg-[#D4A853] text-[#0A0908] font-bold uppercase tracking-wider hover:bg-[#E8C97A] transition-all rounded cursor-pointer text-xs font-mono disabled:opacity-40">
-          {saving ? "Saving…" : "Save"}
-        </button>
-      </div>
-    </ModalShell>
-  );
+function Treasury({ data, currency, busy, act, reserveTargetCents, deployableSurplusCents }: { data:Dashboard|null; currency:string; busy:string|null; act:(a:string,b?:Record<string,unknown>)=>Promise<boolean>; reserveTargetCents:number|null; deployableSurplusCents:number|null }) {
+  const p=data?.cashPolicy; const [draft,setDraft]=useState({name:p?.name||"Treasury Policy",reserve:String(p?.reserve_months_target??6),owner:String(p?.owner_pay_pct??0),tax:String(p?.tax_compliance_reserve_pct??0),operating:String(p?.operating_reserve_pct??0),investing:String(p?.long_term_investing_pct??0),opportunity:String(p?.opportunity_fund_pct??0),taxVerified:p?.tax_reserve_verified??false,taxEvidence:p?.tax_reserve_evidence_ref||"",rationale:p?.rationale||""});
+  useEffect(()=>{setDraft({name:p?.name||"Treasury Policy",reserve:String(p?.reserve_months_target??6),owner:String(p?.owner_pay_pct??0),tax:String(p?.tax_compliance_reserve_pct??0),operating:String(p?.operating_reserve_pct??0),investing:String(p?.long_term_investing_pct??0),opportunity:String(p?.opportunity_fund_pct??0),taxVerified:p?.tax_reserve_verified??false,taxEvidence:p?.tax_reserve_evidence_ref||"",rationale:p?.rationale||""});},[p?.id]);
+  const total=[draft.owner,draft.tax,draft.operating,draft.investing,draft.opportunity].reduce((s,v)=>s+Number(v||0),0);
+  const allocs=p&&deployableSurplusCents!=null?[ ["Owner pay",Number(p.owner_pay_pct)],["Tax/compliance reserve",Number(p.tax_compliance_reserve_pct)],["Operating reserve",Number(p.operating_reserve_pct)],["Long-term investing",Number(p.long_term_investing_pct)],["Opportunity fund",Number(p.opportunity_fund_pct)] ] as [string,number][]:[];
+  return <div className="grid grid-cols-1 xl:grid-cols-[440px_1fr] gap-5">
+    <Panel title="Activate cash-allocation policy" kicker="Versioned · human approved">
+      <div className="space-y-3"><Field label="Policy name"><input value={draft.name} onChange={(e)=>setDraft({...draft,name:e.target.value})} className="input"/></Field><Field label="Liquidity reserve target (months)"><input type="number" min="0" max="60" step="0.5" value={draft.reserve} onChange={(e)=>setDraft({...draft,reserve:e.target.value})} className="input"/></Field><div className="grid grid-cols-2 gap-2"><PercentInput label="Owner pay / living" value={draft.owner} set={(v)=>setDraft({...draft,owner:v})}/><PercentInput label="Tax/compliance reserve" value={draft.tax} set={(v)=>setDraft({...draft,tax:v})}/><PercentInput label="Operating reserve" value={draft.operating} set={(v)=>setDraft({...draft,operating:v})}/><PercentInput label="Long-term investing" value={draft.investing} set={(v)=>setDraft({...draft,investing:v})}/><PercentInput label="Opportunity fund" value={draft.opportunity} set={(v)=>setDraft({...draft,opportunity:v})}/><div className={`rounded border p-2 flex items-center justify-between ${Math.abs(total-100)<.001?"border-[#5C9A6B]/30 text-[#5C9A6B]":"border-[#C85C5C]/30 text-[#C85C5C]"}`}><span className="font-mono text-[10px] uppercase">Total</span><strong>{total.toFixed(0)}%</strong></div></div><label className="flex gap-2 items-start text-[10px] text-[#7A6F65]"><input type="checkbox" checked={draft.taxVerified} onChange={(e)=>setDraft({...draft,taxVerified:e.target.checked})}/><span>Tax reserve percentage has a professional/authority basis. This confirms the policy input only; it is not a tax-liability calculation.</span></label>{draft.taxVerified&&<input value={draft.taxEvidence} onChange={(e)=>setDraft({...draft,taxEvidence:e.target.value})} className="input" placeholder="Evidence / adviser reference required"/>}<textarea value={draft.rationale} onChange={(e)=>setDraft({...draft,rationale:e.target.value})} className="input min-h-20" placeholder="Why this allocation policy?"/><button disabled={busy==="activate_cash_policy"||Math.abs(total-100)>.001} onClick={()=>act("activate_cash_policy",{name:draft.name,reserveMonthsTarget:Number(draft.reserve),ownerPayPct:Number(draft.owner),taxComplianceReservePct:Number(draft.tax),operatingReservePct:Number(draft.operating),longTermInvestingPct:Number(draft.investing),opportunityFundPct:Number(draft.opportunity),taxReserveVerified:draft.taxVerified,taxReserveEvidenceRef:draft.taxEvidence,rationale:draft.rationale})} className="w-full py-2 border border-[#5C9A6B]/35 text-[#5C9A6B] rounded font-mono text-[10px] uppercase disabled:opacity-30">Activate as next version</button></div>
+    </Panel>
+    <div className="space-y-5"><Panel title="Treasury waterfall" kicker="Deterministic output of your approved policy">{p?<>{reserveTargetCents==null?<Notice tone="warn">A reserve target cannot be calculated until there is enough real expense history. Finance OS will not call all cash “surplus” just because the ledger is empty.</Notice>:<div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4"><Metric label="Liquid cash" value={money(data?.metrics?.liquidCashCents,currency)} detail="decision base"/><Metric label="Reserve target" value={money(reserveTargetCents,currency)} detail={`${p.reserve_months_target} months`}/><Metric label="Above reserve" value={money(deployableSurplusCents,currency)} detail="policy-allocable, not automatically spent"/></div>}{deployableSurplusCents!=null&&<div className="space-y-2">{allocs.map(([label,percent])=><div key={label} className="grid grid-cols-[160px_1fr_110px] gap-3 items-center text-xs"><span className="text-[#B0A89E]">{label}</span><div className="h-2 bg-[#1A1714] rounded overflow-hidden"><div className="h-full bg-[#D4A853]/50" style={{width:`${percent}%`}}/></div><span className="text-right font-mono">{money(deployableSurplusCents*percent/100,currency)}</span></div>)}</div>}</>:<Notice tone="warn">No active Treasury Policy. “Pay yourself first” becomes useful only after you define what is being protected first: verified obligations, liquidity, owner pay, long-term capital and optionality.</Notice>}</Panel><Panel title="Policy invariant" kicker="No hidden default"><p className="text-xs text-[#B0A89E] leading-relaxed">Finance OS does not decide that 30/70, 50/30/20, or any other internet rule is right for you. Once you approve a policy, the system can enforce consistency and show exactly where every deployable euro/dollar belongs before discretionary spending.</p></Panel></div>
+  </div>;
 }
 
-// ── Add/Edit Goal ─────────────────────────────────────────────────────────
-function GoalModal({
-  editing, onClose, onSave,
-}: {
-  editing: Goal | null;
-  onClose: () => void;
-  onSave: (input: { name: string; targetAmountUsd: number; currentAmountUsd: number; targetDate: string }) => Promise<void>;
-}) {
-  const [name, setName] = useState(editing?.name ?? "");
-  const [targetAmountUsd, setTargetAmountUsd] = useState(editing ? editing.target_amount / 100 : 0);
-  const [currentAmountUsd, setCurrentAmountUsd] = useState(editing ? editing.current_amount / 100 : 0);
-  const [targetDate, setTargetDate] = useState(editing?.target_date?.slice(0, 10) ?? "");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async () => {
-    setError(null);
-    if (!name.trim()) return setError("Name is required.");
-    if (!targetAmountUsd || targetAmountUsd <= 0) return setError("Target amount must be greater than zero.");
-    if (currentAmountUsd < 0) return setError("Current amount can't be negative.");
-    setSaving(true);
-    try {
-      await onSave({ name: name.trim(), targetAmountUsd, currentAmountUsd, targetDate });
-      onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save goal.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <ModalShell title={editing ? "Edit Goal" : "Add Goal"} onClose={onClose}>
-      {error && <div className="border border-[#C85C5C]/40 bg-[#C85C5C]/10 rounded px-3 py-2 font-mono text-xs text-[#C85C5C]">{"⚠ "}{error}</div>}
-      <div className="space-y-3">
-        <div><FieldLabel>Name *</FieldLabel><input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Emergency Fund" className={inputClass} /></div>
-        <div className="grid grid-cols-2 gap-3">
-          <div><FieldLabel>Target Amount ($) *</FieldLabel><input type="number" min={0.01} step={0.01} value={targetAmountUsd} onChange={e => setTargetAmountUsd(Number(e.target.value))} className={inputClass} /></div>
-          <div><FieldLabel>Current Amount ($)</FieldLabel><input type="number" min={0} step={0.01} value={currentAmountUsd} onChange={e => setCurrentAmountUsd(Number(e.target.value))} className={inputClass} /></div>
-        </div>
-        <div><FieldLabel>Target Date</FieldLabel><input type="date" value={targetDate} onChange={e => setTargetDate(e.target.value)} className={inputClass} /></div>
-      </div>
-      <div className="flex justify-end gap-3 border-t border-[#D4A853]/8 pt-4">
-        <button type="button" onClick={onClose} className="px-4 py-2 border border-white/10 hover:text-white uppercase tracking-wider rounded cursor-pointer text-xs font-mono">Cancel</button>
-        <button type="button" disabled={saving} onClick={handleSubmit} className="px-5 py-2 bg-[#D4A853] text-[#0A0908] font-bold uppercase tracking-wider hover:bg-[#E8C97A] transition-all rounded cursor-pointer text-xs font-mono disabled:opacity-40">
-          {saving ? "Saving…" : "Save"}
-        </button>
-      </div>
-    </ModalShell>
-  );
+function WealthLab({ data, currency, busy, act }: { data:Dashboard|null; currency:string; busy:string|null; act:(a:string,b?:Record<string,unknown>)=>Promise<boolean> }) {
+  const ips=data?.investmentPolicy; const [draft,setDraft]=useState({horizon:String(ips?.horizon_years??10),liquidity:String(ips?.liquidity_buffer_months??6),risk:ips?.risk_capacity||"unassessed",single:String(ips?.max_single_asset_pct??20),illiquid:String(ips?.max_illiquid_pct??30),allowed:(ips?.allowed_asset_classes??["cash","broad_public_markets"]).join(", "),prohibited:(ips?.prohibited_asset_classes??[]).join(", "),notes:ips?.notes||""});
+  const [scenario,setScenario]=useState({initial:"0",monthly:"500",annualReturn:"5",years:"10"}); const [goal,setGoal]=useState({name:"",target:"",date:""});
+  useEffect(()=>setDraft({horizon:String(ips?.horizon_years??10),liquidity:String(ips?.liquidity_buffer_months??6),risk:ips?.risk_capacity||"unassessed",single:String(ips?.max_single_asset_pct??20),illiquid:String(ips?.max_illiquid_pct??30),allowed:(ips?.allowed_asset_classes??["cash","broad_public_markets"]).join(", "),prohibited:(ips?.prohibited_asset_classes??[]).join(", "),notes:ips?.notes||""}),[ips?.id]);
+  const future=useMemo(()=>{const initial=Number(scenario.initial)||0,monthly=Number(scenario.monthly)||0,r=(Number(scenario.annualReturn)||0)/100/12,n=Math.max(0,Math.round((Number(scenario.years)||0)*12));if(r===0)return initial+monthly*n;return initial*Math.pow(1+r,n)+monthly*((Math.pow(1+r,n)-1)/r);},[scenario]);
+  return <div className="space-y-5"><section className="grid grid-cols-1 xl:grid-cols-[440px_1fr] gap-5"><Panel title="Investment Policy Statement" kicker="Constraints before products"><div className="space-y-2"><div className="grid grid-cols-2 gap-2"><Field label="Horizon years"><input type="number" min="1" value={draft.horizon} onChange={(e)=>setDraft({...draft,horizon:e.target.value})} className="input"/></Field><Field label="Liquidity months"><input type="number" min="0" step="0.5" value={draft.liquidity} onChange={(e)=>setDraft({...draft,liquidity:e.target.value})} className="input"/></Field><Field label="Risk capacity"><select value={draft.risk} onChange={(e)=>setDraft({...draft,risk:e.target.value})} className="input"><option value="unassessed">Unassessed</option><option value="low">Low</option><option value="moderate">Moderate</option><option value="high">High</option></select></Field><PercentInput label="Max single asset" value={draft.single} set={(v)=>setDraft({...draft,single:v})}/><PercentInput label="Max illiquid" value={draft.illiquid} set={(v)=>setDraft({...draft,illiquid:v})}/></div><Field label="Allowed asset classes"><input value={draft.allowed} onChange={(e)=>setDraft({...draft,allowed:e.target.value})} className="input"/></Field><Field label="Prohibited asset classes"><input value={draft.prohibited} onChange={(e)=>setDraft({...draft,prohibited:e.target.value})} className="input" placeholder="comma-separated"/></Field><textarea value={draft.notes} onChange={(e)=>setDraft({...draft,notes:e.target.value})} className="input min-h-20" placeholder="Liquidity needs, concentration concerns, property constraints…"/><button disabled={busy==="activate_investment_policy"} onClick={()=>act("activate_investment_policy",{horizonYears:Number(draft.horizon),liquidityBufferMonths:Number(draft.liquidity),riskCapacity:draft.risk,maxSingleAssetPct:Number(draft.single),maxIlliquidPct:Number(draft.illiquid),allowedAssetClasses:draft.allowed,prohibitedAssetClasses:draft.prohibited,notes:draft.notes})} className="w-full py-2 border border-[#5C9A6B]/35 text-[#5C9A6B] rounded font-mono text-[10px] uppercase">Activate next IPS version</button></div></Panel><div className="space-y-5"><Panel title="Scenario engine" kicker="Assumption, not forecast"><div className="grid grid-cols-2 md:grid-cols-4 gap-2"><Field label={`Initial (${currency})`}><input value={scenario.initial} onChange={(e)=>setScenario({...scenario,initial:e.target.value})} className="input"/></Field><Field label="Monthly contribution"><input value={scenario.monthly} onChange={(e)=>setScenario({...scenario,monthly:e.target.value})} className="input"/></Field><Field label="Assumed annual return %"><input value={scenario.annualReturn} onChange={(e)=>setScenario({...scenario,annualReturn:e.target.value})} className="input"/></Field><Field label="Years"><input value={scenario.years} onChange={(e)=>setScenario({...scenario,years:e.target.value})} className="input"/></Field></div><div className="mt-4 border border-[#D4A853]/15 rounded p-4"><span className="font-mono text-[10px] uppercase text-[#7A6F65]">Scenario terminal value</span><div className="font-serif text-3xl mt-1">{money(Math.round(future*100),currency)}</div><p className="text-[10px] text-[#7A6F65] mt-1">Constant monthly compounding using the return assumption you entered. No inflation, tax, fees, volatility or sequence-of-returns model. Education only.</p></div></Panel><Panel title="Decision frame" kicker="Real estate is an asset class, not a default destiny"><p className="text-xs text-[#B0A89E] leading-relaxed">A property purchase should compete against your IPS on liquidity, concentration, leverage, transaction costs, legal/tax complexity, management burden and expected role in your life. Finance OS will not privilege “buy property somewhere cheap” over diversified liquid assets until those constraints and current evidence support it.</p></Panel></div></section><section className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-5"><Panel title="Add goal" kicker="Capital has a job"><form onSubmit={async(e)=>{e.preventDefault();const ok=await act("save_goal",{name:goal.name,targetAmountCents:Math.round(Number(goal.target)*100),currentAmountCents:0,targetDate:goal.date});if(ok)setGoal({name:"",target:"",date:""});}} className="space-y-2"><input required value={goal.name} onChange={(e)=>setGoal({...goal,name:e.target.value})} className="input" placeholder="Emergency reserve, residence, optionality…"/><input required type="number" min="0.01" step="0.01" value={goal.target} onChange={(e)=>setGoal({...goal,target:e.target.value})} className="input" placeholder={`Target (${currency})`}/><input type="date" value={goal.date} onChange={(e)=>setGoal({...goal,date:e.target.value})} className="input"/><button className="w-full py-2 border border-[#D4A853]/30 text-[#D4A853] rounded font-mono text-[10px] uppercase">Add goal</button></form></Panel><Panel title="Goals" kicker="Visible trade-offs">{data?.goals.length?<div className="grid grid-cols-1 md:grid-cols-2 gap-2">{data.goals.map((g)=>{const progress=g.target_amount>0?Math.min(100,(g.current_amount/g.target_amount)*100):0;return <div key={g.id} className="border border-[#D4A853]/10 rounded p-3"><div className="flex justify-between"><span className="text-sm">{g.name}</span><button onClick={()=>act("archive_goal",{id:g.id})} className="text-[10px] text-[#7A6F65]">archive</button></div><p className="text-[10px] text-[#7A6F65] mt-1">{money(g.current_amount,currency)} / {money(g.target_amount,currency)}{g.target_date?` · ${g.target_date}`:""}</p><div className="h-1.5 bg-[#1A1714] mt-2 rounded"><div className="h-full bg-[#D4A853]/50 rounded" style={{width:`${progress}%`}}/></div></div>})}</div>:<p className="text-xs text-[#7A6F65]">No capital goals yet.</p>}</Panel></section></div>;
 }
+
+function FinanceAgent({ data, profileId, currency, busy, setBusy, setError, load, act }: { data:Dashboard|null; profileId:string; currency:string; busy:string|null; setBusy:(v:string|null)=>void; setError:(v:string|null)=>void; load:()=>Promise<void>; act:(a:string,b?:Record<string,unknown>)=>Promise<boolean> }) {
+  const [question,setQuestion]=useState("Given my current ledger, obligations and approved policies, what are the next three financially sensible actions and what evidence is still missing?"); const [analysis,setAnalysis]=useState<AgentAnalysis|null>(null); const [meta,setMeta]=useState<Record<string,unknown>|null>(null);
+  async function ask(){if(!question.trim()||!profileId)return;setBusy("advisor");setError(null);try{const res=await fetch("/api/finance/advisor",{method:"POST",headers:{...getAuthHeaders(),"Content-Type":"application/json"},body:JSON.stringify({profileId,question,tier:"blade"})});const json=await res.json();if(!res.ok)throw new Error(json.error||"Finance Agent failed.");setAnalysis(json.analysis);setMeta(json.meta);await load();}catch(err){setError(err instanceof Error?err.message:"Finance Agent failed.");}finally{setBusy(null);}}
+  const pending=data?.recommendations.filter((r)=>r.status==="proposed")??[];
+  return <div className="grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-5"><div className="space-y-5"><Panel title="Finance Agent" kicker="Server-built snapshot · structured output"><textarea value={question} onChange={(e)=>setQuestion(e.target.value)} className="input min-h-28"/><button disabled={busy==="advisor"} onClick={ask} className="mt-3 w-full py-2.5 border border-[#D4A853]/35 text-[#D4A853] rounded font-mono text-xs uppercase disabled:opacity-40">{busy==="advisor"?"Analyzing authoritative snapshot…":"Run evidence-bound analysis"}</button><p className="text-[10px] text-[#7A6F65] mt-2">The browser sends only your question and profile id. Balances, obligations, policy and IPS are rebuilt server-side; the model cannot trust a caller-supplied financial snapshot.</p></Panel>{analysis&&<div className="space-y-4"><Panel title="Executive summary" kicker="Model synthesis · review required"><p className="text-sm text-[#F5F0EB] leading-relaxed">{analysis.executive_summary}</p>{meta&&<p className="text-[10px] text-[#7A6F65] mt-3">model {String(meta.model??"—")} · cost est ${Number(meta.estimatedCostUSD??0).toFixed(4)} · latency {String(meta.latencyMs??"—")}ms</p>}</Panel>{analysis.facts?.length?<Panel title="Facts used" kicker="Snapshot-grounded">{analysis.facts.map((f,i)=><div key={i} className="border-b border-[#D4A853]/8 py-2 last:border-0"><div className="flex justify-between gap-3 text-xs"><span>{f.label}</span><strong>{f.value}</strong></div><p className="text-[10px] text-[#7A6F65] mt-1">{f.evidence}</p></div>)}</Panel>:null}{analysis.policy_deviations?.length?<Panel title="Policy deviations" kicker="Exceptions become visible">{analysis.policy_deviations.map((d,i)=><div key={i} className="py-2"><Badge tone={d.severity==="high"?"danger":d.severity==="medium"?"warn":"neutral"}>{d.severity}</Badge><span className="text-xs ml-2">{d.statement}</span><p className="text-[10px] text-[#7A6F65] mt-1">{d.evidence}</p></div>)}</Panel>:null}{analysis.education?.length?<Panel title="Financial education" kicker="Concept → mechanism → relevance">{analysis.education.map((e,i)=><div key={i} className="border-b border-[#D4A853]/8 py-3 last:border-0"><h4 className="text-sm text-[#D4A853]">{e.concept}</h4><p className="text-xs text-[#B0A89E] mt-1">{e.explanation}</p><p className="text-[10px] text-[#7A6F65] mt-1">Why it matters: {e.why_it_matters}</p></div>)}</Panel>:null}{analysis.professional_review?.length||analysis.missing_data?.length?<Panel title="Before acting" kicker="Unknown ≠ zero"><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div><span className="text-[10px] font-mono uppercase text-[#C85C5C]">Professional review</span>{analysis.professional_review?.map((x,i)=><p key={i} className="text-xs text-[#B0A89E] mt-2">• {x}</p>)}</div><div><span className="text-[10px] font-mono uppercase text-[#D4A853]">Missing data</span>{analysis.missing_data?.map((x,i)=><p key={i} className="text-xs text-[#B0A89E] mt-2">• {x}</p>)}</div></div></Panel>:null}</div>}</div><Panel title="Recommendation queue" kicker="Approve ≠ execute">{pending.length?<div className="space-y-3">{pending.map((r)=><div key={r.id} className="border border-[#D4A853]/10 rounded p-3"><div className="flex justify-between gap-3"><span className="text-sm">{r.title}</span><Badge tone={r.risk_level==="high"?"danger":r.risk_level==="medium"?"warn":"neutral"}>{r.risk_level}</Badge></div><p className="text-xs text-[#7A6F65] mt-2 leading-relaxed">{r.rationale}</p><div className="flex gap-2 mt-3"><button onClick={()=>act("recommendation_decision",{id:r.id,status:"approved"})} className="flex-1 py-1.5 border border-[#5C9A6B]/30 text-[#5C9A6B] rounded font-mono text-[10px] uppercase">Approve proposal</button><button onClick={()=>act("recommendation_decision",{id:r.id,status:"rejected"})} className="flex-1 py-1.5 border border-[#C85C5C]/25 text-[#C85C5C] rounded font-mono text-[10px] uppercase">Reject</button></div><p className="text-[9px] text-[#7A6F65] mt-2">Approval records your decision only. There is no money-movement tool attached.</p></div>)}</div>:<p className="text-xs text-[#7A6F65]">No pending proposals.</p>}<div className="mt-5 border-t border-[#D4A853]/10 pt-4 text-[10px] text-[#7A6F65] leading-relaxed">Wealth guidance is constrained by your IPS and current stored evidence. For taxes, filings, residency and jurisdiction-specific treatment, Finance OS records verified sources and professional review instead of manufacturing certainty.</div></Panel></div>;
+}
+
+function Metric({label,value,detail}:{label:string;value:string;detail:string}){return <div className="border border-[#D4A853]/10 bg-[#110F0D]/30 rounded-xl p-4"><span className="font-mono text-[10px] uppercase tracking-wider text-[#7A6F65] block">{label}</span><span className="font-serif text-xl md:text-2xl text-[#F5F0EB] block mt-1">{value}</span><span className="text-[10px] text-[#7A6F65]">{detail}</span></div>}
+function Panel({title,kicker,children}:{title:string;kicker:string;children:React.ReactNode}){return <section className="border border-[#D4A853]/12 bg-[#110F0D]/28 rounded-xl p-5"><span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#D4A853]/70 block">{kicker}</span><h2 className="font-serif text-lg text-[#F5F0EB] mt-1 mb-4">{title}</h2>{children}</section>}
+function Field({label,children}:{label:string;children:React.ReactNode}){return <label className="block text-[10px] font-mono uppercase tracking-wider text-[#7A6F65]">{label}<div className="mt-1">{children}</div></label>}
+function PercentInput({label,value,set}:{label:string;value:string;set:(v:string)=>void}){return <Field label={label}><div className="relative"><input type="number" min="0" max="100" step="1" value={value} onChange={(e)=>set(e.target.value)} className="input pr-7"/><span className="absolute right-2 top-2 text-xs text-[#7A6F65]">%</span></div></Field>}
+function Notice({tone,children}:{tone:"warn"|"ok";children:React.ReactNode}){return <div className={`border rounded p-3 text-xs leading-relaxed ${tone==="warn"?"border-[#D4A853]/25 bg-[#D4A853]/5 text-[#B0A89E]":"border-[#5C9A6B]/25 bg-[#5C9A6B]/5 text-[#B0A89E]"}`}>{children}</div>}
+function StateRow({label,value,tone}:{label:string;value:string;tone:"ok"|"warn"}){return <div className="flex justify-between gap-3 border-b border-[#D4A853]/8 py-1.5"><span className="text-[#7A6F65]">{label}</span><span className={tone==="ok"?"text-[#5C9A6B]":"text-[#D4A853]"}>{value}</span></div>}
+function Badge({tone,children}:{tone:"ok"|"warn"|"danger"|"neutral";children:React.ReactNode}){const cls=tone==="ok"?"text-[#5C9A6B] border-[#5C9A6B]/25":tone==="warn"?"text-[#D4A853] border-[#D4A853]/25":tone==="danger"?"text-[#C85C5C] border-[#C85C5C]/25":"text-[#7A6F65] border-[#7A6F65]/25";return <span className={`inline-block border rounded px-1.5 py-0.5 text-[9px] font-mono uppercase ${cls}`}>{children}</span>}
