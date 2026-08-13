@@ -21,7 +21,8 @@
     "check:learning-os": "node scripts/check-learning-os-truth.mjs",
     "check:finance-os": "node scripts/check-finance-os-truth.mjs",
     "check:brand-voice": "node scripts/check-public-brand-voice-v2.mjs",
-    "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs && npm run check:offers && npm run check:drift && npm run check:diagnostic-authority && npm run check:intake-truth && npm run check:stripe-webhook && npm run check:payment-state && npm run check:scaffold-provisioning && npm run check:agent-build && npm run check:training-unit && npm run check:learning-os && npm run check:finance-os && npm run check:brand-voice",
+    "check:transactional-brand-voice": "node scripts/check-transactional-brand-voice.mjs",
+    "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs && npm run check:offers && npm run check:drift && npm run check:diagnostic-authority && npm run check:intake-truth && npm run check:stripe-webhook && npm run check:payment-state && npm run check:scaffold-provisioning && npm run check:agent-build && npm run check:training-unit && npm run check:learning-os && npm run check:finance-os && npm run check:brand-voice && npm run check:transactional-brand-voice",
     "deploy": "wrangler pages deploy out --project-name=signal-and-friction"
   },
   "dependencies": {
