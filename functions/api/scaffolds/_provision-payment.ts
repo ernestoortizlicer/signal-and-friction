@@ -6,6 +6,7 @@ import { canonicalizePublicTargetUrl } from '../_target-url';
 type ProvisionEnv = Record<string, string | undefined> & {
   SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
+  PAGESPEED_API_KEY?: string;
 };
 
 export type ProvisionResult =
