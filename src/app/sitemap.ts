@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 
+export const dynamic = "force-static";
+
 const BASE = "https://signal-and-friction.com";
 const landingAlternates = {
   "x-default": `${BASE}/`,
