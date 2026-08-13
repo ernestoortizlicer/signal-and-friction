@@ -86,7 +86,7 @@ const routes = [
   { path: "/pricing/", marker: "Start with evidence" },
   { path: "/portfolio/", marker: "Illustrative Sample" },
   { path: "/certified/", marker: "not accepting new enrollments" },
-  { path: "/confirmed/", marker: "Intake received" },
+  { path: "/confirmed/", marker: "Start with evidence", finalPath: "/pricing/" },
   { path: "/confirmed/success/", marker: "Checkout return" },
 ];
 
@@ -101,7 +101,14 @@ async function checkRoute(baseUrl, route) {
   if (!hasBuildSha(html)) throw new Error(`${route.path} is not the exact candidate SHA ${sha}.`);
   if (!html.includes(route.marker)) throw new Error(`${route.path} missing expected marker: ${route.marker}`);
 
-  console.log(`✓ ${route.path} — ${response.status}, exact SHA, expected marker present`);
+  if (route.finalPath) {
+    const finalUrl = new URL(response.url);
+    if (finalUrl.pathname !== route.finalPath) {
+      throw new Error(`${route.path} should resolve to ${route.finalPath} but resolved to ${finalUrl.pathname}.`);
+    }
+  }
+
+  console.log(`✓ ${route.path} — ${response.status}, exact SHA, expected marker present${route.finalPath ? `, final path ${route.finalPath}` : ""}`);
 }
 
 try {
