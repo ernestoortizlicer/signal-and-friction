@@ -1,6 +1,6 @@
 # Signal and Friction — Capability Registry
 
-**Status:** CANONICAL INVENTORY v0.1
+**Status:** CANONICAL INVENTORY v0.2
 **Last audited:** 2026-08-13
 **Purpose:** Prevent duplicate agents, duplicate sources of truth, and accidental rebuilding of capabilities that already exist.
 
@@ -107,16 +107,18 @@ These are the public/product-level diagnostic vocabulary. Technical signals are 
 ## 4. Learning and analyst calibration
 
 ### Diagnostic Calibration System
-- **Status:** ACTIVE CONCEPT; **RUNTIME CURRENTLY DRIFTED** between GitHub main and production database.
+- **Status:** ACTIVE / MAIN RECONCILED TO HARDENED CONTRACT; authenticated Cloudflare deployment E2E still required.
 - **UI:** `src/app/admin/learning/DiagnosticCalibration.tsx`
 - **Workflow authority:** `src/lib/training-workflow.ts`
 - **Cloudflare mirror:** `functions/api/training/_shared.ts`
 - **API:** `functions/api/training/{cases,attempt,readiness}.ts`
 - **AI tutor:** `supabase/functions/diagnostic-calibration-tutor/index.ts`
-- **Production state:** `training_cases`, `training_attempts`, plus hardened integrity objects in live Supabase.
+- **Production state:** `training_cases`, `training_attempts`, hardened integrity objects/RPCs/views in live Supabase.
 - **Sacred pedagogy:** observation -> evidence review -> hypothesis -> counter-hypothesis -> Socratic challenge -> revision -> judgment -> recommendation -> hidden reference verdict -> comparative reflection.
 - **Hard boundary:** reference verdict must be absent from pre-reveal model/user context, not merely hidden by prompt/UI convention.
 - **Build rule:** no separate Learning Agent. Future diagnostic/delivery copilot work must extend this architecture.
+- **Integrity hardening 2026-08-13:** finalization requires stage=Recommendation + saved Socratic exchange + revision; reveal is not completion; full preregistered reasoning is immutable post-reveal; professional abstention is first-class.
+- **Operational runbook:** `docs/runbooks/training-production.md`.
 
 ### Reasoning Activities
 - **Status:** ACTIVE
@@ -127,10 +129,10 @@ These are the public/product-level diagnostic vocabulary. Technical signals are 
 - **Rule:** no fabricated exercises to make UI look complete.
 
 ### Legacy Learning / Hyper Leap / older Socratic paths
-- **Status:** LEGACY; audit before continued exposure in canonical Learning UI.
+- **Status:** LEGACY / NON-GATING
 - **Locations:** large portions of `src/app/admin/learning/page.tsx`; `hyper_leap_sessions`; `education_content`; `education_drafts`; `education_progress`; `mechanism_mastery`; `practice_queue`; `supabase/functions/learning-socratic-tutor`.
 - **Risk:** parallel pedagogies can contradict the canonical Diagnostic Calibration integrity model.
-- **Rule:** preserve historical data; do not use legacy paths as readiness authority.
+- **Rule:** preserve historical data; do not use legacy paths as premium-readiness authority. Diagnostic Calibration remains the default Learning tab.
 
 ### Client Autonomy curriculum
 - **Status:** ACTIVE product curriculum, NOT analyst certification
@@ -142,14 +144,15 @@ These are the public/product-level diagnostic vocabulary. Technical signals are 
 
 ## 5. Analyst readiness / certification evidence
 
-### GitHub-main readiness implementation
-- **Status:** DRIFTED / NOT PREMIUM-AUTHORITY
-- **Authority in repo:** `src/lib/calibration-readiness.ts` + `functions/api/training/_shared-readiness.ts`
+### Practice-calibration implementation
+- **Status:** ACTIVE FEEDBACK ONLY / NOT PREMIUM AUTHORITY
+- **Authority:** `src/lib/calibration-readiness.ts` + `functions/api/training/_shared-readiness.ts`
 - **API:** `functions/api/training/readiness.ts`
-- **Known limitation:** computes over completed attempts without the production database's newer gate-eligibility/independent-reference model.
+- **Role:** transparent named criteria for practice feedback and confusion tracking.
+- **Hard boundary:** practice results carry `certificationAuthority: false`; repeated/non-eligible practice cannot authorize premium work.
 
-### Production training-integrity layer
-- **Status:** ACTIVE IN DATABASE, NOT FULLY REPRESENTED IN GITHUB MAIN
+### Premium authorization / production training-integrity layer
+- **Status:** ACTIVE, FAIL-CLOSED
 - **Live objects include:**
   - `case_disposition`
   - `training_adjudications`
@@ -163,8 +166,10 @@ These are the public/product-level diagnostic vocabulary. Technical signals are 
   - `v_bank_readiness`
   - `v_training_attempt_scores`
   - `gate_track_a`
-- **Production design intent:** repeated/revealed cases do not become fresh gate evidence; answer keys are versioned/locked; abstention is first-class; independent/rights verification gates the certification bank.
-- **Current critical issue:** application/API code on main does not yet consume this production truth consistently.
+- **Integrity:** repeated/revealed cases do not become fresh gate evidence; answer keys are versioned/locked; abstention is first-class; independent/rights verification gates the certification bank; deterministic correctness lives in the database.
+- **Current bank state:** the four published cases are practice-only; certification bank is insufficient and premium status must remain NOT AUTHORIZED.
+- **Remaining unknown:** final personal premium-performance threshold contract has not yet been frozen. Even after bank readiness, authorization must remain fail-closed until that contract exists.
+- **Infrastructure caveat:** historical Supabase migration ledger and repository migration tree still have broader drift; do not run blind production `supabase db push` until that is reconciled.
 
 ---
 
@@ -191,6 +196,7 @@ These are the public/product-level diagnostic vocabulary. Technical signals are 
 ### Agent #1 — Opportunity Scout
 - **Status:** EXPERIMENTAL BUILD
 - **Spec:** `docs/agents/agent-01-opportunity-scout-spec-v0.1.md`
+- **Manifest:** `agents/opportunity_scout/AGENT_MANIFEST.json`
 - **Code:** `agents/opportunity_scout/`
 - **Evals:** `evals/opportunity-scout/`
 - **Architecture:** one agent + narrow tools + deterministic gates + explicit state + human approval.
@@ -265,13 +271,22 @@ These are the public/product-level diagnostic vocabulary. Technical signals are 
 ### Product Integrity CI
 - **Status:** ACTIVE
 - **Workflow:** `.github/workflows/product-integrity.yml`
-- **Current guards:** typecheck, offer integrity, domain drift, diagnostic authority, intake truth, Stripe webhook boundary, payment state, scaffold provisioning.
-- **Known gap as of 2026-08-13:** training workflow/readiness integrity tests are not part of CI.
+- **Current guards:** typecheck, offer integrity, domain drift, diagnostic authority, intake truth, Stripe webhook boundary, payment state, scaffold provisioning, Agent Build Manifest gate, Training workflow tests, Training readiness tests.
+- **Latest audited state:** green after Training/agent governance additions.
 
-### Production runbook
-- **Status:** PARTIALLY STALE FOR TRAINING
+### Training production runbook
+- **Status:** CANONICAL
+- **Path:** `docs/runbooks/training-production.md`
+- **Covers:** practice-vs-certification contract, live integrity rules, daily workflow, smoke tests, certification bank, migration warning, authenticated E2E acceptance sequence.
+
+### General production runbook
+- **Status:** ACTIVE but not sufficient alone for Training
 - **Path:** `PRODUCTION_RUNBOOK.md`
-- **Known gap:** does not describe the live August 7–9 training integrity schema currently present in Supabase.
+- **Rule:** use the dedicated Training runbook for analyst calibration until the general runbook is consolidated.
+
+### Deployment verification
+- **Status:** database production integrity verified; application code merged to `main` with CI green; authenticated Cloudflare Pages E2E still required before saying application deployment is fully verified.
+- **Constraint:** current tool environment has no Cloudflare deployment connector and cannot impersonate the user's Supabase browser session.
 
 ---
 
