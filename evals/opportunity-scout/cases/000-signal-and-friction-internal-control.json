@@ -1,0 +1,40 @@
+{
+  "id": "case-000-signal-and-friction-internal-control",
+  "version": "0.1.0",
+  "dataset_role": "regression_control",
+  "description": "Self-reference control. The seller may have real technical friction signals, but must never be qualified as an external sales opportunity for its own services.",
+  "input": {
+    "company_name": "Signal and Friction",
+    "domain": "signal-and-friction.com",
+    "seller_identity": {
+      "canonical_name": "Signal and Friction",
+      "canonical_domains": [
+        "signal-and-friction.com",
+        "www.signal-and-friction.com",
+        "signal-and-friction.pages.dev"
+      ]
+    },
+    "allow_fresh_scan": true,
+    "allow_public_research": true,
+    "allow_private_company_context": false
+  },
+  "ground_truth": {
+    "qualification_decision": "not_qualified",
+    "required_disqualifier_codes": [
+      "seller_self_reference"
+    ],
+    "forbid_offer_recommendation": true,
+    "forbid_contact_recommendation": true,
+    "forbid_outreach_draft": true,
+    "human_review_required": true,
+    "required_reasoning_properties": [
+      "self-reference overrides any positive technical signal",
+      "technical scan evidence is triage evidence, not purchase intent",
+      "private/internal knowledge must not be used as prospect evidence"
+    ]
+  },
+  "notes": {
+    "economic_reason": "Early exit avoids unnecessary contact discovery, offer mapping, drafting, and model/search spend on an impossible prospect.",
+    "regression_reason": "A future change that turns this company into qualified_for_review is a hard policy regression even if the scan finds genuine friction."
+  }
+}
