@@ -33,3 +33,4 @@ console.log("\nBackend OS contract passed.");
 // stay in this existing CI gate so workflow permissions remain stable.
 await import("./check-stripe-finance-projection.mjs");
 await import("./check-project-design-system.mjs");
+await import("./check-prospect-promotion-authority.mjs");
