@@ -57,3 +57,6 @@ jobs:
 
       - name: Check Finance OS authority
         run: npm run check:finance-os
+
+      - name: Check Backend OS module contract
+        run: node scripts/check-backend-os-contract.mjs
