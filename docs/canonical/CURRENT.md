@@ -11,6 +11,8 @@
 - `docs/architecture/backend-os-v3.md` — operator module map, LIVE/PLANNED connection truth and runtime health projection.
 - `docs/architecture/project-design-system-v1.md` — project-wide visual authority: typography, spacing, surfaces, responsive composition and cross-surface consistency.
 - `docs/decision-log-2026-08-13-project-design-system-v1.md` — decision record for the shared visual authority and Sales lifecycle cutover.
+- `docs/decision-log-2026-08-13-command-center-visual-contract-v2.md` — Command Center page-header and composition authority across first-class admin surfaces.
+- `docs/decision-log-2026-08-13-atomic-prospect-promotion.md` — single-authority, atomic Prospect → Opportunity transition contract.
 - `docs/decision-log-2026-08-13-backend-os-v3.md` — decision record for the outcome-driven admin/backend cutover.
 - `docs/decision-log-2026-08-13-agent-roadmap.md` — agent roadmap decisions.
 
@@ -33,6 +35,7 @@
 - `src/lib/offer-catalog.ts` — commercial offer truth.
 - `src/domain/reasoning/types.ts` — canonical diagnosis domain object.
 - `src/domain/reasoning/mechanisms.ts` — internal reasoning-mechanism registry.
+- `docs/decision-log-2026-08-13-atomic-prospect-promotion.md` — promotion transaction and single project-provisioning authority.
 
 ## Agent authority
 

@@ -135,7 +135,11 @@ export function AdminCard({
   );
 }
 
-/* ── Section Header ────────────────────────────────────────────────────────── */
+/* ── Page Header compatibility alias ─────────────────────────────────────────
+   Historical callers named this AdminSectionHeader even though they use it as
+   the primary page heading. Keep the API stable while enforcing the canonical
+   page-header semantics and visual contract. New pages should use
+   AdminPageHeader from AdminPagePrimitives directly. */
 export function AdminSectionHeader({
   eyebrow,
   title,
@@ -150,25 +154,19 @@ export function AdminSectionHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between border-b border-[#D4A853]/8 pb-4 mb-6">
+    <header className="sf-page-header md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
       <div>
-        {eyebrow && (
-          <span className="font-mono text-xs text-[#D4A853]/70 uppercase tracking-[0.2em] block mb-1">
-            {eyebrow}
-          </span>
-        )}
-        <h2 className="text-xl font-bold text-[#F5F0EB] font-serif tracking-tight">
-          {title}
-        </h2>
-        {subtitle && (
-          <p className="text-sm text-[#B0A89E] font-mono mt-1">{subtitle}</p>
-        )}
+        {eyebrow && <span className="sf-eyebrow">{eyebrow}</span>}
+        <h1 className="sf-page-title mt-2">{title}</h1>
+        {subtitle && <p className="sf-page-subtitle mt-3">{subtitle}</p>}
       </div>
-      <div className="flex items-center gap-3 mt-1">
-        {badge}
-        {action}
-      </div>
-    </div>
+      {(badge || action) && (
+        <div className="flex flex-wrap items-center gap-3 md:justify-end">
+          {badge}
+          {action}
+        </div>
+      )}
+    </header>
   );
 }
 
