@@ -16,11 +16,14 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22.13.0'
           cache: npm
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Typecheck application
+        run: npm run typecheck
 
       - name: Check commercial offer integrity
         run: npm run check:offers
@@ -39,3 +42,6 @@ jobs:
 
       - name: Check payment state machine truth
         run: npm run check:payment-state
+
+      - name: Check scaffold provisioning truth
+        run: npm run check:scaffold-provisioning

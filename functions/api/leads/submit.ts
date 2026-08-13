@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseUrl, getServiceRoleKey } from '../_env';
+import { canonicalizePublicTargetUrl } from '../_target-url';
 
 interface Env {
   SUPABASE_URL: string;
@@ -38,45 +39,40 @@ export const onRequestPost = async ({
   try {
     const body = (await request.json()) as LeadSubmissionPayload;
 
-    // Validate required fields
     if (!body.email || !body.url || !body.funnelPain || !body.segmentSelection || !body.customAnswer) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
-        { status: 400, headers: CORS }
-      );
+      return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400, headers: CORS });
     }
 
-    // Validate email format
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
+      return new Response(JSON.stringify({ error: 'Invalid email format' }), { status: 400, headers: CORS });
+    }
+
+    // This value becomes the canonical future scan target, so validate the
+    // public-network policy before persisting anything or returning a payment
+    // link. Automatic post-payment scanning must never turn public intake into
+    // an arbitrary server-side fetch primitive.
+    const canonicalTarget = canonicalizePublicTargetUrl(body.url);
+    if (!canonicalTarget.ok) {
       return new Response(
-        JSON.stringify({ error: 'Invalid email format' }),
+        JSON.stringify({ error: 'Invalid target URL', reason: canonicalTarget.reason }),
         { status: 400, headers: CORS }
       );
     }
+    const targetUrl = canonicalTarget.url;
 
-    // Parse URL and extract company name
     let companyName = 'Unknown Startup';
     let urlDomain = '';
     try {
-      let cleanUrl = body.url;
-      if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
-        cleanUrl = 'https://' + cleanUrl;
-      }
-      const parsedUrl = new URL(cleanUrl);
+      const parsedUrl = new URL(targetUrl);
       urlDomain = parsedUrl.hostname;
       let host = urlDomain;
-      if (host.startsWith('www.')) {
-        host = host.substring(4);
-      }
+      if (host.startsWith('www.')) host = host.substring(4);
       const parts = host.split('.');
-      if (parts.length > 0) {
-        companyName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
-      }
+      if (parts.length > 0) companyName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
     } catch (_e) {
-      companyName = body.url;
+      return new Response(JSON.stringify({ error: 'Invalid target URL' }), { status: 400, headers: CORS });
     }
 
-    // Extract contact name from email
     let contactName = 'Founder';
     const emailParts = body.email.split('@');
     if (emailParts.length > 0 && emailParts[0]) {
@@ -84,11 +80,8 @@ export const onRequestPost = async ({
       contactName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
     }
 
-    // Map segment selection to enum.
-    // elite_us/elite_sg intentionally fall through to 'high_ticket' here —
-    // Elite = Concierge pricing + manual white-glove follow-up, not a
-    // separate Stripe tier yet. Revisit when a real prospect validates
-    // demand above Concierge.
+    // elite_us/elite_sg intentionally remain Concierge/high_ticket until
+    // real paid demand validates a separate offer tier.
     let mappedSegment = 'high_ticket';
     if (
       body.segmentSelection.toLowerCase().includes('autonomy') ||
@@ -99,37 +92,50 @@ export const onRequestPost = async ({
     }
 
     const region = body.region || 'US';
-
     const serviceRoleKey = getServiceRoleKey(env);
     if (!serviceRoleKey) {
-      return new Response(
-        JSON.stringify({ error: 'Server misconfiguration' }),
-        { status: 500, headers: CORS }
-      );
+      return new Response(JSON.stringify({ error: 'Server misconfiguration' }), { status: 500, headers: CORS });
     }
 
     const supabase = createClient(getSupabaseUrl(env), serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
-    // Check if client already exists (prevent duplicates)
-    const { data: existingClient } = await supabase
+    const { data: existingClient, error: existingClientError } = await supabase
       .from('clients')
-      .select('id')
+      .select('id, target_url')
       .eq('contact_email', body.email)
       .maybeSingle();
+
+    if (existingClientError) {
+      return new Response(JSON.stringify({ error: 'Failed to resolve client record' }), { status: 500, headers: CORS });
+    }
 
     let clientId = '';
     if (existingClient) {
       clientId = existingClient.id;
-      // Update existing client
-      await supabase
+
+      // Email alone is not sufficient authorization to silently retarget an
+      // existing client's diagnostic workspace. First establishment is safe;
+      // a conflicting later URL requires human review.
+      if (existingClient.target_url) {
+        const storedTarget = canonicalizePublicTargetUrl(existingClient.target_url);
+        if (!storedTarget.ok || storedTarget.url !== targetUrl) {
+          return new Response(
+            JSON.stringify({ error: 'Target URL conflict requires review', code: 'target_url_conflict_requires_review' }),
+            { status: 409, headers: CORS }
+          );
+        }
+      }
+
+      const { error: updateClientError } = await supabase
         .from('clients')
         .update({
           company_name: companyName,
           contact_name: contactName,
           industry: urlDomain || 'Web Application',
           segment: mappedSegment,
+          target_url: targetUrl,
           custom_fields: {
             segment_raw: body.segmentSelection,
             custom_answer: body.customAnswer,
@@ -139,8 +145,11 @@ export const onRequestPost = async ({
           updated_at: new Date().toISOString(),
         })
         .eq('id', clientId);
+
+      if (updateClientError) {
+        return new Response(JSON.stringify({ error: 'Failed to update lead record' }), { status: 500, headers: CORS });
+      }
     } else {
-      // Insert new client
       const { data: newClient, error: clientErr } = await supabase
         .from('clients')
         .insert({
@@ -150,6 +159,7 @@ export const onRequestPost = async ({
           industry: urlDomain || 'Web Application',
           source_platform: 'Direct Form Submission',
           segment: mappedSegment,
+          target_url: targetUrl,
           custom_fields: {
             segment_raw: body.segmentSelection,
             custom_answer: body.customAnswer,
@@ -167,12 +177,9 @@ export const onRequestPost = async ({
           { status: 500, headers: CORS }
         );
       }
-
       clientId = newClient!.id;
     }
 
-    // Update beta_projects if it exists. Supabase query builders are thenables,
-    // not Promises — they have no `.catch`. Await and ignore a soft failure.
     if (clientId) {
       const pricing = mappedSegment === 'microdosing' ? 350.0 : 2000.0;
       const { error: projectErr } = await supabase
@@ -187,20 +194,11 @@ export const onRequestPost = async ({
           symbolic_price_charged: pricing,
         })
         .eq('client_id', clientId);
-      if (projectErr) {
-        // Project may not exist yet — non-critical.
-        console.warn('beta_projects update skipped:', projectErr.message);
-      }
+      if (projectErr) console.warn('beta_projects update skipped:', projectErr.message);
     }
 
-    // Intake is symptom/context capture, not diagnosis. Persist only the
-    // observable self-reported signal in the legacy-compatible column and
-    // deliberately leave dominant_friction_mechanism NULL. The canonical
-    // mechanism is owned later by the human-led diagnostic workflow.
-    //
-    // Production currently exposes the legacy interactions schema, so this
-    // write intentionally uses only columns proven to exist there. Richer
-    // intake context is already preserved in clients/beta_projects custom_fields.
+    // Intake records evidence/context only. Human diagnostic authority remains
+    // downstream; no friction mechanism is inferred here.
     const { error: interactionErr } = await supabase
       .from('interactions')
       .insert({
@@ -208,11 +206,8 @@ export const onRequestPost = async ({
         funnel_signal: body.funnelPain,
         dominant_friction_mechanism: null,
       });
-    if (interactionErr) {
-      console.warn('interaction logging skipped:', interactionErr.message);
-    }
+    if (interactionErr) console.warn('interaction logging skipped:', interactionErr.message);
 
-    // Determine Stripe payment link based on segment
     const priceId = mappedSegment === 'microdosing' ? 'price_dwy_beta_diagnostic' : 'price_dfy_beta_diagnostic';
     const { data: linkData } = await supabase
       .from('stripe_payment_links')
@@ -220,14 +215,11 @@ export const onRequestPost = async ({
       .eq('price_id', priceId)
       .maybeSingle();
 
-    // A link containing "mock" is a seed placeholder, not a real Stripe
-    // link — never hand it back as if it were usable.
     const rawLink = linkData?.payment_link_url || null;
     const paymentLink = rawLink && !rawLink.includes('mock') ? rawLink : null;
 
     if (!paymentLink) {
       console.error(`❌ Stripe link missing or still a mock placeholder for ${priceId}`);
-      // Still return success - lead is recorded
     }
 
     return new Response(
@@ -244,9 +236,6 @@ export const onRequestPost = async ({
     );
   } catch (error) {
     console.error('Lead submission error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: CORS }
-    );
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500, headers: CORS });
   }
 };

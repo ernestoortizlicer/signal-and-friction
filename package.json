@@ -7,6 +7,7 @@
     "build": "node scripts/check-cloudflare-build-env.mjs && next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "crm": "node scripts/crm-server.mjs",
     "check:drift": "node scripts/check-domain-drift.mjs",
     "check:offers": "node scripts/check-offer-integrity.mjs",
@@ -14,7 +15,8 @@
     "check:intake-truth": "node scripts/check-intake-product-truth.mjs",
     "check:stripe-webhook": "node scripts/check-stripe-webhook-boundary.mjs && node --test src/server/stripe-webhook-boundary.test.mjs",
     "check:payment-state": "node scripts/check-payment-state-truth.mjs",
-    "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs && npm run check:offers && npm run check:drift && npm run check:diagnostic-authority && npm run check:intake-truth && npm run check:stripe-webhook && npm run check:payment-state",
+    "check:scaffold-provisioning": "node scripts/check-scaffold-provisioning-truth.mjs",
+    "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs && npm run check:offers && npm run check:drift && npm run check:diagnostic-authority && npm run check:intake-truth && npm run check:stripe-webhook && npm run check:payment-state && npm run check:scaffold-provisioning",
     "deploy": "wrangler pages deploy out --project-name=signal-and-friction"
   },
   "dependencies": {
