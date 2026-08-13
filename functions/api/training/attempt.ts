@@ -11,32 +11,21 @@ const CORS = {
   'Content-Type': 'application/json',
 };
 
-// Diagnostic Calibration System v3 — the staged attempt lifecycle.
-// Action-routed (single file, four actions) rather than four files: the
-// four actions share one authorization check, one row-fetch pattern, and
-// one stage-gating dependency, and splitting them would just duplicate
-// all three. Every write here goes through canAdvanceStage() from
-// ./_shared (the byte-identical mirror of src/lib/training-workflow.ts) —
-// this file is NOT a second place that decides what's allowed to advance,
-// it's the one enforcement point on the Cloudflare side.
-//
-//   start   — create a new attempt at stage 'observation'.
-//   save    — persist fields for the CURRENT stage; auto-advances to the
-//             next stage IF its requirement is now satisfied, EXCEPT out
-//             of 'recommendation' (-> 'verdict_revealed' requires the
-//             dedicated `reveal` action, which has real side effects: an
-//             AI-assisted calibration call and the actual verdict
-//             reveal) and out of 'verdict_revealed' (-> 'reflection_
-//             complete' requires the dedicated `reflect` action).
-//   reveal  — only valid at stage 'recommendation' with its requirement
-//             met. Computes mechanism_correct in code (a plain equality
-//             check — never asked of the model, same principle as the
-//             existing learning-socratic-tutor function), calls
-//             diagnostic-calibration-tutor for the defensibility
-//             assessment + 7-dimension calibration profile, and reveals
-//             the case's hidden reference_* fields for the first time.
-//   reflect — only valid at stage 'verdict_revealed'; requires all 7
-//             REFLECTION_QUESTIONS keys answered.
+/**
+ * Diagnostic Calibration — hardened attempt lifecycle.
+ *
+ * The application owns progressive disclosure and analyst-authored stage
+ * persistence. The DATABASE owns final scoring/reveal through
+ * `finalize_and_reveal_attempt`, which binds the attempt to auth.uid(),
+ * snapshots the hidden reference, computes deterministic correctness and
+ * decides first-attempt gate eligibility.
+ *
+ * AI calibration runs only AFTER database finalization. It may produce a
+ * calibration profile and a provisional defensibility opinion, but it does
+ * NOT write `disagreement_defensible=true`. A rescued disagreement requires
+ * the separate adjudication contract in the database; model agreement alone
+ * is not certification ground truth.
+ */
 
 function dbRowToFullCase(row: Record<string, unknown>): FullCaseRow {
   return {
@@ -53,7 +42,8 @@ function dbRowToFullCase(row: Record<string, unknown>): FullCaseRow {
     checkoutFlow: (row.checkout_flow as string) ?? null,
     technicalFindings: (row.technical_findings as string) ?? null,
     contextualInfo: (row.contextual_info as string) ?? null,
-    referenceMechanism: row.reference_mechanism as FullCaseRow['referenceMechanism'],
+    referenceDisposition: row.reference_disposition as FullCaseRow['referenceDisposition'],
+    referenceMechanism: (row.reference_mechanism as FullCaseRow['referenceMechanism']) ?? null,
     referenceMechanismNote: (row.reference_mechanism_note as string) ?? null,
     referenceDiagnosis: row.reference_diagnosis as string,
     referenceRecommendation: row.reference_recommendation as string,
@@ -71,6 +61,7 @@ function rowToAttemptInputs(row: Record<string, unknown>): AttemptInputs {
     counterHypothesisReasoning: (row.counter_hypothesis_reasoning as string) ?? undefined,
     socraticExchanges: (row.socratic_exchanges as AttemptInputs['socraticExchanges']) ?? [],
     revision: (row.revision as string) ?? undefined,
+    judgmentDisposition: (row.judgment_disposition as AttemptInputs['judgmentDisposition']) ?? undefined,
     judgmentMechanism: (row.judgment_mechanism as AttemptInputs['judgmentMechanism']) ?? undefined,
     judgmentConfidence: (row.judgment_confidence as AttemptInputs['judgmentConfidence']) ?? undefined,
     recommendation: (row.recommendation as string) ?? undefined,
@@ -79,7 +70,6 @@ function rowToAttemptInputs(row: Record<string, unknown>): AttemptInputs {
   };
 }
 
-// camelCase field -> snake_case column, for the subset `save` may write.
 const SAVE_FIELD_COLUMNS: Record<string, string> = {
   observation: 'observation',
   evidenceNotes: 'evidence_notes',
@@ -89,6 +79,7 @@ const SAVE_FIELD_COLUMNS: Record<string, string> = {
   counterHypothesisReasoning: 'counter_hypothesis_reasoning',
   socraticExchanges: 'socratic_exchanges',
   revision: 'revision',
+  judgmentDisposition: 'judgment_disposition',
   judgmentMechanism: 'judgment_mechanism',
   judgmentConfidence: 'judgment_confidence',
   recommendation: 'recommendation',
@@ -101,13 +92,44 @@ interface Env {
   [key: string]: string | undefined;
 }
 
-export const onRequestGet = async ({
-  request,
-  env,
-}: {
-  request: Request;
-  env: Env;
-}): Promise<Response> => {
+function serverClient(env: Env) {
+  return createClient(getSupabaseUrl(env), getServiceRoleKey(env) ?? '', {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+async function finalizeAsCaller(request: Request, env: Env, attemptId: string): Promise<{
+  reference_disposition: string;
+  reference_mechanism: string | null;
+  disposition_correct: boolean;
+  mechanism_correct: boolean;
+}> {
+  const auth = request.headers.get('Authorization');
+  const apikey = getServiceRoleKey(env);
+  if (!auth?.startsWith('Bearer ') || !apikey) throw new Error('Verified caller credentials unavailable');
+
+  const res = await fetch(`${getSupabaseUrl(env)}/rest/v1/rpc/finalize_and_reveal_attempt`, {
+    method: 'POST',
+    headers: {
+      apikey,
+      Authorization: auth,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ p_attempt_id: attemptId }),
+  });
+  const raw = await res.text();
+  if (!res.ok) throw new Error(`Finalize failed (${res.status}): ${raw.slice(0, 500)}`);
+  const parsed = JSON.parse(raw) as Array<{
+    reference_disposition: string;
+    reference_mechanism: string | null;
+    disposition_correct: boolean;
+    mechanism_correct: boolean;
+  }>;
+  if (!Array.isArray(parsed) || !parsed[0]) throw new Error('Finalize returned no result row');
+  return parsed[0];
+}
+
+export const onRequestGet = async ({ request, env }: { request: Request; env: Env }): Promise<Response> => {
   const admin = await requireAdmin(request, env as Record<string, string>);
   if (admin instanceof Response) {
     const body = await admin.json().catch(() => ({}));
@@ -115,39 +137,33 @@ export const onRequestGet = async ({
   }
 
   const attemptId = new URL(request.url).searchParams.get('attemptId');
-  if (!attemptId) {
-    return Response.json({ error: 'attemptId query param is required' }, { status: 400, headers: CORS });
-  }
+  if (!attemptId) return Response.json({ error: 'attemptId query param is required' }, { status: 400, headers: CORS });
 
-  const supabase = createClient(getSupabaseUrl(env), getServiceRoleKey(env) ?? '', {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  const supabase = serverClient(env);
+  const { data: attempt, error } = await supabase
+    .from('training_attempts').select('*').eq('id', attemptId).eq('analyst_id', admin.id).single();
+  if (error || !attempt) return Response.json({ error: 'Attempt not found' }, { status: 404, headers: CORS });
 
-  const { data: attempt, error } = await supabase.from('training_attempts').select('*').eq('id', attemptId).single();
-  if (error || !attempt) {
-    return Response.json({ error: 'Attempt not found' }, { status: 404, headers: CORS });
-  }
   const { data: caseRow, error: caseError } = await supabase.from('training_cases').select('*').eq('id', attempt.case_id).single();
-  if (caseError || !caseRow) {
-    return Response.json({ error: 'Case not found for this attempt' }, { status: 404, headers: CORS });
-  }
+  if (caseError || !caseRow) return Response.json({ error: 'Case not found for this attempt' }, { status: 404, headers: CORS });
 
-  return Response.json(
-    {
-      attempt: { id: attempt.id, stage: attempt.stage, inputs: rowToAttemptInputs(attempt), calibrationProfile: hasReachedStage(attempt.stage, 'verdict_revealed') ? attempt.calibration_profile : null, mechanismCorrect: hasReachedStage(attempt.stage, 'verdict_revealed') ? attempt.mechanism_correct : null },
-      case: visibleCaseFields(dbRowToFullCase(caseRow), attempt.stage as TrainingStage),
+  const revealed = hasReachedStage(attempt.stage as TrainingStage, 'verdict_revealed');
+  return Response.json({
+    attempt: {
+      id: attempt.id,
+      stage: attempt.stage,
+      inputs: rowToAttemptInputs(attempt),
+      calibrationProfile: revealed ? attempt.calibration_profile : null,
+      dispositionCorrect: revealed ? attempt.disposition_correct : null,
+      mechanismCorrect: revealed ? attempt.mechanism_correct : null,
+      disagreementDefensible: revealed ? attempt.disagreement_defensible : null,
+      gateEligible: revealed ? attempt.is_gate_eligible : false,
     },
-    { headers: CORS }
-  );
+    case: visibleCaseFields(dbRowToFullCase(caseRow), attempt.stage as TrainingStage),
+  }, { headers: CORS });
 };
 
-export const onRequestPost = async ({
-  request,
-  env,
-}: {
-  request: Request;
-  env: Env;
-}): Promise<Response> => {
+export const onRequestPost = async ({ request, env }: { request: Request; env: Env }): Promise<Response> => {
   const admin = await requireAdmin(request, env as Record<string, string>);
   if (admin instanceof Response) {
     const body = await admin.json().catch(() => ({}));
@@ -161,46 +177,39 @@ export const onRequestPost = async ({
     return Response.json({ error: 'Invalid request body' }, { status: 400, headers: CORS });
   }
 
-  const supabase = createClient(getSupabaseUrl(env), getServiceRoleKey(env) ?? '', {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  const supabase = serverClient(env);
 
-  // ── action: start ──
   if (payload.action === 'start') {
     const caseId = payload.caseId as string | undefined;
     if (!caseId) return Response.json({ error: 'caseId is required' }, { status: 400, headers: CORS });
 
     const { data: caseRow, error: caseError } = await supabase
       .from('training_cases').select('*').eq('id', caseId).eq('is_published', true).single();
-    if (caseError || !caseRow) {
-      return Response.json({ error: 'Published case not found' }, { status: 404, headers: CORS });
-    }
+    if (caseError || !caseRow) return Response.json({ error: 'Published case not found' }, { status: 404, headers: CORS });
 
     const { data: attempt, error } = await supabase
       .from('training_attempts')
-      .insert({ case_id: caseId, stage: 'observation' })
+      .insert({ case_id: caseId, analyst_id: admin.id, stage: 'observation' })
       .select()
       .single();
-    if (error || !attempt) {
-      return Response.json({ error: error?.message ?? 'Failed to start attempt' }, { status: 500, headers: CORS });
-    }
+    if (error || !attempt) return Response.json({ error: error?.message ?? 'Failed to start attempt' }, { status: 500, headers: CORS });
 
-    return Response.json(
-      { attempt: { id: attempt.id, stage: attempt.stage, inputs: {} }, case: visibleCaseFields(dbRowToFullCase(caseRow), 'observation') },
-      { status: 201, headers: CORS }
-    );
+    return Response.json({
+      attempt: { id: attempt.id, stage: attempt.stage, inputs: {}, gateEligible: false },
+      case: visibleCaseFields(dbRowToFullCase(caseRow), 'observation'),
+    }, { status: 201, headers: CORS });
   }
 
-  // ── action: save ──
   if (payload.action === 'save') {
     const attemptId = payload.attemptId as string | undefined;
     const fields = (payload.fields ?? {}) as Record<string, unknown>;
     if (!attemptId) return Response.json({ error: 'attemptId is required' }, { status: 400, headers: CORS });
 
-    const { data: existing, error: fetchError } = await supabase.from('training_attempts').select('*').eq('id', attemptId).single();
+    const { data: existing, error: fetchError } = await supabase
+      .from('training_attempts').select('*').eq('id', attemptId).eq('analyst_id', admin.id).single();
     if (fetchError || !existing) return Response.json({ error: 'Attempt not found' }, { status: 404, headers: CORS });
     if (hasReachedStage(existing.stage as TrainingStage, 'verdict_revealed')) {
-      return Response.json({ error: 'This attempt has already been revealed — judgment and recommendation are locked.' }, { status: 409, headers: CORS });
+      return Response.json({ error: 'This attempt has already been revealed — preregistered reasoning is locked.' }, { status: 409, headers: CORS });
     }
 
     const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -208,133 +217,149 @@ export const onRequestPost = async ({
       if (key in fields) update[column] = fields[key];
     }
 
-    const { data: updated, error: updateError } = await supabase
-      .from('training_attempts').update(update).eq('id', attemptId).select().single();
-    if (updateError || !updated) {
-      return Response.json({ error: updateError?.message ?? 'Failed to save' }, { status: 500, headers: CORS });
+    // Abstention is explicit: selecting a non-behavioral disposition clears
+    // any mechanism left in client state so DB constraints cannot be bypassed
+    // by a stale UI value.
+    if ('judgmentDisposition' in fields) {
+      const d = fields.judgmentDisposition;
+      if (d !== 'behavioral_diagnosis' && d !== 'mixed_condition') update.judgment_mechanism = null;
     }
+
+    const { data: updated, error: updateError } = await supabase
+      .from('training_attempts').update(update).eq('id', attemptId).eq('analyst_id', admin.id).select().single();
+    if (updateError || !updated) return Response.json({ error: updateError?.message ?? 'Failed to save' }, { status: 500, headers: CORS });
 
     const stage = updated.stage as TrainingStage;
     const advance = canAdvanceStage(stage, rowToAttemptInputs(updated));
-    // 'recommendation' and 'verdict_revealed' never auto-advance via
-    // `save` — see the dedicated `reveal` / `reflect` actions above.
     const eligibleForAutoAdvance = advance.canAdvance && stage !== 'recommendation' && stage !== 'verdict_revealed';
     let finalAttempt = updated;
     if (eligibleForAutoAdvance) {
       const next = nextStage(stage);
       const { data: advanced, error: advanceError } = await supabase
-        .from('training_attempts').update({ stage: next, updated_at: new Date().toISOString() }).eq('id', attemptId).select().single();
+        .from('training_attempts')
+        .update({ stage: next, updated_at: new Date().toISOString() })
+        .eq('id', attemptId).eq('analyst_id', admin.id).select().single();
       if (!advanceError && advanced) finalAttempt = advanced;
     }
 
-    return Response.json(
-      { attempt: { id: finalAttempt.id, stage: finalAttempt.stage, inputs: rowToAttemptInputs(finalAttempt) }, advanceBlockedReason: eligibleForAutoAdvance ? null : advance.reason },
-      { headers: CORS }
-    );
+    return Response.json({
+      attempt: { id: finalAttempt.id, stage: finalAttempt.stage, inputs: rowToAttemptInputs(finalAttempt) },
+      advanceBlockedReason: eligibleForAutoAdvance ? null : advance.reason,
+    }, { headers: CORS });
   }
 
-  // ── action: reveal ──
   if (payload.action === 'reveal') {
     const attemptId = payload.attemptId as string | undefined;
     if (!attemptId) return Response.json({ error: 'attemptId is required' }, { status: 400, headers: CORS });
 
-    const { data: attempt, error: fetchError } = await supabase.from('training_attempts').select('*').eq('id', attemptId).single();
-    if (fetchError || !attempt) return Response.json({ error: 'Attempt not found' }, { status: 404, headers: CORS });
-    if (attempt.stage !== 'recommendation') {
-      return Response.json({ error: `Cannot reveal from stage '${attempt.stage}' — the attempt must reach 'recommendation' first.` }, { status: 409, headers: CORS });
+    const { data: before, error: fetchError } = await supabase
+      .from('training_attempts').select('*').eq('id', attemptId).eq('analyst_id', admin.id).single();
+    if (fetchError || !before) return Response.json({ error: 'Attempt not found' }, { status: 404, headers: CORS });
+    if (before.stage !== 'recommendation') {
+      return Response.json({ error: `Cannot reveal from stage '${before.stage}' — the attempt must reach 'recommendation' first.` }, { status: 409, headers: CORS });
     }
-    const inputs = rowToAttemptInputs(attempt);
+    const inputs = rowToAttemptInputs(before);
     const advance = canAdvanceStage('recommendation', inputs);
-    if (!advance.canAdvance) {
-      return Response.json({ error: advance.reason }, { status: 422, headers: CORS });
+    if (!advance.canAdvance) return Response.json({ error: advance.reason }, { status: 422, headers: CORS });
+
+    let finalized: Awaited<ReturnType<typeof finalizeAsCaller>>;
+    try {
+      finalized = await finalizeAsCaller(request, env, attemptId);
+    } catch (err) {
+      return Response.json({ error: err instanceof Error ? err.message : 'Failed to finalize attempt' }, { status: 422, headers: CORS });
     }
 
-    const { data: caseRow, error: caseError } = await supabase.from('training_cases').select('*').eq('id', attempt.case_id).single();
+    const { data: caseRow, error: caseError } = await supabase.from('training_cases').select('*').eq('id', before.case_id).single();
     if (caseError || !caseRow) return Response.json({ error: 'Case not found' }, { status: 404, headers: CORS });
     const fullCase = dbRowToFullCase(caseRow);
 
-    const mechanismCorrect = inputs.judgmentMechanism === fullCase.referenceMechanism;
-
-    // AI-assisted defensibility + 7-dimension calibration profile — only
-    // ever called AFTER the analyst's judgment/recommendation are already
-    // locked (see the stage guard above), so this cannot influence what
-    // they submitted. DeepSeek is not selecting the diagnosis here; the
-    // diagnosis (inputs.judgmentMechanism) and the reference
-    // (fullCase.referenceMechanism) both already exist independently —
-    // this call only assesses reasoning quality against them.
     let calibrationProfile: Record<string, number> = {
-      evidence_evaluation: 3, hypothesis_generation: 3, uncertainty_estimation: 3,
-      prioritization: 3, differential_diagnosis: 3, confidence_calibration: 3, recommendation_quality: 3,
+      evidence_evaluation: 3,
+      hypothesis_generation: 3,
+      uncertainty_estimation: 3,
+      prioritization: 3,
+      differential_diagnosis: 3,
+      confidence_calibration: 3,
+      recommendation_quality: 3,
     };
-    let disagreementDefensible: boolean | null = mechanismCorrect ? null : false;
-    let evidenceDisciplinePass = true;
+    let evidenceDisciplinePass: boolean | null = null;
+    let aiDisagreementAssessment: boolean | null = null;
+    let calibrationFeedback: string | null = null;
 
-    try {
-      const tutorUrl = `${getSupabaseUrl(env)}/functions/v1/diagnostic-calibration-tutor`;
-      const res = await fetch(tutorUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getServiceRoleKey(env)}` },
-        body: JSON.stringify({
-          step: 'calibrate',
-          observableCase: visibleCaseFields(fullCase, 'observation'),
-          referenceMechanism: fullCase.referenceMechanism,
-          referenceMechanismNote: fullCase.referenceMechanismNote,
-          referenceDiagnosis: fullCase.referenceDiagnosis,
-          referenceRecommendation: fullCase.referenceRecommendation,
-          inputs,
-          mechanismCorrect,
-        }),
-      });
-      if (res.ok) {
-        const result = (await res.json()) as {
-          calibration_profile: Record<string, number>;
-          disagreement_defensible: boolean | null;
-          evidence_discipline_pass: boolean;
-        };
-        calibrationProfile = result.calibration_profile ?? calibrationProfile;
-        disagreementDefensible = mechanismCorrect ? null : (result.disagreement_defensible ?? false);
-        evidenceDisciplinePass = result.evidence_discipline_pass ?? true;
+    // Current tutor calibration requires a behavioral reference mechanism.
+    // Abstention cases still reveal deterministically; richer abstention
+    // calibration is a separate tutor contract and must not be fabricated.
+    if (fullCase.referenceMechanism) {
+      try {
+        const tutorUrl = `${getSupabaseUrl(env)}/functions/v1/diagnostic-calibration-tutor`;
+        const res = await fetch(tutorUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getServiceRoleKey(env)}` },
+          body: JSON.stringify({
+            step: 'calibrate',
+            observableCase: visibleCaseFields(fullCase, 'observation'),
+            referenceMechanism: fullCase.referenceMechanism,
+            referenceMechanismNote: fullCase.referenceMechanismNote,
+            referenceDiagnosis: fullCase.referenceDiagnosis,
+            referenceRecommendation: fullCase.referenceRecommendation,
+            inputs,
+            mechanismCorrect: finalized.mechanism_correct,
+          }),
+        });
+        if (res.ok) {
+          const result = (await res.json()) as {
+            calibration_profile?: Record<string, number>;
+            disagreement_defensible?: boolean | null;
+            evidence_discipline_pass?: boolean;
+            feedback?: string;
+          };
+          calibrationProfile = result.calibration_profile ?? calibrationProfile;
+          evidenceDisciplinePass = result.evidence_discipline_pass ?? null;
+          aiDisagreementAssessment = finalized.mechanism_correct ? null : (result.disagreement_defensible ?? null);
+          calibrationFeedback = result.feedback ?? null;
+        }
+      } catch {
+        // AI calibration is enrichment. Deterministic reveal must survive an
+        // unavailable model, but the absence is represented honestly below.
       }
-    } catch {
-      // AI calibration is an enrichment, not a gate — reveal proceeds
-      // with the honest neutral defaults above rather than blocking the
-      // analyst from seeing the reference verdict they've already earned.
     }
 
-    const { data: revealed, error: revealError } = await supabase
+    const { data: enriched, error: enrichError } = await supabase
       .from('training_attempts')
       .update({
-        stage: 'verdict_revealed',
-        mechanism_correct: mechanismCorrect,
-        disagreement_defensible: disagreementDefensible,
-        evidence_discipline_pass: evidenceDisciplinePass,
         calibration_profile: calibrationProfile,
-        verdict_revealed_at: new Date().toISOString(),
+        evidence_discipline_pass: evidenceDisciplinePass,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', attemptId)
-      .select()
-      .single();
-    if (revealError || !revealed) {
-      return Response.json({ error: revealError?.message ?? 'Failed to reveal' }, { status: 500, headers: CORS });
+      .eq('id', attemptId).eq('analyst_id', admin.id).select().single();
+    if (enrichError || !enriched) {
+      return Response.json({ error: enrichError?.message ?? 'Verdict revealed but calibration enrichment could not be stored' }, { status: 500, headers: CORS });
     }
 
-    return Response.json(
-      {
-        attempt: { id: revealed.id, stage: revealed.stage, mechanismCorrect, disagreementDefensible, calibrationProfile },
-        case: visibleCaseFields(fullCase, 'verdict_revealed'),
+    return Response.json({
+      attempt: {
+        id: enriched.id,
+        stage: enriched.stage,
+        dispositionCorrect: finalized.disposition_correct,
+        mechanismCorrect: finalized.mechanism_correct,
+        disagreementDefensible: enriched.disagreement_defensible,
+        aiDisagreementAssessment,
+        adjudicationStatus: enriched.adjudication_id ? 'adjudicated' : 'not_adjudicated',
+        calibrationProfile,
+        calibrationFeedback,
+        gateEligible: enriched.is_gate_eligible,
       },
-      { headers: CORS }
-    );
+      case: visibleCaseFields(fullCase, 'verdict_revealed'),
+    }, { headers: CORS });
   }
 
-  // ── action: reflect ──
   if (payload.action === 'reflect') {
     const attemptId = payload.attemptId as string | undefined;
     const reflectionAnswers = payload.reflectionAnswers as Record<string, string> | undefined;
     if (!attemptId) return Response.json({ error: 'attemptId is required' }, { status: 400, headers: CORS });
 
-    const { data: attempt, error: fetchError } = await supabase.from('training_attempts').select('*').eq('id', attemptId).single();
+    const { data: attempt, error: fetchError } = await supabase
+      .from('training_attempts').select('*').eq('id', attemptId).eq('analyst_id', admin.id).single();
     if (fetchError || !attempt) return Response.json({ error: 'Attempt not found' }, { status: 404, headers: CORS });
     if (attempt.stage !== 'verdict_revealed') {
       return Response.json({ error: `Cannot submit reflection from stage '${attempt.stage}' — the verdict must be revealed first.` }, { status: 409, headers: CORS });
@@ -342,21 +367,22 @@ export const onRequestPost = async ({
 
     const inputs = { ...rowToAttemptInputs(attempt), reflectionAnswers };
     const advance = canAdvanceStage('verdict_revealed', inputs);
-    if (!advance.canAdvance) {
-      return Response.json({ error: advance.reason }, { status: 422, headers: CORS });
-    }
+    if (!advance.canAdvance) return Response.json({ error: advance.reason }, { status: 422, headers: CORS });
 
     const { data: completed, error: completeError } = await supabase
       .from('training_attempts')
-      .update({ stage: 'reflection_complete', reflection_answers: reflectionAnswers, completed_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-      .eq('id', attemptId)
-      .select()
-      .single();
-    if (completeError || !completed) {
-      return Response.json({ error: completeError?.message ?? 'Failed to complete reflection' }, { status: 500, headers: CORS });
-    }
+      .update({
+        stage: 'reflection_complete',
+        reflection_answers: reflectionAnswers,
+        completed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', attemptId).eq('analyst_id', admin.id).select().single();
+    if (completeError || !completed) return Response.json({ error: completeError?.message ?? 'Failed to complete reflection' }, { status: 500, headers: CORS });
 
-    return Response.json({ attempt: { id: completed.id, stage: completed.stage, completedAt: completed.completed_at } }, { headers: CORS });
+    return Response.json({
+      attempt: { id: completed.id, stage: completed.stage, completedAt: completed.completed_at, gateEligible: completed.is_gate_eligible },
+    }, { headers: CORS });
   }
 
   return Response.json({ error: `Unknown action: ${String(payload.action)}` }, { status: 400, headers: CORS });
