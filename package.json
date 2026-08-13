@@ -13,7 +13,8 @@
     "check:diagnostic-authority": "node scripts/check-diagnostic-authority.mjs",
     "check:intake-truth": "node scripts/check-intake-product-truth.mjs",
     "check:stripe-webhook": "node scripts/check-stripe-webhook-boundary.mjs && node --test src/server/stripe-webhook-boundary.test.mjs",
-    "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs && npm run check:offers && npm run check:drift && npm run check:diagnostic-authority && npm run check:intake-truth && npm run check:stripe-webhook",
+    "check:payment-state": "node scripts/check-payment-state-truth.mjs",
+    "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs && npm run check:offers && npm run check:drift && npm run check:diagnostic-authority && npm run check:intake-truth && npm run check:stripe-webhook && npm run check:payment-state",
     "deploy": "wrangler pages deploy out --project-name=signal-and-friction"
   },
   "dependencies": {
