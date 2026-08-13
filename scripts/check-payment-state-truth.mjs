@@ -2,6 +2,7 @@ import fs from 'node:fs';
 
 const failures = [];
 const migrationPath = 'supabase/migrations/20260813100000_payment_state_machine_truth.sql';
+const provisioningMigrationPath = 'supabase/migrations/20260813103000_payment_scaffold_provisioning.sql';
 const handlerPath = 'src/server/stripe/legacy-handler.ts';
 
 function requireMatch(source, pattern, message) {
@@ -39,12 +40,28 @@ if (!fs.existsSync(migrationPath)) {
     'no-op payment client updates must not replay state transitions');
   requireMatch(sql, /WHEN protocol_stage = 'pre_payment' THEN 'payment_confirmed'[\s\S]*ELSE protocol_stage/,
     'payment transition must be monotonic and never regress later protocol stages');
-  requireMatch(sql, /SET payment_status = 'paid'[\s\S]*'prospecting', 'outreach_sent', 'followup_sent'[\s\S]*'diagnostic_in_progress'/,
-    'canonical payment must mark the project paid and begin diagnostic work');
+  requireMatch(sql, /SET payment_status = 'paid'/,
+    'canonical payment must mark the project paid');
   requireMatch(sql, /GET DIAGNOSTICS v_project_count = ROW_COUNT[\s\S]*v_project_count <> 1[\s\S]*RAISE EXCEPTION/,
     'missing or duplicate project state must fail closed instead of silently drifting');
   requireMatch(sql, /IF NEW\.client_id IS NULL THEN[\s\S]*RETURN NEW/,
     'unmatched economic events must remain recorded without inventing client state');
+}
+
+// The later provisioning migration intentionally replaces handle_payment_state_truth.
+// Payment confirmation remains authoritative, but delivery may not claim
+// diagnostic work has begun before the scaffold exists.
+if (!fs.existsSync(provisioningMigrationPath)) {
+  failures.push(`${provisioningMigrationPath} is missing`);
+} else {
+  const sql = fs.readFileSync(provisioningMigrationPath, 'utf8');
+  requireMatch(sql, /CREATE OR REPLACE FUNCTION public\.handle_payment_state_truth\(\)/,
+    'latest payment state function override must be explicit');
+  requireMatch(sql, /SET payment_status = 'paid'[\s\S]*'awaiting_input'[\s\S]*'provisioning'/,
+    'paid project must remain awaiting_input/provisioning until scaffold readiness is proven');
+  if (/THEN 'diagnostic_in_progress'[\s\S]{0,400}WHERE client_id = NEW\.client_id/.test(sql)) {
+    failures.push('payment trigger must not claim diagnostic_in_progress before scaffold provisioning succeeds');
+  }
 }
 
 if (!fs.existsSync(handlerPath)) {
@@ -64,4 +81,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('✅ Payment state truth: impossible paid states are rejected, recovery is safe, transitions are atomic/monotonic, and finance has one authority');
+console.log('✅ Payment state truth: money is canonical, false paid states are impossible, and delivery cannot outrun provisioning evidence');
