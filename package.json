@@ -18,7 +18,9 @@
     "check:scaffold-provisioning": "node scripts/check-scaffold-provisioning-truth.mjs",
     "check:agent-build": "node scripts/check-agent-build-gate.mjs",
     "check:training-unit": "node --experimental-strip-types src/lib/training-workflow.test.mjs && node --experimental-strip-types src/lib/calibration-readiness.test.mjs",
-    "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs && npm run check:offers && npm run check:drift && npm run check:diagnostic-authority && npm run check:intake-truth && npm run check:stripe-webhook && npm run check:payment-state && npm run check:scaffold-provisioning && npm run check:agent-build && npm run check:training-unit",
+    "check:learning-os": "node scripts/check-learning-os-truth.mjs",
+    "check:finance-os": "node scripts/check-finance-os-truth.mjs",
+    "predeploy": "npm run build && node scripts/check-no-placeholder-creds.mjs && npm run check:offers && npm run check:drift && npm run check:diagnostic-authority && npm run check:intake-truth && npm run check:stripe-webhook && npm run check:payment-state && npm run check:scaffold-provisioning && npm run check:agent-build && npm run check:training-unit && npm run check:learning-os && npm run check:finance-os",
     "deploy": "wrangler pages deploy out --project-name=signal-and-friction"
   },
   "dependencies": {
