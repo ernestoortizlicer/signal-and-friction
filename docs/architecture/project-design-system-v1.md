@@ -1,7 +1,7 @@
 # Signal & Friction — Project Design System v1
 
-**Status:** PROPOSED PROJECT-WIDE VISUAL AUTHORITY  
-**Effective target:** 2026-08-13  
+**Status:** ACTIVE PROJECT-WIDE VISUAL AUTHORITY  
+**Effective:** 2026-08-13  
 **Scope:** public site, scan/pricing flows, client surfaces, Command Center and future product surfaces.
 
 ## 1. Design premise
