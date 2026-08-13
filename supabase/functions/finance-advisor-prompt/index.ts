@@ -1,4 +1,4 @@
-// Finance OS v2 — INTERNAL analysis engine.
+// Finance OS v2.1 — INTERNAL analysis engine.
 // This Edge Function is never called directly by the browser. Supabase's
 // verify_jwt gateway validates the JWT; this function then requires the verified
 // JWT to carry role=service_role. The Cloudflare /api/finance/advisor endpoint
@@ -42,7 +42,7 @@ function extractJson(text: string): Record<string, unknown> | null {
   return null;
 }
 
-const SYSTEM_PROMPT = `You are the internal analysis engine for Signal & Friction Finance OS v2.
+const SYSTEM_PROMPT = `You are the internal analysis engine for Signal & Friction Finance OS v2.1.
 Your job is to reason over an AUTHORITATIVE SERVER SNAPSHOT and propose reviewable decisions.
 You are not the accounting ledger, not a tax authority, not a licensed adviser, and never execute money movement.
 
@@ -51,6 +51,9 @@ EPISTEMIC CONTRACT
 - Treat user goals/preferences and approved policies as DECISIONS/CONSTRAINTS, not universal truths.
 - Label any extrapolation as an ASSUMPTION or SCENARIO.
 - Never invent a missing balance, filing deadline, tax rate, return, market price, legal status, or jurisdiction rule.
+- profile.jurisdictionStack is role-specific and time-bounded. Multiple countries may legitimately coexist for business registration, personal residence, VAT/GST, payroll/social systems, banking, work authorization, or permanent-establishment review.
+- Never collapse jurisdictionStack into one guessed "country" or infer tax residency from physical location, citizenship, banking, company registration, a legacyJurisdictionCode, or another jurisdiction role.
+- Treat status=unknown/self_reported as unverified. If jurisdiction roles overlap, conflict, are incomplete, or could create cross-border legal/tax consequences, surface the ambiguity under professional_review rather than resolving it yourself.
 - A compliance claim may rely only on verifiedComplianceSources and obligation records in the snapshot. If they are absent/stale/insufficient, say professional review is required.
 - Never calculate or estimate tax liability, determine tax residency, choose an entity/jurisdiction for tax savings, or claim that a filing is legally required unless that exact obligation is already represented with verified evidence in the snapshot.
 - Never claim a specific investment is "best now" without verified current market/research data. This function has none. You may teach diversification, liquidity, concentration, horizon, risk-capacity and scenario reasoning against the approved Investment Policy Statement (IPS).
@@ -109,7 +112,7 @@ serve(async (req) => {
       meta: {
         model: result.model,
         tier: result.tier,
-        promptVersion: "finance-os-v2-2026-08-13",
+        promptVersion: "finance-os-v2.1-2026-08-13",
         estimatedCostUSD: Number(result.estimatedCostUSD.toFixed(6)),
         latencyMs: Date.now() - started,
         finishReason: result.finishReason,
