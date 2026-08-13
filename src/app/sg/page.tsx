@@ -1,32 +1,25 @@
 import type { Metadata } from "next";
-import SingaporeClient from "./SingaporeClient";
+import Home from "../page";
 
 export const metadata: Metadata = {
-  title: "Signal & Friction — APAC Diagnostic Portal | Singapore & Southeast Asia",
+  title: "Signal & Friction — APAC Behavioral Diagnostic | Singapore & Australia",
   description:
-    "Clinical B2B SaaS conversion diagnostics localized for APAC. JCB & PayNow checks, SGD pricing, PDPA compliance. 72-hour async delivery. If it isn't specific to your product, you don't pay.",
+    "Evidence-ranked B2B SaaS behavioral diagnosis for English-first APAC teams. Measured signals, explicit hypotheses and uncertainty. 72-hour async delivery.",
   openGraph: {
-    title: "Signal & Friction — APAC Diagnostic Portal | Singapore & SE Asia",
+    title: "Signal & Friction — APAC Behavioral Diagnostic",
     description:
-      "Isolate Southeast Asia checkout friction killing your APAC revenue. Clinical diagnostic in 72h. JCB & PayNow checks. If it isn't specific to your product, you don't pay.",
+      "Evidence-ranked behavioral diagnosis for English-first teams in Singapore and Australia. If evidence is insufficient, we say so.",
     url: "https://signal-and-friction.com/sg",
     siteName: "Signal & Friction",
-    // Explicit, not left unset: verified live that a route with its own
-    // openGraph object does NOT inherit the parent's file-convention image
-    // (opengraph-image.tsx) — Next replaces the whole openGraph object per
-    // segment rather than merging missing fields. Confirmed by shipping
-    // this unset once and finding /sg had literally no og:image at all in
-    // production. Pointing directly at the same generated route everyone
-    // else resolves to, so it's one visual, never duplicated content.
     images: ["https://signal-and-friction.com/opengraph-image"],
     type: "website",
-    locale: "en_US",
+    locale: "en_SG",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Signal & Friction — Singapore & APAC Diagnostic Portal",
+    title: "Signal & Friction — APAC Behavioral Diagnostic",
     description:
-      "Isolate APAC checkout friction in 72h. Specific to your product, or you don't pay.",
+      "Measured signals, explicit hypotheses, uncertainty and a reviewable decision. 72h async delivery.",
     images: ["https://signal-and-friction.com/opengraph-image"],
   },
   alternates: {
@@ -34,6 +27,15 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Frontend OS v2 migration bridge.
+ *
+ * /sg previously maintained a near-copy of the Global landing with regional
+ * capability claims (JCB/PayNow/PDPA) that were not backed by dedicated
+ * product tools/evals. Until MarketLanding is extracted, APAC intentionally
+ * reuses the canonical landing engine. The client page already routes lead
+ * submissions as APAC when pathname === /sg.
+ */
 export default function SingaporePage() {
-  return <SingaporeClient />;
+  return <Home />;
 }
