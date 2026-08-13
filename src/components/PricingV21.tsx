@@ -68,14 +68,14 @@ export default function PricingV21() {
       <section className="mx-auto max-w-6xl px-6 pb-16 grid gap-8 lg:grid-cols-2">
         <Track
           title="Done-With-You"
-          subtitle="Signal & Friction diagnoses and guides; your team executes."
+          subtitle="I diagnose and guide; your team executes."
           phases={DWY_LADDER}
           links={links}
           linksLoaded={linksLoaded}
         />
         <Track
           title="Done-For-You"
-          subtitle="Signal & Friction diagnoses; execution is handled for you where the selected phase includes it."
+          subtitle="I diagnose and handle execution where the selected phase includes it."
           phases={DFY_LADDER}
           links={links}
           linksLoaded={linksLoaded}
