@@ -43,7 +43,7 @@ export const PUBLIC_CLAIMS = {
     id: 'evidence-insufficient-abstention',
     kind: 'method',
     status: 'approved',
-    copy: 'If the evidence is insufficient, we say so.',
+    copy: 'If the evidence is insufficient, I say so.',
     authority: 'Diagnostic Calibration / professional abstention contract',
     evidenceBoundary: 'The system may abstain; this is not a promise that every case yields one dominant mechanism.',
     reviewedAt: '2026-08-13',
