@@ -412,16 +412,16 @@ async function sendPaymentConfirmation(apiKey: string, params: ConfirmationParam
       <div style="font-family:monospace;font-size:11px;letter-spacing:0.35em;text-transform:uppercase;color:#5C9A6B;">Payment Confirmed</div>
       <h1 style="font-size:26px;font-weight:700;margin:16px 0 8px;">Diagnostic Protocol <span style="color:#D4A853;">Activated</span></h1>
       <p style="color:#B0A89E;font-size:14px;line-height:1.6;">
-        We've received <strong style="color:#F5F0EB;">${amountLabel}</strong> for <strong style="color:#F5F0EB;">${product}</strong>.
-        Your clinical diagnostic and Loom walkthrough will arrive at this inbox within
+        Your payment has been recorded: <strong style="color:#F5F0EB;">${amountLabel}</strong> for <strong style="color:#F5F0EB;">${product}</strong>.
+        I&apos;ll deliver your diagnostic and Loom walkthrough to this inbox within
         <strong style="color:#F5F0EB;">72 hours</strong>. No calls. No meetings. Just the deliverable.
       </p>
       <div style="border:1px solid rgba(212,168,83,0.15);background:rgba(212,168,83,0.03);padding:20px;margin-top:24px;border-radius:8px;">
         <p style="margin:0;color:#B0A89E;font-size:13px;line-height:1.6;">
-          One Signal. One Friction. One Decision. Backed by the S&amp;F Specificity Guarantee — full refund if the finding isn't specific to your product.
+          I&apos;ll distinguish what is measured, modeled, or still unknown. If the evidence is insufficient for a defensible finding, I&apos;ll say so. The S&amp;F Specificity Guarantee covers the specificity of the work, not a business outcome.
         </p>
       </div>
-      <p style="color:#7A6F65;font-size:12px;margin-top:32px;">— Signal &amp; Friction</p>
+      <p style="color:#7A6F65;font-size:12px;margin-top:32px;">— Ernesto · Signal &amp; Friction</p>
     </div>
   </body>
 </html>`;
