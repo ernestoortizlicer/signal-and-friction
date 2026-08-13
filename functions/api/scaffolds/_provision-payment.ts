@@ -67,16 +67,36 @@ export async function provisionPaymentScaffoldBySessionId(
     status: 'succeeded' | 'needs_input' | 'retryable',
     patch: { scaffold_id?: string | null; last_error?: string | null }
   ) => {
-    await supabase
+    const now = new Date().toISOString();
+    const { error: jobError } = await supabase
       .from('scaffold_provisioning_jobs')
       .update({
         status,
         scaffold_id: patch.scaffold_id ?? null,
         last_error: patch.last_error ?? null,
-        finished_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        finished_at: now,
+        updated_at: now,
       })
       .eq('payment_id', payment.id);
+    if (jobError) throw new Error('job_finish_failed');
+
+    // Delivery state is derived from the actual provisioning result, not from
+    // payment optimism. Never regress projects already beyond this boundary.
+    if (status === 'succeeded') {
+      const { error } = await supabase
+        .from('beta_projects')
+        .update({ status: 'diagnostic_in_progress', updated_at: now })
+        .eq('client_id', payment.client_id)
+        .in('status', ['provisioning', 'awaiting_input']);
+      if (error) throw new Error('project_state_advance_failed');
+    } else if (status === 'needs_input') {
+      const { error } = await supabase
+        .from('beta_projects')
+        .update({ status: 'awaiting_input', updated_at: now })
+        .eq('client_id', payment.client_id)
+        .eq('status', 'provisioning');
+      if (error) throw new Error('project_state_block_failed');
+    }
   };
 
   try {
@@ -138,8 +158,6 @@ export async function provisionPaymentScaffoldBySessionId(
       .single();
 
     if (insertError || !created) {
-      // Concurrent delivery/background attempts are resolved by the DB unique
-      // client scaffold invariant. If another attempt won, adopt that row.
       if (insertError?.code === '23505') {
         const { data: raced } = await supabase
           .from('diagnostic_scaffolds')
@@ -158,7 +176,11 @@ export async function provisionPaymentScaffoldBySessionId(
     return { status: 'succeeded', scaffoldId: created.id, created: true };
   } catch (err) {
     const reason = safeError(err);
-    await finish('retryable', { last_error: reason });
+    try {
+      await finish('retryable', { last_error: reason });
+    } catch (finishErr) {
+      console.error(`Scaffold provisioning recovery-state write failed: ${safeError(finishErr)}`);
+    }
     return { status: 'retryable', reason };
   }
 }
