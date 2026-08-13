@@ -1,4 +1,10 @@
-type Env = { STRIPE_SECRET_KEY?: string };
+import { getServiceRoleKey, getSupabaseUrl } from "../_env";
+
+type Env = {
+  STRIPE_SECRET_KEY?: string;
+  SUPABASE_URL?: string;
+  SUPABASE_SERVICE_ROLE_KEY?: string;
+};
 const CORS = { "Content-Type": "application/json" };
 
 export const onRequestGet = async ({ request, env }: { request: Request; env: Env }): Promise<Response> => {
@@ -15,13 +21,34 @@ export const onRequestGet = async ({ request, env }: { request: Request; env: En
       headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
     });
     if (!response.ok) {
-      return Response.json({ verified: false, status: "unavailable" }, { status: 404, headers: CORS });
+      return Response.json({ verified: false, status: "unavailable", canonicalRecorded: false }, { status: 404, headers: CORS });
     }
+
     const session = await response.json() as { status?: string; payment_status?: string };
     const verified = session.status === "complete"
       && (session.payment_status === "paid" || session.payment_status === "no_payment_required");
+
+    let canonicalRecorded = false;
+    const serviceRoleKey = getServiceRoleKey(env);
+    if (verified && serviceRoleKey) {
+      const canonical = await fetch(
+        `${getSupabaseUrl(env)}/rest/v1/payments?stripe_session_id=eq.${encodeURIComponent(sessionId)}&select=id&limit=1`,
+        {
+          headers: {
+            apikey: serviceRoleKey,
+            Authorization: `Bearer ${serviceRoleKey}`,
+          },
+        },
+      );
+      if (canonical.ok) {
+        const rows = await canonical.json() as Array<{ id: string }>;
+        canonicalRecorded = rows.length > 0;
+      }
+    }
+
     return Response.json({
       verified,
+      canonicalRecorded,
       status: session.status ?? null,
       paymentStatus: session.payment_status ?? null,
     }, { headers: CORS });
