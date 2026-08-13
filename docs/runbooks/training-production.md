@@ -1,300 +1,141 @@
-# Signal and Friction — Training Production Runbook
+# Signal and Friction — Learning & Training Production Runbook
 
-**Status:** CANONICAL RUNBOOK v0.1
-**Date:** 2026-08-13
-**Scope:** Analyst Learning / Diagnostic Calibration. This runbook is authoritative for the canonical training path; legacy Learning surfaces are non-gating.
+**Status:** CANONICAL RUNBOOK v0.2  
+**Date:** 2026-08-13  
+**Scope:** Daily Learning OS + Diagnostic Calibration + premium-readiness integrity.
 
----
+## 1. Three different things — never merge them
 
-## 1. Product contract
+### A. Learning discipline
+`Daily Learning OS` schedules and records external-course study, active recall, diagnostic practice and build/application work. It measures adherence and evidence of practice. It does **not** certify expertise.
 
-Signal and Friction's analyst pedagogy is a staged diagnostic calibration system, not a quiz and not a passive course reader.
+### B. Practice calibration
+`Diagnostic Calibration` builds and measures judgment on staged cases. Practice cases may be useful even when they are not certification-eligible. Practice feedback does **not** authorize premium client delivery.
 
-Canonical sequence:
+### C. Premium authorization
+Premium authorization is a separate fail-closed evidence gate using only eligible, independently verified first-attempt evidence. As of 2026-08-13 the certification bank is not ready; the correct status remains **NOT AUTHORIZED**.
 
-`Observation -> Evidence Review -> Hypothesis -> Counter-Hypothesis -> Socratic Challenge -> Revision -> Judgment -> Recommendation -> Reference Verdict -> Comparative Reflection`
+## 2. Canonical user path
 
-The reference verdict must remain structurally absent until the analyst has preregistered the reasoning trail and recommendation. Comparative Reflection is mandatory before the attempt is complete.
+Primary UI: `/admin/learning`
 
----
+Default tab: **Today**.
 
-## 2. Practice and premium authorization are different systems
+Daily operating loop:
 
-### Practice calibration
+`Study → Retrieve → Diagnose → Apply`
 
-Purpose: build judgment through repeated case work and measure learning patterns.
+A normal day is materialized from editable targets in `learning_daily_settings`:
+- course / primary-reference study;
+- Diagnostic Calibration practice;
+- active recall / Reasoning Lab;
+- build or applied artifact.
 
-Practice cases may be operator-authored or otherwise non-eligible for certification. They may update practice-calibration feedback, but **must never authorize premium client delivery**.
+Each completed block may record actual minutes, an outcome statement, an evidence reference and retrieval score. Passive course completion alone is not evidence of operational skill.
 
-### Premium authorization
+The highest-priority active external resource (Udemy or another source) is placed into the course block. Historical Learning surfaces remain preserved but are archived/non-gating.
 
-Purpose: produce defensible evidence that the analyst is ready to deliver at Signal and Friction's premium standard.
+## 3. Diagnostic Calibration canonical sequence
 
-Premium authorization is fail-closed and requires both:
+`Observation → Evidence Review → Hypothesis → Counter-Hypothesis → Socratic Challenge → Revision → Judgment → Recommendation → Reference Verdict → Comparative Reflection`
 
-1. a certification case bank satisfying `v_bank_readiness`; and
-2. an approved personal-performance threshold contract over gate-eligible attempts.
+The reference verdict remains structurally absent until the preregistered reasoning trail and recommendation are locked. `verdict_revealed` is not completion. `completed_at` is written only after all seven Comparative Reflection answers are submitted and stage becomes `reflection_complete`.
 
-As of 2026-08-13 the bank is not ready and the final personal premium threshold contract has not been frozen. Therefore the only correct premium status is **NOT AUTHORIZED**.
+## 4. Professional abstention
 
----
-
-## 3. Current production truth — 2026-08-13
-
-Production Supabase project: `signal-and-friction` (`tsaarsuuclvkjsgjcmoj`).
-
-Current state verified during the repository audit:
-
-- 4 published training cases.
-- 0 real analyst training attempts before first use.
-- 0 certification-eligible cases.
-- 0 mechanisms covered by the certification-eligible bank.
-- 0 certification-eligible abstention cases.
-- `diagnostic-calibration-tutor` Edge Function is ACTIVE.
-- confirmed admin identity exists in Supabase Auth.
-
-The four existing cases are **practice only** under the hardened eligibility contract.
-
----
-
-## 4. Canonical application path
-
-Primary UI:
-
-`/admin/learning`
-
-Default tab:
-
-`Diagnostic Calibration`
-
-Supporting canonical practice:
-
-`Reasoning Engine` / `ReasoningActivities` for Active Recall and Evidence Calibration derived from the canonical 21-mechanism registry.
-
-Legacy surfaces such as Combat Mode / older Socratic Learning are historical/non-gating. They must not contribute to premium authorization.
-
----
-
-## 5. Canonical code/runtime authorities
-
-- `src/domain/reasoning/types.ts` — Diagnosis domain model.
-- `src/domain/reasoning/mechanisms.ts` — internal reasoning registry.
-- `src/lib/training-workflow.ts` — stage/disposition/hidden-verdict contract.
-- `functions/api/training/_shared.ts` — byte-identical Cloudflare mirror.
-- `src/app/admin/learning/DiagnosticCalibration.tsx` — canonical UI.
-- `functions/api/training/cases.ts` — practice/certification case exposure.
-- `functions/api/training/attempt.ts` — owned staged attempt lifecycle.
-- `functions/api/training/readiness.ts` — practice vs premium readiness separation.
-- `supabase/functions/diagnostic-calibration-tutor/index.ts` — Socratic + post-reveal AI enrichment.
-- production DB RPC `finalize_and_reveal_attempt` — deterministic reveal/scoring/gate eligibility.
-- production views `v_case_eligibility_derived`, `v_bank_readiness`, `v_training_attempt_scores`.
-
----
-
-## 6. Hardened integrity rules
-
-### Identity
-
-Every attempt is bound to the verified Supabase user id returned by server-side admin authentication. Caller-supplied analyst ids are not accepted.
-
-### Hidden verdict
-
-Pre-reveal application payloads structurally omit:
-
-- reference disposition;
-- reference mechanism;
-- reference diagnosis;
-- reference recommendation;
-- reference result.
-
-### Staged preregistration
-
-Database finalization rejects attempts unless:
-
-- current stage is `recommendation`;
-- observation exists;
-- evidence review exists;
-- hypothesis + reasoning exist;
-- counter-hypothesis + reasoning exist;
-- at least one non-empty Socratic question/response exchange exists;
-- analyst revision exists;
-- final disposition exists;
-- confidence exists;
-- recommendation exists;
-- uncertainty exists;
-- behavioral/mixed dispositions contain a mechanism;
-- abstention dispositions contain no mechanism.
-
-### Professional abstention
-
-Allowed dispositions:
-
+Final disposition can be:
 - `behavioral_diagnosis`
 - `technical_blocker`
 - `mixed_condition`
 - `insufficient_evidence`
 - `scope_change_required`
 
-The system must not force a behavioral mechanism when the professional judgment is to abstain or change scope.
+Behavioral/mixed judgments require a mechanism. Abstention/scope-change judgments require no forced mechanism. This is enforced in database constraints and finalization.
 
-### Deterministic scoring
+## 5. Authorities
 
-The database computes disposition/mechanism correctness. An LLM is not allowed to decide deterministic correctness.
+Daily Learning OS:
+- `supabase/migrations/20260813140000_learning_os_v2.sql`
+- `functions/api/learning/daily.ts`
+- `src/app/admin/learning/DailyTrainingPlan.tsx`
+- `src/app/admin/learning/page.tsx`
 
-### Defensible disagreement
+Diagnostic Calibration:
+- `src/domain/reasoning/types.ts`
+- `src/domain/reasoning/mechanisms.ts`
+- `src/lib/training-workflow.ts`
+- `functions/api/training/_shared.ts`
+- `src/app/admin/learning/DiagnosticCalibration.tsx`
+- `functions/api/training/cases.ts`
+- `functions/api/training/attempt.ts`
+- `functions/api/training/readiness.ts`
+- `supabase/functions/diagnostic-calibration-tutor/index.ts`
+- production RPC `finalize_and_reveal_attempt`
+- views `v_case_eligibility_derived`, `v_bank_readiness`, `v_training_attempt_scores`
 
-AI may flag a disagreement as potentially defensible for feedback. That is **not certification credit**. A rescued disagreement requires the independent adjudication contract and linked adjudication record.
+Repository reconciliation:
+- `supabase/migrations/20260813125000_training_hardened_reconciliation.sql`
+- `20260813130000_training_reflection_completion_gate.sql`
+- `20260813131000_training_finalize_stage_integrity.sql`
+- `20260813132000_training_freeze_full_reasoning.sql`
 
-### First-attempt gate evidence
+## 6. Integrity contract
 
-A case already revealed to the analyst cannot become fresh certification evidence on a later attempt.
+- Attempts bind to the verified Supabase user id, never caller-supplied analyst ids.
+- Hidden reference fields are structurally omitted pre-reveal.
+- Database finalization requires stage `recommendation` and the complete canonical reasoning payload, including at least one non-empty Socratic exchange and explicit revision.
+- Deterministic correctness is computed in the database, not by an LLM.
+- AI feedback can enrich learning but cannot manufacture certification credit.
+- Defensible disagreement requires its independent adjudication contract.
+- Repeated post-reveal attempts cannot become fresh certification evidence.
+- Gate attempts snapshot ground truth at reveal.
+- Preregistered reasoning becomes immutable after reveal.
+- Comparative Reflection is mandatory for completion.
 
-### Reference snapshots
+## 7. Certification-bank gate
 
-Gate attempts snapshot the reference disposition/mechanism at reveal so later answer-key changes cannot rewrite historical ground truth.
-
-### Post-reveal immutability
-
-After reveal, the complete preregistered reasoning trail is frozen, including:
-
-- observation/evidence;
-- hypothesis/counter-hypothesis;
-- Socratic exchanges;
-- revision;
-- judgment/disposition/confidence;
-- recommendation/uncertainty;
-- case and analyst identity.
-
-Only post-verdict reflection/calibration/adjudication state may evolve according to its own contracts.
-
-### Completion
-
-`verdict_revealed` is NOT completion.
-
-`completed_at` is set only when all seven Comparative Reflection answers have been submitted and stage becomes `reflection_complete`.
-
----
-
-## 7. Daily analyst workflow
-
-For each practice session:
-
-1. Sign in to the admin backend.
-2. Open `/admin/learning`.
-3. Stay in `Diagnostic Calibration` for canonical case work.
-4. Pick a published case. Respect the `Practice only` / `Gate eligible` badge.
-5. Complete every stage in order without external answer-key lookup.
-6. Use the Socratic challenge to attack the reasoning, not obtain the answer.
-7. Commit final disposition, mechanism when applicable, and confidence.
-8. Commit recommendation + explicit unknowns.
-9. Reveal the reference only after preregistration.
-10. Complete all seven Comparative Reflection questions.
-11. Review Practice Calibration as learning feedback only.
-
-Do not optimize for a score. The target is calibrated diagnostic judgment and evidence discipline.
-
----
-
-## 8. Current acceptance tests
-
-Repository CI now requires:
-
-- application typecheck;
-- canonical domain mirror drift check;
-- diagnostic-authority guard;
-- commercial/product integrity guards;
-- Agent Build Manifest gate;
-- Training workflow tests;
-- Training readiness tests.
-
-Production database smoke tests completed 2026-08-13 with transaction rollback and zero residual synthetic rows:
-
-### Finalize integrity smoke
-
-Verified:
-
-- wrong-stage attempt is rejected;
-- recommendation-stage attempt missing Socratic exchange is rejected;
-- fully staged practice attempt can reveal;
-- reveal produces `verdict_revealed`;
-- reveal leaves `completed_at = NULL`;
-- operator-authored practice case remains `is_gate_eligible = false`;
-- reference snapshot is written;
-- synthetic rows left after rollback = 0.
-
-### Post-reveal freeze smoke
-
-Verified:
-
-- revision cannot be mutated after reveal;
-- Socratic exchanges cannot be mutated after reveal;
-- synthetic rows left after rollback = 0.
-
----
-
-## 9. Required user-authenticated E2E before declaring application deployment verified
-
-The database contract is live and smoke-tested. GitHub Product Integrity is green. The remaining deployment verification requires a real authenticated browser session against the deployed Cloudflare Pages application because the current tool environment has no Cloudflare deployment connector and cannot impersonate the user's Supabase session.
-
-E2E acceptance sequence:
-
-1. Load `/admin/learning` authenticated.
-2. Confirm Diagnostic Calibration is the default tab.
-3. Confirm Premium Authorization displays `Not authorized` and does not infer readiness from practice.
-4. Confirm the four cases display `Practice only`.
-5. Start one practice case.
-6. Confirm stages cannot be skipped.
-7. Confirm Socratic call succeeds.
-8. Complete Judgment with a disposition.
-9. Reveal only after Recommendation + Unknowns.
-10. Confirm Reference Verdict appears only after reveal.
-11. Confirm Comparative Reflection is mandatory.
-12. Complete reflection.
-13. Confirm Practice Calibration updates.
-14. Confirm production DB contains one owned `reflection_complete` attempt and still zero gate-eligible attempts.
-
-Until this browser E2E passes, say **database production integrity verified; application deployment pending authenticated verification**, not "fully production verified."
-
----
-
-## 10. Certification-bank buildout
-
-Daily practice does not need to wait for certification-bank completion.
-
-Premium authorization does.
-
-The bank contract currently requires at least:
-
+Current bank contract requires at least:
 - 30 eligible cases;
-- all 6 canonical mechanisms represented;
+- all 6 canonical mechanisms;
 - at least 3 eligible cases per mechanism;
 - at least 8 eligible abstention cases;
-- allowed provenance;
-- accepted rights basis;
-- independent verification;
-- current answer-key version/content hash verification.
+- allowed provenance and rights basis;
+- current independent rights + answer-key verification.
 
-Do not lower these thresholds merely to make readiness achievable faster. Change them only through a versioned decision supported by evidence.
+Do not lower these values merely to create a green badge. Change only through a versioned evidence-backed decision.
 
----
+## 8. Production truth verified on 2026-08-13
 
-## 11. Migration-history warning
+Production Supabase: `signal-and-friction` (`tsaarsuuclvkjsgjcmoj`).
 
-Production migration history and the repository migration tree have historical drift beyond Training. Some hardened August Training migrations exist in production history but not as original files in GitHub; conversely the repository contains older migrations not represented in the production migration ledger.
+Verified during the remediation/audit cycle:
+- hardened schema live;
+- 4 published practice cases at audit time;
+- zero certification-eligible cases at audit time;
+- `diagnostic-calibration-tutor` ACTIVE;
+- transactional production smoke passed with zero residual synthetic rows;
+- wrong-stage finalization rejected;
+- missing Socratic/revision preregistration rejected;
+- valid reveal leaves `completed_at=NULL`;
+- post-reveal reasoning mutation rejected;
+- Product Integrity CI includes Training and Learning OS authority checks.
 
-**Do not run a blind `supabase db push` against production until migration-history reconciliation is complete.**
+## 9. Application acceptance test
 
-Current production DB is runtime truth for the hardened Training contract. Versioned repository migrations added during this audit document and harden the new fixes, but full historical reconciliation is a separate infrastructure task.
+Before calling a new deployment fully verified, use a real authenticated admin session:
+1. Open `/admin/learning`; confirm **Today** is default.
+2. Add/activate a real course resource and materialize the daily plan.
+3. Complete one course/retrieval/build block with evidence.
+4. Open Diagnostic Calibration from Today.
+5. Confirm stages cannot be skipped and hidden verdict fields do not appear early.
+6. Complete Socratic challenge, revision, disposition/judgment, recommendation and unknowns.
+7. Reveal the reference only after preregistration.
+8. Complete all seven reflection questions.
+9. Confirm the attempt is `reflection_complete` and practice metrics update.
+10. Confirm no practice-only attempt becomes gate evidence.
 
----
+Until authenticated browser E2E passes for a deployment, report **database/runtime integrity verified; authenticated application E2E pending**, not “fully production verified.”
 
-## 12. Rollback / incident rule
+## 10. CI / incident rule
 
-If a Training change risks answer-key leakage, ownership bypass, mutable preregistration, false certification evidence, or skipping mandatory stages:
-
-- fail closed;
-- stop counting new gate evidence;
-- preserve attempts and audit history;
-- revert the application surface if needed;
-- do not delete user learning history to conceal a defect;
-- write an incident/failure case and regression test before reopening the gate.
+CI must run `check:training-unit` and `check:learning-os`. If a change risks answer-key leakage, ownership bypass, mutable preregistration, false certification evidence, skipped mandatory stages or passive-course completion being treated as skill evidence: fail closed, preserve history, create a regression case/test, and reopen only after the invariant is enforced at the authoritative layer.
