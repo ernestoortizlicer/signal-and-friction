@@ -37,6 +37,9 @@ jobs:
       - name: Check native intake product truth
         run: npm run check:intake-truth
 
+      - name: Check market surface integrity
+        run: node scripts/check-market-surface-integrity.mjs
+
       - name: Check Stripe webhook transport safety
         run: npm run check:stripe-webhook
 
