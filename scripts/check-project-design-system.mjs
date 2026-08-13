@@ -27,8 +27,12 @@ console.log("Project Design System contract\n");
 
 requireFile("src/styles/sf-design-system.css", "Project visual authority exists");
 requireFile("docs/decision-log-2026-08-13-project-design-system-v1.md", "Material design/lifecycle decision has a Decision Log");
+requireFile("docs/decision-log-2026-08-13-command-center-visual-contract-v2.md", "Command Center visual-contract decision is recorded");
+requireFile("docs/decision-log-2026-08-13-atomic-prospect-promotion.md", "Atomic promotion decision is recorded");
 requireText("docs/architecture/project-design-system-v1.md", "ACTIVE PROJECT-WIDE VISUAL AUTHORITY", "Project design authority is active rather than proposed");
 requireText("docs/canonical/CURRENT.md", "docs/decision-log-2026-08-13-project-design-system-v1.md", "CURRENT points to the design/lifecycle decision record");
+requireText("docs/canonical/CURRENT.md", "docs/decision-log-2026-08-13-command-center-visual-contract-v2.md", "CURRENT points to Command Center visual contract v2");
+requireText("docs/canonical/CURRENT.md", "docs/decision-log-2026-08-13-atomic-prospect-promotion.md", "CURRENT points to atomic prospect promotion authority");
 requireText("src/app/template.tsx", "@/styles/sf-design-system.css", "Design authority is loaded at the app root");
 requireText("src/app/template.tsx", "sf-product", "Every application surface receives the project design scope");
 requireText("src/app/admin/layout.tsx", "@/styles/sf-design-system.css", "Command Center explicitly loads the same design authority");
@@ -55,6 +59,7 @@ requireText("src/components/admin/AdminComponents.tsx", '<h1 className="sf-page-
 requireText("src/components/admin/AdminPagePrimitives.tsx", '<h1 className="sf-page-title', "Canonical AdminPageHeader uses the same semantic h1 authority");
 
 const firstClassSurfaces = [
+  "src/app/admin/overview/page.tsx",
   "src/app/admin/priorities/page.tsx",
   "src/app/admin/sales/page.tsx",
   "src/app/admin/prospecting/page.tsx",
