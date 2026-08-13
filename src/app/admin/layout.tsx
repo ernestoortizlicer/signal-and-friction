@@ -150,6 +150,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                 {isActive&&<span className="hidden md:block ml-auto w-1.5 h-1.5 rounded-full bg-[#D4A853]"/>}
               </Link>;
             })}
+            {normalizedPathname.startsWith("/admin/finance") && <Link href="/admin/finance/jurisdictions" className={`hidden md:flex ml-8 mt-1 px-3 py-2 rounded text-[10px] font-mono uppercase tracking-wider border ${normalizedPathname === "/admin/finance/jurisdictions" ? "border-[#D4A853]/30 bg-[#D4A853]/8 text-[#D4A853]" : "border-transparent text-[#7A6F65] hover:text-[#B0A89E]"}`}>JX · Jurisdictions</Link>}
           </nav>
           <div className="mt-auto px-5 py-4 hidden md:block border-t border-[#D4A853]/6"><div className="font-mono text-xs text-[#7A6F65] tracking-[0.15em] uppercase">Engine v2.5</div></div>
         </aside>
