@@ -47,8 +47,16 @@ WHERE c.protocol_stage = 'payment_confirmed'
 -- owner of ledger posting for canonical Checkout payments.
 DROP TRIGGER IF EXISTS trigger_project_payment_paid ON public.beta_projects;
 
-COMMENT ON FUNCTION public.handle_project_payment_paid() IS
-  'RETIRED 2026-08-13: payment_status is derived state; canonical payment events own financial reconciliation.';
+DO $$
+BEGIN
+  IF to_regprocedure('public.handle_project_payment_paid()') IS NOT NULL THEN
+    EXECUTE $comment$
+      COMMENT ON FUNCTION public.handle_project_payment_paid() IS
+      'RETIRED 2026-08-13: payment_status is derived state; canonical payment events own financial reconciliation.'
+    $comment$;
+  END IF;
+END
+$$;
 
 CREATE OR REPLACE FUNCTION public.handle_payment_state_truth()
 RETURNS TRIGGER AS $$
