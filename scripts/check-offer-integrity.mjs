@@ -8,6 +8,8 @@
  *     stripe_payment_links table, but may not hardcode Stripe Payment Links
  *   - archived Certified code may not carry independent Stripe price env vars
  *     or recreate checkout sessions
+ *   - read-only retrieval of an existing Checkout Session is allowed only in
+ *     the dedicated payment-verification endpoint and must remain GET-only
  *
  * This intentionally checks runtime source trees rather than documentation,
  * migrations, or one-off maintenance scripts.
@@ -19,6 +21,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const RUNTIME_ROOTS = ["src/app", "src/components", "functions", "supabase/functions"];
+const READ_ONLY_CHECKOUT_SESSION_READER = "functions/api/stripe/session-status.ts";
 
 let failed = false;
 
@@ -56,14 +59,17 @@ if (certifiedStart === -1 || certifiedEnd === -1 || certifiedEnd <= certifiedSta
 
 const forbidden = [
   {
+    kind: "payment_link",
     pattern: /https:\/\/buy\.stripe\.com\//,
     message: "hardcoded Stripe Payment Link found; runtime checkout must resolve through canonical offer data",
   },
   {
+    kind: "certified_price",
     pattern: /STRIPE_PRICE_CERTIFIED_(ANNUAL|MONTHLY|RENEWAL)/,
     message: "archived Certified Stripe price environment variable found in runtime code",
   },
   {
+    kind: "checkout_session",
     pattern: /api\.stripe\.com\/v1\/checkout\/sessions/,
     message: "direct Stripe checkout-session creation found outside the canonical active-offer path",
   },
@@ -74,7 +80,16 @@ for (const root of RUNTIME_ROOTS) {
     if (!/\.(ts|tsx|js|jsx|mjs|cjs)$/.test(file)) continue;
     const content = readFileSync(path.join(ROOT, file), "utf8");
     for (const rule of forbidden) {
-      if (rule.pattern.test(content)) fail(file, rule.message);
+      if (!rule.pattern.test(content)) continue;
+
+      if (rule.kind === "checkout_session" && file === READ_ONLY_CHECKOUT_SESSION_READER) {
+        if (/method\s*:\s*["'](?:POST|PUT|PATCH|DELETE)["']/i.test(content)) {
+          fail(file, "Checkout session verifier must remain read-only");
+        }
+        continue;
+      }
+
+      fail(file, rule.message);
     }
   }
 }
@@ -91,4 +106,5 @@ if (failed) {
 
 console.log("✓ Active offer commerce is governed by the canonical catalog.");
 console.log("✓ No hardcoded Stripe Payment Links exist in runtime source.");
+console.log("✓ Checkout session verification is read-only.");
 console.log("✓ Certified is structurally non-transactable.");
