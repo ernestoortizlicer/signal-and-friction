@@ -25,6 +25,9 @@ jobs:
       - name: Typecheck application
         run: npm run typecheck
 
+      - name: Build production application
+        run: npm run build
+
       - name: Check commercial offer integrity
         run: npm run check:offers
 
