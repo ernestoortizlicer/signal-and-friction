@@ -1,176 +1,92 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
 import Link from "next/link";
-import dynamic from "next/dynamic";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import MarketSelector from "@/components/MarketSelector";
+import { getCountryMarket, type MarketCountryCode } from "@/lib/market-profiles";
+import { PUBLIC_CLAIMS } from "@/lib/public-claims";
 
-const HexGrid = dynamic(() => import("@/components/HexGrid"), { ssr: false });
+const COUNTRIES = new Set<MarketCountryCode>(["GLOBAL", "US", "CA", "GB", "SG", "AU"]);
 
 function SuccessContent() {
-  const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "";
-  const product = searchParams.get("product") || "Diagnostic Protocol";
+  const params = useSearchParams();
+  const [countryCode, setCountryCode] = useState<MarketCountryCode>("GLOBAL");
+  const email = params.get("email") || "";
 
-  // The referral row itself is now recorded server-side by
-  // functions/api/stripe/webhook.ts, at the moment Stripe confirms the
-  // payment — that's the only place that actually knows the purchase
-  // amount, which the proportional 20% credit needs and this page never
-  // had. This client only clears its own local flag once it's landed here;
-  // it no longer writes to the referrals table (and no longer hardcodes
-  // the old flat $500 coupon reference).
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('sf_referral_ref');
-    }
-  }, []);
+    const queryCountry = params.get("country") as MarketCountryCode | null;
+    const storedCountry = localStorage.getItem("sf_market_country") as MarketCountryCode | null;
+    const resolved = queryCountry && COUNTRIES.has(queryCountry)
+      ? queryCountry
+      : storedCountry && COUNTRIES.has(storedCountry)
+        ? storedCountry
+        : "GLOBAL";
+    setCountryCode(resolved);
+    localStorage.removeItem("sf_referral_ref");
+  }, [params]);
 
+  const profile = getCountryMarket(countryCode);
   return (
-    <main className="h-screen w-screen bg-[#0A0908] text-[#F5F0EB] overflow-y-auto relative flex flex-col items-center justify-center font-mono py-8">
-      <HexGrid />
+    <main className="min-h-screen bg-[#0A0908] text-[#F5F0EB]">
+      <header className="border-b border-[#D4A853]/10">
+        <div className="mx-auto flex max-w-5xl flex-col gap-4 px-5 py-5 md:flex-row md:items-center md:justify-between">
+          <Link href={profile.route} className="text-sm font-semibold">Signal &amp; Friction</Link>
+          <MarketSelector active={countryCode} compact />
+        </div>
+      </header>
 
-      {/* Background grid */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        backgroundImage: "linear-gradient(rgba(212,168,83,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(212,168,83,0.02) 1px, transparent 1px)",
-        backgroundSize: "60px 60px",
-      }} />
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="z-10 flex flex-col items-center gap-8 max-w-lg w-full px-8 text-center"
-      >
-        {/* Shield icon */}
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M28 4L8 13V29C8 40.05 16.8 50.42 28 53C39.2 50.42 48 40.05 48 29V13L28 4Z"
-              stroke="#D4A853"
-              strokeWidth="1.5"
-              fill="rgba(212,168,83,0.06)"
-            />
-            <path
-              d="M20 28L25.5 33.5L36 23"
-              stroke="#5C9A6B"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </motion.div>
-
-        {/* Status badge */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.35, duration: 0.5 }}
-          className="font-mono text-xs text-[#5C9A6B] tracking-[0.35em] uppercase"
-        >
-          Payment Confirmed
-        </motion.div>
-
-        {/* Headline */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45, duration: 0.6 }}
-          className="space-y-2"
-        >
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-            Diagnostic Protocol <span className="text-[#D4A853]">Activated</span>
-          </h1>
-          {product && (
-            <p className="font-mono text-xs text-[#B0A89E] tracking-[0.15em] uppercase">
-              {product}
-            </p>
-          )}
-        </motion.div>
-
-        {/* Delivery info */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.6 }}
-          className="border border-[#D4A853]/10 bg-[#D4A853]/[0.03] p-6 space-y-4 w-full"
-        >
-          {email && (
-            <div className="space-y-1">
-              <div className="font-mono text-xs text-[#7A6F65] tracking-[0.2em] uppercase">
-                Delivery Inbox
-              </div>
-              <div className="font-mono text-xs text-[#F5F0EB] tracking-wide break-all">
-                {email}
-              </div>
-            </div>
-          )}
-
-          <div className="border-t border-[#D4A853]/8 pt-4">
-            <p className="font-mono text-sm text-[#B0A89E] leading-relaxed">
-              You will receive your clinical diagnostic and Loom walkthrough within{" "}
-              <span className="text-[#F5F0EB]">72 hours</span>. No meetings. No calls. Just the deliverable.
-            </p>
+      <section className="mx-auto max-w-5xl px-5 py-16 sm:py-24">
+        <div className="max-w-3xl">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#6B8F5E]/30 bg-[#6B8F5E]/8 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-[#8FB482]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#8FB482]" /> Payment confirmed
           </div>
-        </motion.div>
+          <h1 className="mt-6 text-balance text-4xl font-semibold tracking-[-0.045em] sm:text-6xl">The engagement is active. Now the evidence work begins.</h1>
+          <p className="mt-6 max-w-2xl text-base leading-7 text-[#92887F]">
+            We do not display invented live-analysis states. Your payment has activated the engagement; the next verified state is the delivery itself.
+          </p>
+        </div>
 
-        {/* Protocol steps */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8, duration: 0.5 }}
-          className="grid grid-cols-3 gap-3 w-full"
-        >
+        <div className="mt-12 grid gap-4 md:grid-cols-3">
           {[
-            { id: "01", label: "Scan Active" },
-            { id: "02", label: "Report Compiling" },
-            { id: "03", label: "Transmission Queued" },
-          ].map((step) => (
-            <div
-              key={step.id}
-              className="border border-[#D4A853]/5 px-3 py-2.5 text-center"
-            >
-              <div className="font-mono text-xs text-[#D4A853]/70 tracking-[0.2em] mb-1">{step.id}</div>
-              <div className="font-mono text-xs text-[#B0A89E]">{step.label}</div>
+            ["01", "Payment recorded", "The commercial event is confirmed through Stripe and enters the delivery workflow."],
+            ["02", "Evidence reviewed", "Observed signals, competing hypotheses, uncertainty and missing evidence are kept explicit."],
+            ["03", "Decision delivered", "You receive the most defensible finding the evidence supports — or an abstention if it does not."],
+          ].map(([id, title, copy]) => (
+            <div key={id} className="rounded-xl border border-white/7 bg-white/[0.015] p-5">
+              <div className="font-mono text-[9px] tracking-[0.18em] text-[#D4A853]">{id}</div>
+              <h2 className="mt-3 text-base font-semibold">{title}</h2>
+              <p className="mt-2 text-sm leading-6 text-[#81786F]">{copy}</p>
             </div>
           ))}
-        </motion.div>
+        </div>
 
-        {/* Return link */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 0.5 }}
-        >
-          <Link
-            href="/"
-            className="font-mono text-xs text-[#7A6F65] hover:text-[#B0A89E] transition-colors tracking-[0.2em] uppercase"
-          >
-            ← Return to Signal & Friction
-          </Link>
-        </motion.div>
-      </motion.div>
+        <div className="mt-10 rounded-2xl border border-[#D4A853]/15 bg-[#11100E] p-6 sm:p-8">
+          <div className="grid gap-8 md:grid-cols-2">
+            <div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#D4A853]">Delivery contract</div>
+              <p className="mt-3 text-lg leading-7">{PUBLIC_CLAIMS.async72h.copy}</p>
+              <p className="mt-3 text-sm leading-6 text-[#81786F]">No meeting dependency. The 72-hour commitment is a delivery SLA, not a promise of conversion or revenue outcome.</p>
+            </div>
+            <div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#D4A853]">Evidence boundary</div>
+              <p className="mt-3 text-lg leading-7">{PUBLIC_CLAIMS.abstention.copy}</p>
+              <p className="mt-3 text-sm leading-6 text-[#81786F]">Specificity is guaranteed; certainty is not fabricated. That boundary is part of the product.</p>
+            </div>
+          </div>
+          {email && <div className="mt-6 border-t border-[#D4A853]/10 pt-5 text-sm text-[#8F857C]">Delivery contact: <span className="text-[#F5F0EB]">{email}</span></div>}
+        </div>
+
+        <div className="mt-8 flex flex-wrap gap-5 text-xs text-[#756C63]">
+          <Link href={profile.route} className="hover:text-[#D4A853]">Return to {profile.shortLabel}</Link>
+          <Link href="/legal/guarantee" className="hover:text-[#D4A853]">Guarantee</Link>
+          <Link href="/legal/terms" className="hover:text-[#D4A853]">Terms</Link>
+        </div>
+      </section>
     </main>
   );
 }
 
 export default function SuccessPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="h-screen w-screen bg-[#0A0908] flex items-center justify-center">
-          <div className="font-mono text-xs text-[#7A6F65] tracking-[0.2em] uppercase flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#D4A853] animate-ping" />
-            Loading...
-          </div>
-        </div>
-      }
-    >
-      <SuccessContent />
-    </Suspense>
-  );
+  return <Suspense fallback={<div className="min-h-screen bg-[#0A0908]" />}><SuccessContent /></Suspense>;
 }
