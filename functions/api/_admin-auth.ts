@@ -12,6 +12,10 @@
  * manually — there's no shared env var namespace between the Next.js build
  * and the Cloudflare Functions runtime).
  *
+ * IMPORTANT: return the verified Supabase user id as well as email. Training
+ * attempts are user-owned in the hardened calibration schema and must bind
+ * `analyst_id` to the verified identity, never to a caller-supplied UUID.
+ *
  * Lives under functions/ (not src/lib) for the same reason as _models.ts —
  * Cloudflare esbuild can't resolve cross-directory imports into src/ at
  * function compile time. The leading `_` keeps Pages from treating this
@@ -23,6 +27,7 @@ import { getSupabaseUrl, getServiceRoleKey } from "./_env";
 const ADMIN_ALLOWLIST_FALLBACK = "ernestoortiz@gmail.com,ernestoortizlicer@gmail.com";
 
 export interface AdminUser {
+  id: string;
   email: string;
 }
 
@@ -53,11 +58,6 @@ export async function requireAdmin(
   }
 
   const supabaseUrl = getSupabaseUrl(env);
-  // The actual root cause found in production 2026-07-28: this specific
-  // value (not the URL) had a hidden trailing character, so Supabase
-  // rejected it with "Invalid API key" — a 401 with a *valid, unexpired*
-  // token, which reads exactly like an auth bug even though the token was
-  // never the problem.
   const apikey = getServiceRoleKey(env);
   if (!apikey) {
     return Response.json({ error: "Server misconfiguration" }, { status: 500 });
@@ -66,11 +66,6 @@ export async function requireAdmin(
   const token = authHeader.slice(7);
   const targetUrl = `${supabaseUrl}/auth/v1/user`;
 
-  // Validate the URL itself before attempting to fetch it. An invalid URL
-  // (e.g. from a hidden control character in the env var) throws here
-  // synchronously with a specific, diagnosable message — as opposed to the
-  // generic "Fetch API cannot load" TypeError fetch() throws for the same
-  // underlying problem, which carries no further detail.
   try {
     new URL(targetUrl);
   } catch (err) {
@@ -89,26 +84,6 @@ export async function requireAdmin(
       headers: { Authorization: `Bearer ${token}`, apikey },
     });
   } catch (err) {
-    // A network-level failure here (as opposed to a non-2xx from Supabase,
-    // which is handled below) previously propagated as an uncaught
-    // exception out of every admin-gated endpoint — Cloudflare then served
-    // its own bare 500 with no body, so the real reason was never visible
-    // anywhere, not even in logs the caller could see. Every caller of
-    // requireAdmin depends on it resolving to either an AdminUser or a
-    // Response; it must never throw.
-    // 500, not 502/503/504 — Cloudflare's edge treats the 50x "gateway"
-    // range as a signal the origin itself is down and substitutes its own
-    // generic error page over whatever body the Worker actually returned,
-    // even when the Worker ran successfully and produced valid JSON. 502
-    // was confirmed to swallow this exact message in production.
-    // err.message alone is the generic wrapper ("Fetch API cannot load: <url>")
-    // — workerd's fetch() attaches the actual underlying reason (DNS
-    // failure, connection reset, TLS error, etc.) as err.cause, which was
-    // being silently discarded here. Surface it explicitly.
-    // Passing new URL()'s validation doesn't rule out something workerd's
-    // fetch() specifically rejects that the URL constructor tolerates —
-    // show the exact JSON-escaped target so any invisible character shows
-    // up as a visible escape sequence (\n, \t,  , etc.) either way.
     const message = err instanceof Error ? err.message : "Unknown error";
     const cause = err instanceof Error && err.cause !== undefined ? String(err.cause) : null;
     return Response.json(
@@ -119,22 +94,11 @@ export async function requireAdmin(
     );
   }
   if (!userRes.ok) {
-    // Previously collapsed every non-OK response from Supabase into a bare
-    // "Unauthorized" with no indication of what Supabase actually said
-    // (expired token, malformed JWT, wrong project, etc.) or what the
-    // token itself claims. Surface both — this is the same class of fix
-    // as the fetch-failure branch above: don't let a real reason get
-    // discarded on the way back to the caller.
     const supabaseBody = await userRes.text().catch(() => "(could not read response body)");
     const claims = decodeJwtPayloadForDiagnostics(token);
     const claimsSummary = claims
       ? `exp=${claims.exp ? new Date(Number(claims.exp) * 1000).toISOString() : "(none)"} (expired=${claims.exp ? Date.now() > Number(claims.exp) * 1000 : "unknown"}), email=${claims.email ?? "(none)"}, role=${claims.role ?? "(none)"}, sub=${claims.sub ?? "(none)"}, aud=${claims.aud ?? "(none)"}`
       : "token does not decode as a 3-segment JWT";
-    // Supabase's own API keys (anon and service_role) are themselves JWTs
-    // with a role claim — decode ours the same way to confirm which one is
-    // actually deployed, without ever printing the key itself. This is the
-    // server's own credential, not the caller's, so it's diagnosed
-    // independently of whatever the caller sent.
     const apikeyClaims = decodeJwtPayloadForDiagnostics(apikey);
     const apikeySummary = apikeyClaims
       ? `role=${apikeyClaims.role ?? "(none)"}, ref=${apikeyClaims.ref ?? "(none)"}, iss=${apikeyClaims.iss ?? "(none)"}, iat=${apikeyClaims.iat ? new Date(Number(apikeyClaims.iat) * 1000).toISOString() : "(none)"}`
@@ -147,15 +111,16 @@ export async function requireAdmin(
     );
   }
 
-  const user = (await userRes.json()) as { email?: string };
+  const user = (await userRes.json()) as { id?: string; email?: string };
+  const id = (user.id || "").trim();
   const email = (user.email || "").toLowerCase();
   const allowlist = (env.ADMIN_EMAILS || ADMIN_ALLOWLIST_FALLBACK)
     .split(",")
     .map((e) => e.trim().toLowerCase());
 
-  if (!email || !allowlist.includes(email)) {
+  if (!id || !email || !allowlist.includes(email)) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  return { email };
+  return { id, email };
 }
