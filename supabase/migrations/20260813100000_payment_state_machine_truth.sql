@@ -4,10 +4,11 @@
 -- Invariants:
 -- 1. A client cannot enter a post-payment protocol stage without an authoritative payment row.
 -- 2. A beta project cannot enter payment_status = paid without an authoritative payment row.
--- 3. Inserting the first canonical payment for a client atomically advances client/project payment state.
--- 4. A payment-linked client must have exactly one beta_project; otherwise the payment insert fails and Stripe can retry.
--- 5. Payment cannot regress a client/project already beyond the initial paid state.
--- 6. The payments table / Stripe webhook owns payment truth. A manual derived-state update must not create revenue.
+-- 3. Inserting or safely reconciling a canonical payment to a client atomically advances client/project payment state.
+-- 4. A payment-linked client must have exactly one beta_project; otherwise linking fails closed.
+-- 5. A canonical payment may be reconciled from NULL client_id once, but cannot be reassigned between clients.
+-- 6. Payment cannot regress a client/project already beyond the initial paid state.
+-- 7. The payments table / Stripe webhook owns payment truth. A manual derived-state update must not create revenue.
 
 -- The old protocol model started every client at payment_confirmed, which made
 -- pre-payment intake indistinguishable from a paid customer. Introduce an
@@ -61,8 +62,7 @@ $$;
 
 -- Invalid state should be impossible, not merely visible in a dashboard.
 -- Any transition from pre_payment into the delivery protocol requires a
--- canonical payments row for that client. The payment AFTER INSERT trigger
--- below satisfies this guard in the same transaction.
+-- canonical payments row for that client.
 CREATE OR REPLACE FUNCTION public.guard_client_payment_stage_truth()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -117,14 +117,43 @@ CREATE TRIGGER trigger_guard_project_payment_status_truth
   FOR EACH ROW
   EXECUTE FUNCTION public.guard_project_payment_status_truth();
 
+-- Recovery contract: an unmatched canonical payment can later be reconciled
+-- by setting client_id from NULL to the proven client. Once assigned, moving
+-- the economic event to a different client is forbidden.
+CREATE OR REPLACE FUNCTION public.guard_payment_client_assignment_truth()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF OLD.client_id IS NOT NULL
+     AND NEW.client_id IS DISTINCT FROM OLD.client_id
+  THEN
+    RAISE EXCEPTION 'payment % client_id is immutable once assigned', OLD.id
+      USING ERRCODE = '23514';
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_guard_payment_client_assignment_truth ON public.payments;
+CREATE TRIGGER trigger_guard_payment_client_assignment_truth
+  BEFORE UPDATE OF client_id ON public.payments
+  FOR EACH ROW
+  EXECUTE FUNCTION public.guard_payment_client_assignment_truth();
+
 CREATE OR REPLACE FUNCTION public.handle_payment_state_truth()
 RETURNS TRIGGER AS $$
 DECLARE
   v_project_count integer;
 BEGIN
-  -- An unmatched economic event is still retained in payments for recovery.
-  -- It cannot advance client/project state until client_id is reconciled.
+  -- An unmatched economic event is retained in payments without inventing
+  -- client/project state. A later NULL -> client_id reconciliation re-enters
+  -- this same state transition through the UPDATE trigger below.
   IF NEW.client_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  -- On UPDATE, a no-op client_id write should not replay the state machine.
+  IF TG_OP = 'UPDATE' AND OLD.client_id IS NOT DISTINCT FROM NEW.client_id THEN
     RETURN NEW;
   END IF;
 
@@ -169,9 +198,9 @@ $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trigger_payment_state_truth ON public.payments;
 CREATE TRIGGER trigger_payment_state_truth
-  AFTER INSERT ON public.payments
+  AFTER INSERT OR UPDATE OF client_id ON public.payments
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_payment_state_truth();
 
 COMMENT ON FUNCTION public.handle_payment_state_truth() IS
-  'Canonical payment insert atomically advances non-regressive client/project payment state; missing project fails closed for retry.';
+  'Canonical payment insert or NULL-to-client reconciliation atomically advances non-regressive client/project payment state; missing project fails closed.';
